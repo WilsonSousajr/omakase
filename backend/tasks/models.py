@@ -58,6 +58,65 @@ class Task(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    def save(self, *args, **kwargs):
+        from django.utils import timezone
+
+        # For existing tasks, get previous state to detect changes
+        if self.pk:
+            try:
+                old = Task.objects.get(pk=self.pk)
+                old_completed = old.is_completed
+                old_status = old.kanban_status
+            except Task.DoesNotExist:
+                old_completed = self.is_completed
+                old_status = self.kanban_status
+        else:
+            old_completed = self.is_completed
+            old_status = self.kanban_status
+
+        # Detect which field changed
+        completed_changed = old_completed != self.is_completed
+        status_changed = old_status != self.kanban_status
+
+        # Sync logic with priority to most recent change
+        if completed_changed:
+            # is_completed was just changed (checkbox clicked)
+            if self.is_completed:
+                # Checked: move to done
+                self.kanban_status = 'done'
+                if not self.completed_at:
+                    self.completed_at = timezone.now()
+            else:
+                # Unchecked: move to todo and clear timestamp
+                self.kanban_status = 'todo'
+                self.completed_at = None
+        elif status_changed:
+            # kanban_status was just changed (drag & drop)
+            if self.kanban_status == 'done':
+                # Moved to done: check it
+                self.is_completed = True
+                if not self.completed_at:
+                    self.completed_at = timezone.now()
+            else:
+                # Moved out of done: uncheck it
+                self.is_completed = False
+                self.completed_at = None
+        elif self.is_completed and self.kanban_status != 'done':
+            # Ensure sync on create
+            self.kanban_status = 'done'
+            if not self.completed_at:
+                self.completed_at = timezone.now()
+        elif self.kanban_status == 'done' and not self.is_completed:
+            # Ensure sync on create
+            self.is_completed = True
+            if not self.completed_at:
+                self.completed_at = timezone.now()
+        elif not self.is_completed and self.kanban_status != 'done':
+            # Both false: clear timestamp
+            self.completed_at = None
+
+        super().save(*args, **kwargs)
+
     class Meta:
         ordering = ["kanban_order", "-created_at"]
 
