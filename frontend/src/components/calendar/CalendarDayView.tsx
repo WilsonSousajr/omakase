@@ -1,0 +1,97 @@
+"use client";
+
+import { useDroppable } from "@dnd-kit/core";
+import { format } from "date-fns";
+import { useCalendarStore } from "@/stores/calendarStore";
+import { useTimeBlocks, useDeleteTimeBlock, useUpdateTimeBlock } from "@/hooks/useTimeBlocks";
+import { useTasks } from "@/hooks/useTasks";
+import TimeBlockItem from "./TimeBlockItem";
+
+const HOURS = Array.from({ length: 17 }, (_, i) => i + 6); // 06:00 - 22:00
+const SLOT_HEIGHT = 48;
+
+function TimeSlot({ hour, half, date }: { hour: number; half: 0 | 1; date: string }) {
+  const time = `${hour.toString().padStart(2, "0")}:${half === 0 ? "00" : "30"}`;
+  const droppableId = `slot-${date}-${time}`;
+
+  const { setNodeRef, isOver } = useDroppable({
+    id: droppableId,
+    data: { type: "timeslot", date, time },
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={`h-[${SLOT_HEIGHT / 2}px] border-b border-zinc-800/50 transition-colors ${
+        half === 0 ? "border-t border-zinc-800" : ""
+      } ${isOver ? "bg-indigo-500/10" : ""}`}
+      style={{ height: `${SLOT_HEIGHT / 2}px` }}
+    />
+  );
+}
+
+export default function CalendarDayView() {
+  const { selectedDate } = useCalendarStore();
+  const dateStr = format(selectedDate, "yyyy-MM-dd");
+
+  const { data: timeBlocks = [] } = useTimeBlocks(dateStr, dateStr);
+  const { data: tasks = [] } = useTasks();
+  const deleteTimeBlock = useDeleteTimeBlock();
+  const updateTimeBlock = useUpdateTimeBlock();
+
+  const taskMap = Object.fromEntries(tasks.map((t) => [t.id, t]));
+
+  function timeToOffset(time: string): number {
+    const [h, m] = time.split(":").map(Number);
+    return ((h - 6) * 60 + m) / 30 * (SLOT_HEIGHT / 2);
+  }
+
+  return (
+    <div className="flex-1 overflow-auto">
+      <div className="relative flex">
+        {/* Time labels */}
+        <div className="w-14 shrink-0">
+          {HOURS.map((hour) => (
+            <div
+              key={hour}
+              className="flex items-start justify-end pr-2 text-[10px] text-zinc-500"
+              style={{ height: `${SLOT_HEIGHT}px` }}
+            >
+              {format(new Date(2000, 0, 1, hour), "h a")}
+            </div>
+          ))}
+        </div>
+
+        {/* Grid + blocks */}
+        <div className="relative flex-1">
+          {/* Slots */}
+          {HOURS.map((hour) => (
+            <div key={hour}>
+              <TimeSlot hour={hour} half={0} date={dateStr} />
+              <TimeSlot hour={hour} half={1} date={dateStr} />
+            </div>
+          ))}
+
+          {/* Time blocks */}
+          {timeBlocks.map((block) => (
+            <div
+              key={block.id}
+              className="absolute left-0 right-0"
+              style={{ top: `${timeToOffset(block.start_time)}px` }}
+            >
+              <TimeBlockItem
+                block={block}
+                task={taskMap[block.task]}
+                onDelete={(id) => deleteTimeBlock.mutate(id)}
+                onResize={(id, newEndTime) =>
+                  updateTimeBlock.mutate({ id, end_time: newEndTime })
+                }
+                slotHeight={SLOT_HEIGHT}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
