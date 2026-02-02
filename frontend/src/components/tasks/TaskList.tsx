@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useTasks, useDeleteTask } from "@/hooks/useTasks";
+import { useTasks, useDeleteTask, useToggleTaskComplete } from "@/hooks/useTasks";
 import { useUIStore } from "@/stores/uiStore";
 import DraggableTaskCard from "./DraggableTaskCard";
 import TaskFilters from "./TaskFilters";
@@ -14,6 +14,7 @@ export default function TaskList() {
   const [editTask, setEditTask] = useState<Task | null>(null);
   const { openModal, closeModal } = useUIStore();
   const deleteTask = useDeleteTask();
+  const toggleComplete = useToggleTaskComplete();
 
   const { data: tasks = [], isLoading } = useTasks({
     priority: priority || undefined,
@@ -27,6 +28,10 @@ export default function TaskList() {
 
   const handleDelete = (id: string) => {
     deleteTask.mutate(id);
+  };
+
+  const handleToggleComplete = (id: string, isCompleted: boolean) => {
+    toggleComplete.mutate({ id, is_completed: isCompleted });
   };
 
   const handleCloseForm = () => {
@@ -67,6 +72,7 @@ export default function TaskList() {
               task={task}
               onEdit={handleEdit}
               onDelete={handleDelete}
+              onToggleComplete={handleToggleComplete}
             />
           ))
         )}
