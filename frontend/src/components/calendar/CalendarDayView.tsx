@@ -4,7 +4,7 @@ import { useDroppable } from "@dnd-kit/core";
 import { format } from "date-fns";
 import { useCalendarStore } from "@/stores/calendarStore";
 import { useTimeBlocks, useDeleteTimeBlock, useUpdateTimeBlock } from "@/hooks/useTimeBlocks";
-import { useTasks } from "@/hooks/useTasks";
+import { useTasks, useToggleTaskComplete } from "@/hooks/useTasks";
 import TimeBlockItem from "./TimeBlockItem";
 
 const HOURS = Array.from({ length: 17 }, (_, i) => i + 6); // 06:00 - 22:00
@@ -38,8 +38,13 @@ export default function CalendarDayView() {
   const { data: tasks = [] } = useTasks();
   const deleteTimeBlock = useDeleteTimeBlock();
   const updateTimeBlock = useUpdateTimeBlock();
+  const toggleComplete = useToggleTaskComplete();
 
   const taskMap = Object.fromEntries(tasks.map((t) => [t.id, t]));
+
+  const handleToggleComplete = (id: string, isCompleted: boolean) => {
+    toggleComplete.mutate({ id, is_completed: isCompleted });
+  };
 
   function timeToOffset(time: string): number {
     const [h, m] = time.split(":").map(Number);
@@ -86,6 +91,7 @@ export default function CalendarDayView() {
                 onResize={(id, newEndTime) =>
                   updateTimeBlock.mutate({ id, end_time: newEndTime })
                 }
+                onToggleComplete={handleToggleComplete}
                 slotHeight={SLOT_HEIGHT}
               />
             </div>
