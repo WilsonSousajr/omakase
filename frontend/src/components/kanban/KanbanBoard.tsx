@@ -85,11 +85,11 @@ export default function KanbanBoard() {
 
   if (isLoading) {
     return (
-      <div className="flex h-full gap-4 p-4">
+      <div className="flex h-full gap-5 p-5">
         {[1, 2, 3].map((i) => (
           <div
             key={i}
-            className="flex-1 animate-pulse rounded-xl border border-zinc-800 bg-zinc-950/50"
+            className="flex-1 animate-pulse rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg)]/50"
           />
         ))}
       </div>
@@ -103,7 +103,7 @@ export default function KanbanBoard() {
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex h-full gap-4 p-4">
+      <div className="flex h-full gap-5 p-5">
         {KANBAN_STATUSES.map(({ value, label }) => (
           <KanbanColumn
             key={value}

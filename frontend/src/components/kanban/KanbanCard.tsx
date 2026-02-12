@@ -41,15 +41,15 @@ export default function KanbanCard({ task }: KanbanCardProps) {
       style={style}
       onClick={() => setActiveTaskId(task.id)}
       className={cn(
-        "group cursor-pointer rounded-lg border bg-zinc-900 p-3 transition-colors",
+        "group cursor-pointer rounded-2xl border bg-[var(--color-surface)] p-4 transition-all duration-300",
         isActive
-          ? "border-indigo-500/50 ring-1 ring-indigo-500/20"
-          : "border-zinc-800 hover:border-zinc-700"
+          ? "border-white/20 ring-1 ring-white/10"
+          : "border-[var(--color-border)] hover:border-[var(--color-border-hover)]"
       )}
     >
       <div className="flex items-start gap-2">
         <button
-          className="mt-0.5 cursor-grab text-zinc-600 hover:text-zinc-400 active:cursor-grabbing"
+          className="mt-0.5 cursor-grab text-[var(--color-text-faint)] hover:text-[var(--color-text-muted)] active:cursor-grabbing"
           {...listeners}
           {...attributes}
         >
@@ -58,7 +58,7 @@ export default function KanbanCard({ task }: KanbanCardProps) {
 
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <span className="truncate text-sm font-medium text-zinc-200">
+            <span className="truncate text-sm font-medium text-[var(--color-text-primary)]">
               {task.title}
             </span>
           </div>
@@ -66,7 +66,7 @@ export default function KanbanCard({ task }: KanbanCardProps) {
           <div className="mt-1.5 flex items-center gap-1.5">
             {priority && (
               <span
-                className="rounded px-1.5 py-0.5 text-[10px] font-medium"
+                className="rounded-lg px-1.5 py-0.5 text-[10px] font-medium"
                 style={{
                   backgroundColor: priority.color + "20",
                   color: priority.color,
@@ -78,7 +78,7 @@ export default function KanbanCard({ task }: KanbanCardProps) {
             {task.tags.map((tag) => (
               <span
                 key={tag.id}
-                className="rounded px-1.5 py-0.5 text-[10px]"
+                className="rounded-lg px-1.5 py-0.5 text-[10px]"
                 style={{
                   backgroundColor: tag.color + "20",
                   color: tag.color,
