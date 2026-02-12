@@ -22,9 +22,9 @@ function WeekTimeSlot({ hour, half, date }: { hour: number; half: 0 | 1; date: s
   return (
     <div
       ref={setNodeRef}
-      className={`border-b border-zinc-800/30 transition-colors ${
-        half === 0 ? "border-t border-zinc-800/50" : ""
-      } ${isOver ? "bg-indigo-500/10" : ""}`}
+      className={`border-b border-[var(--color-border)]/30 transition-colors ${
+        half === 0 ? "border-t border-[var(--color-border)]/50" : ""
+      } ${isOver ? "bg-white/5" : ""}`}
       style={{ height: `${SLOT_HEIGHT / 2}px` }}
     />
   );
@@ -67,7 +67,7 @@ export default function CalendarWeekView() {
           {HOURS.map((hour) => (
             <div
               key={hour}
-              className="flex items-start justify-end pr-1.5 text-[9px] text-zinc-500"
+              className="flex items-start justify-end pr-1.5 text-[9px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-faint)]"
               style={{ height: `${SLOT_HEIGHT}px` }}
             >
               {format(new Date(2000, 0, 1, hour), "ha")}
@@ -82,12 +82,12 @@ export default function CalendarWeekView() {
           const dayBlocks = blocksByDate[dayStr] || [];
 
           return (
-            <div key={dayStr} className="relative flex-1 border-l border-zinc-800/50">
+            <div key={dayStr} className="relative flex-1 border-l border-[var(--color-border)]/50">
               {/* Day header */}
-              <div className="sticky top-0 z-10 flex h-8 items-center justify-center border-b border-zinc-800 bg-zinc-950">
+              <div className="sticky top-0 z-10 flex h-8 items-center justify-center border-b border-[var(--color-border)] bg-[var(--color-bg)]">
                 <span
                   className={`text-[10px] font-medium ${
-                    isToday ? "text-indigo-400" : "text-zinc-400"
+                    isToday ? "text-[var(--color-text-primary)]" : "text-[var(--color-text-muted)]"
                   }`}
                 >
                   {format(day, "EEE d")}

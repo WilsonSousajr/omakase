@@ -22,9 +22,9 @@ function TimeSlot({ hour, half, date }: { hour: number; half: 0 | 1; date: strin
   return (
     <div
       ref={setNodeRef}
-      className={`h-[${SLOT_HEIGHT / 2}px] border-b border-zinc-800/50 transition-colors ${
-        half === 0 ? "border-t border-zinc-800" : ""
-      } ${isOver ? "bg-indigo-500/10" : ""}`}
+      className={`h-[${SLOT_HEIGHT / 2}px] border-b border-[var(--color-border)]/50 transition-colors ${
+        half === 0 ? "border-t border-[var(--color-border)]" : ""
+      } ${isOver ? "bg-white/5" : ""}`}
       style={{ height: `${SLOT_HEIGHT / 2}px` }}
     />
   );
@@ -54,7 +54,7 @@ export default function CalendarDayView() {
           {HOURS.map((hour) => (
             <div
               key={hour}
-              className="flex items-start justify-end pr-2 text-[10px] text-zinc-500"
+              className="flex items-start justify-end pr-2 text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-faint)]"
               style={{ height: `${SLOT_HEIGHT}px` }}
             >
               {format(new Date(2000, 0, 1, hour), "h a")}

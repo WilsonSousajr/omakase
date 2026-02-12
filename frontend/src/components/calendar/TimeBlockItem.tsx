@@ -40,7 +40,7 @@ export default function TimeBlockItem({
   const height = durationSlots * slotHeight;
 
   const priority = task ? PRIORITIES.find((p) => p.value === task.priority) : null;
-  const color = priority?.color ?? "#6366f1"; // fallback to indigo
+  const color = priority?.color ?? "#a1a1aa"; // fallback to neutral gray
 
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: `timeblock-${block.id}`,
@@ -117,7 +117,7 @@ export default function TimeBlockItem({
       ref={setNodeRef}
       {...listeners}
       {...attributes}
-      className="group absolute inset-x-1 cursor-grab overflow-hidden rounded border px-2 py-1 active:cursor-grabbing"
+      className="group absolute inset-x-1 cursor-grab overflow-hidden rounded-lg border px-2 py-1 active:cursor-grabbing"
       style={{
         ...style,
         borderColor: `${color}40`,
@@ -132,7 +132,7 @@ export default function TimeBlockItem({
             </p>
             {priority && (
               <span
-                className="shrink-0 rounded px-1 py-0.5 text-[9px] font-semibold leading-none"
+                className="shrink-0 rounded-lg px-1 py-0.5 text-[9px] font-semibold leading-none"
                 style={{
                   backgroundColor: `${color}25`,
                   color,

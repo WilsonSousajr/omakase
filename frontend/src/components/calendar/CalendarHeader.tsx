@@ -10,32 +10,32 @@ export default function CalendarHeader() {
     useCalendarStore();
 
   return (
-    <div className="flex items-center justify-between border-b border-zinc-800 px-4 py-2">
+    <div className="flex items-center justify-between border-b border-[var(--color-border)] px-5 py-3">
       <div className="flex items-center gap-2">
         <button
           onClick={goBack}
-          className="rounded p-1 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200"
+          className="rounded-lg p-1 text-[var(--color-text-muted)] hover:bg-white/5 hover:text-[var(--color-text-secondary)]"
         >
           <ChevronLeft className="h-4 w-4" />
         </button>
         <button
           onClick={goToToday}
-          className="rounded px-2 py-0.5 text-xs text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200"
+          className="rounded-lg px-2 py-0.5 text-xs text-[var(--color-text-muted)] hover:bg-white/5 hover:text-[var(--color-text-secondary)]"
         >
           Today
         </button>
         <button
           onClick={goForward}
-          className="rounded p-1 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200"
+          className="rounded-lg p-1 text-[var(--color-text-muted)] hover:bg-white/5 hover:text-[var(--color-text-secondary)]"
         >
           <ChevronRight className="h-4 w-4" />
         </button>
-        <span className="text-sm font-medium text-zinc-200">
+        <span className="text-sm font-medium text-[var(--color-text-primary)]">
           {format(selectedDate, "MMMM d, yyyy")}
         </span>
       </div>
 
-      <div className="flex rounded-md border border-zinc-800">
+      <div className="flex rounded-xl border border-[var(--color-border)]">
         {(["day", "week"] as const).map((mode) => (
           <button
             key={mode}
@@ -43,8 +43,8 @@ export default function CalendarHeader() {
             className={cn(
               "px-3 py-1 text-xs capitalize",
               viewMode === mode
-                ? "bg-zinc-800 text-zinc-200"
-                : "text-zinc-500 hover:text-zinc-300"
+                ? "bg-[var(--color-surface-hover)] text-[var(--color-text-primary)]"
+                : "text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
             )}
           >
             {mode}
