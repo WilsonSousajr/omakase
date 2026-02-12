@@ -14,15 +14,15 @@ const SESSION_LABELS = {
 } as const;
 
 const SESSION_COLORS = {
-  focus: "text-indigo-400",
-  short_break: "text-emerald-400",
-  long_break: "text-amber-400",
+  focus: "text-[#e5e5e5]",
+  short_break: "text-[#737373]",
+  long_break: "text-[#a3a3a3]",
 } as const;
 
 const RING_COLORS = {
-  focus: "stroke-indigo-500",
-  short_break: "stroke-emerald-500",
-  long_break: "stroke-amber-500",
+  focus: "stroke-[#e5e5e5]",
+  short_break: "stroke-[#737373]",
+  long_break: "stroke-[#a3a3a3]",
 } as const;
 
 const DURATIONS: Record<string, number> = {
@@ -109,7 +109,7 @@ export default function PomodoroTimer() {
   return (
     <div className="flex flex-col items-center">
       {/* Session type tabs */}
-      <div className="mb-4 flex rounded-lg border border-zinc-800">
+      <div className="mb-4 flex rounded-2xl border border-[var(--color-border)]">
         {(["focus", "short_break", "long_break"] as const).map((type) => (
           <button
             key={type}
@@ -117,8 +117,8 @@ export default function PomodoroTimer() {
             className={cn(
               "px-3 py-1.5 text-xs transition-colors",
               sessionType === type
-                ? "bg-zinc-800 text-zinc-200"
-                : "text-zinc-500 hover:text-zinc-300"
+                ? "bg-[var(--color-surface-hover)] text-[var(--color-text-primary)]"
+                : "text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
             )}
           >
             {SESSION_LABELS[type]}
@@ -134,7 +134,7 @@ export default function PomodoroTimer() {
             cy="100"
             r={radius}
             fill="none"
-            stroke="#27272a"
+            stroke="var(--color-border)"
             strokeWidth="6"
           />
           <circle
@@ -154,7 +154,7 @@ export default function PomodoroTimer() {
           <span className={cn("text-3xl font-light tabular-nums", SESSION_COLORS[sessionType])}>
             {minutes.toString().padStart(2, "0")}:{seconds.toString().padStart(2, "0")}
           </span>
-          <span className="text-[10px] text-zinc-500">
+          <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
             {SESSION_LABELS[sessionType]}
           </span>
         </div>
@@ -164,7 +164,7 @@ export default function PomodoroTimer() {
       <div className="flex items-center gap-3">
         <button
           onClick={reset}
-          className="rounded-full p-2 text-zinc-500 hover:bg-zinc-800 hover:text-zinc-300"
+          className="rounded-full p-2 text-[var(--color-text-faint)] hover:bg-white/5 hover:text-[var(--color-text-secondary)]"
         >
           <RotateCcw className="h-4 w-4" />
         </button>
@@ -173,8 +173,8 @@ export default function PomodoroTimer() {
           className={cn(
             "flex h-12 w-12 items-center justify-center rounded-full transition-colors",
             isRunning
-              ? "bg-zinc-800 text-zinc-300 hover:bg-zinc-700"
-              : "bg-indigo-600 text-white hover:bg-indigo-500"
+              ? "bg-[var(--color-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]"
+              : "bg-[var(--color-button-primary)] text-[var(--color-button-primary-text)] hover:bg-[var(--color-button-primary-hover)]"
           )}
         >
           {isRunning ? (
@@ -183,7 +183,7 @@ export default function PomodoroTimer() {
             <Play className="ml-0.5 h-5 w-5" />
           )}
         </button>
-        <div className="w-8 text-center text-xs text-zinc-500">
+        <div className="w-8 text-center text-xs text-[var(--color-text-muted)]">
           #{completedPomodoros}
         </div>
       </div>
