@@ -75,20 +75,20 @@ export default function TaskForm({ editTask, onClose }: TaskFormProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-      <div className="w-full max-w-lg rounded-xl border border-zinc-800 bg-zinc-900 shadow-2xl">
-        <div className="flex items-center justify-between border-b border-zinc-800 px-5 py-3">
-          <h3 className="text-sm font-medium text-zinc-200">
+      <div className="w-full max-w-lg rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] shadow-2xl">
+        <div className="flex items-center justify-between border-b border-[var(--color-border)] px-6 py-4">
+          <h3 className="text-base font-semibold text-[var(--color-text-primary)]">
             {editTask ? "Edit Task" : "New Task"}
           </h3>
           <button
             onClick={onClose}
-            className="rounded p-1 text-zinc-500 hover:bg-zinc-800 hover:text-zinc-300"
+            className="rounded-lg p-1 text-[var(--color-text-faint)] hover:bg-white/5 hover:text-[var(--color-text-secondary)]"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4 p-5">
+        <form onSubmit={handleSubmit} className="space-y-4 p-6">
           <div>
             <input
               type="text"
@@ -96,7 +96,7 @@ export default function TaskForm({ editTask, onClose }: TaskFormProps) {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               autoFocus
-              className="w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-200 placeholder-zinc-500 outline-none focus:border-indigo-500"
+              className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-input)] px-3.5 py-2.5 text-sm text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] outline-none focus:border-[var(--color-text-secondary)]/40"
             />
           </div>
 
@@ -106,17 +106,17 @@ export default function TaskForm({ editTask, onClose }: TaskFormProps) {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={2}
-              className="w-full resize-none rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-200 placeholder-zinc-500 outline-none focus:border-indigo-500"
+              className="w-full resize-none rounded-xl border border-[var(--color-border)] bg-[var(--color-input)] px-3.5 py-2.5 text-sm text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] outline-none focus:border-[var(--color-text-secondary)]/40"
             />
           </div>
 
           <div className="flex gap-3">
             <div className="flex-1">
-              <label className="mb-1 block text-xs text-zinc-500">Priority</label>
+              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">Priority</label>
               <select
                 value={priority}
                 onChange={(e) => setPriority(e.target.value as Priority)}
-                className="w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-1.5 text-sm text-zinc-300 outline-none focus:border-indigo-500"
+                className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-input)] px-3.5 py-2 text-sm text-[var(--color-text-primary)] outline-none focus:border-[var(--color-text-secondary)]/40"
               >
                 {PRIORITIES.map((p) => (
                   <option key={p.value} value={p.value}>
@@ -126,11 +126,11 @@ export default function TaskForm({ editTask, onClose }: TaskFormProps) {
               </select>
             </div>
             <div className="flex-1">
-              <label className="mb-1 block text-xs text-zinc-500">Area</label>
+              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">Area</label>
               <select
                 value={area}
                 onChange={(e) => setArea(e.target.value as Area)}
-                className="w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-1.5 text-sm text-zinc-300 outline-none focus:border-indigo-500"
+                className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-input)] px-3.5 py-2 text-sm text-[var(--color-text-primary)] outline-none focus:border-[var(--color-text-secondary)]/40"
               >
                 {AREAS.map((a) => (
                   <option key={a.value} value={a.value}>
@@ -143,56 +143,56 @@ export default function TaskForm({ editTask, onClose }: TaskFormProps) {
 
           <div className="flex gap-3">
             <div className="flex-1">
-              <label className="mb-1 block text-xs text-zinc-500">Scheduled Date</label>
+              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">Scheduled Date</label>
               <input
                 type="date"
                 value={scheduledDate}
                 onChange={(e) => setScheduledDate(e.target.value)}
-                className="w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-1.5 text-sm text-zinc-300 outline-none focus:border-indigo-500"
+                className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-input)] px-3.5 py-2 text-sm text-[var(--color-text-primary)] outline-none focus:border-[var(--color-text-secondary)]/40"
               />
             </div>
             <div className="flex-1">
-              <label className="mb-1 block text-xs text-zinc-500">Due Date</label>
+              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">Due Date</label>
               <input
                 type="date"
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
-                className="w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-1.5 text-sm text-zinc-300 outline-none focus:border-indigo-500"
+                className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-input)] px-3.5 py-2 text-sm text-[var(--color-text-primary)] outline-none focus:border-[var(--color-text-secondary)]/40"
               />
             </div>
             <div className="w-24">
-              <label className="mb-1 block text-xs text-zinc-500">Est. (min)</label>
+              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">Est. (min)</label>
               <input
                 type="number"
                 min="0"
                 value={estimatedMinutes}
                 onChange={(e) => setEstimatedMinutes(e.target.value)}
-                className="w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-1.5 text-sm text-zinc-300 outline-none focus:border-indigo-500"
+                className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-input)] px-3.5 py-2 text-sm text-[var(--color-text-primary)] outline-none focus:border-[var(--color-text-secondary)]/40"
               />
             </div>
           </div>
 
           {tags.length > 0 && (
             <div>
-              <label className="mb-1.5 block text-xs text-zinc-500">Tags</label>
+              <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">Tags</label>
               <div className="flex flex-wrap gap-1.5">
                 {tags.map((tag) => (
                   <button
                     key={tag.id}
                     type="button"
                     onClick={() => toggleTag(tag.id)}
-                    className="rounded-full px-2.5 py-1 text-xs transition-colors"
+                    className="rounded-lg px-2.5 py-1 text-xs transition-colors"
                     style={{
                       backgroundColor: selectedTagIds.includes(tag.id)
                         ? tag.color + "30"
                         : "transparent",
                       color: selectedTagIds.includes(tag.id)
                         ? tag.color
-                        : "#a1a1aa",
+                        : "var(--color-text-secondary)",
                       border: `1px solid ${
                         selectedTagIds.includes(tag.id)
                           ? tag.color + "60"
-                          : "#3f3f46"
+                          : "var(--color-border)"
                       }`,
                     }}
                   >
@@ -207,14 +207,14 @@ export default function TaskForm({ editTask, onClose }: TaskFormProps) {
             <button
               type="button"
               onClick={onClose}
-              className="rounded-md px-3 py-1.5 text-xs text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200"
+              className="rounded-xl px-3 py-1.5 text-xs text-[var(--color-text-secondary)] hover:bg-white/5 hover:text-[var(--color-text-primary)]"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={!title.trim() || createTask.isPending || updateTask.isPending}
-              className="rounded-md bg-indigo-600 px-4 py-1.5 text-xs font-medium text-white transition-colors hover:bg-indigo-500 disabled:opacity-50"
+              className="rounded-xl bg-[var(--color-button-primary)] px-4 py-1.5 text-xs font-medium text-[var(--color-button-primary-text)] transition-colors hover:bg-[var(--color-button-primary-hover)] disabled:opacity-50"
             >
               {editTask ? "Update" : "Create"}
             </button>
