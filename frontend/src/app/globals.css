@@ -2,6 +2,20 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+:root {
+  --color-bg: #0a0a0a;
+  --color-surface: #141414;
+  --color-surface-hover: #1a1a1a;
+  --color-surface-elevated: #1e1e1e;
+  --color-border: #232323;
+  --color-border-hover: #2a2a2a;
+  --color-input: #0e0e0e;
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #a3a3a3;
+  --color-text-muted: #737373;
+  --color-text-faint: #525252;
+}
+
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -12,10 +26,10 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #3f3f46;
+  background: #232323;
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #52525b;
+  background: #2a2a2a;
 }
