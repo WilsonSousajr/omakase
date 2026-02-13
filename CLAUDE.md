@@ -60,6 +60,16 @@ frontend/
 - `timeblocks/` — CRUD, filterable by date range
 - `pomodoro/sessions/` — Create, list, patch (complete)
 
+## Design System
+
+- **Monochrome palette** — wstech.tech-inspired, dark-only. See `docs/design-system.md` for full spec.
+- **Font:** Outfit (geometric sans-serif) via Next.js Google Fonts
+- **Signature:** Section labels use `text-[10px] font-semibold uppercase tracking-[0.15em]` (kanban headers, form labels, time labels)
+- **Colors:** CSS custom properties in `globals.css` `:root` — use `var(--color-*)` not hardcoded zinc/indigo
+- **Accents:** Functional only — priority colors (gray/amber/orange/red) for badges and time blocks. Everything else is grayscale.
+- **Border radius:** `rounded-2xl` cards, `rounded-xl` inputs/buttons, `rounded-lg` badges
+- **Active states:** White/gray (no indigo) — `var(--color-surface-active)` for nav, `white/20` ring for cards
+
 ## Key Patterns
 
 - UUIDs as primary keys on all models
@@ -94,3 +104,10 @@ frontend/
 - `N` — New task
 - `Escape` — Close modal
 - `Space` — Toggle pomodoro timer (when not in input)
+
+## Workflow Rules
+
+- **Always update CLAUDE.md** after completing an implementation or discovering new patterns, gotchas, or learnings
+- **Always update `/docs`** — maintain `docs/` as the self-reference documentation for all modules, features, architecture decisions, and implementation details. When you need to understand how something works, look here first. Update after every significant change.
+- **Delete plan files after completing a plan** — once a plan is fully implemented, remove the plan file from `docs/plans/`
+- **Always update `docs/design-system.md`** when making any frontend UI/UX changes — keep it current with colors, spacing, typography, component patterns, and design decisions
