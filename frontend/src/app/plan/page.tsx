@@ -70,7 +70,7 @@ export default function PlanPage() {
   return (
     <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
       <div className="flex h-full">
-        <div className="w-[400px] shrink-0 border-r border-zinc-800">
+        <div className="w-[400px] shrink-0 border-r border-[var(--color-border)]">
           <TaskList />
         </div>
         <div className="flex-1">
