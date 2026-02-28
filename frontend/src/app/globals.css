@@ -14,6 +14,10 @@
   --color-text-secondary: #a3a3a3;
   --color-text-muted: #737373;
   --color-text-faint: #525252;
+  --color-surface-active: rgba(255, 255, 255, 0.08);
+  --color-button-primary: #e5e5e5;
+  --color-button-primary-hover: #d4d4d4;
+  --color-button-primary-text: #0a0a0a;
 }
 
 ::-webkit-scrollbar {

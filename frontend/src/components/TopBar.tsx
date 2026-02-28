@@ -14,7 +14,7 @@ export default function TopBar() {
       </span>
       <button
         onClick={() => openModal("task-form")}
-        className="flex items-center gap-1.5 rounded-xl bg-[#e5e5e5] px-3 py-1.5 text-xs font-medium text-[#0a0a0a] transition-colors hover:bg-[#d4d4d4]"
+        className="flex items-center gap-1.5 rounded-xl bg-[var(--color-button-primary)] px-3 py-1.5 text-xs font-medium text-[var(--color-button-primary-text)] transition-colors hover:bg-[var(--color-button-primary-hover)]"
       >
         <Plus className="h-3.5 w-3.5" />
         New Task

@@ -55,7 +55,7 @@ export default function Sidebar() {
               className={cn(
                 "flex items-center gap-2 rounded-xl px-2.5 py-2 text-sm transition-colors",
                 active
-                  ? "bg-white/8 text-[var(--color-text-primary)]"
+                  ? "bg-[var(--color-surface-active)] text-[var(--color-text-primary)]"
                   : "text-[var(--color-text-muted)] hover:bg-[var(--color-surface)] hover:text-[var(--color-text-secondary)]"
               )}
             >
