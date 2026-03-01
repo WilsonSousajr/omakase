@@ -24,3 +24,12 @@ repos:
     hooks:
       - id: detect-secrets
         args: ['--baseline', '.secrets.baseline']
+
+  - repo: local
+    hooks:
+      - id: frontend-lint
+        name: frontend eslint (lint-staged)
+        entry: sh -c 'cd frontend && npx lint-staged'
+        language: system
+        files: ^frontend/.*\.(ts|tsx)$
+        pass_filenames: false
