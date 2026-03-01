@@ -5,8 +5,8 @@ import { useUIStore } from "@/stores/uiStore";
 import Sidebar from "../Sidebar";
 
 vi.mock("next/link", () => ({
-  default: ({ children, href }: { children: React.ReactNode; href: string }) => (
-    <a href={href}>
+  default: ({ children, href, ...props }: { children: React.ReactNode; href: string; className?: string }) => (
+    <a href={href} {...props}>
       {children}
     </a>
   ),
