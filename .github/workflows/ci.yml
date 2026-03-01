@@ -24,7 +24,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
       - run: npx tsc --noEmit
-      - run: pnpm test
+      - run: pnpm test -- --coverage --coverage.thresholds.lines=50
       - run: pnpm build
 
   backend:
