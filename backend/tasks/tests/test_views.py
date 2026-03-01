@@ -301,3 +301,70 @@ class TestTimeBlockViewSet:
         resp = api_client.delete(f"/api/v1/timeblocks/{tb.pk}/")
         assert resp.status_code == status.HTTP_204_NO_CONTENT
         assert Task.objects.filter(pk=task_pk).exists()
+
+
+@pytest.mark.django_db
+class TestTaskViewEdgeCases:
+    def test_create_task_with_nonexistent_tag_ids(self, api_client):
+        resp = api_client.post(
+            "/api/v1/tasks/",
+            {"title": "Test", "tag_ids": [str(uuid.uuid4())]},
+            format="json",
+        )
+        assert resp.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_reorder_bulk_with_100_items(self, api_client):
+        """Boundary test: exactly 100 items should succeed."""
+        tasks = [TaskFactory(kanban_order=i) for i in range(100)]
+        payload = [
+            {"id": str(t.id), "kanban_order": i, "kanban_status": "todo"}
+            for i, t in enumerate(tasks)
+        ]
+        resp = api_client.patch("/api/v1/tasks/reorder-bulk/", payload, format="json")
+        assert resp.status_code == status.HTTP_200_OK
+
+    def test_reorder_bulk_with_duplicate_ids(self, api_client):
+        task = TaskFactory()
+        payload = [
+            {"id": str(task.id), "kanban_order": 0, "kanban_status": "todo"},
+            {"id": str(task.id), "kanban_order": 1, "kanban_status": "todo"},
+        ]
+        resp = api_client.patch("/api/v1/tasks/reorder-bulk/", payload, format="json")
+        assert resp.status_code == status.HTTP_200_OK
+
+    def test_reorder_bulk_nonexistent_ids_ignored(self, api_client):
+        payload = [
+            {"id": str(uuid.uuid4()), "kanban_order": 0, "kanban_status": "todo"},
+        ]
+        resp = api_client.patch("/api/v1/tasks/reorder-bulk/", payload, format="json")
+        assert resp.status_code == status.HTTP_200_OK
+
+
+@pytest.mark.django_db
+class TestTimeBlockViewEdgeCases:
+    def test_create_timeblock_with_nonexistent_task(self, api_client):
+        resp = api_client.post(
+            "/api/v1/timeblocks/",
+            {
+                "task": str(uuid.uuid4()),
+                "date": "2025-01-15",
+                "start_time": "09:00:00",
+                "end_time": "10:00:00",
+            },
+            format="json",
+        )
+        assert resp.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_create_timeblock_end_before_start_returns_400(self, api_client):
+        task = TaskFactory()
+        resp = api_client.post(
+            "/api/v1/timeblocks/",
+            {
+                "task": str(task.id),
+                "date": "2025-01-15",
+                "start_time": "10:00:00",
+                "end_time": "09:00:00",
+            },
+            format="json",
+        )
+        assert resp.status_code == status.HTTP_400_BAD_REQUEST
