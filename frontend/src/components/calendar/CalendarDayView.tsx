@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { useDroppable } from "@dnd-kit/core";
 import { format } from "date-fns";
 import { useCalendarStore } from "@/stores/calendarStore";
@@ -40,7 +41,7 @@ export default function CalendarDayView() {
   const updateTimeBlock = useUpdateTimeBlock();
   const toggleComplete = useToggleTaskComplete();
 
-  const taskMap = Object.fromEntries(tasks.map((t) => [t.id, t]));
+  const taskMap = useMemo(() => Object.fromEntries(tasks.map((t) => [t.id, t])), [tasks]);
 
   const handleToggleComplete = (id: string, isCompleted: boolean) => {
     toggleComplete.mutate({ id, is_completed: isCompleted });
