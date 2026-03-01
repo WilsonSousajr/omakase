@@ -19,6 +19,15 @@ docker compose logs -f     # Follow logs
 
 Services: frontend :3000 | backend :8000 | postgres :5432
 
+### Pre-commit Setup
+
+```bash
+pip install pre-commit     # Install pre-commit binary
+pre-commit install         # Install git hooks
+```
+
+Pre-commit runs automatically on `git commit`: ruff lint/format for Python, ESLint via lint-staged for TypeScript/TSX, detect-secrets, and standard file checks.
+
 ## Backend Commands
 
 ```bash
@@ -80,7 +89,7 @@ frontend/
 - PostgreSQL port bound to `127.0.0.1` only (not exposed to network)
 - `reorder-bulk` endpoint capped at 100 items per request; uses `transaction.atomic()` + `select_for_update()` for race condition safety
 - Next.js security headers: `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`
-- Pre-commit hooks configured (`.pre-commit-config.yaml`): ruff lint/format, detect-secrets, trailing-whitespace, no-commit-to-branch
+- Pre-commit hooks configured (`.pre-commit-config.yaml`): ruff lint/format, detect-secrets, trailing-whitespace, no-commit-to-branch, frontend ESLint via lint-staged
 
 ## Key Patterns
 
@@ -167,8 +176,9 @@ pnpm test:coverage   # with coverage report
 ### CI Pipeline
 
 GitHub Actions (`.github/workflows/ci.yml`) runs on push to main and PRs:
-- **Frontend job:** pnpm install → lint → `tsc --noEmit` → test → build
+- **Frontend job:** pnpm install → lint → `tsc --noEmit` → test (with `--coverage --coverage.thresholds.lines=50`) → build
 - **Backend job:** PostgreSQL service → pip install → `ruff check` + `ruff format --check` → migrate → pytest with `--cov-fail-under=60`
+- **Concurrency:** `ci-${{ github.ref }}` group with `cancel-in-progress: true` — prevents wasted CI minutes on rapid pushes
 
 ### Test Patterns
 
@@ -221,6 +231,7 @@ Types: feat, fix, test, chore, docs, refactor, ci, style
 - **Frontend hook tests**: Files using JSX wrapper functions must be `.tsx`, not `.ts`
 - **Frontend dnd-kit mocks**: Must include `useDroppable` in `@dnd-kit/core` mock for KanbanColumn
 - **Frontend "Focus" text**: Appears in both tab and timer label — use `getAllByText` not `getByText`
+- **Frontend next/link mock**: Must forward all props (especially `className`) via rest spread — `({ children, href, ...props }) => <a href={href} {...props}>{children}</a>` — otherwise `toHaveClass()` assertions fail
 - **factory-boy deprecation**: `TaskFactory._after_postgeneration` save warning — add `skip_postgeneration_save=True` in Meta to suppress
 
 ## Local Environment Notes
