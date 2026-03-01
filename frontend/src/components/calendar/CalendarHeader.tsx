@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useCalendarStore } from "@/stores/calendarStore";
@@ -12,6 +13,12 @@ export default function CalendarHeader() {
   const goToToday = useCalendarStore((s) => s.goToToday);
   const goForward = useCalendarStore((s) => s.goForward);
   const goBack = useCalendarStore((s) => s.goBack);
+
+  const [dateLabel, setDateLabel] = useState("");
+
+  useEffect(() => {
+    setDateLabel(format(selectedDate, "MMMM d, yyyy"));
+  }, [selectedDate]);
 
   return (
     <div className="flex items-center justify-between border-b border-[var(--color-border)] px-5 py-3">
@@ -35,7 +42,7 @@ export default function CalendarHeader() {
           <ChevronRight className="h-4 w-4" />
         </button>
         <span className="text-sm font-medium text-[var(--color-text-primary)]">
-          {format(selectedDate, "MMMM d, yyyy")}
+          {dateLabel}
         </span>
       </div>
 
