@@ -78,7 +78,9 @@ frontend/
 - DRF uses `AllowAny` permission by default (switch to `IsAuthenticated` when auth is implemented); `SessionAuthentication` is pre-configured
 - CORS only allows explicit origins (no `CORS_ALLOW_ALL_ORIGINS`)
 - PostgreSQL port bound to `127.0.0.1` only (not exposed to network)
-- `reorder-bulk` endpoint capped at 100 items per request
+- `reorder-bulk` endpoint capped at 100 items per request; uses `transaction.atomic()` + `select_for_update()` for race condition safety
+- Next.js security headers: `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`
+- Pre-commit hooks configured (`.pre-commit-config.yaml`): ruff lint/format, detect-secrets, trailing-whitespace, no-commit-to-branch
 
 ## Key Patterns
 
@@ -94,6 +96,10 @@ frontend/
 - `AudioContext` reused via `useRef` in PomodoroTimer (not recreated per notification)
 - Markdown preview uses `rehype-sanitize` to prevent XSS
 - Tag model `color` field validated with hex color regex
+- Zustand selectors: use `useStore((s) => s.field)` not destructuring — prevents over-subscription and unnecessary re-renders
+- `TaskCard` wrapped in `React.memo` — prevents re-render of every card when any sibling changes
+- `taskMap` in calendar views memoized with `useMemo` — prevents object recreation on every render
+- `TimeBlockSerializer.validate()` rejects `end_time <= start_time` at serializer level (400, not DB IntegrityError)
 
 ## Drag & Drop (Plan Mode)
 
@@ -108,7 +114,7 @@ frontend/
 - Time blocks are colored by task priority (gray/amber/orange/red), not a fixed color
 - Priority badge shown inline next to task title
 - Bottom resize handle (visible on hover) allows dragging to change `end_time` — snaps to 15-min increments, min 15 min, max 22:00
-- Resize uses native mouse events (mousedown/mousemove/mouseup), not dnd-kit
+- Resize uses native mouse events (mousedown/mousemove/mouseup), not dnd-kit; height driven by React state (not DOM manipulation)
 
 ## Plan ↔ Focus Mode Sync
 
@@ -161,8 +167,8 @@ pnpm test:coverage   # with coverage report
 ### CI Pipeline
 
 GitHub Actions (`.github/workflows/ci.yml`) runs on push to main and PRs:
-- **Frontend job:** pnpm install → lint → test → build
-- **Backend job:** PostgreSQL service → pip install → migrate → pytest with coverage
+- **Frontend job:** pnpm install → lint → `tsc --noEmit` → test → build
+- **Backend job:** PostgreSQL service → pip install → `ruff check` + `ruff format --check` → migrate → pytest with `--cov-fail-under=60`
 
 ### Test Patterns
 
@@ -211,7 +217,7 @@ Types: feat, fix, test, chore, docs, refactor, ci, style
 
 - **Backend UUID comparison**: DRF responses return UUID objects, not strings — use `str()` when comparing: `str(resp.data["task"]) == str(task.pk)`
 - **Backend hex validation**: `TagFactory(color="notacolor")` hits DB varchar(7) limit before Django validation — use `TagFactory.build()` + `full_clean()` for validator tests
-- **Backend TimeBlock constraint**: `end_time <= start_time` raises `IntegrityError` at DB level (not serializer 400) — test with `pytest.raises(IntegrityError)`
+- **Backend TimeBlock constraint**: `end_time <= start_time` is now caught by serializer `validate()` (returns 400). DB constraint still exists as a safety net — test the serializer path with `resp.status_code == 400`
 - **Frontend hook tests**: Files using JSX wrapper functions must be `.tsx`, not `.ts`
 - **Frontend dnd-kit mocks**: Must include `useDroppable` in `@dnd-kit/core` mock for KanbanColumn
 - **Frontend "Focus" text**: Appears in both tab and timer label — use `getAllByText` not `getByText`
