@@ -316,10 +316,7 @@ class TestTaskViewEdgeCases:
     def test_reorder_bulk_with_100_items(self, api_client):
         """Boundary test: exactly 100 items should succeed."""
         tasks = [TaskFactory(kanban_order=i) for i in range(100)]
-        payload = [
-            {"id": str(t.id), "kanban_order": i, "kanban_status": "todo"}
-            for i, t in enumerate(tasks)
-        ]
+        payload = [{"id": str(t.id), "kanban_order": i, "kanban_status": "todo"} for i, t in enumerate(tasks)]
         resp = api_client.patch("/api/v1/tasks/reorder-bulk/", payload, format="json")
         assert resp.status_code == status.HTTP_200_OK
 
