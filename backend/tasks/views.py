@@ -58,10 +58,7 @@ class TaskViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         task_ids = [item["id"] for item in serializer.validated_data]
         with transaction.atomic():
-            tasks_by_id = {
-                t.id: t
-                for t in Task.objects.filter(id__in=task_ids).select_for_update()
-            }
+            tasks_by_id = {t.id: t for t in Task.objects.filter(id__in=task_ids).select_for_update()}
             to_update = []
             for item in serializer.validated_data:
                 task = tasks_by_id.get(item["id"])

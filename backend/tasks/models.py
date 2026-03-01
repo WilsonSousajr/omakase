@@ -49,12 +49,12 @@ class Task(models.Model):
     title = models.CharField(max_length=500)
     description = models.TextField(blank=True, default="")
     notes = models.TextField(blank=True, default="")
-    priority = models.CharField(
-        max_length=10, choices=PriorityChoices.choices, default=PriorityChoices.MEDIUM
-    )
+    priority = models.CharField(max_length=10, choices=PriorityChoices.choices, default=PriorityChoices.MEDIUM)
     area = models.CharField(max_length=20, choices=AreaChoices.choices, default=AreaChoices.WORK)
     kanban_status = models.CharField(
-        max_length=20, choices=KanbanStatusChoices.choices, default=KanbanStatusChoices.TODO,
+        max_length=20,
+        choices=KanbanStatusChoices.choices,
+        default=KanbanStatusChoices.TODO,
         db_index=True,
     )
     tags = models.ManyToManyField(Tag, blank=True, related_name="tasks")
@@ -92,16 +92,16 @@ class Task(models.Model):
             # is_completed was just changed (checkbox clicked)
             if self.is_completed:
                 # Checked: move to done
-                self.kanban_status = 'done'
+                self.kanban_status = "done"
                 if not self.completed_at:
                     self.completed_at = timezone.now()
             else:
                 # Unchecked: move to todo and clear timestamp
-                self.kanban_status = 'todo'
+                self.kanban_status = "todo"
                 self.completed_at = None
         elif status_changed:
             # kanban_status was just changed (drag & drop)
-            if self.kanban_status == 'done':
+            if self.kanban_status == "done":
                 # Moved to done: check it
                 self.is_completed = True
                 if not self.completed_at:
@@ -110,17 +110,17 @@ class Task(models.Model):
                 # Moved out of done: uncheck it
                 self.is_completed = False
                 self.completed_at = None
-        elif self.is_completed and self.kanban_status != 'done':
+        elif self.is_completed and self.kanban_status != "done":
             # Ensure sync on create
-            self.kanban_status = 'done'
+            self.kanban_status = "done"
             if not self.completed_at:
                 self.completed_at = timezone.now()
-        elif self.kanban_status == 'done' and not self.is_completed:
+        elif self.kanban_status == "done" and not self.is_completed:
             # Ensure sync on create
             self.is_completed = True
             if not self.completed_at:
                 self.completed_at = timezone.now()
-        elif not self.is_completed and self.kanban_status != 'done':
+        elif not self.is_completed and self.kanban_status != "done":
             # Both false: clear timestamp
             self.completed_at = None
 
