@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { X, AlertCircle } from "lucide-react";
 import api from "@/lib/api";
+import { TOAST_DURATION_MS } from "@/lib/constants";
 import type { AxiosError } from "axios";
 
 interface ToastMessage {
@@ -33,23 +34,33 @@ api.interceptors.response.use(
 
 export default function Toast() {
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
+  const timeoutIds = useRef<Map<number, ReturnType<typeof setTimeout>>>(new Map());
 
   const addToast = useCallback((msg: ToastMessage) => {
     setToasts((prev) => [...prev, msg]);
-    setTimeout(() => {
+    const timeoutId = setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== msg.id));
-    }, 4000);
+      timeoutIds.current.delete(msg.id);
+    }, TOAST_DURATION_MS);
+    timeoutIds.current.set(msg.id, timeoutId);
   }, []);
 
   useEffect(() => {
     listeners.add(addToast);
     return () => {
       listeners.delete(addToast);
+      timeoutIds.current.forEach((id) => clearTimeout(id));
+      timeoutIds.current.clear();
     };
   }, [addToast]);
 
   const dismiss = (id: number) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
+    const timeoutId = timeoutIds.current.get(id);
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+      timeoutIds.current.delete(id);
+    }
   };
 
   if (toasts.length === 0) return null;
@@ -59,13 +70,13 @@ export default function Toast() {
       {toasts.map((toast) => (
         <div
           key={toast.id}
-          className="flex items-center gap-2 rounded-lg border border-red-900/50 bg-red-950/90 px-4 py-3 text-sm text-red-300 shadow-lg backdrop-blur"
+          className="flex items-center gap-2 rounded-2xl border border-[#ef4444]/20 bg-[var(--color-surface-elevated)] px-4 py-3 text-sm text-[#ef4444] shadow-lg backdrop-blur"
         >
           <AlertCircle className="h-4 w-4 shrink-0" />
           <span className="flex-1">{toast.message}</span>
           <button
             onClick={() => dismiss(toast.id)}
-            className="shrink-0 rounded p-0.5 hover:bg-red-900/50"
+            className="shrink-0 rounded-lg p-0.5 hover:bg-[#ef4444]/10"
           >
             <X className="h-3 w-3" />
           </button>

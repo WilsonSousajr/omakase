@@ -19,7 +19,7 @@ export default function TaskCard({ task, onEdit, onDelete, onToggleComplete }: T
   return (
     <div
       className={cn(
-        "group flex items-start gap-2 rounded-lg border border-zinc-800 bg-zinc-900 p-3 transition-colors hover:border-zinc-700"
+        "group flex items-start gap-2 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 transition-all duration-300 hover:bg-[var(--color-surface-hover)] hover:border-[var(--color-border-hover)]"
       )}
     >
       {/* Checkbox */}
@@ -44,21 +44,21 @@ export default function TaskCard({ task, onEdit, onDelete, onToggleComplete }: T
         </div>
       </button>
 
-      <div className="mt-0.5 text-zinc-600">
+      <div className="mt-0.5 text-[var(--color-text-faint)]">
         <GripVertical className="h-4 w-4" />
       </div>
 
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
           <span className={cn(
-            "truncate text-sm font-medium text-zinc-200",
+            "truncate text-sm font-medium text-[var(--color-text-primary)]",
             task.is_completed && "line-through opacity-60"
           )}>
             {task.title}
           </span>
           {priority && (
             <span
-              className="shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium"
+              className="shrink-0 rounded-lg px-1.5 py-0.5 text-[10px] font-medium"
               style={{
                 backgroundColor: priority.color + "20",
                 color: priority.color,
@@ -70,7 +70,7 @@ export default function TaskCard({ task, onEdit, onDelete, onToggleComplete }: T
         </div>
 
         {task.description && (
-          <p className="mt-0.5 truncate text-xs text-zinc-500">
+          <p className="mt-0.5 truncate text-xs text-[var(--color-text-muted)]">
             {task.description}
           </p>
         )}
@@ -79,7 +79,7 @@ export default function TaskCard({ task, onEdit, onDelete, onToggleComplete }: T
           {task.tags.map((tag) => (
             <span
               key={tag.id}
-              className="rounded px-1.5 py-0.5 text-[10px]"
+              className="rounded-lg px-1.5 py-0.5 text-[10px]"
               style={{
                 backgroundColor: tag.color + "20",
                 color: tag.color,
@@ -89,7 +89,7 @@ export default function TaskCard({ task, onEdit, onDelete, onToggleComplete }: T
             </span>
           ))}
           {task.scheduled_date && (
-            <span className="flex items-center gap-1 text-[10px] text-zinc-500">
+            <span className="flex items-center gap-1 text-[10px] text-[var(--color-text-muted)]">
               <Calendar className="h-3 w-3" />
               {format(new Date(task.scheduled_date + "T00:00:00"), "MMM d")}
             </span>
@@ -101,14 +101,14 @@ export default function TaskCard({ task, onEdit, onDelete, onToggleComplete }: T
         <button
           onClick={() => onEdit(task)}
           onPointerDown={(e) => e.stopPropagation()}
-          className="rounded p-1 text-zinc-500 hover:bg-zinc-800 hover:text-zinc-300"
+          className="rounded-lg p-1 text-[var(--color-text-faint)] hover:bg-white/5 hover:text-[var(--color-text-secondary)]"
         >
           <Pencil className="h-3.5 w-3.5" />
         </button>
         <button
           onClick={() => onDelete(task.id)}
           onPointerDown={(e) => e.stopPropagation()}
-          className="rounded p-1 text-zinc-500 hover:bg-red-900/50 hover:text-red-400"
+          className="rounded-lg p-1 text-[var(--color-text-faint)] hover:bg-[#ef4444]/10 hover:text-[#ef4444]"
         >
           <Trash2 className="h-3.5 w-3.5" />
         </button>

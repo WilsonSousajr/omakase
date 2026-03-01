@@ -23,18 +23,18 @@ export default function KanbanColumn({ status, label, tasks }: KanbanColumnProps
     <div
       ref={setNodeRef}
       className={cn(
-        "flex flex-1 flex-col rounded-xl border border-zinc-800 bg-zinc-950/50 transition-colors",
-        isOver && "border-indigo-500/30 bg-indigo-500/5"
+        "flex flex-1 flex-col rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg)]/50 transition-all duration-300",
+        isOver && "border-[var(--color-border-hover)] bg-white/5"
       )}
     >
-      <div className="flex items-center gap-2 border-b border-zinc-800 px-4 py-3">
-        <h3 className="text-sm font-medium text-zinc-300">{label}</h3>
-        <span className="rounded-full bg-zinc-800 px-2 py-0.5 text-[10px] text-zinc-400">
+      <div className="flex items-center gap-2 border-b border-[var(--color-border)] px-4 py-3">
+        <h3 className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">{label}</h3>
+        <span className="rounded-lg bg-[var(--color-surface)] px-2 py-0.5 text-[10px] text-[var(--color-text-muted)]">
           {tasks.length}
         </span>
       </div>
 
-      <div className="flex-1 space-y-2 overflow-auto p-3">
+      <div className="flex-1 space-y-3 overflow-auto p-4">
         <SortableContext
           items={tasks.map((t) => t.id)}
           strategy={verticalListSortingStrategy}
@@ -45,7 +45,7 @@ export default function KanbanColumn({ status, label, tasks }: KanbanColumnProps
         </SortableContext>
 
         {tasks.length === 0 && (
-          <div className="flex items-center justify-center py-8 text-xs text-zinc-600">
+          <div className="flex items-center justify-center py-8 text-xs text-[var(--color-text-faint)]">
             Drop tasks here
           </div>
         )}

@@ -41,7 +41,7 @@ export default function TaskList() {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="border-b border-zinc-800 p-3">
+      <div className="border-b border-[var(--color-border)] p-4">
         <TaskFilters
           search={search}
           onSearchChange={setSearch}
@@ -50,18 +50,18 @@ export default function TaskList() {
         />
       </div>
 
-      <div className="flex-1 space-y-2 overflow-auto p-3">
+      <div className="flex-1 space-y-3 overflow-auto p-4">
         {isLoading ? (
           <div className="space-y-2">
             {[1, 2, 3].map((i) => (
               <div
                 key={i}
-                className="h-20 animate-pulse rounded-lg border border-zinc-800 bg-zinc-900"
+                className="h-20 animate-pulse rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)]"
               />
             ))}
           </div>
         ) : tasks.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 text-zinc-500">
+          <div className="flex flex-col items-center justify-center py-12 text-[var(--color-text-muted)]">
             <p className="text-sm">No tasks yet</p>
             <p className="text-xs">Click &quot;New Task&quot; to get started</p>
           </div>

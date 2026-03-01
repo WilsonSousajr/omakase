@@ -7,6 +7,7 @@ import { useCreateTimeBlock, useUpdateTimeBlock } from "@/hooks/useTimeBlocks";
 import { useUpdateTask } from "@/hooks/useTasks";
 import type { Task } from "@/types/task";
 import type { TimeBlock } from "@/types/timeblock";
+import { DRAG_ACTIVATION_DISTANCE, DEFAULT_TIMEBLOCK_MINUTES } from "@/lib/constants";
 
 function addMinutesToTime(time: string, minutes: number): string {
   const [h, m] = time.split(":").map(Number);
@@ -22,10 +23,10 @@ export default function PlanPage() {
   const updateTask = useUpdateTask();
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
+    useSensor(PointerSensor, { activationConstraint: { distance: DRAG_ACTIVATION_DISTANCE } })
   );
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over) return;
 
@@ -41,16 +42,20 @@ export default function PlanPage() {
     const { date, time } = overData;
 
     if (activeData.type === "task") {
-      const duration = activeData.task.estimated_minutes || 30;
-      createTimeBlock.mutate({
-        task: activeData.task.id,
-        date,
-        start_time: time + ":00",
-        end_time: addMinutesToTime(time, duration),
-      });
-      // Set scheduled_date so the task appears in focus mode
-      if (activeData.task.scheduled_date !== date) {
-        updateTask.mutate({ id: activeData.task.id, scheduled_date: date });
+      const duration = activeData.task.estimated_minutes || DEFAULT_TIMEBLOCK_MINUTES;
+      try {
+        await createTimeBlock.mutateAsync({
+          task: activeData.task.id,
+          date,
+          start_time: time + ":00",
+          end_time: addMinutesToTime(time, duration),
+        });
+        // Set scheduled_date so the task appears in focus mode
+        if (activeData.task.scheduled_date !== date) {
+          await updateTask.mutateAsync({ id: activeData.task.id, scheduled_date: date });
+        }
+      } catch {
+        // Errors handled by global toast interceptor
       }
     } else if (activeData.type === "timeblock") {
       const block = activeData.block;
@@ -70,7 +75,7 @@ export default function PlanPage() {
   return (
     <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
       <div className="flex h-full">
-        <div className="w-[400px] shrink-0 border-r border-zinc-800">
+        <div className="w-[400px] shrink-0 border-r border-[var(--color-border)]">
           <TaskList />
         </div>
         <div className="flex-1">

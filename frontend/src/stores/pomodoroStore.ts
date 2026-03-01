@@ -1,12 +1,9 @@
 import { create } from "zustand";
+import { POMODORO_DURATIONS, POMODOROS_BEFORE_LONG_BREAK } from "@/lib/constants";
 
 type SessionType = "focus" | "short_break" | "long_break";
 
-const DURATIONS: Record<SessionType, number> = {
-  focus: 25 * 60,
-  short_break: 5 * 60,
-  long_break: 15 * 60,
-};
+const DURATIONS = POMODORO_DURATIONS as Record<SessionType, number>;
 
 interface PomodoroState {
   sessionType: SessionType;
@@ -66,7 +63,7 @@ export const usePomodoroStore = create<PomodoroState>((set, get) => ({
       const isWork = sessionType === "focus";
       const newCompleted = isWork ? completedPomodoros + 1 : completedPomodoros;
       const nextType: SessionType = isWork
-        ? newCompleted % 4 === 0
+        ? newCompleted % POMODOROS_BEFORE_LONG_BREAK === 0
           ? "long_break"
           : "short_break"
         : "focus";

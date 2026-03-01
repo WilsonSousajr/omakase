@@ -1,6 +1,14 @@
 import uuid
 
+from django.core.validators import RegexValidator
 from django.db import models
+
+from .constants import DEFAULT_TAG_COLOR
+
+hex_color_validator = RegexValidator(
+    regex=r"^#[0-9a-fA-F]{6}$",
+    message="Color must be a valid hex color (e.g. #ff0000)",
+)
 
 
 class AreaChoices(models.TextChoices):
@@ -25,7 +33,7 @@ class KanbanStatusChoices(models.TextChoices):
 class Tag(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=100)
-    color = models.CharField(max_length=7, default="#6366f1")
+    color = models.CharField(max_length=7, default=DEFAULT_TAG_COLOR, validators=[hex_color_validator])
     area = models.CharField(max_length=20, choices=AreaChoices.choices, default=AreaChoices.WORK)
     created_at = models.DateTimeField(auto_now_add=True)
 

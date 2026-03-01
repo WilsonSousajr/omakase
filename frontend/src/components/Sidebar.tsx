@@ -24,18 +24,18 @@ export default function Sidebar() {
   return (
     <aside
       className={cn(
-        "flex flex-col border-r border-zinc-800 bg-zinc-950 transition-all duration-200",
+        "flex flex-col border-r border-[var(--color-border)] bg-[var(--color-bg)] transition-all duration-200",
         sidebarOpen ? "w-48" : "w-14"
       )}
     >
-      <div className="flex items-center gap-2 border-b border-zinc-800 p-3">
-        <LayoutDashboard className="h-5 w-5 shrink-0 text-indigo-400" />
+      <div className="flex items-center gap-2 border-b border-[var(--color-border)] p-3">
+        <LayoutDashboard className="h-5 w-5 shrink-0 text-[var(--color-text-secondary)]" />
         {sidebarOpen && (
-          <span className="text-sm font-semibold text-zinc-100">Omakase</span>
+          <span className="text-sm font-semibold text-[var(--color-text-primary)]">Omakase</span>
         )}
         <button
           onClick={toggleSidebar}
-          className="ml-auto rounded p-1 text-zinc-500 hover:bg-zinc-800 hover:text-zinc-300"
+          className="ml-auto rounded-lg p-1 text-[var(--color-text-faint)] hover:bg-[var(--color-surface)] hover:text-[var(--color-text-secondary)]"
         >
           {sidebarOpen ? (
             <ChevronLeft className="h-4 w-4" />
@@ -53,10 +53,10 @@ export default function Sidebar() {
               key={href}
               href={href}
               className={cn(
-                "flex items-center gap-2 rounded-md px-2.5 py-2 text-sm transition-colors",
+                "flex items-center gap-2 rounded-xl px-2.5 py-2 text-sm transition-colors",
                 active
-                  ? "bg-indigo-500/15 text-indigo-400"
-                  : "text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200"
+                  ? "bg-[var(--color-surface-active)] text-[var(--color-text-primary)]"
+                  : "text-[var(--color-text-muted)] hover:bg-[var(--color-surface)] hover:text-[var(--color-text-secondary)]"
               )}
             >
               <Icon className="h-4 w-4 shrink-0" />
