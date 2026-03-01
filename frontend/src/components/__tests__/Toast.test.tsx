@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, act } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import { TOAST_DURATION_MS } from "@/lib/constants";
 
 // We need to import Toast after mocking api to avoid the interceptor import side effect

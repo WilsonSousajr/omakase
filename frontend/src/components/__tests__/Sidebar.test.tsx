@@ -5,7 +5,7 @@ import { useUIStore } from "@/stores/uiStore";
 import Sidebar from "../Sidebar";
 
 vi.mock("next/link", () => ({
-  default: ({ children, href, ...props }: any) => (
+  default: ({ children, href, ...props }: Record<string, unknown>) => (
     <a href={href} {...props}>
       {children}
     </a>
