@@ -5,6 +5,7 @@ import Providers from "@/components/Providers";
 import Sidebar from "@/components/Sidebar";
 import TopBar from "@/components/TopBar";
 import Toast from "@/components/Toast";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import KeyboardShortcutProvider from "@/components/KeyboardShortcutProvider";
 
 const outfit = Outfit({ subsets: ["latin"] });
@@ -29,7 +30,9 @@ export default function RootLayout({
             <Sidebar />
             <div className="flex flex-1 flex-col overflow-hidden">
               <TopBar />
-              <main className="flex-1 overflow-auto">{children}</main>
+              <main className="flex-1 overflow-auto">
+                <ErrorBoundary>{children}</ErrorBoundary>
+              </main>
             </div>
             <Toast />
           </KeyboardShortcutProvider>

@@ -39,6 +39,15 @@ export default function TaskForm({ editTask, onClose }: TaskFormProps) {
       setScheduledDate(editTask.scheduled_date || "");
       setDueDate(editTask.due_date || "");
       setEstimatedMinutes(editTask.estimated_minutes?.toString() || "");
+    } else {
+      setTitle("");
+      setDescription("");
+      setPriority("medium");
+      setArea("work");
+      setSelectedTagIds([]);
+      setScheduledDate("");
+      setDueDate("");
+      setEstimatedMinutes("");
     }
   }, [editTask]);
 

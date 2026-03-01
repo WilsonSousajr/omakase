@@ -39,8 +39,8 @@ export function useTodayTasks() {
   return useQuery({
     queryKey: ["tasks", "today"],
     queryFn: async () => {
-      const { data } = await api.get<Task[]>("/tasks/today/");
-      return data;
+      const { data } = await api.get<PaginatedResponse<Task> | Task[]>("/tasks/today/");
+      return Array.isArray(data) ? data : data.results;
     },
   });
 }

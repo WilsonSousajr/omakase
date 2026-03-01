@@ -3,7 +3,9 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import rehypeSanitize from "rehype-sanitize";
 import { cn } from "@/lib/utils";
+import { NOTES_DEBOUNCE_MS } from "@/lib/constants";
 import { useUpdateTask } from "@/hooks/useTasks";
 
 interface MarkdownEditorProps {
@@ -16,6 +18,11 @@ export default function MarkdownEditor({ taskId, initialContent }: MarkdownEdito
   const [tab, setTab] = useState<"write" | "preview">("write");
   const updateTask = useUpdateTask();
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const mutateRef = useRef(updateTask.mutate);
+
+  useEffect(() => {
+    mutateRef.current = updateTask.mutate;
+  }, [updateTask.mutate]);
 
   useEffect(() => {
     setContent(initialContent);
@@ -23,15 +30,15 @@ export default function MarkdownEditor({ taskId, initialContent }: MarkdownEdito
 
   const saveNotes = useCallback(
     (notes: string) => {
-      updateTask.mutate({ id: taskId, notes });
+      mutateRef.current({ id: taskId, notes });
     },
-    [taskId, updateTask]
+    [taskId]
   );
 
   const handleChange = (value: string) => {
     setContent(value);
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => saveNotes(value), 500);
+    debounceRef.current = setTimeout(() => saveNotes(value), NOTES_DEBOUNCE_MS);
   };
 
   useEffect(() => {
@@ -69,7 +76,7 @@ export default function MarkdownEditor({ taskId, initialContent }: MarkdownEdito
       ) : (
         <div className="prose prose-sm prose-invert max-w-none p-3 prose-headings:text-[var(--color-text-primary)] prose-p:text-[var(--color-text-secondary)] prose-a:text-[var(--color-text-primary)] prose-a:underline prose-strong:text-[var(--color-text-primary)] prose-code:text-[var(--color-text-secondary)] prose-pre:bg-[var(--color-surface)]">
           {content ? (
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+            <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeSanitize]}>{content}</ReactMarkdown>
           ) : (
             <p className="text-[var(--color-text-faint)]">Nothing to preview</p>
           )}

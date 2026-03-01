@@ -3,6 +3,7 @@
 import { useEffect, useRef, useCallback } from "react";
 import { Pause, Play, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { POMODORO_DURATIONS } from "@/lib/constants";
 import { usePomodoroStore } from "@/stores/pomodoroStore";
 import { useCreatePomodoroSession, useCompletePomodoroSession } from "@/hooks/usePomodoro";
 import { useUIStore } from "@/stores/uiStore";
@@ -25,11 +26,7 @@ const RING_COLORS = {
   long_break: "stroke-[#a3a3a3]",
 } as const;
 
-const DURATIONS: Record<string, number> = {
-  focus: 25 * 60,
-  short_break: 5 * 60,
-  long_break: 15 * 60,
-};
+const DURATIONS = POMODORO_DURATIONS;
 
 export default function PomodoroTimer() {
   const {
@@ -54,9 +51,17 @@ export default function PomodoroTimer() {
     completeSessionRef.current = completeSession.mutate;
   }, [completeSession.mutate]);
 
+  const audioCtxRef = useRef<AudioContext | null>(null);
+
   const playNotification = useCallback(() => {
     try {
-      const ctx = new AudioContext();
+      if (!audioCtxRef.current) {
+        audioCtxRef.current = new AudioContext();
+      }
+      const ctx = audioCtxRef.current;
+      if (ctx.state === "suspended") {
+        ctx.resume();
+      }
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.connect(gain);
@@ -69,6 +74,12 @@ export default function PomodoroTimer() {
     } catch {
       // Audio not available
     }
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      audioCtxRef.current?.close();
+    };
   }, []);
 
   useEffect(() => {

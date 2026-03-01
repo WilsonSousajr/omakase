@@ -214,3 +214,7 @@ Toast uses elevated surface bg with red accent text:
 rounded-2xl border border-[#ef4444]/20 bg-[var(--color-surface-elevated)]
 text-[#ef4444] shadow-lg
 ```
+
+### Error Boundary
+
+`ErrorBoundary` component wraps `<main>` content in root layout. On render error, shows centered message with "Try Again" button (primary button style). Uses class component (`getDerivedStateFromError`).

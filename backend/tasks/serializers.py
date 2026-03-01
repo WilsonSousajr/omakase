@@ -1,3 +1,4 @@
+from django.utils import timezone
 from rest_framework import serializers
 
 from .models import Tag, Task, TimeBlock
@@ -30,7 +31,16 @@ class TaskListSerializer(serializers.ModelSerializer):
             "tags", "tag_ids", "scheduled_date", "due_date", "estimated_minutes",
             "kanban_order", "is_completed", "completed_at", "created_at", "updated_at",
         ]
-        read_only_fields = ["id", "created_at", "updated_at"]
+        read_only_fields = ["id", "completed_at", "created_at", "updated_at"]
+
+    def update(self, instance, validated_data):
+        is_completed = validated_data.get("is_completed")
+        if is_completed is not None:
+            if is_completed and not instance.is_completed:
+                validated_data["completed_at"] = timezone.now()
+            elif not is_completed and instance.is_completed:
+                validated_data["completed_at"] = None
+        return super().update(instance, validated_data)
 
 
 class TaskSerializer(TaskListSerializer):

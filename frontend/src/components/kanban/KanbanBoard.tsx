@@ -10,13 +10,15 @@ import {
   closestCorners,
 } from "@dnd-kit/core";
 import { useCallback, useEffect, useState } from "react";
-import { KANBAN_STATUSES, type KanbanStatus } from "@/lib/constants";
+import { KANBAN_STATUSES, DRAG_ACTIVATION_DISTANCE, type KanbanStatus } from "@/lib/constants";
 import { useTodayTasks, useReorderTasks, useUpdateTask } from "@/hooks/useTasks";
 import type { Task } from "@/types/task";
 import KanbanColumn from "./KanbanColumn";
 
+const EMPTY_TASKS: Task[] = [];
+
 export default function KanbanBoard() {
-  const { data: serverTasks = [], isLoading } = useTodayTasks();
+  const { data: serverTasks = EMPTY_TASKS, isLoading } = useTodayTasks();
   const reorderTasks = useReorderTasks();
   const updateTask = useUpdateTask();
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -26,7 +28,7 @@ export default function KanbanBoard() {
   }, [serverTasks]);
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
+    useSensor(PointerSensor, { activationConstraint: { distance: DRAG_ACTIVATION_DISTANCE } })
   );
 
   const getTasksByStatus = useCallback(
@@ -70,16 +72,19 @@ export default function KanbanBoard() {
       kanban_status: t.kanban_status,
     }));
 
-    reorderTasks.mutate(reorderItems);
+    const snapshot = [...tasks];
+    reorderTasks.mutate(reorderItems, {
+      onError: () => setTasks(snapshot),
+    });
 
     // Also update the specific task's status in case it moved columns
     const movedTask = tasks.find((t) => t.id === active.id);
     const originalTask = serverTasks.find((t) => t.id === active.id);
     if (movedTask && originalTask && movedTask.kanban_status !== originalTask.kanban_status) {
-      updateTask.mutate({
-        id: movedTask.id,
-        kanban_status: movedTask.kanban_status,
-      });
+      updateTask.mutate(
+        { id: movedTask.id, kanban_status: movedTask.kanban_status },
+        { onError: () => setTasks(snapshot) },
+      );
     }
   };
 

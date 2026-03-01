@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { X, AlertCircle } from "lucide-react";
 import api from "@/lib/api";
+import { TOAST_DURATION_MS } from "@/lib/constants";
 import type { AxiosError } from "axios";
 
 interface ToastMessage {
@@ -33,23 +34,33 @@ api.interceptors.response.use(
 
 export default function Toast() {
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
+  const timeoutIds = useRef<Map<number, ReturnType<typeof setTimeout>>>(new Map());
 
   const addToast = useCallback((msg: ToastMessage) => {
     setToasts((prev) => [...prev, msg]);
-    setTimeout(() => {
+    const timeoutId = setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== msg.id));
-    }, 4000);
+      timeoutIds.current.delete(msg.id);
+    }, TOAST_DURATION_MS);
+    timeoutIds.current.set(msg.id, timeoutId);
   }, []);
 
   useEffect(() => {
     listeners.add(addToast);
     return () => {
       listeners.delete(addToast);
+      timeoutIds.current.forEach((id) => clearTimeout(id));
+      timeoutIds.current.clear();
     };
   }, [addToast]);
 
   const dismiss = (id: number) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
+    const timeoutId = timeoutIds.current.get(id);
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+      timeoutIds.current.delete(id);
+    }
   };
 
   if (toasts.length === 0) return null;
