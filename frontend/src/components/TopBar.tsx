@@ -6,7 +6,7 @@ import { Plus } from "lucide-react";
 import { useUIStore } from "@/stores/uiStore";
 
 export default function TopBar() {
-  const { openModal } = useUIStore();
+  const openModal = useUIStore((s) => s.openModal);
   const [dateStr, setDateStr] = useState("");
 
   useEffect(() => {

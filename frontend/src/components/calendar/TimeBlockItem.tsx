@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef } from "react";
+import { useCallback, useRef, useState, useEffect } from "react";
 import type { TimeBlock } from "@/types/timeblock";
 import type { Task } from "@/types/task";
 import { PRIORITIES } from "@/lib/constants";
@@ -54,24 +54,19 @@ export default function TimeBlockItem({
   const resizing = useRef(false);
   const startY = useRef(0);
   const startEndMin = useRef(endMin);
+  const [resizeHeight, setResizeHeight] = useState<number | null>(null);
 
   const handleResizeMove = useCallback(
     (e: MouseEvent) => {
       if (!resizing.current) return;
       const deltaY = e.clientY - startY.current;
-      // Each slotHeight pixels = 30 minutes
       const deltaMin = Math.round(deltaY / (slotHeight / 2)) * 15;
       const newEnd = Math.max(startMin + 15, startEndMin.current + deltaMin);
-      // Clamp to 22:00
       const clamped = Math.min(newEnd, 22 * 60);
-      // Update block height visually via style
-      const el = document.getElementById(`timeblock-${block.id}`);
-      if (el) {
-        const newSlots = (clamped - startMin) / 30;
-        el.style.height = `${newSlots * slotHeight}px`;
-      }
+      const newSlots = (clamped - startMin) / 30;
+      setResizeHeight(newSlots * slotHeight);
     },
-    [block.id, slotHeight, startMin]
+    [slotHeight, startMin]
   );
 
   const handleResizeUp = useCallback(
@@ -81,6 +76,7 @@ export default function TimeBlockItem({
       document.removeEventListener("mouseup", handleResizeUp);
       document.body.style.cursor = "";
       document.body.style.userSelect = "";
+      setResizeHeight(null);
 
       const deltaY = e.clientY - startY.current;
       const deltaMin = Math.round(deltaY / (slotHeight / 2)) * 15;
@@ -106,8 +102,15 @@ export default function TimeBlockItem({
     [endMin, handleResizeMove, handleResizeUp]
   );
 
+  useEffect(() => {
+    return () => {
+      document.removeEventListener("mousemove", handleResizeMove);
+      document.removeEventListener("mouseup", handleResizeUp);
+    };
+  }, [handleResizeMove, handleResizeUp]);
+
   const style = {
-    height: `${height}px`,
+    height: `${resizeHeight ?? height}px`,
     transform: transform
       ? `translate(${transform.x}px, ${transform.y}px)`
       : undefined,

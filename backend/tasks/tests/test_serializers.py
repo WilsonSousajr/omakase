@@ -7,6 +7,7 @@ from tasks.serializers import (
     TaskListSerializer,
     TaskReorderSerializer,
     TaskSerializer,
+    TimeBlockSerializer,
 )
 
 
@@ -78,12 +79,14 @@ class TestTaskSerializer:
 class TestTaskReorderSerializer:
     def test_valid_item(self):
         import uuid
+
         data = {"id": str(uuid.uuid4()), "kanban_order": 0, "kanban_status": "todo"}
         serializer = TaskReorderSerializer(data=data)
         assert serializer.is_valid(), serializer.errors
 
     def test_invalid_kanban_status(self):
         import uuid
+
         data = {"id": str(uuid.uuid4()), "kanban_order": 0, "kanban_status": "invalid"}
         serializer = TaskReorderSerializer(data=data)
         assert not serializer.is_valid()
@@ -94,3 +97,37 @@ class TestTaskReorderSerializer:
         serializer = TaskReorderSerializer(data=data)
         assert not serializer.is_valid()
         assert "id" in serializer.errors
+
+
+@pytest.mark.django_db
+class TestTimeBlockSerializerValidation:
+    def test_end_time_must_be_after_start_time(self, task):
+        data = {
+            "task": str(task.id),
+            "date": "2025-01-15",
+            "start_time": "10:00:00",
+            "end_time": "09:00:00",
+        }
+        serializer = TimeBlockSerializer(data=data)
+        assert not serializer.is_valid()
+        assert "non_field_errors" in serializer.errors
+
+    def test_equal_times_invalid(self, task):
+        data = {
+            "task": str(task.id),
+            "date": "2025-01-15",
+            "start_time": "10:00:00",
+            "end_time": "10:00:00",
+        }
+        serializer = TimeBlockSerializer(data=data)
+        assert not serializer.is_valid()
+
+    def test_valid_times_pass(self, task):
+        data = {
+            "task": str(task.id),
+            "date": "2025-01-15",
+            "start_time": "09:00:00",
+            "end_time": "10:00:00",
+        }
+        serializer = TimeBlockSerializer(data=data)
+        assert serializer.is_valid()

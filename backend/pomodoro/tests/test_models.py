@@ -29,8 +29,8 @@ class TestPomodoroSession:
         assert session.task is None
 
     def test_ordering_by_started_at_desc(self):
-        s1 = PomodoroSessionFactory()
-        s2 = PomodoroSessionFactory()
+        PomodoroSessionFactory()
+        PomodoroSessionFactory()
         sessions = list(PomodoroSession.objects.all())
         assert sessions[0].started_at >= sessions[1].started_at
 

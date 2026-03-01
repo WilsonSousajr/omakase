@@ -1,10 +1,11 @@
 import datetime
+
 import factory
 import pytest
 from rest_framework.test import APIClient
 
-from tasks.models import Tag, Task, TimeBlock
 from pomodoro.models import PomodoroSession
+from tasks.models import Tag, Task, TimeBlock
 
 
 class TagFactory(factory.django.DjangoModelFactory):

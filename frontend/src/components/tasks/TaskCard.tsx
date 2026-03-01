@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { cn } from "@/lib/utils";
 import { PRIORITIES } from "@/lib/constants";
 import type { Task } from "@/types/task";
@@ -13,7 +14,7 @@ interface TaskCardProps {
   onToggleComplete: (id: string, isCompleted: boolean) => void;
 }
 
-export default function TaskCard({ task, onEdit, onDelete, onToggleComplete }: TaskCardProps) {
+function TaskCard({ task, onEdit, onDelete, onToggleComplete }: TaskCardProps) {
   const priority = PRIORITIES.find((p) => p.value === task.priority);
 
   return (
@@ -116,3 +117,5 @@ export default function TaskCard({ task, onEdit, onDelete, onToggleComplete }: T
     </div>
   );
 }
+
+export default memo(TaskCard);

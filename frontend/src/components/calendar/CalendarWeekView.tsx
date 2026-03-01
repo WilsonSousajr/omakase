@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { format, startOfWeek, addDays } from "date-fns";
 import { useCalendarStore } from "@/stores/calendarStore";
 import { useTimeBlocks, useDeleteTimeBlock, useUpdateTimeBlock } from "@/hooks/useTimeBlocks";
@@ -44,7 +45,7 @@ export default function CalendarWeekView() {
   const updateTimeBlock = useUpdateTimeBlock();
   const toggleComplete = useToggleTaskComplete();
 
-  const taskMap = Object.fromEntries(tasks.map((t) => [t.id, t]));
+  const taskMap = useMemo(() => Object.fromEntries(tasks.map((t) => [t.id, t])), [tasks]);
 
   const handleToggleComplete = (id: string, isCompleted: boolean) => {
     toggleComplete.mutate({ id, is_completed: isCompleted });

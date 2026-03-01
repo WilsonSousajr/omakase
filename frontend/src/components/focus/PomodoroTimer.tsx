@@ -29,19 +29,17 @@ const RING_COLORS = {
 const DURATIONS = POMODORO_DURATIONS;
 
 export default function PomodoroTimer() {
-  const {
-    sessionType,
-    timeRemaining,
-    isRunning,
-    completedPomodoros,
-    start,
-    pause,
-    reset,
-    switchSession,
-    setOnComplete,
-  } = usePomodoroStore();
+  const sessionType = usePomodoroStore((s) => s.sessionType);
+  const timeRemaining = usePomodoroStore((s) => s.timeRemaining);
+  const isRunning = usePomodoroStore((s) => s.isRunning);
+  const completedPomodoros = usePomodoroStore((s) => s.completedPomodoros);
+  const start = usePomodoroStore((s) => s.start);
+  const pause = usePomodoroStore((s) => s.pause);
+  const reset = usePomodoroStore((s) => s.reset);
+  const switchSession = usePomodoroStore((s) => s.switchSession);
+  const setOnComplete = usePomodoroStore((s) => s.setOnComplete);
 
-  const { activeTaskId } = useUIStore();
+  const activeTaskId = useUIStore((s) => s.activeTaskId);
   const createSession = useCreatePomodoroSession();
   const completeSession = useCompletePomodoroSession();
   const currentSessionId = useRef<string | null>(null);

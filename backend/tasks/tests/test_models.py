@@ -93,6 +93,7 @@ class TestTimeBlock:
 
     def test_constraint_end_after_start(self):
         import datetime
+
         with pytest.raises(IntegrityError):
             TimeBlockFactory(
                 start_time=datetime.time(10, 0),
@@ -101,6 +102,7 @@ class TestTimeBlock:
 
     def test_constraint_equal_times(self):
         import datetime
+
         with pytest.raises(IntegrityError):
             TimeBlockFactory(
                 start_time=datetime.time(10, 0),
@@ -115,6 +117,7 @@ class TestTimeBlock:
 
     def test_ordering_by_date_start_time(self):
         import datetime
+
         TimeBlockFactory(date=datetime.date(2025, 1, 2), start_time=datetime.time(8, 0), end_time=datetime.time(9, 0))
         TimeBlockFactory(date=datetime.date(2025, 1, 1), start_time=datetime.time(10, 0), end_time=datetime.time(11, 0))
         blocks = list(TimeBlock.objects.all())
@@ -125,3 +128,38 @@ class TestTimeBlock:
         result = str(tb)
         assert tb.task.title in result
         assert str(tb.date) in result
+
+
+@pytest.mark.django_db
+class TestTaskCompletionSync:
+    def test_create_with_completed_true_syncs_to_done(self):
+        task = TaskFactory(is_completed=True)
+        assert task.kanban_status == "done"
+        assert task.completed_at is not None
+
+    def test_create_with_done_status_syncs_completed(self):
+        task = TaskFactory(kanban_status="done")
+        assert task.is_completed is True
+        assert task.completed_at is not None
+
+    def test_create_with_conflicting_completed_and_in_progress(self):
+        """is_completed=True should win and force kanban_status to done."""
+        task = TaskFactory(is_completed=True, kanban_status="in_progress")
+        assert task.kanban_status == "done"
+        assert task.completed_at is not None
+
+    def test_uncheck_clears_timestamp_and_resets_status(self):
+        task = TaskFactory(is_completed=True)
+        task.is_completed = False
+        task.save()
+        task.refresh_from_db()
+        assert task.kanban_status == "todo"
+        assert task.completed_at is None
+
+    def test_move_out_of_done_unchecks(self):
+        task = TaskFactory(kanban_status="done")
+        task.kanban_status = "in_progress"
+        task.save()
+        task.refresh_from_db()
+        assert task.is_completed is False
+        assert task.completed_at is None

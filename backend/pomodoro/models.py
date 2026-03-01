@@ -14,11 +14,9 @@ class PomodoroSession(models.Model):
     task = models.ForeignKey(
         "tasks.Task", on_delete=models.SET_NULL, null=True, blank=True, related_name="pomodoro_sessions"
     )
-    session_type = models.CharField(
-        max_length=20, choices=SessionTypeChoices.choices, default=SessionTypeChoices.FOCUS
-    )
+    session_type = models.CharField(max_length=20, choices=SessionTypeChoices.choices, default=SessionTypeChoices.FOCUS)
     duration_minutes = models.PositiveIntegerField(default=25)
-    started_at = models.DateTimeField(auto_now_add=True)
+    started_at = models.DateTimeField(auto_now_add=True, db_index=True)
     ended_at = models.DateTimeField(null=True, blank=True)
     completed = models.BooleanField(default=False)
 

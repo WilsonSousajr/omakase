@@ -6,7 +6,7 @@ import PomodoroTimer from "./PomodoroTimer";
 import MarkdownEditor from "./MarkdownEditor";
 
 export default function ActiveTaskPanel() {
-  const { activeTaskId } = useUIStore();
+  const activeTaskId = useUIStore((s) => s.activeTaskId);
   const { data: task } = useTask(activeTaskId);
 
   return (

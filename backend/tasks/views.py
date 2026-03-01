@@ -1,5 +1,6 @@
 from datetime import date
 
+from django.db import transaction
 from django_filters import rest_framework as filters
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
@@ -56,16 +57,17 @@ class TaskViewSet(viewsets.ModelViewSet):
         serializer = TaskReorderSerializer(data=request.data, many=True)
         serializer.is_valid(raise_exception=True)
         task_ids = [item["id"] for item in serializer.validated_data]
-        tasks_by_id = {t.id: t for t in Task.objects.filter(id__in=task_ids)}
-        to_update = []
-        for item in serializer.validated_data:
-            task = tasks_by_id.get(item["id"])
-            if task:
-                task.kanban_order = item["kanban_order"]
-                task.kanban_status = item["kanban_status"]
-                to_update.append(task)
-        if to_update:
-            Task.objects.bulk_update(to_update, ["kanban_order", "kanban_status"])
+        with transaction.atomic():
+            tasks_by_id = {t.id: t for t in Task.objects.filter(id__in=task_ids).select_for_update()}
+            to_update = []
+            for item in serializer.validated_data:
+                task = tasks_by_id.get(item["id"])
+                if task:
+                    task.kanban_order = item["kanban_order"]
+                    task.kanban_status = item["kanban_status"]
+                    to_update.append(task)
+            if to_update:
+                Task.objects.bulk_update(to_update, ["kanban_order", "kanban_status"])
         return Response({"status": "ok"})
 
 
