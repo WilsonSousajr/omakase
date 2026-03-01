@@ -8,12 +8,14 @@ interface DraggableTaskCardProps {
   task: Task;
   onEdit: (task: Task) => void;
   onDelete: (id: string) => void;
+  onToggleComplete: (id: string, isCompleted: boolean) => void;
 }
 
 export default function DraggableTaskCard({
   task,
   onEdit,
   onDelete,
+  onToggleComplete,
 }: DraggableTaskCardProps) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: `task-${task.id}`,
@@ -37,6 +39,7 @@ export default function DraggableTaskCard({
         task={task}
         onEdit={onEdit}
         onDelete={onDelete}
+        onToggleComplete={onToggleComplete}
       />
     </div>
   );

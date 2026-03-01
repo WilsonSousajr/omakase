@@ -10,9 +10,10 @@ interface TaskCardProps {
   task: Task;
   onEdit: (task: Task) => void;
   onDelete: (id: string) => void;
+  onToggleComplete: (id: string, isCompleted: boolean) => void;
 }
 
-export default function TaskCard({ task, onEdit, onDelete }: TaskCardProps) {
+export default function TaskCard({ task, onEdit, onDelete, onToggleComplete }: TaskCardProps) {
   const priority = PRIORITIES.find((p) => p.value === task.priority);
 
   return (
@@ -21,13 +22,38 @@ export default function TaskCard({ task, onEdit, onDelete }: TaskCardProps) {
         "group flex items-start gap-2 rounded-lg border border-zinc-800 bg-zinc-900 p-3 transition-colors hover:border-zinc-700"
       )}
     >
+      {/* Checkbox */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onToggleComplete(task.id, !task.is_completed);
+        }}
+        className="mt-0.5 shrink-0"
+      >
+        <div className={cn(
+          "h-4 w-4 rounded border transition-all",
+          task.is_completed
+            ? "bg-blue-500 border-blue-500"
+            : "border-zinc-600 hover:border-zinc-500"
+        )}>
+          {task.is_completed && (
+            <svg className="h-full w-full text-white" viewBox="0 0 16 16">
+              <path fill="currentColor" d="M13 4L6 11L3 8" strokeWidth="2" stroke="currentColor" />
+            </svg>
+          )}
+        </div>
+      </button>
+
       <div className="mt-0.5 text-zinc-600">
         <GripVertical className="h-4 w-4" />
       </div>
 
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
-          <span className="truncate text-sm font-medium text-zinc-200">
+          <span className={cn(
+            "truncate text-sm font-medium text-zinc-200",
+            task.is_completed && "line-through opacity-60"
+          )}>
             {task.title}
           </span>
           {priority && (
