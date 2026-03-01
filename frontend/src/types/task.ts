@@ -10,6 +10,7 @@ export interface Task {
   area: "work" | "personal" | "study";
   kanban_status: "todo" | "in_progress" | "done";
   tags: Tag[];
+  project: string | null;
   scheduled_date: string | null;
   due_date: string | null;
   estimated_minutes: number | null;
@@ -28,6 +29,7 @@ export interface TaskCreate {
   area?: "work" | "personal" | "study";
   kanban_status?: "todo" | "in_progress" | "done";
   tag_ids?: string[];
+  project?: string | null;
   scheduled_date?: string | null;
   due_date?: string | null;
   estimated_minutes?: number | null;
