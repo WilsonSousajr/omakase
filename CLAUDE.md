@@ -70,21 +70,37 @@ frontend/
 - **Border radius:** `rounded-2xl` cards, `rounded-xl` inputs/buttons, `rounded-lg` badges
 - **Active states:** White/gray (no indigo) — `var(--color-surface-active)` for nav, `white/20` ring for cards
 
+## Security & Configuration
+
+- `.env` file is **required** — `docker compose up` will fail without it. Copy `.env.example` and fill in real values.
+- `SECRET_KEY` and `DATABASE_URL` raise `ImproperlyConfigured` if missing (no insecure fallbacks)
+- `DEBUG` defaults to `False` (must explicitly set `DJANGO_DEBUG=True` in `.env` for development)
+- DRF uses `AllowAny` permission by default (switch to `IsAuthenticated` when auth is implemented); `SessionAuthentication` is pre-configured
+- CORS only allows explicit origins (no `CORS_ALLOW_ALL_ORIGINS`)
+- PostgreSQL port bound to `127.0.0.1` only (not exposed to network)
+- `reorder-bulk` endpoint capped at 100 items per request
+
 ## Key Patterns
 
 - UUIDs as primary keys on all models
 - TanStack Query for server state, Zustand for UI state
 - `TaskListSerializer` (lightweight) for list views, `TaskSerializer` (full with time_blocks) for detail
 - Tags: accept `tag_ids` on write, return nested `tags` on read
-- Optimistic updates on kanban drag via local state + reorder-bulk API
-- Debounced auto-save on markdown notes (500ms)
+- Optimistic updates on kanban drag via local state + reorder-bulk API (with rollback on error)
+- Debounced auto-save on markdown notes (`NOTES_DEBOUNCE_MS` in constants)
+- `completed_at` is read-only — set server-side when `is_completed` changes
+- Shared constants in `backend/tasks/constants.py` and `frontend/src/lib/constants.ts` — avoid magic numbers
+- `ErrorBoundary` wraps `{children}` in root layout to catch render errors
+- `AudioContext` reused via `useRef` in PomodoroTimer (not recreated per notification)
+- Markdown preview uses `rehype-sanitize` to prevent XSS
+- Tag model `color` field validated with hex color regex
 
 ## Drag & Drop (Plan Mode)
 
-- Uses `@dnd-kit/core` with `PointerSensor` (5px activation distance)
+- Uses `@dnd-kit/core` with `PointerSensor` (`DRAG_ACTIVATION_DISTANCE` in constants)
 - Entire task card is the drag surface (listeners on wrapper div, not just grip icon)
 - Edit/delete buttons use `onPointerDown` stopPropagation to avoid triggering drags
-- Dropping a task on a calendar slot creates a TimeBlock AND sets `scheduled_date` on the task (syncs with focus mode)
+- Dropping a task on a calendar slot creates a TimeBlock AND sets `scheduled_date` — chained with `mutateAsync` + try/catch (not fire-and-forget)
 - Existing time blocks can be repositioned by dragging within the calendar
 
 ## Calendar Time Blocks
@@ -104,6 +120,57 @@ frontend/
 - `N` — New task
 - `Escape` — Close modal
 - `Space` — Toggle pomodoro timer (when not in input)
+
+## Testing
+
+### Backend (pytest + pytest-django + factory-boy)
+
+```bash
+# Run all backend tests (inside Docker)
+docker compose exec backend pytest -v
+docker compose exec backend pytest --cov --cov-report=term-missing
+
+# Run specific test groups
+docker compose exec backend pytest tasks/tests/test_models.py -v
+docker compose exec backend pytest tasks/tests/test_views.py -v
+docker compose exec backend pytest pomodoro/ -v
+
+# Install dev deps (after rebuilding container)
+docker compose exec backend pip install -r requirements-dev.txt
+```
+
+**Config:** `backend/pyproject.toml` — pytest settings + coverage config
+**Factories:** `backend/conftest.py` — TagFactory, TaskFactory, TimeBlockFactory, PomodoroSessionFactory
+**Test files:** `backend/{tasks,pomodoro}/tests/test_{models,serializers,views}.py`
+
+### Frontend (Vitest + React Testing Library + MSW)
+
+```bash
+cd frontend
+pnpm test            # single run
+pnpm test:watch      # watch mode
+pnpm test:coverage   # with coverage report
+```
+
+**Config:** `frontend/vitest.config.ts`
+**Setup:** `frontend/src/test/setup.ts` — jest-dom, cleanup, next/navigation mock
+**Utilities:** `frontend/src/test/utils.tsx` — `renderWithProviders()` with test QueryClient
+**MSW Handlers:** `frontend/src/test/handlers.ts` — mock API endpoints + data factories
+**Test files:** `frontend/src/{stores,hooks,components}/**/__tests__/*.test.{ts,tsx}`
+
+### CI Pipeline
+
+GitHub Actions (`.github/workflows/ci.yml`) runs on push to main and PRs:
+- **Frontend job:** pnpm install → lint → test → build
+- **Backend job:** PostgreSQL service → pip install → migrate → pytest with coverage
+
+### Test Patterns
+
+- Backend: `@pytest.mark.django_db` on all DB-touching tests, factory-boy for test data
+- Frontend stores: Direct `getState()`/`setState()` — no rendering needed
+- Frontend hooks: `renderHook()` + MSW for API mocking
+- Frontend components: `renderWithProviders()` wrapper includes QueryClientProvider
+- Mock `@dnd-kit/*` in component tests that use drag-and-drop
 
 ## Workflow Rules
 

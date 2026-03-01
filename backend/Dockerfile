@@ -12,6 +12,8 @@ COPY . .
 
 # Development
 FROM base AS dev
+COPY requirements-dev.txt .
+RUN pip install --no-cache-dir -r requirements-dev.txt
 CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
 
 # Production
