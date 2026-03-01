@@ -6,14 +6,18 @@ from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
+from django.db.models import Count
+
 from .constants import REORDER_BULK_MAX_ITEMS
-from .models import Tag, Task, TimeBlock
+from .models import Project, Tag, Task, TimeBlock, Workspace
 from .serializers import (
+    ProjectSerializer,
     TagSerializer,
     TaskListSerializer,
     TaskReorderSerializer,
     TaskSerializer,
     TimeBlockSerializer,
+    WorkspaceSerializer,
 )
 
 
@@ -109,3 +113,30 @@ class TimeBlockViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return TimeBlock.objects.filter(task__user=self.request.user).select_related("task")
+
+
+class WorkspaceViewSet(viewsets.ModelViewSet):
+    serializer_class = WorkspaceSerializer
+
+    def get_queryset(self):
+        return Workspace.objects.filter(user=self.request.user).annotate(project_count=Count("projects"))
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+
+class ProjectFilter(filters.FilterSet):
+    class Meta:
+        model = Project
+        fields = ["workspace", "status"]
+
+
+class ProjectViewSet(viewsets.ModelViewSet):
+    serializer_class = ProjectSerializer
+    filterset_class = ProjectFilter
+
+    def get_queryset(self):
+        return Project.objects.filter(workspace__user=self.request.user).annotate(task_count=Count("tasks"))
+
+    def perform_create(self, serializer):
+        serializer.save()
