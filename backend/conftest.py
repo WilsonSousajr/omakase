@@ -7,7 +7,7 @@ from rest_framework.test import APIClient
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from pomodoro.models import PomodoroSession
-from tasks.models import Tag, Task, TimeBlock
+from tasks.models import Project, Tag, Task, TimeBlock, Workspace
 
 
 class UserFactory(factory.django.DjangoModelFactory):
@@ -24,6 +24,25 @@ class UserFactory(factory.django.DjangoModelFactory):
         self.set_password(password)
         if create:
             self.save()
+
+
+class WorkspaceFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = Workspace
+
+    user = factory.LazyFunction(lambda: UserFactory())
+    name = factory.Sequence(lambda n: f"Workspace {n}")
+    color = "#a3a3a3"
+
+
+class ProjectFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = Project
+
+    workspace = factory.SubFactory(WorkspaceFactory)
+    name = factory.Sequence(lambda n: f"Project {n}")
+    color = "#a3a3a3"
+    status = "active"
 
 
 class TagFactory(factory.django.DjangoModelFactory):
