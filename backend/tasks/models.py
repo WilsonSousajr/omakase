@@ -4,7 +4,7 @@ from django.conf import settings
 from django.core.validators import RegexValidator
 from django.db import models
 
-from .constants import DEFAULT_TAG_COLOR
+from .constants import DEFAULT_TAG_COLOR, DEFAULT_WORKSPACE_COLOR
 
 hex_color_validator = RegexValidator(
     regex=r"^#[0-9a-fA-F]{6}$",
@@ -31,6 +31,48 @@ class KanbanStatusChoices(models.TextChoices):
     DONE = "done", "Done"
 
 
+class ProjectStatusChoices(models.TextChoices):
+    ACTIVE = "active", "Active"
+    PAUSED = "paused", "Paused"
+    COMPLETED = "completed", "Completed"
+    ARCHIVED = "archived", "Archived"
+
+
+class Workspace(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="workspaces")
+    name = models.CharField(max_length=200)
+    color = models.CharField(max_length=7, default=DEFAULT_WORKSPACE_COLOR, validators=[hex_color_validator])
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["name"]
+
+    def __str__(self):
+        return self.name
+
+
+class Project(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    workspace = models.ForeignKey(Workspace, on_delete=models.CASCADE, related_name="projects")
+    name = models.CharField(max_length=200)
+    description = models.TextField(blank=True, default="")
+    color = models.CharField(max_length=7, default=DEFAULT_WORKSPACE_COLOR, validators=[hex_color_validator])
+    status = models.CharField(
+        max_length=20, choices=ProjectStatusChoices.choices, default=ProjectStatusChoices.ACTIVE
+    )
+    due_date = models.DateField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["name"]
+
+    def __str__(self):
+        return self.name
+
+
 class Tag(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(
@@ -53,6 +95,7 @@ class Task(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="tasks", null=True, blank=True
     )
+    project = models.ForeignKey(Project, on_delete=models.SET_NULL, null=True, blank=True, related_name="tasks")
     title = models.CharField(max_length=500)
     description = models.TextField(blank=True, default="")
     notes = models.TextField(blank=True, default="")
