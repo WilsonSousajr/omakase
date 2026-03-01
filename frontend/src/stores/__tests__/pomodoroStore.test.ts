@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { usePomodoroStore } from "../pomodoroStore";
 import { POMODORO_DURATIONS, POMODOROS_BEFORE_LONG_BREAK } from "@/lib/constants";
 
