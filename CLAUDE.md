@@ -172,6 +172,57 @@ GitHub Actions (`.github/workflows/ci.yml`) runs on push to main and PRs:
 - Frontend components: `renderWithProviders()` wrapper includes QueryClientProvider
 - Mock `@dnd-kit/*` in component tests that use drag-and-drop
 
+## Git Workflow (STRICT)
+
+### Atomic Commits
+
+- **One logical change per commit** — never bundle unrelated changes together
+- **Commit as you go** — after each file or small group of related files, not in bulk at the end
+- Examples of proper atomic commits:
+  - `feat: add vitest config and test setup` (infra only)
+  - `test: add uiStore tests` (one store)
+  - `test: add TaskCard component tests` (one component)
+  - `ci: add GitHub Actions workflow` (CI only)
+- **Never** make large catch-all commits like "add test suite (152 tests)" or "fix everything"
+
+### Gitflow
+
+- **main** — production-ready, only receives merges from feature/release branches
+- **feat/<name>** — feature branches for new functionality
+- **fix/<name>** — bugfix branches
+- **chore/<name>** — maintenance, refactoring, tooling
+- **test/<name>** — test-only additions
+- Always branch from `main`, always PR back to `main`
+- Branch names should be descriptive: `feat/pomodoro-timer`, not `feat/stuff`
+
+### Commit Message Convention
+
+```
+<type>: <short description>
+
+Types: feat, fix, test, chore, docs, refactor, ci, style
+```
+
+- Keep subject line under 72 characters
+- Use imperative mood ("add", "fix", "update" — not "added", "fixes", "updated")
+- Body is optional but encouraged for non-trivial changes
+
+## Testing Gotchas
+
+- **Backend UUID comparison**: DRF responses return UUID objects, not strings — use `str()` when comparing: `str(resp.data["task"]) == str(task.pk)`
+- **Backend hex validation**: `TagFactory(color="notacolor")` hits DB varchar(7) limit before Django validation — use `TagFactory.build()` + `full_clean()` for validator tests
+- **Backend TimeBlock constraint**: `end_time <= start_time` raises `IntegrityError` at DB level (not serializer 400) — test with `pytest.raises(IntegrityError)`
+- **Frontend hook tests**: Files using JSX wrapper functions must be `.tsx`, not `.ts`
+- **Frontend dnd-kit mocks**: Must include `useDroppable` in `@dnd-kit/core` mock for KanbanColumn
+- **Frontend "Focus" text**: Appears in both tab and timer label — use `getAllByText` not `getByText`
+- **factory-boy deprecation**: `TaskFactory._after_postgeneration` save warning — add `skip_postgeneration_save=True` in Meta to suppress
+
+## Local Environment Notes
+
+- Use `docker-compose` (hyphenated), not `docker compose` (space-separated)
+- `pnpm` is not on PATH — use `npx pnpm` for local frontend commands
+- Backend dev deps installed at runtime (volume mount), not baked into image — run `docker-compose exec backend pip install -r requirements-dev.txt` after container rebuild
+
 ## Workflow Rules
 
 - **Always update CLAUDE.md** after completing an implementation or discovering new patterns, gotchas, or learnings
