@@ -6,8 +6,12 @@ import { useCalendarStore } from "@/stores/calendarStore";
 import { cn } from "@/lib/utils";
 
 export default function CalendarHeader() {
-  const { selectedDate, viewMode, setViewMode, goToToday, goForward, goBack } =
-    useCalendarStore();
+  const selectedDate = useCalendarStore((s) => s.selectedDate);
+  const viewMode = useCalendarStore((s) => s.viewMode);
+  const setViewMode = useCalendarStore((s) => s.setViewMode);
+  const goToToday = useCalendarStore((s) => s.goToToday);
+  const goForward = useCalendarStore((s) => s.goForward);
+  const goBack = useCalendarStore((s) => s.goBack);
 
   return (
     <div className="flex items-center justify-between border-b border-[var(--color-border)] px-5 py-3">

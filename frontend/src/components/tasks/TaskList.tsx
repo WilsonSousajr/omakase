@@ -12,7 +12,8 @@ export default function TaskList() {
   const [search, setSearch] = useState("");
   const [priority, setPriority] = useState("");
   const [editTask, setEditTask] = useState<Task | null>(null);
-  const { openModal, closeModal } = useUIStore();
+  const openModal = useUIStore((s) => s.openModal);
+  const closeModal = useUIStore((s) => s.closeModal);
   const deleteTask = useDeleteTask();
   const toggleComplete = useToggleTaskComplete();
 

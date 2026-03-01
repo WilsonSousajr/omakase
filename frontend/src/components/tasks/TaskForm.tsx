@@ -15,7 +15,7 @@ interface TaskFormProps {
 }
 
 export default function TaskForm({ editTask, onClose }: TaskFormProps) {
-  const { modalOpen } = useUIStore();
+  const modalOpen = useUIStore((s) => s.modalOpen);
   const { data: tags = [] } = useTags();
   const createTask = useCreateTask();
   const updateTask = useUpdateTask();
