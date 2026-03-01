@@ -18,7 +18,7 @@ class PomodoroSession(models.Model):
         max_length=20, choices=SessionTypeChoices.choices, default=SessionTypeChoices.FOCUS
     )
     duration_minutes = models.PositiveIntegerField(default=25)
-    started_at = models.DateTimeField(auto_now_add=True)
+    started_at = models.DateTimeField(auto_now_add=True, db_index=True)
     ended_at = models.DateTimeField(null=True, blank=True)
     completed = models.BooleanField(default=False)
 
