@@ -13,10 +13,10 @@ interface AuthState {
 }
 
 function loadTokens(): AuthTokens | null {
-  if (typeof window === "undefined") return null;
-  const raw = localStorage.getItem("auth_tokens");
-  if (!raw) return null;
   try {
+    if (typeof window === "undefined") return null;
+    const raw = localStorage.getItem("auth_tokens");
+    if (!raw) return null;
     return JSON.parse(raw);
   } catch {
     return null;
@@ -24,11 +24,15 @@ function loadTokens(): AuthTokens | null {
 }
 
 function saveTokens(tokens: AuthTokens | null) {
-  if (typeof window === "undefined") return;
-  if (tokens) {
-    localStorage.setItem("auth_tokens", JSON.stringify(tokens));
-  } else {
-    localStorage.removeItem("auth_tokens");
+  try {
+    if (typeof window === "undefined") return;
+    if (tokens) {
+      localStorage.setItem("auth_tokens", JSON.stringify(tokens));
+    } else {
+      localStorage.removeItem("auth_tokens");
+    }
+  } catch {
+    // localStorage may not be available in test environments
   }
 }
 

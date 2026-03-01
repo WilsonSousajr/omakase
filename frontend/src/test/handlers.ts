@@ -67,6 +67,24 @@ function paginated<T>(results: T[]) {
   return { count: results.length, next: null, previous: null, results };
 }
 
+export function createMockUser(overrides = {}) {
+  return {
+    id: 1,
+    username: "testuser",
+    email: "test@example.com",
+    date_joined: "2025-01-01T00:00:00Z",
+    ...overrides,
+  };
+}
+
+export function createMockTokens(overrides = {}) {
+  return {
+    access: "mock-access-token",
+    refresh: "mock-refresh-token",
+    ...overrides,
+  };
+}
+
 // Default mock data
 const mockTags = [createMockTag({ name: "Frontend" }), createMockTag({ name: "Backend" })];
 const mockTasks = [
@@ -76,6 +94,34 @@ const mockTasks = [
 ];
 
 export const handlers = [
+  // Auth
+  http.post(`${API_URL}/auth/register/`, async ({ request }) => {
+    const body = (await request.json()) as Record<string, unknown>;
+    if (body.username === "taken") {
+      return HttpResponse.json(
+        { username: ["A user with this username already exists."] },
+        { status: 400 }
+      );
+    }
+    return HttpResponse.json(createMockUser(body), { status: 201 });
+  }),
+  http.post(`${API_URL}/auth/token/`, async ({ request }) => {
+    const body = (await request.json()) as Record<string, unknown>;
+    if (body.password === "wrongpassword") {
+      return HttpResponse.json(
+        { detail: "No active account found with the given credentials" },
+        { status: 401 }
+      );
+    }
+    return HttpResponse.json(createMockTokens());
+  }),
+  http.post(`${API_URL}/auth/token/refresh/`, () =>
+    HttpResponse.json({ access: "new-access-token" })
+  ),
+  http.get(`${API_URL}/auth/me/`, () =>
+    HttpResponse.json(createMockUser())
+  ),
+
   // Tasks
   http.get(`${API_URL}/tasks/`, () =>
     HttpResponse.json(paginated(mockTasks))
