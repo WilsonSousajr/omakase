@@ -4,7 +4,7 @@ from rest_framework.routers import DefaultRouter
 from .views import PomodoroSessionViewSet
 
 router = DefaultRouter()
-router.register("sessions", PomodoroSessionViewSet)
+router.register("sessions", PomodoroSessionViewSet, basename="pomodorosession")
 
 urlpatterns = [
     path("", include(router.urls)),

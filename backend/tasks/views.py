@@ -27,15 +27,20 @@ class TaskFilter(filters.FilterSet):
 
 
 class TaskViewSet(viewsets.ModelViewSet):
-    queryset = Task.objects.prefetch_related("tags", "time_blocks").all()
     filterset_class = TaskFilter
     search_fields = ["title", "description"]
     ordering_fields = ["kanban_order", "created_at", "priority", "due_date"]
+
+    def get_queryset(self):
+        return Task.objects.filter(user=self.request.user).prefetch_related("tags", "time_blocks")
 
     def get_serializer_class(self):
         if self.action == "list" or self.action == "today":
             return TaskListSerializer
         return TaskSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
 
     @action(detail=False, methods=["get"])
     def today(self, request):
@@ -78,10 +83,15 @@ class TagFilter(filters.FilterSet):
 
 
 class TagViewSet(viewsets.ModelViewSet):
-    queryset = Tag.objects.all()
     serializer_class = TagSerializer
     filterset_class = TagFilter
     search_fields = ["name"]
+
+    def get_queryset(self):
+        return Tag.objects.filter(user=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
 
 
 class TimeBlockFilter(filters.FilterSet):
@@ -94,6 +104,8 @@ class TimeBlockFilter(filters.FilterSet):
 
 
 class TimeBlockViewSet(viewsets.ModelViewSet):
-    queryset = TimeBlock.objects.select_related("task").all()
     serializer_class = TimeBlockSerializer
     filterset_class = TimeBlockFilter
+
+    def get_queryset(self):
+        return TimeBlock.objects.filter(task__user=self.request.user).select_related("task")
