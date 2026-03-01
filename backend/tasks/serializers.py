@@ -1,6 +1,28 @@
+from django.db.models import Count
 from rest_framework import serializers
 
-from .models import Tag, Task, TimeBlock
+from .models import Project, Tag, Task, TimeBlock, Workspace
+
+
+class WorkspaceSerializer(serializers.ModelSerializer):
+    project_count = serializers.IntegerField(read_only=True, default=0)
+
+    class Meta:
+        model = Workspace
+        fields = ["id", "name", "color", "project_count", "created_at", "updated_at"]
+        read_only_fields = ["id", "created_at", "updated_at"]
+
+
+class ProjectSerializer(serializers.ModelSerializer):
+    task_count = serializers.IntegerField(read_only=True, default=0)
+
+    class Meta:
+        model = Project
+        fields = [
+            "id", "workspace", "name", "description", "color",
+            "status", "due_date", "task_count", "created_at", "updated_at",
+        ]
+        read_only_fields = ["id", "created_at", "updated_at"]
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -39,6 +61,7 @@ class TaskListSerializer(serializers.ModelSerializer):
             "priority",
             "area",
             "kanban_status",
+            "project",
             "tags",
             "tag_ids",
             "scheduled_date",
