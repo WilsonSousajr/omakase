@@ -16,6 +16,13 @@ class TimeBlockSerializer(serializers.ModelSerializer):
         fields = ["id", "task", "date", "start_time", "end_time", "created_at", "updated_at"]
         read_only_fields = ["id", "created_at", "updated_at"]
 
+    def validate(self, data):
+        start = data.get("start_time", getattr(self.instance, "start_time", None))
+        end = data.get("end_time", getattr(self.instance, "end_time", None))
+        if start and end and end <= start:
+            raise serializers.ValidationError("end_time must be after start_time.")
+        return data
+
 
 class TaskListSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True, read_only=True)
@@ -26,9 +33,22 @@ class TaskListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Task
         fields = [
-            "id", "title", "description", "priority", "area", "kanban_status",
-            "tags", "tag_ids", "scheduled_date", "due_date", "estimated_minutes",
-            "kanban_order", "is_completed", "completed_at", "created_at", "updated_at",
+            "id",
+            "title",
+            "description",
+            "priority",
+            "area",
+            "kanban_status",
+            "tags",
+            "tag_ids",
+            "scheduled_date",
+            "due_date",
+            "estimated_minutes",
+            "kanban_order",
+            "is_completed",
+            "completed_at",
+            "created_at",
+            "updated_at",
         ]
         read_only_fields = ["id", "completed_at", "created_at", "updated_at"]
 
@@ -43,6 +63,4 @@ class TaskSerializer(TaskListSerializer):
 class TaskReorderSerializer(serializers.Serializer):
     id = serializers.UUIDField()
     kanban_order = serializers.IntegerField()
-    kanban_status = serializers.ChoiceField(
-        choices=["todo", "in_progress", "done"]
-    )
+    kanban_status = serializers.ChoiceField(choices=["todo", "in_progress", "done"])

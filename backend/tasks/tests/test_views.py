@@ -5,7 +5,6 @@ import pytest
 from rest_framework import status
 
 from conftest import TagFactory, TaskFactory, TimeBlockFactory
-from pomodoro.models import PomodoroSession
 from tasks.models import Task, TimeBlock
 
 
@@ -68,6 +67,7 @@ class TestTaskViewSet:
         task = TaskFactory(is_completed=True)
         # Set completed_at directly since factory doesn't trigger serializer logic
         from django.utils import timezone
+
         Task.objects.filter(pk=task.pk).update(completed_at=timezone.now())
         resp = api_client.patch(
             f"/api/v1/tasks/{task.pk}/",
@@ -91,6 +91,7 @@ class TestTaskViewSet:
     def test_delete_task_nullifies_pomodoro(self, api_client):
         task = TaskFactory()
         from conftest import PomodoroSessionFactory
+
         session = PomodoroSessionFactory(task=task)
         api_client.delete(f"/api/v1/tasks/{task.pk}/")
         session.refresh_from_db()
@@ -136,6 +137,7 @@ class TestTaskViewSet:
 
     def test_today_endpoint(self, api_client):
         from datetime import date
+
         TaskFactory(scheduled_date=date.today())
         TaskFactory(scheduled_date=date.today() - datetime.timedelta(days=1))
         resp = api_client.get("/api/v1/tasks/today/")
@@ -166,23 +168,16 @@ class TestTaskViewSet:
         assert task.kanban_status == "done"
 
     def test_reorder_bulk_not_list(self, api_client):
-        resp = api_client.patch(
-            "/api/v1/tasks/reorder-bulk/", {"id": "abc"}, format="json"
-        )
+        resp = api_client.patch("/api/v1/tasks/reorder-bulk/", {"id": "abc"}, format="json")
         assert resp.status_code == status.HTTP_400_BAD_REQUEST
 
     def test_reorder_bulk_exceeds_limit(self, api_client):
-        payload = [
-            {"id": str(uuid.uuid4()), "kanban_order": i, "kanban_status": "todo"}
-            for i in range(101)
-        ]
+        payload = [{"id": str(uuid.uuid4()), "kanban_order": i, "kanban_status": "todo"} for i in range(101)]
         resp = api_client.patch("/api/v1/tasks/reorder-bulk/", payload, format="json")
         assert resp.status_code == status.HTTP_400_BAD_REQUEST
 
     def test_reorder_bulk_invalid_item(self, api_client):
-        payload = [
-            {"id": str(uuid.uuid4()), "kanban_order": 0, "kanban_status": "invalid"}
-        ]
+        payload = [{"id": str(uuid.uuid4()), "kanban_order": 0, "kanban_status": "invalid"}]
         resp = api_client.patch("/api/v1/tasks/reorder-bulk/", payload, format="json")
         assert resp.status_code == status.HTTP_400_BAD_REQUEST
 
@@ -257,20 +252,19 @@ class TestTimeBlockViewSet:
         assert resp.status_code == status.HTTP_201_CREATED
 
     def test_create_invalid_times(self, api_client):
-        """end_time <= start_time is rejected by DB CheckConstraint."""
-        from django.db.utils import IntegrityError
+        """end_time <= start_time is rejected by serializer validation."""
         task = TaskFactory()
-        with pytest.raises(IntegrityError, match="timeblock_end_after_start"):
-            api_client.post(
-                "/api/v1/timeblocks/",
-                {
-                    "task": str(task.pk),
-                    "date": "2025-01-15",
-                    "start_time": "10:00:00",
-                    "end_time": "09:00:00",
-                },
-                format="json",
-            )
+        resp = api_client.post(
+            "/api/v1/timeblocks/",
+            {
+                "task": str(task.pk),
+                "date": "2025-01-15",
+                "start_time": "10:00:00",
+                "end_time": "09:00:00",
+            },
+            format="json",
+        )
+        assert resp.status_code == status.HTTP_400_BAD_REQUEST
 
     def test_filter_by_date(self, api_client):
         TimeBlockFactory(date=datetime.date(2025, 1, 15))
