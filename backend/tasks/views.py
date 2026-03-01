@@ -119,7 +119,7 @@ class WorkspaceViewSet(viewsets.ModelViewSet):
     serializer_class = WorkspaceSerializer
 
     def get_queryset(self):
-        return Workspace.objects.filter(user=self.request.user).annotate(project_count=Count("projects"))
+        return Workspace.objects.filter(user=self.request.user).annotate(project_count=Count("projects")).order_by("name")
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
@@ -136,7 +136,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
     filterset_class = ProjectFilter
 
     def get_queryset(self):
-        return Project.objects.filter(workspace__user=self.request.user).annotate(task_count=Count("tasks"))
+        return Project.objects.filter(workspace__user=self.request.user).annotate(task_count=Count("tasks")).order_by("name")
 
     def perform_create(self, serializer):
         serializer.save()
