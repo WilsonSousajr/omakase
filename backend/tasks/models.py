@@ -1,5 +1,6 @@
 import uuid
 
+from django.conf import settings
 from django.core.validators import RegexValidator
 from django.db import models
 
@@ -32,6 +33,9 @@ class KanbanStatusChoices(models.TextChoices):
 
 class Tag(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="tags", null=True, blank=True
+    )
     name = models.CharField(max_length=100)
     color = models.CharField(max_length=7, default=DEFAULT_TAG_COLOR, validators=[hex_color_validator])
     area = models.CharField(max_length=20, choices=AreaChoices.choices, default=AreaChoices.WORK)
@@ -46,6 +50,9 @@ class Tag(models.Model):
 
 class Task(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="tasks", null=True, blank=True
+    )
     title = models.CharField(max_length=500)
     description = models.TextField(blank=True, default="")
     notes = models.TextField(blank=True, default="")
