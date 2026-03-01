@@ -6,12 +6,14 @@ import type { Task } from "@/types/task";
 import { PRIORITIES } from "@/lib/constants";
 import { useDraggable } from "@dnd-kit/core";
 import { X } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface TimeBlockItemProps {
   block: TimeBlock;
   task?: Task;
   onDelete: (id: string) => void;
   onResize: (id: string, newEndTime: string) => void;
+  onToggleComplete?: (id: string, isCompleted: boolean) => void;
   slotHeight: number;
 }
 
@@ -32,6 +34,7 @@ export default function TimeBlockItem({
   task,
   onDelete,
   onResize,
+  onToggleComplete,
   slotHeight,
 }: TimeBlockItemProps) {
   const startMin = timeToMinutes(block.start_time);
@@ -125,9 +128,40 @@ export default function TimeBlockItem({
       }}
     >
       <div className="flex items-start justify-between">
-        <div className="min-w-0">
+        {/* Checkbox */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            if (task?.id) {
+              onToggleComplete?.(task.id, !task.is_completed);
+            }
+          }}
+          onPointerDown={(e) => e.stopPropagation()}
+          className="mr-1.5 mt-0.5 shrink-0"
+        >
+          <div className={cn(
+            "h-3.5 w-3.5 rounded border transition-all",
+            task?.is_completed
+              ? "bg-blue-500 border-blue-500"
+              : "border-current opacity-50 hover:opacity-100"
+          )}
+          style={{ borderColor: color }}
+          >
+            {task?.is_completed && (
+              <svg className="h-full w-full text-white" viewBox="0 0 16 16">
+                <path fill="currentColor" d="M13 4L6 11L3 8" strokeWidth="2.5" stroke="currentColor" />
+              </svg>
+            )}
+          </div>
+        </button>
+
+        <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
-            <p className="truncate text-xs font-medium" style={{ color }}>
+            <p className={cn(
+              "truncate text-xs font-medium",
+              task?.is_completed && "line-through opacity-60"
+            )}
+            style={{ color }}>
               {task?.title || "Task"}
             </p>
             {priority && (
@@ -146,6 +180,7 @@ export default function TimeBlockItem({
             {block.start_time.slice(0, 5)} – {block.end_time.slice(0, 5)}
           </p>
         </div>
+
         <button
           onClick={(e) => {
             e.stopPropagation();

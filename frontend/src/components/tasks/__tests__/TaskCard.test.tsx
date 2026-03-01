@@ -27,7 +27,7 @@ const mockTask: Task = {
 
 describe("TaskCard", () => {
   it("renders task info", () => {
-    render(<TaskCard task={mockTask} onEdit={vi.fn()} onDelete={vi.fn()} />);
+    render(<TaskCard task={mockTask} onEdit={vi.fn()} onDelete={vi.fn()} onToggleComplete={vi.fn()} />);
     expect(screen.getByText("Write tests")).toBeInTheDocument();
     expect(screen.getByText("High")).toBeInTheDocument();
     expect(screen.getByText("Backend")).toBeInTheDocument();
@@ -37,21 +37,21 @@ describe("TaskCard", () => {
   it("edit button calls onEdit", async () => {
     const user = userEvent.setup();
     const onEdit = vi.fn();
-    render(<TaskCard task={mockTask} onEdit={onEdit} onDelete={vi.fn()} />);
+    render(<TaskCard task={mockTask} onEdit={onEdit} onDelete={vi.fn()} onToggleComplete={vi.fn()} />);
 
-    // Edit button has Pencil icon — find all buttons, first is edit
+    // buttons: [0]=checkbox, [1]=edit, [2]=delete
     const buttons = screen.getAllByRole("button");
-    await user.click(buttons[0]);
+    await user.click(buttons[1]);
     expect(onEdit).toHaveBeenCalledWith(mockTask);
   });
 
   it("delete button calls onDelete", async () => {
     const user = userEvent.setup();
     const onDelete = vi.fn();
-    render(<TaskCard task={mockTask} onEdit={vi.fn()} onDelete={onDelete} />);
+    render(<TaskCard task={mockTask} onEdit={vi.fn()} onDelete={onDelete} onToggleComplete={vi.fn()} />);
 
     const buttons = screen.getAllByRole("button");
-    await user.click(buttons[1]);
+    await user.click(buttons[2]);
     expect(onDelete).toHaveBeenCalledWith("task-1");
   });
 });

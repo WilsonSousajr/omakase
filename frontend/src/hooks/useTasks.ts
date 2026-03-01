@@ -105,3 +105,49 @@ export function useReorderTasks() {
     },
   });
 }
+
+export function useToggleTaskComplete() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, is_completed }: { id: string; is_completed: boolean }) => {
+      const response = await api.patch(`/tasks/${id}/`, { is_completed });
+      return response.data;
+    },
+    onMutate: async ({ id, is_completed }) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ["tasks"] });
+
+      // Snapshot previous value
+      const previousTasks = queryClient.getQueryData(["tasks"]);
+
+      // Optimistically update all task queries
+      queryClient.setQueriesData<Task[]>(
+        { queryKey: ["tasks"] },
+        (old) => old?.map(t =>
+          t.id === id
+            ? {
+                ...t,
+                is_completed,
+                kanban_status: is_completed ? 'done' : 'todo',
+                completed_at: is_completed ? new Date().toISOString() : null
+              }
+            : t
+        )
+      );
+
+      return { previousTasks };
+    },
+    onError: (_err, _variables, context) => {
+      // Rollback on error
+      if (context?.previousTasks) {
+        queryClient.setQueryData(["tasks"], context.previousTasks);
+      }
+    },
+    onSettled: () => {
+      // Refetch to sync with server
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["timeblocks"] });
+    },
+  });
+}

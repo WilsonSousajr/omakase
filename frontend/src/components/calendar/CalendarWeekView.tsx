@@ -3,7 +3,7 @@
 import { format, startOfWeek, addDays } from "date-fns";
 import { useCalendarStore } from "@/stores/calendarStore";
 import { useTimeBlocks, useDeleteTimeBlock, useUpdateTimeBlock } from "@/hooks/useTimeBlocks";
-import { useTasks } from "@/hooks/useTasks";
+import { useTasks, useToggleTaskComplete } from "@/hooks/useTasks";
 import { useDroppable } from "@dnd-kit/core";
 import TimeBlockItem from "./TimeBlockItem";
 
@@ -42,8 +42,13 @@ export default function CalendarWeekView() {
   const { data: tasks = [] } = useTasks();
   const deleteTimeBlock = useDeleteTimeBlock();
   const updateTimeBlock = useUpdateTimeBlock();
+  const toggleComplete = useToggleTaskComplete();
 
   const taskMap = Object.fromEntries(tasks.map((t) => [t.id, t]));
+
+  const handleToggleComplete = (id: string, isCompleted: boolean) => {
+    toggleComplete.mutate({ id, is_completed: isCompleted });
+  };
 
   function timeToOffset(time: string): number {
     const [h, m] = time.split(":").map(Number);
@@ -117,6 +122,7 @@ export default function CalendarWeekView() {
                       onResize={(id, newEndTime) =>
                         updateTimeBlock.mutate({ id, end_time: newEndTime })
                       }
+                      onToggleComplete={handleToggleComplete}
                       slotHeight={SLOT_HEIGHT}
                     />
                   </div>

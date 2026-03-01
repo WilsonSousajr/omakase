@@ -58,7 +58,10 @@ export default function KanbanCard({ task }: KanbanCardProps) {
 
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <span className="truncate text-sm font-medium text-[var(--color-text-primary)]">
+            <span className={cn(
+              "truncate text-sm font-medium text-[var(--color-text-primary)]",
+              task.is_completed && "line-through opacity-60"
+            )}>
               {task.title}
             </span>
           </div>
