@@ -49,25 +49,31 @@ docker compose exec frontend pnpm lint       # Run linter
 
 ```
 backend/
+  accounts/        # Auth: register, JWT token, me endpoint
   omakase/         # Django project settings, urls, wsgi
   tasks/           # Task, Tag, TimeBlock models + API
   pomodoro/        # PomodoroSession model + API
 frontend/
   src/
-    app/           # Next.js App Router pages (/plan, /focus)
+    app/(auth)/    # Login + Register pages (no sidebar)
+    app/(main)/    # Plan + Focus pages (with sidebar)
     components/    # React components (tasks/, calendar/, kanban/, focus/)
-    hooks/         # TanStack Query hooks (useTasks, useTags, useTimeBlocks, usePomodoro)
-    stores/        # Zustand stores (uiStore, pomodoroStore, calendarStore)
-    lib/           # Utilities (api, constants, utils)
-    types/         # TypeScript types
+    hooks/         # TanStack Query hooks (useTasks, useTags, useTimeBlocks, usePomodoro, useAuth)
+    stores/        # Zustand stores (uiStore, pomodoroStore, calendarStore, authStore)
+    lib/           # Utilities (api with JWT interceptors, constants, utils)
+    types/         # TypeScript types (task, tag, timeblock, pomodoro, auth)
 ```
 
 ## API Endpoints (all under /api/v1/)
 
-- `tasks/` — CRUD + `today/` + `reorder-bulk/`
-- `tags/` — CRUD, filterable by area
-- `timeblocks/` — CRUD, filterable by date range
-- `pomodoro/sessions/` — Create, list, patch (complete)
+- `auth/register/` — POST (AllowAny)
+- `auth/token/` — POST JWT obtain (AllowAny)
+- `auth/token/refresh/` — POST JWT refresh (AllowAny)
+- `auth/me/` — GET current user (IsAuthenticated)
+- `tasks/` — CRUD + `today/` + `reorder-bulk/` (user-scoped)
+- `tags/` — CRUD, filterable by area (user-scoped)
+- `timeblocks/` — CRUD, filterable by date range (user-scoped via task.user)
+- `pomodoro/sessions/` — Create, list, patch (user-scoped)
 
 ## Design System
 
@@ -84,7 +90,13 @@ frontend/
 - `.env` file is **required** — `docker compose up` will fail without it. Copy `.env.example` and fill in real values.
 - `SECRET_KEY` and `DATABASE_URL` raise `ImproperlyConfigured` if missing (no insecure fallbacks)
 - `DEBUG` defaults to `False` (must explicitly set `DJANGO_DEBUG=True` in `.env` for development)
-- DRF uses `AllowAny` permission by default (switch to `IsAuthenticated` when auth is implemented); `SessionAuthentication` is pre-configured
+- DRF uses `IsAuthenticated` permission by default; `JWTAuthentication` + `SessionAuthentication` configured
+- JWT: 60-min access tokens, 7-day refresh tokens (djangorestframework-simplejwt)
+- Auth endpoints (register, token) use explicit `AllowAny` override
+- Frontend: JWT tokens stored in localStorage via authStore, auto-attached by axios interceptor
+- Token refresh: 401 → auto-refresh with concurrent request queue (prevents multiple refresh calls)
+- Route groups: `(auth)` for login/register (no sidebar), `(main)` for plan/focus (with sidebar)
+- AuthGuard wraps root layout — redirects unauthenticated users to /login
 - CORS only allows explicit origins (no `CORS_ALLOW_ALL_ORIGINS`)
 - PostgreSQL port bound to `127.0.0.1` only (not exposed to network)
 - `reorder-bulk` endpoint capped at 100 items per request; uses `transaction.atomic()` + `select_for_update()` for race condition safety
@@ -93,7 +105,9 @@ frontend/
 
 ## Key Patterns
 
-- UUIDs as primary keys on all models
+- UUIDs as primary keys on all models (except User which uses Django's built-in int PK)
+- All models have `user` FK (nullable during migration phase) — ViewSets enforce user scoping via `get_queryset()` + `perform_create()`
+- When removing `queryset` from ViewSet, must add `basename` to `router.register()` — DRF can't auto-detect
 - TanStack Query for server state, Zustand for UI state
 - `TaskListSerializer` (lightweight) for list views, `TaskSerializer` (full with time_blocks) for detail
 - Tags: accept `tag_ids` on write, return nested `tags` on read
@@ -233,6 +247,10 @@ Types: feat, fix, test, chore, docs, refactor, ci, style
 - **Frontend "Focus" text**: Appears in both tab and timer label — use `getAllByText` not `getByText`
 - **Frontend next/link mock**: Must forward all props (especially `className`) via rest spread — `({ children, href, ...props }) => <a href={href} {...props}>{children}</a>` — otherwise `toHaveClass()` assertions fail
 - **factory-boy deprecation**: `TaskFactory._after_postgeneration` save warning — add `skip_postgeneration_save=True` in Meta to suppress
+- **UserFactory password**: Use `@post_generation` hook with manual `save()` — `PostGenerationMethodCall("set_password")` + `skip_postgeneration_save=True` would skip saving the hashed password
+- **Backend auth tests**: Use `authenticated_client` fixture (JWT Bearer token) — `api_client` fixture returns 401 on all user-scoped endpoints
+- **Frontend authStore tests**: Must use `vi.stubGlobal("localStorage", ...)` because store `.ts` files don't run in jsdom environment
+- **Frontend localStorage in authStore**: Wrap in try-catch — `loadTokens()` runs at module init time when localStorage may not be available
 
 ## Local Environment Notes
 
