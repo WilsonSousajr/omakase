@@ -2,10 +2,20 @@ import datetime
 
 import factory
 import pytest
+from django.contrib.auth.models import User
 from rest_framework.test import APIClient
 
 from pomodoro.models import PomodoroSession
 from tasks.models import Tag, Task, TimeBlock
+
+
+class UserFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = User
+
+    username = factory.Sequence(lambda n: f"user{n}")
+    email = factory.LazyAttribute(lambda obj: f"{obj.username}@example.com")
+    password = factory.PostGenerationMethodCall("set_password", "testpass123")
 
 
 class TagFactory(factory.django.DjangoModelFactory):
@@ -74,3 +84,8 @@ def time_block(db):
 @pytest.fixture
 def pomodoro_session(db):
     return PomodoroSessionFactory()
+
+
+@pytest.fixture
+def user(db):
+    return UserFactory()
