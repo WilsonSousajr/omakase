@@ -51,7 +51,7 @@ docker compose exec frontend pnpm lint       # Run linter
 backend/
   accounts/        # Auth: register, JWT token, me endpoint
   omakase/         # Django project settings, urls, wsgi
-  tasks/           # Task, Tag, TimeBlock models + API
+  tasks/           # Task, Tag, TimeBlock, Workspace, Project models + API
   pomodoro/        # PomodoroSession model + API
 frontend/
   src/
@@ -73,6 +73,8 @@ frontend/
 - `tasks/` — CRUD + `today/` + `reorder-bulk/` (user-scoped)
 - `tags/` — CRUD, filterable by area (user-scoped)
 - `timeblocks/` — CRUD, filterable by date range (user-scoped via task.user)
+- `workspaces/` — CRUD (user-scoped, annotated with project_count)
+- `projects/` — CRUD, filterable by workspace/status (user-scoped via workspace.user, annotated with task_count)
 - `pomodoro/sessions/` — Create, list, patch (user-scoped)
 
 ## Design System
@@ -123,6 +125,9 @@ frontend/
 - `TaskCard` wrapped in `React.memo` — prevents re-render of every card when any sibling changes
 - `taskMap` in calendar views memoized with `useMemo` — prevents object recreation on every render
 - `TimeBlockSerializer.validate()` rejects `end_time <= start_time` at serializer level (400, not DB IntegrityError)
+- Workspace/Project hierarchy: Workspace → Project → Task (optional). Project scoped via `workspace.user`. Task has nullable `project` FK (SET_NULL on delete)
+- Annotated querysets (Count) must add explicit `.order_by()` — annotations lose model-level ordering, causing DRF pagination warnings
+- Workspace/Project serializers include computed `project_count`/`task_count` via annotation (not DB field)
 
 ## Drag & Drop (Plan Mode)
 
