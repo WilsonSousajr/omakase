@@ -20,4 +20,4 @@ export interface ProjectCreate {
   due_date?: string | null;
 }
 
-export interface ProjectUpdate extends Partial<ProjectCreate> {}
+export type ProjectUpdate = Partial<ProjectCreate>;

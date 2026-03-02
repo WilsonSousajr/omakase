@@ -12,4 +12,4 @@ export interface WorkspaceCreate {
   color: string;
 }
 
-export interface WorkspaceUpdate extends Partial<WorkspaceCreate> {}
+export type WorkspaceUpdate = Partial<WorkspaceCreate>;
