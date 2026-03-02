@@ -24,6 +24,7 @@ export function createMockTask(overrides = {}) {
     area: "work",
     kanban_status: "todo",
     tags: [],
+    project: null,
     scheduled_date: null,
     due_date: null,
     estimated_minutes: null,
@@ -59,6 +60,34 @@ export function createMockPomodoroSession(overrides = {}) {
     started_at: "2025-01-01T00:00:00Z",
     ended_at: null,
     completed: false,
+    ...overrides,
+  };
+}
+
+export function createMockWorkspace(overrides = {}) {
+  return {
+    id: crypto.randomUUID(),
+    name: "Test Workspace",
+    color: "#a3a3a3",
+    project_count: 0,
+    created_at: "2025-01-01T00:00:00Z",
+    updated_at: "2025-01-01T00:00:00Z",
+    ...overrides,
+  };
+}
+
+export function createMockProject(overrides = {}) {
+  return {
+    id: crypto.randomUUID(),
+    workspace: crypto.randomUUID(),
+    name: "Test Project",
+    description: "",
+    color: "#a3a3a3",
+    status: "active",
+    due_date: null,
+    task_count: 0,
+    created_at: "2025-01-01T00:00:00Z",
+    updated_at: "2025-01-01T00:00:00Z",
     ...overrides,
   };
 }
@@ -185,4 +214,36 @@ export const handlers = [
     const body = (await request.json()) as Record<string, unknown>;
     return HttpResponse.json(createMockPomodoroSession({ id: params.id, ...body }));
   }),
+
+  // Workspaces
+  http.get(`${API_URL}/workspaces/`, () =>
+    HttpResponse.json(paginated([createMockWorkspace({ name: "Work" }), createMockWorkspace({ name: "Personal" })]))
+  ),
+  http.post(`${API_URL}/workspaces/`, async ({ request }) => {
+    const body = (await request.json()) as Record<string, unknown>;
+    return HttpResponse.json(createMockWorkspace(body), { status: 201 });
+  }),
+  http.patch(`${API_URL}/workspaces/:id/`, async ({ request, params }) => {
+    const body = (await request.json()) as Record<string, unknown>;
+    return HttpResponse.json(createMockWorkspace({ id: params.id, ...body }));
+  }),
+  http.delete(`${API_URL}/workspaces/:id/`, () =>
+    new HttpResponse(null, { status: 204 })
+  ),
+
+  // Projects
+  http.get(`${API_URL}/projects/`, () =>
+    HttpResponse.json(paginated([createMockProject({ name: "Project Alpha" }), createMockProject({ name: "Project Beta" })]))
+  ),
+  http.post(`${API_URL}/projects/`, async ({ request }) => {
+    const body = (await request.json()) as Record<string, unknown>;
+    return HttpResponse.json(createMockProject(body), { status: 201 });
+  }),
+  http.patch(`${API_URL}/projects/:id/`, async ({ request, params }) => {
+    const body = (await request.json()) as Record<string, unknown>;
+    return HttpResponse.json(createMockProject({ id: params.id, ...body }));
+  }),
+  http.delete(`${API_URL}/projects/:id/`, () =>
+    new HttpResponse(null, { status: 204 })
+  ),
 ];
