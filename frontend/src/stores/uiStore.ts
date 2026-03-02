@@ -8,6 +8,8 @@ interface UIState {
   closeModal: () => void;
   activeTaskId: string | null;
   setActiveTaskId: (id: string | null) => void;
+  activeWorkspaceId: string | null;
+  setActiveWorkspaceId: (id: string | null) => void;
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -18,4 +20,6 @@ export const useUIStore = create<UIState>((set) => ({
   closeModal: () => set({ modalOpen: null }),
   activeTaskId: null,
   setActiveTaskId: (id) => set({ activeTaskId: id }),
+  activeWorkspaceId: null,
+  setActiveWorkspaceId: (id) => set({ activeWorkspaceId: id }),
 }));

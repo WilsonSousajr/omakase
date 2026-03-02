@@ -17,9 +17,17 @@ export const KANBAN_STATUSES = [
   { value: "done", label: "Done" },
 ] as const;
 
+export const PROJECT_STATUSES = [
+  { value: "active", label: "Active" },
+  { value: "paused", label: "Paused" },
+  { value: "completed", label: "Completed" },
+  { value: "archived", label: "Archived" },
+] as const;
+
 export type Priority = (typeof PRIORITIES)[number]["value"];
 export type Area = (typeof AREAS)[number]["value"];
 export type KanbanStatus = (typeof KANBAN_STATUSES)[number]["value"];
+export type ProjectStatus = (typeof PROJECT_STATUSES)[number]["value"];
 
 // Drag & Drop
 export const DRAG_ACTIVATION_DISTANCE = 5;
