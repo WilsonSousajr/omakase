@@ -56,9 +56,9 @@ backend/
 frontend/
   src/
     app/(auth)/    # Login + Register pages (no sidebar)
-    app/(main)/    # Plan + Focus pages (with sidebar)
-    components/    # React components (tasks/, calendar/, kanban/, focus/)
-    hooks/         # TanStack Query hooks (useTasks, useTags, useTimeBlocks, usePomodoro, useAuth)
+    app/(main)/    # Plan + Focus + Projects pages (with sidebar)
+    components/    # React components (tasks/, calendar/, kanban/, focus/, projects/)
+    hooks/         # TanStack Query hooks (useTasks, useTags, useTimeBlocks, usePomodoro, useAuth, useWorkspaces, useProjects)
     stores/        # Zustand stores (uiStore, pomodoroStore, calendarStore, authStore)
     lib/           # Utilities (api with JWT interceptors, constants, utils)
     types/         # TypeScript types (task, tag, timeblock, pomodoro, auth)
@@ -128,6 +128,13 @@ frontend/
 - Workspace/Project hierarchy: Workspace → Project → Task (optional). Project scoped via `workspace.user`. Task has nullable `project` FK (SET_NULL on delete)
 - Annotated querysets (Count) must add explicit `.order_by()` — annotations lose model-level ordering, causing DRF pagination warnings
 - Workspace/Project serializers include computed `project_count`/`task_count` via annotation (not DB field)
+- Frontend: `useProjects` create/delete mutations invalidate both `["projects"]` and `["workspaces"]` queries (project_count changes)
+- Frontend: TaskCard receives optional `projects: Map<string, Project>` for O(1) project badge lookup (avoids n+1 queries)
+- Frontend: ProjectBadge uses FolderOpen icon + colored badge (same pattern as tag badges)
+- Frontend: Projects page groups projects by status (Active/Paused/Completed/Archived), uses modal for create/edit
+- Frontend: Sidebar workspace selector sets `activeWorkspaceId` in uiStore — used to filter projects page
+- Frontend: TaskForm project dropdown shows all user's projects (not filtered by workspace)
+- Frontend: `PROJECT_STATUSES` in constants.ts with derived `ProjectStatus` type
 
 ## Drag & Drop (Plan Mode)
 

@@ -153,6 +153,26 @@ rounded-lg px-1.5 py-0.5 text-[10px]
 style={{ backgroundColor: color + "20", color }}
 ```
 
+### Project Badge
+
+Same as tag badge but with a FolderOpen icon prefix. Appears in TaskCard metadata row alongside tags and scheduled date.
+
+```
+flex items-center gap-1 rounded-lg px-1.5 py-0.5 text-[10px]
+style={{ backgroundColor: color + "20", color }}
+Icon: FolderOpen h-2.5 w-2.5
+```
+
+### Project Card
+
+Uses the standard card pattern with a color dot indicator, description preview, task count, and optional due date.
+
+```
+Color dot: h-3 w-3 rounded-full (inline style backgroundColor)
+Task count: ListTodo icon + "N tasks" in text-[10px] text-[var(--color-text-muted)]
+Due date: CalendarDays icon + formatted date
+```
+
 ## Border Radius Scale
 
 | Component | Radius | Tailwind |
