@@ -7,6 +7,7 @@ describe("uiStore", () => {
       sidebarOpen: true,
       modalOpen: null,
       activeTaskId: null,
+      activeWorkspaceId: null,
     });
   });
 
@@ -38,5 +39,16 @@ describe("uiStore", () => {
     useUIStore.getState().setActiveTaskId("abc-123");
     useUIStore.getState().setActiveTaskId(null);
     expect(useUIStore.getState().activeTaskId).toBeNull();
+  });
+
+  it("sets active workspace id", () => {
+    useUIStore.getState().setActiveWorkspaceId("ws-123");
+    expect(useUIStore.getState().activeWorkspaceId).toBe("ws-123");
+  });
+
+  it("clears active workspace id", () => {
+    useUIStore.getState().setActiveWorkspaceId("ws-123");
+    useUIStore.getState().setActiveWorkspaceId(null);
+    expect(useUIStore.getState().activeWorkspaceId).toBeNull();
   });
 });
