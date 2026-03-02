@@ -6,21 +6,27 @@ import {
   ChevronLeft,
   ChevronRight,
   Crosshair,
+  FolderOpen,
   LayoutDashboard,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useUIStore } from "@/stores/uiStore";
+import { useWorkspaces } from "@/hooks/useWorkspaces";
 
 const NAV_ITEMS = [
   { href: "/plan", label: "Plan", icon: Calendar },
   { href: "/focus", label: "Focus", icon: Crosshair },
+  { href: "/projects", label: "Projects", icon: FolderOpen },
 ];
 
 export default function Sidebar() {
   const pathname = usePathname();
   const sidebarOpen = useUIStore((s) => s.sidebarOpen);
   const toggleSidebar = useUIStore((s) => s.toggleSidebar);
+  const activeWorkspaceId = useUIStore((s) => s.activeWorkspaceId);
+  const setActiveWorkspaceId = useUIStore((s) => s.setActiveWorkspaceId);
+  const { data: workspaces = [] } = useWorkspaces();
 
   return (
     <aside
@@ -45,6 +51,26 @@ export default function Sidebar() {
           )}
         </button>
       </div>
+
+      {sidebarOpen && workspaces.length > 0 && (
+        <div className="border-b border-[var(--color-border)] px-3 py-2">
+          <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
+            Workspace
+          </label>
+          <select
+            value={activeWorkspaceId || ""}
+            onChange={(e) => setActiveWorkspaceId(e.target.value || null)}
+            className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-input)] px-2.5 py-1.5 text-xs text-[var(--color-text-primary)] outline-none focus:border-[var(--color-text-secondary)]/40"
+          >
+            <option value="">All workspaces</option>
+            {workspaces.map((ws) => (
+              <option key={ws.id} value={ws.id}>
+                {ws.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       <nav className="flex flex-col gap-1 p-2">
         {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
