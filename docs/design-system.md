@@ -264,10 +264,24 @@ Icons: Clock (hours), BarChart3 (blocks), Flame (streak). Sections conditionally
 
 **Calendar TimeBlock (study):** Uses discipline color instead of priority color, BookOpen icon prefix. Same resize/drag behavior as task time blocks.
 
+**ClassBlockItem (calendar):** Read-only calendar block for virtual class occurrences. Dashed border, ultra-light bg (`color + "0d"`), BookOpen icon, discipline name, class type badge, time range, optional location with MapPin icon. Not draggable, not resizable — purely informational.
+
 ```
-Study form modals: "semester-form", "discipline-form", "studyblock-form"
+Dashed border: border border-dashed, borderColor: color + "50"
+Ultra-light bg: backgroundColor: color + "0d"
+Title: text-xs font-medium, color: color + "c0"
+Type badge: text-[9px] font-semibold capitalize, bg: color + "18", color: color + "90"
+Time + location: text-[10px], color: color + "70" / "60"
+```
+
+**ClassScheduleForm:** Modal form for adding/editing recurring class schedules on a discipline. Day-of-week select, time range inputs, class type select, location text input. Uses `modalOpen === "classschedule-form"`.
+
+**Class Schedule List (discipline detail):** Inline management section below study blocks on `/study/[disciplineId]`. Each schedule row shows day, type badge, active status, time range, location. Edit (Pencil) and delete (Trash2) icons on hover.
+
+```
+Study form modals: "semester-form", "discipline-form", "studyblock-form", "classschedule-form"
 Study page: /study — semesters grid + disciplines grouped by status
-Discipline detail: /study/[disciplineId] — study blocks list with type/status filters
+Discipline detail: /study/[disciplineId] — study blocks list + class schedule management
 Sidebar: BookOpen icon nav item + semester selector dropdown
 ```
 

@@ -53,19 +53,17 @@ backend/
   omakase/         # Django project settings, urls, wsgi
   tasks/           # Task, Tag, TimeBlock, Workspace, Project models + API
   pomodoro/        # PomodoroSession model + API
-  study/           # Semester, Discipline, StudyBlock models + API
-  stats/           # Daily stats endpoint (no models)
+  study/           # Semester, Discipline, StudyBlock, ClassSchedule models + API
   stats/           # Daily stats aggregation endpoint (no models)
-  study/           # Semester, Discipline, StudyBlock models + API
 frontend/
   src/
     app/(auth)/    # Login + Register pages (no sidebar)
     app/(main)/    # Plan + Focus + Projects + Study pages (with sidebar)
     components/    # React components (tasks/, calendar/, kanban/, focus/, projects/, study/)
-    hooks/         # TanStack Query hooks (useTasks, useTags, useTimeBlocks, usePomodoro, useAuth, useWorkspaces, useProjects, useStats, useSemesters, useDisciplines, useStudyBlocks)
+    hooks/         # TanStack Query hooks (useTasks, useTags, useTimeBlocks, usePomodoro, useAuth, useWorkspaces, useProjects, useStats, useSemesters, useDisciplines, useStudyBlocks, useClassSchedules, useClassOccurrences)
     stores/        # Zustand stores (uiStore, pomodoroStore, calendarStore, authStore)
     lib/           # Utilities (api with JWT interceptors, constants, utils)
-    types/         # TypeScript types (task, tag, timeblock, pomodoro, auth, stats, semester, discipline, studyblock)
+    types/         # TypeScript types (task, tag, timeblock, pomodoro, auth, stats, semester, discipline, studyblock, classschedule)
 ```
 
 ## API Endpoints (all under /api/v1/)
@@ -84,6 +82,8 @@ frontend/
 - `study/semesters/` — CRUD (user-scoped, annotated with discipline_count)
 - `study/disciplines/` — CRUD, filterable by semester/status (user-scoped via semester.user, annotated with study_block_count)
 - `study/studyblocks/` — CRUD, filterable by discipline/type/status (user-scoped via discipline.semester.user)
+- `study/classschedules/` — CRUD, filterable by discipline/class_type/is_active (user-scoped via discipline.semester.user)
+- `study/class-occurrences/` — GET computed virtual class occurrences for a date range (date_from, date_to params required, max 90 days)
 
 ## Design System
 
@@ -164,6 +164,15 @@ frontend/
 - Frontend: TimeBlockItem supports both task and study_block rendering — uses discipline color for study blocks, BookOpen icon
 - Frontend: TodayStudyBlocks panel in focus page shows scheduled study blocks below kanban (read-only, not draggable)
 - Frontend: Plan page drag handler supports `type: "studyblock"` — creates TimeBlock with `study_block` FK
+- ClassSchedule: recurring weekly class blocks (discipline FK, day_of_week 0-6, start/end_time, class_type, location, is_active)
+- ClassSchedule CheckConstraint: end_time > start_time, day_of_week 0-6
+- ClassOccurrenceView computes virtual occurrences on-the-fly (not persisted) for a date range, respects semester boundaries
+- Class occurrence composite IDs: `{schedule_id}-{date}` (since they're not DB rows)
+- ClassOccurrenceView: max 90-day range, requires both date_from and date_to params
+- Frontend: ClassBlockItem is read-only (dashed border, lighter bg, BookOpen icon, not draggable/resizable)
+- Frontend: CalendarDayView renders class occurrences before time blocks (class blocks layer behind interactive blocks)
+- Frontend: ClassScheduleForm uses `modalOpen === "classschedule-form"`, managed from discipline detail page
+- Frontend: Discipline detail page has class schedule management section with add/edit/delete
 
 ## Drag & Drop (Plan Mode)
 
