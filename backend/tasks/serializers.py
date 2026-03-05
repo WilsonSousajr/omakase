@@ -35,7 +35,7 @@ class TagSerializer(serializers.ModelSerializer):
 class TimeBlockSerializer(serializers.ModelSerializer):
     class Meta:
         model = TimeBlock
-        fields = ["id", "task", "date", "start_time", "end_time", "created_at", "updated_at"]
+        fields = ["id", "task", "study_block", "date", "start_time", "end_time", "created_at", "updated_at"]
         read_only_fields = ["id", "created_at", "updated_at"]
 
     def validate(self, data):
@@ -43,6 +43,13 @@ class TimeBlockSerializer(serializers.ModelSerializer):
         end = data.get("end_time", getattr(self.instance, "end_time", None))
         if start and end and end <= start:
             raise serializers.ValidationError("end_time must be after start_time.")
+
+        task = data.get("task", getattr(self.instance, "task", None))
+        study_block = data.get("study_block", getattr(self.instance, "study_block", None))
+        if not task and not study_block:
+            raise serializers.ValidationError("Either task or study_block must be provided.")
+        if task and study_block:
+            raise serializers.ValidationError("Cannot set both task and study_block.")
         return data
 
 
