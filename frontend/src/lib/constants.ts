@@ -24,10 +24,43 @@ export const PROJECT_STATUSES = [
   { value: "archived", label: "Archived" },
 ] as const;
 
+export const SEMESTER_STATUSES = [
+  { value: "active", label: "Active" },
+  { value: "completed", label: "Completed" },
+  { value: "archived", label: "Archived" },
+] as const;
+
+export const DISCIPLINE_STATUSES = [
+  { value: "active", label: "Active" },
+  { value: "completed", label: "Completed" },
+  { value: "dropped", label: "Dropped" },
+] as const;
+
+export const STUDY_BLOCK_TYPES = [
+  { value: "theory", label: "Theory" },
+  { value: "exercises", label: "Exercises" },
+  { value: "review", label: "Review" },
+  { value: "assignment", label: "Assignment" },
+  { value: "exam_prep", label: "Exam Prep" },
+  { value: "lab", label: "Lab" },
+  { value: "reading", label: "Reading" },
+] as const;
+
+export const STUDY_BLOCK_STATUSES = [
+  { value: "planned", label: "Planned" },
+  { value: "in_progress", label: "In Progress" },
+  { value: "completed", label: "Completed" },
+  { value: "skipped", label: "Skipped" },
+] as const;
+
 export type Priority = (typeof PRIORITIES)[number]["value"];
 export type Area = (typeof AREAS)[number]["value"];
 export type KanbanStatus = (typeof KANBAN_STATUSES)[number]["value"];
 export type ProjectStatus = (typeof PROJECT_STATUSES)[number]["value"];
+export type SemesterStatus = (typeof SEMESTER_STATUSES)[number]["value"];
+export type DisciplineStatus = (typeof DISCIPLINE_STATUSES)[number]["value"];
+export type StudyBlockType = (typeof STUDY_BLOCK_TYPES)[number]["value"];
+export type StudyBlockStatus = (typeof STUDY_BLOCK_STATUSES)[number]["value"];
 
 // Drag & Drop
 export const DRAG_ACTIVATION_DISTANCE = 5;
