@@ -235,6 +235,21 @@ rounded-2xl border border-[#ef4444]/20 bg-[var(--color-surface-elevated)]
 text-[#ef4444] shadow-lg
 ```
 
+### Sidebar Stats Panel
+
+Bottom-anchored panel in sidebar (`mt-auto`), only visible when sidebar is expanded. Two sections: "Today" and "This Week".
+
+```
+Container: border-t border-[var(--color-border)] px-3 py-3
+Section label: text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]
+Stat row: flex items-center gap-2, icon h-3.5 w-3.5 text-[var(--color-text-faint)]
+Stat text: text-xs text-[var(--color-text-secondary)]
+Progress bar: h-1 rounded-full bg-[var(--color-surface)], fill bg-[var(--color-text-secondary)]
+Weekly labels: text-[11px] text-[var(--color-text-faint)]
+```
+
+Icons: Clock (hours), BarChart3 (blocks), Flame (streak). Sections conditionally hidden when data is zero.
+
 ### Error Boundary
 
 `ErrorBoundary` component wraps `<main>` content in root layout. On render error, shows centered message with "Try Again" button (primary button style). Uses class component (`getDerivedStateFromError`).

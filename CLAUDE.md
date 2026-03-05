@@ -53,15 +53,16 @@ backend/
   omakase/         # Django project settings, urls, wsgi
   tasks/           # Task, Tag, TimeBlock, Workspace, Project models + API
   pomodoro/        # PomodoroSession model + API
+  stats/           # Daily stats aggregation endpoint (no models)
 frontend/
   src/
     app/(auth)/    # Login + Register pages (no sidebar)
     app/(main)/    # Plan + Focus + Projects pages (with sidebar)
     components/    # React components (tasks/, calendar/, kanban/, focus/, projects/)
-    hooks/         # TanStack Query hooks (useTasks, useTags, useTimeBlocks, usePomodoro, useAuth, useWorkspaces, useProjects)
+    hooks/         # TanStack Query hooks (useTasks, useTags, useTimeBlocks, usePomodoro, useAuth, useWorkspaces, useProjects, useStats)
     stores/        # Zustand stores (uiStore, pomodoroStore, calendarStore, authStore)
     lib/           # Utilities (api with JWT interceptors, constants, utils)
-    types/         # TypeScript types (task, tag, timeblock, pomodoro, auth)
+    types/         # TypeScript types (task, tag, timeblock, pomodoro, auth, stats)
 ```
 
 ## API Endpoints (all under /api/v1/)
@@ -76,6 +77,7 @@ frontend/
 - `workspaces/` — CRUD (user-scoped, annotated with project_count)
 - `projects/` — CRUD, filterable by workspace/status (user-scoped via workspace.user, annotated with task_count)
 - `pomodoro/sessions/` — Create, list, patch (user-scoped)
+- `stats/daily/` — GET daily stats (hours focused, blocks, streak, weekly hours)
 
 ## Design System
 
@@ -135,6 +137,9 @@ frontend/
 - Frontend: Sidebar workspace selector sets `activeWorkspaceId` in uiStore — used to filter projects page
 - Frontend: TaskForm project dropdown shows all user's projects (not filtered by workspace)
 - Frontend: `PROJECT_STATUSES` in constants.ts with derived `ProjectStatus` type
+- Stats app: read-only aggregation, no models — queries TimeBlock + PomodoroSession data
+- Frontend: `useDailyStats()` hook auto-refetches every 60s via `refetchInterval`
+- Frontend: SidebarStats renders at sidebar bottom (`mt-auto`), hidden when collapsed, sections hide when no data
 
 ## Drag & Drop (Plan Mode)
 
