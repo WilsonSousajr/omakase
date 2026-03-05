@@ -8,6 +8,7 @@ describe("uiStore", () => {
       modalOpen: null,
       activeTaskId: null,
       activeWorkspaceId: null,
+      activeSemesterId: null,
     });
   });
 
@@ -50,5 +51,16 @@ describe("uiStore", () => {
     useUIStore.getState().setActiveWorkspaceId("ws-123");
     useUIStore.getState().setActiveWorkspaceId(null);
     expect(useUIStore.getState().activeWorkspaceId).toBeNull();
+  });
+
+  it("sets active semester id", () => {
+    useUIStore.getState().setActiveSemesterId("sem-123");
+    expect(useUIStore.getState().activeSemesterId).toBe("sem-123");
+  });
+
+  it("clears active semester id", () => {
+    useUIStore.getState().setActiveSemesterId("sem-123");
+    useUIStore.getState().setActiveSemesterId(null);
+    expect(useUIStore.getState().activeSemesterId).toBeNull();
   });
 });
