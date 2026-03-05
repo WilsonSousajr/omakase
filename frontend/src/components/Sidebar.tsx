@@ -2,6 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import {
+  BookOpen,
   Calendar,
   ChevronLeft,
   ChevronRight,
@@ -13,12 +14,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useUIStore } from "@/stores/uiStore";
 import { useWorkspaces } from "@/hooks/useWorkspaces";
+import { useSemesters } from "@/hooks/useSemesters";
 import SidebarStats from "./SidebarStats";
 
 const NAV_ITEMS = [
   { href: "/plan", label: "Plan", icon: Calendar },
   { href: "/focus", label: "Focus", icon: Crosshair },
   { href: "/projects", label: "Projects", icon: FolderOpen },
+  { href: "/study", label: "Study", icon: BookOpen },
 ];
 
 export default function Sidebar() {
@@ -27,7 +30,10 @@ export default function Sidebar() {
   const toggleSidebar = useUIStore((s) => s.toggleSidebar);
   const activeWorkspaceId = useUIStore((s) => s.activeWorkspaceId);
   const setActiveWorkspaceId = useUIStore((s) => s.setActiveWorkspaceId);
+  const activeSemesterId = useUIStore((s) => s.activeSemesterId);
+  const setActiveSemesterId = useUIStore((s) => s.setActiveSemesterId);
   const { data: workspaces = [] } = useWorkspaces();
+  const { data: semesters = [] } = useSemesters();
 
   return (
     <aside
@@ -67,6 +73,26 @@ export default function Sidebar() {
             {workspaces.map((ws) => (
               <option key={ws.id} value={ws.id}>
                 {ws.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {sidebarOpen && semesters.length > 0 && (
+        <div className="border-b border-[var(--color-border)] px-3 py-2">
+          <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
+            Semester
+          </label>
+          <select
+            value={activeSemesterId || ""}
+            onChange={(e) => setActiveSemesterId(e.target.value || null)}
+            className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-input)] px-2.5 py-1.5 text-xs text-[var(--color-text-primary)] outline-none focus:border-[var(--color-text-secondary)]/40"
+          >
+            <option value="">All semesters</option>
+            {semesters.map((sem) => (
+              <option key={sem.id} value={sem.id}>
+                {sem.name}
               </option>
             ))}
           </select>
