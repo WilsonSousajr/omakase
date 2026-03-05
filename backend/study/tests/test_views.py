@@ -232,7 +232,7 @@ class TestTimeBlockPolymorphicFK:
             format="json",
         )
         assert resp.status_code == status.HTTP_201_CREATED
-        assert resp.data["task"] == str(task.pk)
+        assert str(resp.data["task"]) == str(task.pk)
         assert resp.data["study_block"] is None
 
     def test_create_timeblock_with_study_block(self, authenticated_client, user):
@@ -248,7 +248,7 @@ class TestTimeBlockPolymorphicFK:
             format="json",
         )
         assert resp.status_code == status.HTTP_201_CREATED
-        assert resp.data["study_block"] == str(sb.pk)
+        assert str(resp.data["study_block"]) == str(sb.pk)
         assert resp.data["task"] is None
 
     def test_create_timeblock_without_either_fails(self, authenticated_client):

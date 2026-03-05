@@ -188,9 +188,9 @@ class Task(models.Model):
 
 class TimeBlock(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    task = models.ForeignKey(Task, on_delete=models.SET_NULL, null=True, blank=True, related_name="time_blocks")
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, null=True, blank=True, related_name="time_blocks")
     study_block = models.ForeignKey(
-        "study.StudyBlock", on_delete=models.SET_NULL, null=True, blank=True, related_name="time_blocks"
+        "study.StudyBlock", on_delete=models.CASCADE, null=True, blank=True, related_name="time_blocks"
     )
     date = models.DateField()
     start_time = models.TimeField()

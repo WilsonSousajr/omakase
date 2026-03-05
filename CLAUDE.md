@@ -149,7 +149,7 @@ frontend/
 - Study hierarchy: Semester → Discipline → StudyBlock (parallels Workspace → Project → Task)
 - Discipline scoped via `semester.user`, StudyBlock via `discipline.semester.user` (same pattern as Project → workspace.user)
 - StudyBlock.save() syncs `is_completed ↔ status` (mirrors Task pattern)
-- TimeBlock polymorphic FK: nullable `task` + nullable `study_block`, CheckConstraint requires at least one non-null
+- TimeBlock polymorphic FK: nullable `task` + nullable `study_block`, CASCADE on delete, CheckConstraint requires at least one non-null
 - TimeBlockSerializer validates exactly one of task/study_block on write
 - TimeBlockViewSet uses Q(task__user) | Q(study_block__discipline__semester__user) with .distinct()
 - `block_type` field name (not `type`) to avoid Python reserved word conflict
