@@ -301,6 +301,7 @@ Types: feat, fix, test, chore, docs, refactor, ci, style
 - **Backend auth tests**: Use `authenticated_client` fixture (JWT Bearer token) — `api_client` fixture returns 401 on all user-scoped endpoints
 - **Frontend authStore tests**: Must use `vi.stubGlobal("localStorage", ...)` because store `.ts` files don't run in jsdom environment
 - **Frontend localStorage in authStore**: Wrap in try-catch — `loadTokens()` runs at module init time when localStorage may not be available
+- **Frontend SSR hydration + localStorage**: Components that read localStorage-backed Zustand state (e.g. `isAuthenticated`) must use a `hasMounted` gate (`useState(false)` + `useEffect` → `true`) to avoid hydration mismatch — server sees `null`, client sees stored value
 
 ## Local Environment Notes
 
