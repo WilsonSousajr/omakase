@@ -5,7 +5,7 @@ import { http, HttpResponse } from "msw";
 import { useSemesters } from "../useSemesters";
 import { createTestQueryClient } from "@/test/utils";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { handlers, createMockSemester } from "@/test/handlers";
+import { handlers } from "@/test/handlers";
 import type { ReactNode } from "react";
 
 const server = setupServer(...handlers);
