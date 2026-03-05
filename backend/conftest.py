@@ -7,7 +7,7 @@ from rest_framework.test import APIClient
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from pomodoro.models import PomodoroSession
-from study.models import Discipline, Semester, StudyBlock
+from study.models import ClassSchedule, Discipline, Semester, StudyBlock
 from tasks.models import Project, Tag, Task, TimeBlock, Workspace
 
 
@@ -126,6 +126,19 @@ class StudyBlockFactory(factory.django.DjangoModelFactory):
     status = "planned"
 
 
+class ClassScheduleFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = ClassSchedule
+
+    discipline = factory.SubFactory(DisciplineFactory)
+    day_of_week = 0  # Monday
+    start_time = datetime.time(10, 0)
+    end_time = datetime.time(11, 40)
+    class_type = "lecture"
+    location = "Room 101"
+    is_active = True
+
+
 @pytest.fixture
 def api_client():
     return APIClient()
@@ -177,3 +190,8 @@ def discipline(db, user):
 @pytest.fixture
 def study_block(db, user):
     return StudyBlockFactory(discipline__semester__user=user)
+
+
+@pytest.fixture
+def class_schedule(db, user):
+    return ClassScheduleFactory(discipline__semester__user=user)

@@ -41,6 +41,13 @@ class StudyBlockStatusChoices(models.TextChoices):
     SKIPPED = "skipped", "Skipped"
 
 
+class ClassTypeChoices(models.TextChoices):
+    LECTURE = "lecture", "Lecture"
+    LAB = "lab", "Lab"
+    TUTORIAL = "tutorial", "Tutorial"
+    SEMINAR = "seminar", "Seminar"
+
+
 class PriorityChoices(models.TextChoices):
     LOW = "low", "Low"
     MEDIUM = "medium", "Medium"
@@ -166,3 +173,45 @@ class StudyBlock(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class ClassSchedule(models.Model):
+    DAY_OF_WEEK_CHOICES = [
+        (0, "Monday"),
+        (1, "Tuesday"),
+        (2, "Wednesday"),
+        (3, "Thursday"),
+        (4, "Friday"),
+        (5, "Saturday"),
+        (6, "Sunday"),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    discipline = models.ForeignKey(Discipline, on_delete=models.CASCADE, related_name="class_schedules")
+    day_of_week = models.IntegerField(choices=DAY_OF_WEEK_CHOICES)
+    start_time = models.TimeField()
+    end_time = models.TimeField()
+    class_type = models.CharField(
+        max_length=20, choices=ClassTypeChoices.choices, default=ClassTypeChoices.LECTURE
+    )
+    location = models.CharField(max_length=300, blank=True, default="")
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["day_of_week", "start_time"]
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(end_time__gt=models.F("start_time")),
+                name="class_end_after_start",
+            ),
+            models.CheckConstraint(
+                check=models.Q(day_of_week__gte=0, day_of_week__lte=6),
+                name="class_valid_day_of_week",
+            ),
+        ]
+
+    def __str__(self):
+        day_name = dict(self.DAY_OF_WEEK_CHOICES).get(self.day_of_week, "")
+        return f"{self.discipline} — {day_name} {self.start_time:%H:%M}"
