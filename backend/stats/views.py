@@ -1,6 +1,6 @@
 import datetime
 
-from django.db.models import Sum
+from django.db.models import Q, Sum
 from django.db.models.functions import Coalesce
 from django.utils import timezone
 from rest_framework.response import Response
@@ -47,36 +47,38 @@ class DailyStatsView(APIView):
         return round(total / 60, 1)
 
     def _blocks_today(self, user, today):
-        """Count TimeBlocks for today. Completed = linked task is_completed."""
-        blocks = TimeBlock.objects.filter(task__user=user, date=today).select_related("task")
+        """Count TimeBlocks for today. Completed = linked task/study_block is_completed."""
+        user_filter = Q(task__user=user) | Q(study_block__discipline__semester__user=user)
+        blocks = TimeBlock.objects.filter(user_filter, date=today).select_related("task", "study_block")
         total = blocks.count()
-        completed = blocks.filter(task__is_completed=True).count()
+        completed = blocks.filter(
+            Q(task__is_completed=True) | Q(study_block__is_completed=True)
+        ).count()
         return completed, total
 
     def _current_streak(self, user, today):
         """Count consecutive days backward with at least 1 completed TimeBlock."""
+        dates = set(
+            TimeBlock.objects.filter(
+                Q(task__user=user, task__is_completed=True)
+                | Q(study_block__discipline__semester__user=user, study_block__is_completed=True),
+            ).values_list("date", flat=True).distinct()
+        )
         streak = 0
         day = today
-        while True:
-            has_completed = TimeBlock.objects.filter(
-                task__user=user,
-                date=day,
-                task__is_completed=True,
-            ).exists()
-            if not has_completed:
-                break
+        while day in dates:
             streak += 1
             day -= datetime.timedelta(days=1)
         return streak
 
     def _weekly_hours_by_area(self, user, week_start, today, area):
-        """Sum TimeBlock durations this week for a given task area."""
-        blocks = TimeBlock.objects.filter(
-            task__user=user,
-            task__area=area,
-            date__gte=week_start,
-            date__lte=today,
-        )
+        """Sum TimeBlock durations this week for a given task/study area."""
+        date_filter = Q(date__gte=week_start, date__lte=today)
+        if area == "study":
+            area_filter = Q(study_block__discipline__semester__user=user) | Q(task__user=user, task__area="study")
+        else:
+            area_filter = Q(task__user=user, task__area=area)
+        blocks = TimeBlock.objects.filter(date_filter & area_filter)
         total_minutes = 0
         for block in blocks:
             start = datetime.datetime.combine(block.date, block.start_time)
