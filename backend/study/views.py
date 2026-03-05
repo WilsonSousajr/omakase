@@ -3,6 +3,7 @@ import datetime
 from django.db.models import Count
 from django_filters import rest_framework as filters
 from rest_framework import viewsets
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -48,6 +49,9 @@ class DisciplineViewSet(viewsets.ModelViewSet):
         )
 
     def perform_create(self, serializer):
+        semester = serializer.validated_data.get("semester")
+        if semester and semester.user != self.request.user:
+            raise PermissionDenied("You do not own this semester.")
         serializer.save()
 
 
@@ -65,6 +69,9 @@ class StudyBlockViewSet(viewsets.ModelViewSet):
         return StudyBlock.objects.filter(discipline__semester__user=self.request.user).select_related("discipline")
 
     def perform_create(self, serializer):
+        discipline = serializer.validated_data.get("discipline")
+        if discipline and discipline.semester.user != self.request.user:
+            raise PermissionDenied("You do not own this discipline.")
         serializer.save()
 
 
@@ -85,6 +92,9 @@ class ClassScheduleViewSet(viewsets.ModelViewSet):
         )
 
     def perform_create(self, serializer):
+        discipline = serializer.validated_data.get("discipline")
+        if discipline and discipline.semester.user != self.request.user:
+            raise PermissionDenied("You do not own this discipline.")
         serializer.save()
 
 

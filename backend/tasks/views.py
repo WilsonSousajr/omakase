@@ -4,6 +4,7 @@ from django.db import transaction
 from django_filters import rest_framework as filters
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 
 from django.db.models import Count
@@ -149,4 +150,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         return Project.objects.filter(workspace__user=self.request.user).annotate(task_count=Count("tasks")).order_by("name")
 
     def perform_create(self, serializer):
+        workspace = serializer.validated_data.get("workspace")
+        if workspace and workspace.user != self.request.user:
+            raise PermissionDenied("You do not own this workspace.")
         serializer.save()
