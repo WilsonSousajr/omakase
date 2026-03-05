@@ -13,6 +13,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useUIStore } from "@/stores/uiStore";
 import { useWorkspaces } from "@/hooks/useWorkspaces";
+import SidebarStats from "./SidebarStats";
 
 const NAV_ITEMS = [
   { href: "/plan", label: "Plan", icon: Calendar },
@@ -92,6 +93,12 @@ export default function Sidebar() {
           );
         })}
       </nav>
+
+      {sidebarOpen && (
+        <div className="mt-auto">
+          <SidebarStats />
+        </div>
+      )}
     </aside>
   );
 }
