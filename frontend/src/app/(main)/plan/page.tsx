@@ -5,7 +5,9 @@ import TaskList from "@/components/tasks/TaskList";
 import Calendar from "@/components/calendar/Calendar";
 import { useCreateTimeBlock, useUpdateTimeBlock } from "@/hooks/useTimeBlocks";
 import { useUpdateTask } from "@/hooks/useTasks";
+import { useUpdateStudyBlock } from "@/hooks/useStudyBlocks";
 import type { Task } from "@/types/task";
+import type { StudyBlock } from "@/types/studyblock";
 import type { TimeBlock } from "@/types/timeblock";
 import { DRAG_ACTIVATION_DISTANCE, DEFAULT_TIMEBLOCK_MINUTES } from "@/lib/constants";
 
@@ -21,6 +23,7 @@ export default function PlanPage() {
   const createTimeBlock = useCreateTimeBlock();
   const updateTimeBlock = useUpdateTimeBlock();
   const updateTask = useUpdateTask();
+  const updateStudyBlock = useUpdateStudyBlock();
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: DRAG_ACTIVATION_DISTANCE } })
@@ -35,6 +38,7 @@ export default function PlanPage() {
 
     const activeData = active.data.current as
       | { type: "task"; task: Task }
+      | { type: "studyblock"; studyBlock: StudyBlock }
       | { type: "timeblock"; block: TimeBlock }
       | undefined;
     if (!activeData) return;
@@ -53,6 +57,22 @@ export default function PlanPage() {
         // Set scheduled_date so the task appears in focus mode
         if (activeData.task.scheduled_date !== date) {
           await updateTask.mutateAsync({ id: activeData.task.id, scheduled_date: date });
+        }
+      } catch {
+        // Errors handled by global toast interceptor
+      }
+    } else if (activeData.type === "studyblock") {
+      const sb = activeData.studyBlock;
+      const duration = sb.estimated_minutes || DEFAULT_TIMEBLOCK_MINUTES;
+      try {
+        await createTimeBlock.mutateAsync({
+          study_block: sb.id,
+          date,
+          start_time: time + ":00",
+          end_time: addMinutesToTime(time, duration),
+        });
+        if (sb.scheduled_date !== date) {
+          await updateStudyBlock.mutateAsync({ id: sb.id, scheduled_date: date });
         }
       } catch {
         // Errors handled by global toast interceptor
