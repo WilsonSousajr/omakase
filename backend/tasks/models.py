@@ -185,7 +185,10 @@ class Task(models.Model):
 
 class TimeBlock(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="time_blocks")
+    task = models.ForeignKey(Task, on_delete=models.SET_NULL, null=True, blank=True, related_name="time_blocks")
+    study_block = models.ForeignKey(
+        "study.StudyBlock", on_delete=models.SET_NULL, null=True, blank=True, related_name="time_blocks"
+    )
     date = models.DateField()
     start_time = models.TimeField()
     end_time = models.TimeField()
@@ -199,7 +202,12 @@ class TimeBlock(models.Model):
                 check=models.Q(end_time__gt=models.F("start_time")),
                 name="timeblock_end_after_start",
             ),
+            models.CheckConstraint(
+                check=models.Q(task__isnull=False) | models.Q(study_block__isnull=False),
+                name="timeblock_has_task_or_study_block",
+            ),
         ]
 
     def __str__(self):
-        return f"{self.task.title} — {self.date} {self.start_time}-{self.end_time}"
+        label = self.task.title if self.task else (self.study_block.title if self.study_block else "Unlinked")
+        return f"{label} — {self.date} {self.start_time}-{self.end_time}"
