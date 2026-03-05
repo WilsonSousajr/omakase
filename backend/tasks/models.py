@@ -96,6 +96,9 @@ class Task(models.Model):
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="tasks", null=True, blank=True
     )
     project = models.ForeignKey(Project, on_delete=models.SET_NULL, null=True, blank=True, related_name="tasks")
+    discipline = models.ForeignKey(
+        "study.Discipline", on_delete=models.SET_NULL, null=True, blank=True, related_name="tasks"
+    )
     title = models.CharField(max_length=500)
     description = models.TextField(blank=True, default="")
     notes = models.TextField(blank=True, default="")

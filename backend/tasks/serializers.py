@@ -69,6 +69,7 @@ class TaskListSerializer(serializers.ModelSerializer):
             "area",
             "kanban_status",
             "project",
+            "discipline",
             "tags",
             "tag_ids",
             "scheduled_date",
