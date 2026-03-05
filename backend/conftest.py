@@ -7,6 +7,7 @@ from rest_framework.test import APIClient
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from pomodoro.models import PomodoroSession
+from study.models import Discipline, Semester, StudyBlock
 from tasks.models import Project, Tag, Task, TimeBlock, Workspace
 
 
@@ -91,6 +92,40 @@ class PomodoroSessionFactory(factory.django.DjangoModelFactory):
     duration_minutes = 25
 
 
+class SemesterFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = Semester
+
+    user = factory.LazyFunction(lambda: UserFactory())
+    name = factory.Sequence(lambda n: f"Semester {n}")
+    institution = "Test University"
+    start_date = datetime.date(2026, 3, 1)
+    end_date = datetime.date(2026, 7, 15)
+    status = "active"
+
+
+class DisciplineFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = Discipline
+
+    semester = factory.SubFactory(SemesterFactory)
+    name = factory.Sequence(lambda n: f"Discipline {n}")
+    code = factory.Sequence(lambda n: f"DISC{n:03d}")
+    color = "#a3a3a3"
+    status = "active"
+
+
+class StudyBlockFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = StudyBlock
+
+    discipline = factory.SubFactory(DisciplineFactory)
+    title = factory.Sequence(lambda n: f"Study Block {n}")
+    block_type = "theory"
+    priority = "medium"
+    status = "planned"
+
+
 @pytest.fixture
 def api_client():
     return APIClient()
@@ -127,3 +162,18 @@ def time_block(db, user):
 @pytest.fixture
 def pomodoro_session(db, user):
     return PomodoroSessionFactory(user=user, task__user=user)
+
+
+@pytest.fixture
+def semester(db, user):
+    return SemesterFactory(user=user)
+
+
+@pytest.fixture
+def discipline(db, user):
+    return DisciplineFactory(semester__user=user)
+
+
+@pytest.fixture
+def study_block(db, user):
+    return StudyBlockFactory(discipline__semester__user=user)
