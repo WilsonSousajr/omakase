@@ -76,6 +76,18 @@ export function createMockWorkspace(overrides = {}) {
   };
 }
 
+export function createMockDailyStats(overrides = {}) {
+  return {
+    hours_focused_today: 0,
+    blocks_completed_today: 0,
+    blocks_total_today: 0,
+    current_streak: 0,
+    weekly_work_hours: 0,
+    weekly_study_hours: 0,
+    ...overrides,
+  };
+}
+
 export function createMockProject(overrides = {}) {
   return {
     id: crypto.randomUUID(),
@@ -245,5 +257,17 @@ export const handlers = [
   }),
   http.delete(`${API_URL}/projects/:id/`, () =>
     new HttpResponse(null, { status: 204 })
+  ),
+
+  // Stats
+  http.get(`${API_URL}/stats/daily/`, () =>
+    HttpResponse.json(createMockDailyStats({
+      hours_focused_today: 2.5,
+      blocks_completed_today: 3,
+      blocks_total_today: 5,
+      current_streak: 7,
+      weekly_work_hours: 12.0,
+      weekly_study_hours: 4.5,
+    }))
   ),
 ];
