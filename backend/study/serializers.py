@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Discipline, Semester, StudyBlock
+from .models import ClassSchedule, Discipline, Semester, StudyBlock
 
 
 class SemesterSerializer(serializers.ModelSerializer):
@@ -44,3 +44,32 @@ class StudyBlockSerializer(serializers.ModelSerializer):
             "is_completed", "completed_at", "created_at", "updated_at",
         ]
         read_only_fields = ["id", "completed_at", "created_at", "updated_at"]
+
+
+class ClassScheduleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ClassSchedule
+        fields = [
+            "id", "discipline", "day_of_week", "start_time", "end_time",
+            "class_type", "location", "is_active", "created_at", "updated_at",
+        ]
+        read_only_fields = ["id", "created_at", "updated_at"]
+
+    def validate(self, data):
+        start = data.get("start_time", getattr(self.instance, "start_time", None))
+        end = data.get("end_time", getattr(self.instance, "end_time", None))
+        if start and end and end <= start:
+            raise serializers.ValidationError("end_time must be after start_time.")
+        return data
+
+
+class ClassOccurrenceSerializer(serializers.Serializer):
+    id = serializers.CharField()
+    class_schedule_id = serializers.UUIDField()
+    discipline_name = serializers.CharField()
+    discipline_color = serializers.CharField()
+    class_type = serializers.CharField()
+    location = serializers.CharField()
+    date = serializers.DateField()
+    start_time = serializers.TimeField()
+    end_time = serializers.TimeField()
