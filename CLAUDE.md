@@ -54,6 +54,7 @@ backend/
   tasks/           # Task, Tag, TimeBlock, Workspace, Project models + API
   pomodoro/        # PomodoroSession model + API
   stats/           # Daily stats aggregation endpoint (no models)
+  study/           # Semester, Discipline, StudyBlock models + API
 frontend/
   src/
     app/(auth)/    # Login + Register pages (no sidebar)
@@ -73,11 +74,14 @@ frontend/
 - `auth/me/` — GET current user (IsAuthenticated)
 - `tasks/` — CRUD + `today/` + `reorder-bulk/` (user-scoped)
 - `tags/` — CRUD, filterable by area (user-scoped)
-- `timeblocks/` — CRUD, filterable by date range (user-scoped via task.user)
+- `timeblocks/` — CRUD, filterable by date range (user-scoped via task.user OR study_block.discipline.semester.user)
 - `workspaces/` — CRUD (user-scoped, annotated with project_count)
 - `projects/` — CRUD, filterable by workspace/status (user-scoped via workspace.user, annotated with task_count)
 - `pomodoro/sessions/` — Create, list, patch (user-scoped)
 - `stats/daily/` — GET daily stats (hours focused, blocks, streak, weekly hours)
+- `study/semesters/` — CRUD (user-scoped, annotated with discipline_count)
+- `study/disciplines/` — CRUD, filterable by semester/status (user-scoped via semester.user, annotated with study_block_count)
+- `study/studyblocks/` — CRUD, filterable by discipline/type/status (user-scoped via discipline.semester.user)
 
 ## Design System
 
@@ -140,6 +144,13 @@ frontend/
 - Stats app: read-only aggregation, no models — queries TimeBlock + PomodoroSession data
 - Frontend: `useDailyStats()` hook auto-refetches every 60s via `refetchInterval`
 - Frontend: SidebarStats renders at sidebar bottom (`mt-auto`), hidden when collapsed, sections hide when no data
+- Study hierarchy: Semester → Discipline → StudyBlock (parallels Workspace → Project → Task)
+- Discipline scoped via `semester.user`, StudyBlock via `discipline.semester.user` (same pattern as Project → workspace.user)
+- StudyBlock.save() syncs `is_completed ↔ status` (mirrors Task pattern)
+- TimeBlock polymorphic FK: nullable `task` + nullable `study_block`, CheckConstraint requires at least one non-null
+- TimeBlockSerializer validates exactly one of task/study_block on write
+- TimeBlockViewSet uses Q(task__user) | Q(study_block__discipline__semester__user) with .distinct()
+- `block_type` field name (not `type`) to avoid Python reserved word conflict
 
 ## Drag & Drop (Plan Mode)
 
@@ -186,8 +197,8 @@ docker compose exec backend pip install -r requirements-dev.txt
 ```
 
 **Config:** `backend/pyproject.toml` — pytest settings + coverage config
-**Factories:** `backend/conftest.py` — TagFactory, TaskFactory, TimeBlockFactory, PomodoroSessionFactory
-**Test files:** `backend/{tasks,pomodoro}/tests/test_{models,serializers,views}.py`
+**Factories:** `backend/conftest.py` — TagFactory, TaskFactory, TimeBlockFactory, PomodoroSessionFactory, SemesterFactory, DisciplineFactory, StudyBlockFactory
+**Test files:** `backend/{tasks,pomodoro,study,stats}/tests/test_{models,serializers,views}.py`
 
 ### Frontend (Vitest + React Testing Library + MSW)
 
