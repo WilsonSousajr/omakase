@@ -3,7 +3,7 @@ import datetime
 import pytest
 from django.db import IntegrityError
 
-from conftest import DisciplineFactory, SemesterFactory, StudyBlockFactory
+from conftest import ClassScheduleFactory, DisciplineFactory, SemesterFactory, StudyBlockFactory
 
 
 @pytest.mark.django_db
@@ -73,3 +73,37 @@ class TestStudyBlock:
         sb.save()
         assert sb.status == "planned"
         assert sb.completed_at is None
+
+
+@pytest.mark.django_db
+class TestClassSchedule:
+    def test_str(self, class_schedule):
+        s = str(class_schedule)
+        assert "Monday" in s
+        assert "10:00" in s
+
+    def test_ordering_by_day_and_time(self, user):
+        sem = SemesterFactory(user=user)
+        disc = DisciplineFactory(semester=sem)
+        c_wed = ClassScheduleFactory(discipline=disc, day_of_week=2, start_time=datetime.time(8, 0))
+        c_mon = ClassScheduleFactory(discipline=disc, day_of_week=0, start_time=datetime.time(10, 0))
+        from study.models import ClassSchedule
+
+        schedules = list(ClassSchedule.objects.filter(discipline=disc))
+        assert schedules[0] == c_mon
+        assert schedules[1] == c_wed
+
+    def test_end_before_start_raises_integrity_error(self, user):
+        with pytest.raises(IntegrityError):
+            ClassScheduleFactory(
+                discipline__semester__user=user,
+                start_time=datetime.time(14, 0),
+                end_time=datetime.time(10, 0),
+            )
+
+    def test_invalid_day_of_week_raises_integrity_error(self, user):
+        with pytest.raises(IntegrityError):
+            ClassScheduleFactory(
+                discipline__semester__user=user,
+                day_of_week=7,
+            )
