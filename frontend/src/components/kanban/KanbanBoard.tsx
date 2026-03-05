@@ -9,7 +9,7 @@ import {
   useSensors,
   closestCorners,
 } from "@dnd-kit/core";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { KANBAN_STATUSES, DRAG_ACTIVATION_DISTANCE, type KanbanStatus } from "@/lib/constants";
 import { useTodayTasks, useReorderTasks, useUpdateTask } from "@/hooks/useTasks";
 import type { Task } from "@/types/task";
@@ -22,9 +22,13 @@ export default function KanbanBoard() {
   const reorderTasks = useReorderTasks();
   const updateTask = useUpdateTask();
   const [tasks, setTasks] = useState<Task[]>([]);
+  const isDraggingRef = useRef(false);
+  const preDropSnapshotRef = useRef<Task[]>([]);
 
   useEffect(() => {
-    setTasks(serverTasks);
+    if (!isDraggingRef.current) {
+      setTasks(serverTasks);
+    }
   }, [serverTasks]);
 
   const sensors = useSensors(
@@ -36,6 +40,11 @@ export default function KanbanBoard() {
       tasks.filter((t) => t.kanban_status === status),
     [tasks]
   );
+
+  const handleDragStart = () => {
+    isDraggingRef.current = true;
+    preDropSnapshotRef.current = [...tasks];
+  };
 
   const handleDragOver = (event: DragOverEvent) => {
     const { active, over } = event;
@@ -63,6 +72,7 @@ export default function KanbanBoard() {
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
+    isDraggingRef.current = false;
     const { active, over } = event;
     if (!over) return;
 
@@ -72,9 +82,9 @@ export default function KanbanBoard() {
       kanban_status: t.kanban_status,
     }));
 
-    const snapshot = [...tasks];
+    const rollback = preDropSnapshotRef.current;
     reorderTasks.mutate(reorderItems, {
-      onError: () => setTasks(snapshot),
+      onError: () => setTasks(rollback),
     });
 
     // Also update the specific task's status in case it moved columns
@@ -83,7 +93,7 @@ export default function KanbanBoard() {
     if (movedTask && originalTask && movedTask.kanban_status !== originalTask.kanban_status) {
       updateTask.mutate(
         { id: movedTask.id, kanban_status: movedTask.kanban_status },
-        { onError: () => setTasks(snapshot) },
+        { onError: () => setTasks(rollback) },
       );
     }
   };
@@ -105,6 +115,7 @@ export default function KanbanBoard() {
     <DndContext
       sensors={sensors}
       collisionDetection={closestCorners}
+      onDragStart={handleDragStart}
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
     >
