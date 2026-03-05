@@ -1,7 +1,7 @@
 import pytest
 from django.utils import timezone
 
-from conftest import TagFactory, TaskFactory
+from conftest import DisciplineFactory, StudyBlockFactory, TagFactory, TaskFactory
 from tasks.serializers import (
     TagSerializer,
     TaskListSerializer,
@@ -73,6 +73,46 @@ class TestTaskSerializer:
         assert "notes" in data
         assert "time_blocks" in data
         assert data["notes"] == "Some notes"
+
+
+@pytest.mark.django_db
+class TestTaskDisciplineFK:
+    def test_task_with_discipline_serializes(self):
+        discipline = DisciplineFactory()
+        task = TaskFactory(discipline=discipline, area="study")
+        data = TaskListSerializer(task).data
+        assert str(data["discipline"]) == str(discipline.pk)
+        assert data["area"] == "study"
+
+    def test_task_create_with_discipline(self):
+        discipline = DisciplineFactory()
+        data = {
+            "title": "Study integrals",
+            "area": "study",
+            "discipline": str(discipline.pk),
+        }
+        serializer = TaskListSerializer(data=data)
+        assert serializer.is_valid(), serializer.errors
+        task = serializer.save()
+        assert task.discipline == discipline
+
+    def test_task_without_discipline(self):
+        task = TaskFactory(discipline=None, area="work")
+        data = TaskListSerializer(task).data
+        assert data["discipline"] is None
+
+    def test_discipline_set_null_on_delete(self):
+        discipline = DisciplineFactory()
+        task = TaskFactory(discipline=discipline)
+        discipline.delete()
+        task.refresh_from_db()
+        assert task.discipline is None
+
+    def test_task_detail_includes_discipline(self):
+        discipline = DisciplineFactory()
+        task = TaskFactory(discipline=discipline, area="study")
+        data = TaskSerializer(task).data
+        assert str(data["discipline"]) == str(discipline.pk)
 
 
 @pytest.mark.django_db
