@@ -5,6 +5,7 @@ import { X } from "lucide-react";
 import { PRIORITIES, AREAS } from "@/lib/constants";
 import { useTags } from "@/hooks/useTags";
 import { useProjects } from "@/hooks/useProjects";
+import { useDisciplines } from "@/hooks/useDisciplines";
 import { useCreateTask, useUpdateTask } from "@/hooks/useTasks";
 import { useUIStore } from "@/stores/uiStore";
 import type { Task } from "@/types/task";
@@ -19,6 +20,7 @@ export default function TaskForm({ editTask, onClose }: TaskFormProps) {
   const modalOpen = useUIStore((s) => s.modalOpen);
   const { data: tags = [] } = useTags();
   const { data: projects = [] } = useProjects();
+  const { data: disciplines = [] } = useDisciplines();
   const createTask = useCreateTask();
   const updateTask = useUpdateTask();
 
@@ -27,6 +29,7 @@ export default function TaskForm({ editTask, onClose }: TaskFormProps) {
   const [priority, setPriority] = useState<Priority>("medium");
   const [area, setArea] = useState<Area>("work");
   const [projectId, setProjectId] = useState<string>("");
+  const [disciplineId, setDisciplineId] = useState<string>("");
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const [scheduledDate, setScheduledDate] = useState("");
   const [dueDate, setDueDate] = useState("");
@@ -39,6 +42,7 @@ export default function TaskForm({ editTask, onClose }: TaskFormProps) {
       setPriority(editTask.priority);
       setArea(editTask.area);
       setProjectId(editTask.project || "");
+      setDisciplineId(editTask.discipline || "");
       setSelectedTagIds(editTask.tags.map((t) => t.id));
       setScheduledDate(editTask.scheduled_date || "");
       setDueDate(editTask.due_date || "");
@@ -49,6 +53,7 @@ export default function TaskForm({ editTask, onClose }: TaskFormProps) {
       setPriority("medium");
       setArea("work");
       setProjectId("");
+      setDisciplineId("");
       setSelectedTagIds([]);
       setScheduledDate("");
       setDueDate("");
@@ -68,7 +73,8 @@ export default function TaskForm({ editTask, onClose }: TaskFormProps) {
       priority,
       area,
       tag_ids: selectedTagIds,
-      project: projectId || null,
+      project: area === "study" ? null : (projectId || null),
+      discipline: area === "study" ? (disciplineId || null) : null,
       scheduled_date: scheduledDate || null,
       due_date: dueDate || null,
       estimated_minutes: estimatedMinutes ? parseInt(estimatedMinutes) : null,
@@ -155,19 +161,39 @@ export default function TaskForm({ editTask, onClose }: TaskFormProps) {
               </select>
             </div>
             <div className="flex-1">
-              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">Project</label>
-              <select
-                value={projectId}
-                onChange={(e) => setProjectId(e.target.value)}
-                className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-input)] px-3.5 py-2 text-sm text-[var(--color-text-primary)] outline-none focus:border-[var(--color-text-secondary)]/40"
-              >
-                <option value="">None</option>
-                {projects.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
-                  </option>
-                ))}
-              </select>
+              {area === "study" ? (
+                <>
+                  <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">Discipline</label>
+                  <select
+                    value={disciplineId}
+                    onChange={(e) => setDisciplineId(e.target.value)}
+                    className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-input)] px-3.5 py-2 text-sm text-[var(--color-text-primary)] outline-none focus:border-[var(--color-text-secondary)]/40"
+                  >
+                    <option value="">None</option>
+                    {disciplines.map((d) => (
+                      <option key={d.id} value={d.id}>
+                        {d.name}
+                      </option>
+                    ))}
+                  </select>
+                </>
+              ) : (
+                <>
+                  <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">Project</label>
+                  <select
+                    value={projectId}
+                    onChange={(e) => setProjectId(e.target.value)}
+                    className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-input)] px-3.5 py-2 text-sm text-[var(--color-text-primary)] outline-none focus:border-[var(--color-text-secondary)]/40"
+                  >
+                    <option value="">None</option>
+                    {projects.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name}
+                      </option>
+                    ))}
+                  </select>
+                </>
+              )}
             </div>
           </div>
 

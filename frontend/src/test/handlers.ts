@@ -25,6 +25,7 @@ export function createMockTask(overrides = {}) {
     kanban_status: "todo",
     tags: [],
     project: null,
+    discipline: null,
     scheduled_date: null,
     due_date: null,
     estimated_minutes: null,
