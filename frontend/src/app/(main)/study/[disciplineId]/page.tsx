@@ -2,14 +2,17 @@
 
 import { useState, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Plus } from "lucide-react";
-import { STUDY_BLOCK_TYPES, STUDY_BLOCK_STATUSES } from "@/lib/constants";
+import { ArrowLeft, Plus, Calendar, Pencil, Trash2 } from "lucide-react";
+import { STUDY_BLOCK_TYPES, STUDY_BLOCK_STATUSES, DAYS_OF_WEEK, CLASS_TYPES } from "@/lib/constants";
 import { useDisciplines } from "@/hooks/useDisciplines";
 import { useStudyBlocks, useUpdateStudyBlock, useDeleteStudyBlock } from "@/hooks/useStudyBlocks";
+import { useClassSchedules, useDeleteClassSchedule } from "@/hooks/useClassSchedules";
 import { useUIStore } from "@/stores/uiStore";
 import StudyBlockCard from "@/components/study/StudyBlockCard";
 import StudyBlockForm from "@/components/study/StudyBlockForm";
+import ClassScheduleForm from "@/components/study/ClassScheduleForm";
 import type { StudyBlock } from "@/types/studyblock";
+import type { ClassSchedule } from "@/types/classschedule";
 import type { Discipline } from "@/types/discipline";
 
 export default function DisciplineDetailPage() {
@@ -21,10 +24,13 @@ export default function DisciplineDetailPage() {
 
   const { data: disciplines = [] } = useDisciplines();
   const { data: studyBlocks = [], isLoading } = useStudyBlocks({ discipline: disciplineId });
+  const { data: classSchedules = [] } = useClassSchedules({ discipline: disciplineId });
   const updateStudyBlock = useUpdateStudyBlock();
   const deleteStudyBlock = useDeleteStudyBlock();
+  const deleteClassSchedule = useDeleteClassSchedule();
 
   const [editStudyBlock, setEditStudyBlock] = useState<StudyBlock | null>(null);
+  const [editClassSchedule, setEditClassSchedule] = useState<ClassSchedule | null>(null);
   const [filterType, setFilterType] = useState<string>("");
   const [filterStatus, setFilterStatus] = useState<string>("");
 
@@ -69,8 +75,23 @@ export default function DisciplineDetailPage() {
     });
   };
 
+  const handleNewSchedule = () => {
+    setEditClassSchedule(null);
+    openModal("classschedule-form");
+  };
+
+  const handleEditSchedule = (schedule: ClassSchedule) => {
+    setEditClassSchedule(schedule);
+    openModal("classschedule-form");
+  };
+
+  const handleDeleteSchedule = async (id: string) => {
+    await deleteClassSchedule.mutateAsync(id);
+  };
+
   const handleClose = () => {
     setEditStudyBlock(null);
+    setEditClassSchedule(null);
     closeModal();
   };
 
@@ -171,9 +192,87 @@ export default function DisciplineDetailPage() {
         </div>
       )}
 
+      {/* Class schedules section */}
+      <div className="mt-8 border-t border-[var(--color-border)] pt-6">
+        <div className="mb-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Calendar className="h-4 w-4 text-[var(--color-text-muted)]" />
+            <h2 className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
+              Class Schedule
+            </h2>
+          </div>
+          <button
+            onClick={handleNewSchedule}
+            className="flex items-center gap-1.5 rounded-xl bg-[var(--color-button-primary)] px-3 py-1.5 text-xs font-medium text-[var(--color-button-primary-text)] transition-colors hover:bg-[var(--color-button-primary-hover)]"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            Add Class
+          </button>
+        </div>
+
+        {classSchedules.length === 0 ? (
+          <p className="py-6 text-center text-xs text-[var(--color-text-faint)]">
+            No class schedules yet. Add recurring classes to see them on the calendar.
+          </p>
+        ) : (
+          <div className="grid gap-2">
+            {classSchedules.map((schedule) => {
+              const day = DAYS_OF_WEEK.find((d) => d.value === schedule.day_of_week);
+              const type = CLASS_TYPES.find((t) => t.value === schedule.class_type);
+              return (
+                <div
+                  key={schedule.id}
+                  className="group flex items-center gap-3 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-card)] px-4 py-3"
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-medium text-[var(--color-text-primary)]">
+                        {day?.label || "Unknown"}
+                      </span>
+                      <span className="rounded-lg bg-white/5 px-1.5 py-0.5 text-[9px] font-semibold text-[var(--color-text-muted)]">
+                        {type?.label || schedule.class_type}
+                      </span>
+                      {!schedule.is_active && (
+                        <span className="rounded-lg bg-red-500/10 px-1.5 py-0.5 text-[9px] font-semibold text-red-400">
+                          Inactive
+                        </span>
+                      )}
+                    </div>
+                    <p className="mt-0.5 text-[10px] text-[var(--color-text-faint)]">
+                      {schedule.start_time.slice(0, 5)} – {schedule.end_time.slice(0, 5)}
+                      {schedule.location && ` · ${schedule.location}`}
+                    </p>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                    <button
+                      onClick={() => handleEditSchedule(schedule)}
+                      className="rounded-lg p-1.5 text-[var(--color-text-faint)] hover:bg-white/5 hover:text-[var(--color-text-secondary)]"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteSchedule(schedule.id)}
+                      className="rounded-lg p-1.5 text-[var(--color-text-faint)] hover:bg-red-500/10 hover:text-red-400"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
       <StudyBlockForm
         editStudyBlock={editStudyBlock}
         defaultDisciplineId={disciplineId}
+        onClose={handleClose}
+      />
+
+      <ClassScheduleForm
+        editSchedule={editClassSchedule}
+        disciplineId={disciplineId}
         onClose={handleClose}
       />
     </div>
