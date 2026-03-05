@@ -112,7 +112,15 @@ class TimeBlockViewSet(viewsets.ModelViewSet):
     filterset_class = TimeBlockFilter
 
     def get_queryset(self):
-        return TimeBlock.objects.filter(task__user=self.request.user).select_related("task")
+        from django.db.models import Q
+
+        return (
+            TimeBlock.objects.filter(
+                Q(task__user=self.request.user) | Q(study_block__discipline__semester__user=self.request.user)
+            )
+            .select_related("task", "study_block")
+            .distinct()
+        )
 
 
 class WorkspaceViewSet(viewsets.ModelViewSet):
