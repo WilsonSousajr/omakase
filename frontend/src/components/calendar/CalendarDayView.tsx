@@ -8,7 +8,9 @@ import { useTimeBlocks, useDeleteTimeBlock, useUpdateTimeBlock } from "@/hooks/u
 import { useTasks, useToggleTaskComplete } from "@/hooks/useTasks";
 import { useStudyBlocks, useUpdateStudyBlock } from "@/hooks/useStudyBlocks";
 import { useDisciplines } from "@/hooks/useDisciplines";
+import { useClassOccurrences } from "@/hooks/useClassOccurrences";
 import TimeBlockItem from "./TimeBlockItem";
+import ClassBlockItem from "./ClassBlockItem";
 
 const HOURS = Array.from({ length: 17 }, (_, i) => i + 6); // 06:00 - 22:00
 const SLOT_HEIGHT = 48;
@@ -41,6 +43,7 @@ export default function CalendarDayView() {
   const { data: tasks = [] } = useTasks();
   const { data: studyBlocks = [] } = useStudyBlocks();
   const { data: disciplines = [] } = useDisciplines();
+  const { data: classOccurrences = [] } = useClassOccurrences(dateStr, dateStr);
   const deleteTimeBlock = useDeleteTimeBlock();
   const updateTimeBlock = useUpdateTimeBlock();
   const toggleComplete = useToggleTaskComplete();
@@ -86,6 +89,17 @@ export default function CalendarDayView() {
             <div key={hour}>
               <TimeSlot hour={hour} half={0} date={dateStr} />
               <TimeSlot hour={hour} half={1} date={dateStr} />
+            </div>
+          ))}
+
+          {/* Class occurrences (read-only, dashed) */}
+          {classOccurrences.map((occ) => (
+            <div
+              key={occ.id}
+              className="absolute left-0 right-0"
+              style={{ top: `${timeToOffset(occ.start_time)}px` }}
+            >
+              <ClassBlockItem occurrence={occ} slotHeight={SLOT_HEIGHT} />
             </div>
           ))}
 
