@@ -130,6 +130,37 @@ export function createMockStudyBlock(overrides = {}) {
   };
 }
 
+export function createMockClassSchedule(overrides = {}) {
+  return {
+    id: crypto.randomUUID(),
+    discipline: crypto.randomUUID(),
+    day_of_week: 0,
+    start_time: "10:00:00",
+    end_time: "11:40:00",
+    class_type: "lecture",
+    location: "Room 101",
+    is_active: true,
+    created_at: "2026-01-01T00:00:00Z",
+    updated_at: "2026-01-01T00:00:00Z",
+    ...overrides,
+  };
+}
+
+export function createMockClassOccurrence(overrides = {}) {
+  return {
+    id: `${crypto.randomUUID()}-2026-03-02`,
+    class_schedule_id: crypto.randomUUID(),
+    discipline_name: "Calculo 2",
+    discipline_color: "#3b82f6",
+    class_type: "lecture",
+    location: "Room 101",
+    date: "2026-03-02",
+    start_time: "10:00:00",
+    end_time: "11:40:00",
+    ...overrides,
+  };
+}
+
 export function createMockDailyStats(overrides = {}) {
   return {
     hours_focused_today: 0,
@@ -371,5 +402,32 @@ export const handlers = [
   }),
   http.delete(`${API_URL}/study/studyblocks/:id/`, () =>
     new HttpResponse(null, { status: 204 })
+  ),
+
+  // Class Schedules
+  http.get(`${API_URL}/study/classschedules/`, () =>
+    HttpResponse.json(paginated([
+      createMockClassSchedule({ day_of_week: 0 }),
+      createMockClassSchedule({ day_of_week: 2 }),
+    ]))
+  ),
+  http.post(`${API_URL}/study/classschedules/`, async ({ request }) => {
+    const body = (await request.json()) as Record<string, unknown>;
+    return HttpResponse.json(createMockClassSchedule(body), { status: 201 });
+  }),
+  http.patch(`${API_URL}/study/classschedules/:id/`, async ({ request, params }) => {
+    const body = (await request.json()) as Record<string, unknown>;
+    return HttpResponse.json(createMockClassSchedule({ id: params.id, ...body }));
+  }),
+  http.delete(`${API_URL}/study/classschedules/:id/`, () =>
+    new HttpResponse(null, { status: 204 })
+  ),
+
+  // Class Occurrences
+  http.get(`${API_URL}/study/class-occurrences/`, () =>
+    HttpResponse.json([
+      createMockClassOccurrence({ date: "2026-03-02" }),
+      createMockClassOccurrence({ date: "2026-03-04", discipline_name: "Algebra Linear" }),
+    ])
   ),
 ];

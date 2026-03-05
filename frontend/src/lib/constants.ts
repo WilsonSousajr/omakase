@@ -62,6 +62,25 @@ export type DisciplineStatus = (typeof DISCIPLINE_STATUSES)[number]["value"];
 export type StudyBlockType = (typeof STUDY_BLOCK_TYPES)[number]["value"];
 export type StudyBlockStatus = (typeof STUDY_BLOCK_STATUSES)[number]["value"];
 
+export const CLASS_TYPES = [
+  { value: "lecture", label: "Lecture" },
+  { value: "lab", label: "Lab" },
+  { value: "tutorial", label: "Tutorial" },
+  { value: "seminar", label: "Seminar" },
+] as const;
+
+export const DAYS_OF_WEEK = [
+  { value: 0, label: "Monday" },
+  { value: 1, label: "Tuesday" },
+  { value: 2, label: "Wednesday" },
+  { value: 3, label: "Thursday" },
+  { value: 4, label: "Friday" },
+  { value: 5, label: "Saturday" },
+  { value: 6, label: "Sunday" },
+] as const;
+
+export type ClassType = (typeof CLASS_TYPES)[number]["value"];
+
 // Drag & Drop
 export const DRAG_ACTIVATION_DISTANCE = 5;
 
