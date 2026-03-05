@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     "tasks",
     "pomodoro",
     "stats",
+    "study",
 ]
 
 MIDDLEWARE = [
