@@ -1,6 +1,6 @@
 # Omakase
 
-Productivity app (Notion + Sunsama + Focusbrew). Currently Work module only.
+Productivity app (Notion + Sunsama + Focusbrew). Work + Study modules.
 
 ## Architecture
 
@@ -53,17 +53,19 @@ backend/
   omakase/         # Django project settings, urls, wsgi
   tasks/           # Task, Tag, TimeBlock, Workspace, Project models + API
   pomodoro/        # PomodoroSession model + API
+  study/           # Semester, Discipline, StudyBlock models + API
+  stats/           # Daily stats endpoint (no models)
   stats/           # Daily stats aggregation endpoint (no models)
   study/           # Semester, Discipline, StudyBlock models + API
 frontend/
   src/
     app/(auth)/    # Login + Register pages (no sidebar)
-    app/(main)/    # Plan + Focus + Projects pages (with sidebar)
-    components/    # React components (tasks/, calendar/, kanban/, focus/, projects/)
-    hooks/         # TanStack Query hooks (useTasks, useTags, useTimeBlocks, usePomodoro, useAuth, useWorkspaces, useProjects, useStats)
+    app/(main)/    # Plan + Focus + Projects + Study pages (with sidebar)
+    components/    # React components (tasks/, calendar/, kanban/, focus/, projects/, study/)
+    hooks/         # TanStack Query hooks (useTasks, useTags, useTimeBlocks, usePomodoro, useAuth, useWorkspaces, useProjects, useStats, useSemesters, useDisciplines, useStudyBlocks)
     stores/        # Zustand stores (uiStore, pomodoroStore, calendarStore, authStore)
     lib/           # Utilities (api with JWT interceptors, constants, utils)
-    types/         # TypeScript types (task, tag, timeblock, pomodoro, auth, stats)
+    types/         # TypeScript types (task, tag, timeblock, pomodoro, auth, stats, semester, discipline, studyblock)
 ```
 
 ## API Endpoints (all under /api/v1/)
@@ -151,6 +153,17 @@ frontend/
 - TimeBlockSerializer validates exactly one of task/study_block on write
 - TimeBlockViewSet uses Q(task__user) | Q(study_block__discipline__semester__user) with .distinct()
 - `block_type` field name (not `type`) to avoid Python reserved word conflict
+- Frontend: Study page shows semesters grid + disciplines grouped by status (mirrors Projects page)
+- Frontend: Discipline detail page at `/study/[disciplineId]` lists study blocks with type/status filters
+- Frontend: Sidebar has semester selector (parallels workspace selector) + BookOpen Study nav item
+- Frontend: `activeSemesterId` in uiStore filters discipline list on study page
+- Frontend: `useDisciplines` create/delete mutations invalidate both `["disciplines"]` and `["semesters"]` queries (discipline_count changes)
+- Frontend: `useStudyBlocks` create/delete mutations invalidate both `["studyblocks"]` and `["disciplines"]` queries (study_block_count changes)
+- Frontend: StudyBlockCard uses `React.memo` with discipline `Map<string, Discipline>` for O(1) lookup (same as TaskCard + projects)
+- Frontend: StudyBlockForm uses `modalOpen === "studyblock-form"`, DisciplineForm uses `"discipline-form"`, SemesterForm uses `"semester-form"`
+- Frontend: TimeBlockItem supports both task and study_block rendering — uses discipline color for study blocks, BookOpen icon
+- Frontend: TodayStudyBlocks panel in focus page shows scheduled study blocks below kanban (read-only, not draggable)
+- Frontend: Plan page drag handler supports `type: "studyblock"` — creates TimeBlock with `study_block` FK
 
 ## Drag & Drop (Plan Mode)
 

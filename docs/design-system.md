@@ -250,6 +250,27 @@ Weekly labels: text-[11px] text-[var(--color-text-faint)]
 
 Icons: Clock (hours), BarChart3 (blocks), Flame (streak). Sections conditionally hidden when data is zero.
 
+### Study Components
+
+**SemesterCard:** Card with name, institution, discipline count, date range. Click-to-select with `ring-white/20` active indicator.
+
+**DisciplineCard:** Card with color dot, name, code, professor, block count, credits. Supports `onClick` for navigation to detail page.
+
+**StudyBlockCard:** `React.memo` wrapped. Checkbox (priority-colored when complete), title, priority/type/discipline badges. Edit/delete on hover. Uses `onPointerDown` stopPropagation on buttons.
+
+**DisciplineBadge:** BookOpen icon + colored badge (same pattern as ProjectBadge). Uses `color + "20"` for background alpha.
+
+**TodayStudyBlocks:** Focus page panel below kanban. Shows scheduled study blocks for today with completion toggles and discipline badges. Conditionally rendered (hidden when empty).
+
+**Calendar TimeBlock (study):** Uses discipline color instead of priority color, BookOpen icon prefix. Same resize/drag behavior as task time blocks.
+
+```
+Study form modals: "semester-form", "discipline-form", "studyblock-form"
+Study page: /study — semesters grid + disciplines grouped by status
+Discipline detail: /study/[disciplineId] — study blocks list with type/status filters
+Sidebar: BookOpen icon nav item + semester selector dropdown
+```
+
 ### Error Boundary
 
 `ErrorBoundary` component wraps `<main>` content in root layout. On render error, shows centered message with "Try Again" button (primary button style). Uses class component (`getDerivedStateFromError`).
