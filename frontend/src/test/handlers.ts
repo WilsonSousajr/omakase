@@ -42,6 +42,7 @@ export function createMockTimeBlock(overrides = {}) {
   return {
     id: crypto.randomUUID(),
     task: crypto.randomUUID(),
+    study_block: null,
     date: "2025-01-15",
     start_time: "09:00:00",
     end_time: "10:00:00",
@@ -72,6 +73,59 @@ export function createMockWorkspace(overrides = {}) {
     project_count: 0,
     created_at: "2025-01-01T00:00:00Z",
     updated_at: "2025-01-01T00:00:00Z",
+    ...overrides,
+  };
+}
+
+export function createMockSemester(overrides = {}) {
+  return {
+    id: crypto.randomUUID(),
+    name: "2026.1",
+    institution: "UnB",
+    start_date: "2026-03-01",
+    end_date: "2026-07-15",
+    status: "active",
+    discipline_count: 0,
+    created_at: "2026-01-01T00:00:00Z",
+    updated_at: "2026-01-01T00:00:00Z",
+    ...overrides,
+  };
+}
+
+export function createMockDiscipline(overrides = {}) {
+  return {
+    id: crypto.randomUUID(),
+    semester: crypto.randomUUID(),
+    name: "Calculo 2",
+    code: "MAT0026",
+    professor: "Dr. Silva",
+    color: "#a3a3a3",
+    credits: 6,
+    target_grade: null,
+    status: "active",
+    study_block_count: 0,
+    created_at: "2026-01-01T00:00:00Z",
+    updated_at: "2026-01-01T00:00:00Z",
+    ...overrides,
+  };
+}
+
+export function createMockStudyBlock(overrides = {}) {
+  return {
+    id: crypto.randomUUID(),
+    discipline: crypto.randomUUID(),
+    title: "Chapter 5 Exercises",
+    block_type: "exercises",
+    priority: "medium",
+    status: "planned",
+    notes: "",
+    estimated_minutes: null,
+    scheduled_date: null,
+    due_date: null,
+    is_completed: false,
+    completed_at: null,
+    created_at: "2026-01-01T00:00:00Z",
+    updated_at: "2026-01-01T00:00:00Z",
     ...overrides,
   };
 }
@@ -269,5 +323,53 @@ export const handlers = [
       weekly_work_hours: 12.0,
       weekly_study_hours: 4.5,
     }))
+  ),
+
+  // Semesters
+  http.get(`${API_URL}/study/semesters/`, () =>
+    HttpResponse.json(paginated([createMockSemester({ name: "2026.1" }), createMockSemester({ name: "2025.2" })]))
+  ),
+  http.post(`${API_URL}/study/semesters/`, async ({ request }) => {
+    const body = (await request.json()) as Record<string, unknown>;
+    return HttpResponse.json(createMockSemester(body), { status: 201 });
+  }),
+  http.patch(`${API_URL}/study/semesters/:id/`, async ({ request, params }) => {
+    const body = (await request.json()) as Record<string, unknown>;
+    return HttpResponse.json(createMockSemester({ id: params.id, ...body }));
+  }),
+  http.delete(`${API_URL}/study/semesters/:id/`, () =>
+    new HttpResponse(null, { status: 204 })
+  ),
+
+  // Disciplines
+  http.get(`${API_URL}/study/disciplines/`, () =>
+    HttpResponse.json(paginated([createMockDiscipline({ name: "Calculo 2" }), createMockDiscipline({ name: "Algebra Linear" })]))
+  ),
+  http.post(`${API_URL}/study/disciplines/`, async ({ request }) => {
+    const body = (await request.json()) as Record<string, unknown>;
+    return HttpResponse.json(createMockDiscipline(body), { status: 201 });
+  }),
+  http.patch(`${API_URL}/study/disciplines/:id/`, async ({ request, params }) => {
+    const body = (await request.json()) as Record<string, unknown>;
+    return HttpResponse.json(createMockDiscipline({ id: params.id, ...body }));
+  }),
+  http.delete(`${API_URL}/study/disciplines/:id/`, () =>
+    new HttpResponse(null, { status: 204 })
+  ),
+
+  // Study Blocks
+  http.get(`${API_URL}/study/studyblocks/`, () =>
+    HttpResponse.json(paginated([createMockStudyBlock({ title: "Chapter 5" }), createMockStudyBlock({ title: "Problem Set 3" })]))
+  ),
+  http.post(`${API_URL}/study/studyblocks/`, async ({ request }) => {
+    const body = (await request.json()) as Record<string, unknown>;
+    return HttpResponse.json(createMockStudyBlock(body), { status: 201 });
+  }),
+  http.patch(`${API_URL}/study/studyblocks/:id/`, async ({ request, params }) => {
+    const body = (await request.json()) as Record<string, unknown>;
+    return HttpResponse.json(createMockStudyBlock({ id: params.id, ...body }));
+  }),
+  http.delete(`${API_URL}/study/studyblocks/:id/`, () =>
+    new HttpResponse(null, { status: 204 })
   ),
 ];
