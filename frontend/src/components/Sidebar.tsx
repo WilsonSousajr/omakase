@@ -42,21 +42,26 @@ export default function Sidebar() {
         sidebarOpen ? "w-48" : "w-14"
       )}
     >
-      <div className="flex items-center gap-2 border-b border-[var(--color-border)] p-3">
-        <LayoutDashboard className="h-5 w-5 shrink-0 text-[var(--color-text-secondary)]" />
-        {sidebarOpen && (
-          <span className="text-sm font-semibold text-[var(--color-text-primary)]">Omakase</span>
-        )}
-        <button
-          onClick={toggleSidebar}
-          className="ml-auto rounded-lg p-1 text-[var(--color-text-faint)] hover:bg-[var(--color-surface)] hover:text-[var(--color-text-secondary)]"
-        >
-          {sidebarOpen ? (
-            <ChevronLeft className="h-4 w-4" />
-          ) : (
+      <div className="flex items-center border-b border-[var(--color-border)] p-3">
+        {sidebarOpen ? (
+          <>
+            <LayoutDashboard className="h-5 w-5 shrink-0 text-[var(--color-text-secondary)]" />
+            <span className="ml-2 text-sm font-semibold text-[var(--color-text-primary)]">Omakase</span>
+            <button
+              onClick={toggleSidebar}
+              className="ml-auto rounded-lg p-1 text-[var(--color-text-faint)] hover:bg-[var(--color-surface)] hover:text-[var(--color-text-secondary)]"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+          </>
+        ) : (
+          <button
+            onClick={toggleSidebar}
+            className="mx-auto rounded-lg p-1 text-[var(--color-text-faint)] hover:bg-[var(--color-surface)] hover:text-[var(--color-text-secondary)]"
+          >
             <ChevronRight className="h-4 w-4" />
-          )}
-        </button>
+          </button>
+        )}
       </div>
 
       {sidebarOpen && workspaces.length > 0 && (
