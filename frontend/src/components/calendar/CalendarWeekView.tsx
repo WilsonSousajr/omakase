@@ -53,7 +53,7 @@ export default function CalendarWeekView() {
 
   function timeToOffset(time: string): number {
     const [h, m] = time.split(":").map(Number);
-    return ((h - 6) * 60 + m) / 30 * (SLOT_HEIGHT / 2);
+    return Math.max(0, ((h - 6) * 60 + m) / 30 * (SLOT_HEIGHT / 2));
   }
 
   const blocksByDate = timeBlocks.reduce(

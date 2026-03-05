@@ -13,7 +13,7 @@ import { DRAG_ACTIVATION_DISTANCE, DEFAULT_TIMEBLOCK_MINUTES } from "@/lib/const
 
 function addMinutesToTime(time: string, minutes: number): string {
   const [h, m] = time.split(":").map(Number);
-  const total = h * 60 + m + minutes;
+  const total = Math.min(h * 60 + m + minutes, 22 * 60);
   const newH = Math.floor(total / 60);
   const newM = total % 60;
   return `${newH.toString().padStart(2, "0")}:${newM.toString().padStart(2, "0")}:00`;
