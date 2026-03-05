@@ -171,3 +171,43 @@ class TestTimeBlockSerializerValidation:
         }
         serializer = TimeBlockSerializer(data=data)
         assert serializer.is_valid()
+
+    def test_study_block_fk_serializes(self, study_block):
+        from conftest import TimeBlockFactory
+
+        tb = TimeBlockFactory(task=None, study_block=study_block)
+        data = TimeBlockSerializer(tb).data
+        assert str(data["study_block"]) == str(study_block.pk)
+        assert data["task"] is None
+
+    def test_both_task_and_study_block_rejected(self, task, study_block):
+        data = {
+            "task": str(task.id),
+            "study_block": str(study_block.pk),
+            "date": "2025-01-15",
+            "start_time": "09:00:00",
+            "end_time": "10:00:00",
+        }
+        serializer = TimeBlockSerializer(data=data)
+        assert not serializer.is_valid()
+        assert "non_field_errors" in serializer.errors
+
+    def test_neither_task_nor_study_block_rejected(self):
+        data = {
+            "date": "2025-01-15",
+            "start_time": "09:00:00",
+            "end_time": "10:00:00",
+        }
+        serializer = TimeBlockSerializer(data=data)
+        assert not serializer.is_valid()
+        assert "non_field_errors" in serializer.errors
+
+    def test_valid_with_study_block(self, study_block):
+        data = {
+            "study_block": str(study_block.pk),
+            "date": "2025-01-15",
+            "start_time": "09:00:00",
+            "end_time": "10:00:00",
+        }
+        serializer = TimeBlockSerializer(data=data)
+        assert serializer.is_valid(), serializer.errors
