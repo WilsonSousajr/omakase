@@ -4,7 +4,13 @@ import pytest
 from django.utils import timezone
 from rest_framework import status
 
-from conftest import PomodoroSessionFactory, TaskFactory, TimeBlockFactory
+from conftest import (
+    DisciplineFactory,
+    PomodoroSessionFactory,
+    StudyBlockFactory,
+    TaskFactory,
+    TimeBlockFactory,
+)
 
 
 @pytest.mark.django_db
@@ -173,3 +179,77 @@ class TestDailyStatsView:
             "weekly_study_hours",
         }
         assert set(resp.data.keys()) == expected_keys
+
+
+@pytest.mark.django_db
+class TestReviewSummaryView:
+    URL = "/api/v1/stats/review/"
+
+    def test_unauthenticated_returns_401(self, api_client):
+        resp = api_client.get(self.URL, {"date": "2026-03-06"})
+        assert resp.status_code == status.HTTP_401_UNAUTHORIZED
+
+    def test_missing_date_returns_400(self, authenticated_client):
+        resp = authenticated_client.get(self.URL)
+        assert resp.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_empty_day(self, authenticated_client):
+        resp = authenticated_client.get(self.URL, {"date": "2026-03-06"})
+        assert resp.status_code == status.HTTP_200_OK
+        assert resp.data["hours_focused"] == 0
+        assert resp.data["blocks_completed"] == 0
+        assert resp.data["blocks_total"] == 0
+        assert resp.data["incomplete_tasks"] == []
+        assert resp.data["incomplete_study_blocks"] == []
+        assert resp.data["completed_items"] == []
+        assert resp.data["daily_review"] is None
+
+    def test_summary_with_data(self, authenticated_client, user):
+        today = datetime.date(2026, 3, 6)
+        completed_task = TaskFactory(
+            user=user,
+            title="Done task",
+            is_completed=True,
+            scheduled_date=today,
+            estimated_minutes=30,
+        )
+        TimeBlockFactory(
+            task=completed_task,
+            date=today,
+            start_time=datetime.time(9, 0),
+            end_time=datetime.time(9, 45),
+        )
+        TaskFactory(
+            user=user,
+            title="Pending task",
+            scheduled_date=today,
+            estimated_minutes=60,
+        )
+        resp = authenticated_client.get(self.URL, {"date": "2026-03-06"})
+        assert resp.status_code == status.HTTP_200_OK
+        assert resp.data["blocks_total"] == 1
+        assert resp.data["blocks_completed"] == 1
+        assert len(resp.data["incomplete_tasks"]) == 1
+        assert resp.data["incomplete_tasks"][0]["title"] == "Pending task"
+        assert len(resp.data["completed_items"]) == 1
+        assert resp.data["completed_items"][0]["title"] == "Done task"
+        assert resp.data["completed_items"][0]["actual_minutes"] == 45
+
+    def test_includes_study_blocks(self, authenticated_client, user):
+        today = datetime.date(2026, 3, 6)
+        disc = DisciplineFactory(semester__user=user)
+        StudyBlockFactory(
+            discipline=disc,
+            title="Incomplete SB",
+            scheduled_date=today,
+            status="planned",
+        )
+        resp = authenticated_client.get(self.URL, {"date": "2026-03-06"})
+        assert len(resp.data["incomplete_study_blocks"]) == 1
+        assert resp.data["incomplete_study_blocks"][0]["title"] == "Incomplete SB"
+
+    def test_other_user_data_excluded(self, authenticated_client, user):
+        today = datetime.date(2026, 3, 6)
+        TaskFactory(title="Other user task", scheduled_date=today)  # different user
+        resp = authenticated_client.get(self.URL, {"date": "2026-03-06"})
+        assert len(resp.data["incomplete_tasks"]) == 0

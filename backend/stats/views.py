@@ -8,7 +8,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from pomodoro.models import PomodoroSession
-from tasks.models import TimeBlock
+from study.models import StudyBlock
+from tasks.models import Task, TimeBlock
 
 from .models import DailyReview
 from .serializers import DailyReviewSerializer
@@ -89,6 +90,107 @@ class DailyStatsView(APIView):
             end = datetime.datetime.combine(block.date, block.end_time)
             total_minutes += (end - start).total_seconds() / 60
         return round(total_minutes / 60, 1)
+
+
+class ReviewSummaryView(APIView):
+    """Aggregate review data for a given date."""
+
+    def get(self, request):
+        date_str = request.query_params.get("date")
+        if not date_str:
+            return Response(
+                {"detail": "date query parameter is required."},
+                status=400,
+            )
+
+        try:
+            review_date = datetime.date.fromisoformat(date_str)
+        except ValueError:
+            return Response(
+                {"detail": "Invalid date format. Use YYYY-MM-DD."},
+                status=400,
+            )
+
+        user = request.user
+
+        hours_focused = self._hours_focused(user, review_date)
+
+        user_filter = Q(task__user=user) | Q(
+            study_block__discipline__semester__user=user
+        )
+        blocks = TimeBlock.objects.filter(
+            user_filter, date=review_date
+        ).select_related("task", "study_block")
+        blocks_total = blocks.count()
+        blocks_completed = blocks.filter(
+            Q(task__is_completed=True) | Q(study_block__is_completed=True)
+        ).count()
+
+        incomplete_tasks = Task.objects.filter(
+            user=user,
+            scheduled_date=review_date,
+            is_completed=False,
+        ).values("id", "title", "priority", "area", "estimated_minutes")
+
+        incomplete_study_blocks = StudyBlock.objects.filter(
+            discipline__semester__user=user,
+            scheduled_date=review_date,
+            is_completed=False,
+        ).values("id", "title", "block_type", "priority", "estimated_minutes")
+
+        completed_items = []
+        for block in blocks:
+            is_task = block.task is not None
+            linked = block.task if is_task else block.study_block
+            if not linked:
+                continue
+            if is_task and not linked.is_completed:
+                continue
+            if not is_task and not linked.is_completed:
+                continue
+            start = datetime.datetime.combine(block.date, block.start_time)
+            end = datetime.datetime.combine(block.date, block.end_time)
+            actual_min = int((end - start).total_seconds() / 60)
+            completed_items.append(
+                {
+                    "id": str(linked.id),
+                    "title": linked.title,
+                    "type": "task" if is_task else "studyblock",
+                    "estimated_minutes": linked.estimated_minutes,
+                    "actual_minutes": actual_min,
+                }
+            )
+
+        daily_review = DailyReview.objects.filter(
+            user=user, date=review_date
+        ).first()
+        review_data = (
+            DailyReviewSerializer(daily_review).data if daily_review else None
+        )
+
+        return Response(
+            {
+                "date": review_date.isoformat(),
+                "hours_focused": hours_focused,
+                "blocks_completed": blocks_completed,
+                "blocks_total": blocks_total,
+                "incomplete_tasks": list(incomplete_tasks),
+                "incomplete_study_blocks": list(incomplete_study_blocks),
+                "completed_items": completed_items,
+                "daily_review": review_data,
+            }
+        )
+
+    def _hours_focused(self, user, date):
+        total = (
+            PomodoroSession.objects.filter(
+                user=user,
+                session_type="focus",
+                completed=True,
+                started_at__date=date,
+            ).aggregate(total=Coalesce(Sum("duration_minutes"), 0))["total"]
+        )
+        return round(total / 60, 1)
 
 
 class DailyReviewViewSet(viewsets.ModelViewSet):
