@@ -162,6 +162,34 @@ export function createMockClassOccurrence(overrides = {}) {
   };
 }
 
+export function createMockDailyReview(overrides = {}) {
+  return {
+    id: crypto.randomUUID(),
+    date: "2026-03-06",
+    productivity_rating: null,
+    win_of_the_day: "",
+    is_shutdown: false,
+    shutdown_at: null,
+    created_at: "2026-03-06T22:00:00Z",
+    updated_at: "2026-03-06T22:00:00Z",
+    ...overrides,
+  };
+}
+
+export function createMockReviewSummary(overrides = {}) {
+  return {
+    date: "2026-03-06",
+    hours_focused: 0,
+    blocks_completed: 0,
+    blocks_total: 0,
+    incomplete_tasks: [],
+    incomplete_study_blocks: [],
+    completed_items: [],
+    daily_review: null,
+    ...overrides,
+  };
+}
+
 export function createMockDailyStats(overrides = {}) {
   return {
     hours_focused_today: 0,
@@ -356,6 +384,22 @@ export const handlers = [
       weekly_study_hours: 4.5,
     }))
   ),
+
+  // Daily Reviews
+  http.get(`${API_URL}/stats/review/`, () =>
+    HttpResponse.json(createMockReviewSummary())
+  ),
+  http.get(`${API_URL}/stats/reviews/`, () =>
+    HttpResponse.json(paginated([]))
+  ),
+  http.post(`${API_URL}/stats/reviews/`, async ({ request }) => {
+    const body = (await request.json()) as Record<string, unknown>;
+    return HttpResponse.json(createMockDailyReview(body), { status: 201 });
+  }),
+  http.patch(`${API_URL}/stats/reviews/:id/`, async ({ request, params }) => {
+    const body = (await request.json()) as Record<string, unknown>;
+    return HttpResponse.json(createMockDailyReview({ id: params.id, ...body }));
+  }),
 
   // Semesters
   http.get(`${API_URL}/study/semesters/`, () =>
