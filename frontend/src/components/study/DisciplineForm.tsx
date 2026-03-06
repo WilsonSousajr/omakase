@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { X } from "lucide-react";
 import { DISCIPLINE_STATUSES } from "@/lib/constants";
 import { useSemesters } from "@/hooks/useSemesters";
@@ -29,6 +29,7 @@ export default function DisciplineForm({ editDiscipline, defaultSemesterId, onCl
   const [credits, setCredits] = useState("");
   const [targetGrade, setTargetGrade] = useState("");
   const [status, setStatus] = useState<DisciplineStatus>("active");
+  const defaultsInitialized = useRef(false);
 
   useEffect(() => {
     if (editDiscipline) {
@@ -40,15 +41,13 @@ export default function DisciplineForm({ editDiscipline, defaultSemesterId, onCl
       setCredits(editDiscipline.credits?.toString() || "");
       setTargetGrade(editDiscipline.target_grade?.toString() || "");
       setStatus(editDiscipline.status);
-    } else {
-      setName("");
-      setCode("");
-      setProfessor("");
-      setSemesterId(defaultSemesterId || semesters[0]?.id || "");
-      setColor("#a3a3a3");
-      setCredits("");
-      setTargetGrade("");
-      setStatus("active");
+      defaultsInitialized.current = true;
+    } else if (!defaultsInitialized.current) {
+      const defaultId = defaultSemesterId || semesters[0]?.id || "";
+      if (defaultId) {
+        setSemesterId(defaultId);
+        defaultsInitialized.current = true;
+      }
     }
   }, [editDiscipline, semesters, defaultSemesterId]);
 

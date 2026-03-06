@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { X } from "lucide-react";
 import { PRIORITIES, STUDY_BLOCK_TYPES, STUDY_BLOCK_STATUSES } from "@/lib/constants";
 import { useDisciplines } from "@/hooks/useDisciplines";
@@ -30,6 +30,7 @@ export default function StudyBlockForm({ editStudyBlock, defaultDisciplineId, on
   const [estimatedMinutes, setEstimatedMinutes] = useState("");
   const [scheduledDate, setScheduledDate] = useState("");
   const [dueDate, setDueDate] = useState("");
+  const defaultsInitialized = useRef(false);
 
   useEffect(() => {
     if (editStudyBlock) {
@@ -42,16 +43,13 @@ export default function StudyBlockForm({ editStudyBlock, defaultDisciplineId, on
       setEstimatedMinutes(editStudyBlock.estimated_minutes?.toString() || "");
       setScheduledDate(editStudyBlock.scheduled_date || "");
       setDueDate(editStudyBlock.due_date || "");
-    } else {
-      setTitle("");
-      setDisciplineId(defaultDisciplineId || disciplines[0]?.id || "");
-      setBlockType("theory");
-      setPriority("medium");
-      setStatus("planned");
-      setNotes("");
-      setEstimatedMinutes("");
-      setScheduledDate("");
-      setDueDate("");
+      defaultsInitialized.current = true;
+    } else if (!defaultsInitialized.current) {
+      const defaultId = defaultDisciplineId || disciplines[0]?.id || "";
+      if (defaultId) {
+        setDisciplineId(defaultId);
+        defaultsInitialized.current = true;
+      }
     }
   }, [editStudyBlock, disciplines, defaultDisciplineId]);
 
