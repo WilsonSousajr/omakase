@@ -7,6 +7,7 @@ from rest_framework.test import APIClient
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from pomodoro.models import PomodoroSession
+from stats.models import DailyReview
 from study.models import ClassSchedule, Discipline, Semester, StudyBlock
 from tasks.models import Project, Tag, Task, TimeBlock, Workspace
 
@@ -139,6 +140,17 @@ class ClassScheduleFactory(factory.django.DjangoModelFactory):
     is_active = True
 
 
+class DailyReviewFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = DailyReview
+
+    user = factory.LazyFunction(lambda: UserFactory())
+    date = datetime.date.today()
+    productivity_rating = None
+    win_of_the_day = ""
+    is_shutdown = False
+
+
 @pytest.fixture
 def api_client():
     return APIClient()
@@ -195,3 +207,8 @@ def study_block(db, user):
 @pytest.fixture
 def class_schedule(db, user):
     return ClassScheduleFactory(discipline__semester__user=user)
+
+
+@pytest.fixture
+def daily_review(db, user):
+    return DailyReviewFactory(user=user)
