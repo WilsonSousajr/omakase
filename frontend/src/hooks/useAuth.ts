@@ -56,18 +56,27 @@ export function useRegister() {
   return useMutation({
     mutationFn: async (credentials: RegisterCredentials) => {
       await api.post<User>("/auth/register/", credentials);
-      const { data: tokens } = await api.post<AuthTokens>("/auth/token/", {
-        username: credentials.username,
-        password: credentials.password,
-      });
-      const { data: user } = await api.get<User>("/auth/me/", {
-        headers: { Authorization: `Bearer ${tokens.access}` },
-      });
-      return { user, tokens };
+      try {
+        const { data: tokens } = await api.post<AuthTokens>("/auth/token/", {
+          username: credentials.username,
+          password: credentials.password,
+        });
+        const { data: user } = await api.get<User>("/auth/me/", {
+          headers: { Authorization: `Bearer ${tokens.access}` },
+        });
+        return { user, tokens, loginFailed: false as const };
+      } catch {
+        // Account created but auto-login failed — redirect to login
+        return { user: null, tokens: null, loginFailed: true as const };
+      }
     },
-    onSuccess: ({ user, tokens }) => {
-      setAuth(user, tokens);
-      router.push("/plan");
+    onSuccess: (result) => {
+      if (result.loginFailed) {
+        router.push("/login");
+      } else {
+        setAuth(result.user!, result.tokens!);
+        router.push("/plan");
+      }
     },
   });
 }
