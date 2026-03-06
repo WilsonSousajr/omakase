@@ -17,3 +17,15 @@ class DailyReviewSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
         read_only_fields = ["id", "created_at", "updated_at"]
+
+    def validate(self, data):
+        request = self.context.get("request")
+        if request and not self.instance:
+            date = data.get("date")
+            if date and DailyReview.objects.filter(
+                user=request.user, date=date
+            ).exists():
+                raise serializers.ValidationError(
+                    {"date": "A review for this date already exists."}
+                )
+        return data

@@ -3,11 +3,15 @@ import datetime
 from django.db.models import Q, Sum
 from django.db.models.functions import Coalesce
 from django.utils import timezone
+from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from pomodoro.models import PomodoroSession
 from tasks.models import TimeBlock
+
+from .models import DailyReview
+from .serializers import DailyReviewSerializer
 
 
 class DailyStatsView(APIView):
@@ -85,3 +89,20 @@ class DailyStatsView(APIView):
             end = datetime.datetime.combine(block.date, block.end_time)
             total_minutes += (end - start).total_seconds() / 60
         return round(total_minutes / 60, 1)
+
+
+class DailyReviewViewSet(viewsets.ModelViewSet):
+    serializer_class = DailyReviewSerializer
+
+    def get_queryset(self):
+        return DailyReview.objects.filter(user=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+    def perform_update(self, serializer):
+        instance = serializer.instance
+        if serializer.validated_data.get("is_shutdown") and not instance.is_shutdown:
+            serializer.save(shutdown_at=timezone.now())
+        else:
+            serializer.save()
