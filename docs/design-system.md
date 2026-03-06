@@ -285,6 +285,27 @@ Discipline detail: /study/[disciplineId] — study blocks list + class schedule 
 Sidebar: BookOpen icon nav item + semester selector dropdown
 ```
 
+### Review Components
+
+**Review Page:** 6-step wizard at `/review`. Step indicator: dot + line progress bar at top (`h-1.5 w-1.5 rounded-full`, connected by `h-px w-6` lines). Content area centered with `max-w-2xl`.
+
+**ReviewSummary (Step 0):** Stats row with 3 cards (hours focused, blocks completed/total, completion %). Completed items with green Check icon, incomplete items with amber Circle icon and `border-amber-500/20`.
+
+**ReviewRollover (Step 1):** Cards for each incomplete item with 4 action buttons (Tomorrow, Pick date, Backlog, Skip). Selected card dims with `opacity-60` and shows action label badge. "Apply & Continue" disabled until all items have decisions.
+
+**ReviewScore (Step 2):** 5 rating buttons (1-5) with labels. Selected button gets `ring-1 ring-white/20 bg-white/10`. Continue disabled until selection.
+
+**ReviewWin (Step 3):** Textarea with placeholder. Optional — has both "Skip" (ghost link) and "Continue" (primary button).
+
+**ReviewPreview (Step 4):** Read-only list of tomorrow's class occurrences (dashed border, discipline color dot), tasks, and study blocks.
+
+**ReviewShutdown (Step 5):** Centered Moon icon, two states: pre-shutdown ("Shut Down" primary button) and post-shutdown ("Great work today. Time to rest." with "Close" ghost button → `/plan`).
+
+```
+Sidebar nav order: Plan → Focus → Review → Projects → Study
+Review icon: CheckSquare from lucide-react
+```
+
 ### Error Boundary
 
 `ErrorBoundary` component wraps `<main>` content in root layout. On render error, shows centered message with "Try Again" button (primary button style). Uses class component (`getDerivedStateFromError`).

@@ -54,16 +54,16 @@ backend/
   tasks/           # Task, Tag, TimeBlock, Workspace, Project models + API
   pomodoro/        # PomodoroSession model + API
   study/           # Semester, Discipline, StudyBlock, ClassSchedule models + API
-  stats/           # Daily stats aggregation endpoint (no models)
+  stats/           # Daily stats aggregation + DailyReview model + ReviewSummaryView
 frontend/
   src/
     app/(auth)/    # Login + Register pages (no sidebar)
-    app/(main)/    # Plan + Focus + Projects + Study pages (with sidebar)
-    components/    # React components (tasks/, calendar/, kanban/, focus/, projects/, study/)
-    hooks/         # TanStack Query hooks (useTasks, useTags, useTimeBlocks, usePomodoro, useAuth, useWorkspaces, useProjects, useStats, useSemesters, useDisciplines, useStudyBlocks, useClassSchedules, useClassOccurrences)
+    app/(main)/    # Plan + Focus + Review + Projects + Study pages (with sidebar)
+    components/    # React components (tasks/, calendar/, kanban/, focus/, projects/, study/, review/)
+    hooks/         # TanStack Query hooks (useTasks, useTags, useTimeBlocks, usePomodoro, useAuth, useWorkspaces, useProjects, useStats, useSemesters, useDisciplines, useStudyBlocks, useClassSchedules, useClassOccurrences, useDailyReviews)
     stores/        # Zustand stores (uiStore, pomodoroStore, calendarStore, authStore)
     lib/           # Utilities (api with JWT interceptors, constants, utils)
-    types/         # TypeScript types (task, tag, timeblock, pomodoro, auth, stats, semester, discipline, studyblock, classschedule)
+    types/         # TypeScript types (task, tag, timeblock, pomodoro, auth, stats, semester, discipline, studyblock, classschedule, dailyreview)
 ```
 
 ## API Endpoints (all under /api/v1/)
@@ -79,6 +79,8 @@ frontend/
 - `projects/` — CRUD, filterable by workspace/status (user-scoped via workspace.user, annotated with task_count)
 - `pomodoro/sessions/` — Create, list, patch (user-scoped)
 - `stats/daily/` — GET daily stats (hours focused, blocks, streak, weekly hours)
+- `stats/review/` — GET review summary for a date (date param required, aggregates TimeBlock/Task/StudyBlock/PomodoroSession)
+- `stats/reviews/` — CRUD DailyReview (user-scoped, unique per user+date)
 - `study/semesters/` — CRUD (user-scoped, annotated with discipline_count)
 - `study/disciplines/` — CRUD, filterable by semester/status (user-scoped via semester.user, annotated with study_block_count)
 - `study/studyblocks/` — CRUD, filterable by discipline/type/status (user-scoped via discipline.semester.user)
@@ -143,7 +145,7 @@ frontend/
 - Frontend: Sidebar workspace selector sets `activeWorkspaceId` in uiStore — used to filter projects page
 - Frontend: TaskForm project dropdown shows all user's projects (not filtered by workspace)
 - Frontend: `PROJECT_STATUSES` in constants.ts with derived `ProjectStatus` type
-- Stats app: read-only aggregation, no models — queries TimeBlock + PomodoroSession data
+- Stats app: DailyStatsView (read-only aggregation) + DailyReview model + ReviewSummaryView + DailyReviewViewSet
 - Frontend: `useDailyStats()` hook auto-refetches every 60s via `refetchInterval`
 - Frontend: SidebarStats renders at sidebar bottom (`mt-auto`), hidden when collapsed, sections hide when no data
 - Study hierarchy: Semester → Discipline → StudyBlock (parallels Workspace → Project → Task)
@@ -173,6 +175,17 @@ frontend/
 - Frontend: CalendarDayView renders class occurrences before time blocks (class blocks layer behind interactive blocks)
 - Frontend: ClassScheduleForm uses `modalOpen === "classschedule-form"`, managed from discipline detail page
 - Frontend: Discipline detail page has class schedule management section with add/edit/delete
+- DailyReview in stats app — stores productivity_rating (1-5), win_of_the_day, is_shutdown + shutdown_at
+- DailyReview unique_together (user, date) — serializer validates via request context since user not in serializer fields
+- DailyReviewViewSet.perform_update auto-stamps shutdown_at when is_shutdown transitions to True
+- ReviewSummaryView aggregates TimeBlock, Task, StudyBlock, PomodoroSession data for any given date
+- Review page is a 6-step wizard: Summary → Rollover → Score → Win → Preview → Shutdown
+- Rollover = PATCH scheduled_date on tasks/study blocks (tomorrow, pick date, or null for backlog)
+- Study block "skip" action sets status="skipped" (not just clearing scheduled_date)
+- Shutdown nudge: toast on plan/focus pages when today's review has is_shutdown=true, shown once per session via uiStore flag
+- Frontend: useReviewSummary(date) hook for the aggregation endpoint, useDailyReview(date) for CRUD
+- Frontend: emitToast exported from Toast.tsx for programmatic toast messages
+- Frontend: Review wizard state (step, rating, win, reviewId) owned by page, each step is a pure component with props
 
 ## Drag & Drop (Plan Mode)
 
