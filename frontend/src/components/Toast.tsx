@@ -14,7 +14,7 @@ interface ToastMessage {
 let toastId = 0;
 const listeners: Set<(msg: ToastMessage) => void> = new Set();
 
-function emitToast(message: string) {
+export function emitToast(message: string) {
   const msg = { id: ++toastId, message };
   listeners.forEach((fn) => fn(msg));
 }

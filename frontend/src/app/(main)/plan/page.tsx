@@ -1,11 +1,16 @@
 "use client";
 
+import { useEffect } from "react";
+import { format } from "date-fns";
 import { DndContext, type DragEndEvent, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import TaskList from "@/components/tasks/TaskList";
 import Calendar from "@/components/calendar/Calendar";
+import { emitToast } from "@/components/Toast";
 import { useCreateTimeBlock, useUpdateTimeBlock } from "@/hooks/useTimeBlocks";
 import { useUpdateTask } from "@/hooks/useTasks";
 import { useUpdateStudyBlock } from "@/hooks/useStudyBlocks";
+import { useDailyReview } from "@/hooks/useDailyReviews";
+import { useUIStore } from "@/stores/uiStore";
 import type { Task } from "@/types/task";
 import type { StudyBlock } from "@/types/studyblock";
 import type { TimeBlock } from "@/types/timeblock";
@@ -24,6 +29,18 @@ export default function PlanPage() {
   const updateTimeBlock = useUpdateTimeBlock();
   const updateTask = useUpdateTask();
   const updateStudyBlock = useUpdateStudyBlock();
+
+  const today = format(new Date(), "yyyy-MM-dd");
+  const { data: todayReview } = useDailyReview(today);
+  const hasShownShutdownNudge = useUIStore((s) => s.hasShownShutdownNudge);
+  const setHasShownShutdownNudge = useUIStore((s) => s.setHasShownShutdownNudge);
+
+  useEffect(() => {
+    if (todayReview?.is_shutdown && !hasShownShutdownNudge) {
+      emitToast("You've shut down for the day. Rest well!");
+      setHasShownShutdownNudge(true);
+    }
+  }, [todayReview, hasShownShutdownNudge, setHasShownShutdownNudge]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: DRAG_ACTIVATION_DISTANCE } })
