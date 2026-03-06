@@ -20,7 +20,12 @@ function emitToast(message: string) {
 }
 
 // Set up axios interceptor to catch errors globally
-api.interceptors.response.use(
+// Module-level guard prevents duplicate interceptors on HMR
+let interceptorId: number | null = null;
+if (interceptorId !== null) {
+  api.interceptors.response.eject(interceptorId);
+}
+interceptorId = api.interceptors.response.use(
   (res) => res,
   (error: AxiosError) => {
     const message =
