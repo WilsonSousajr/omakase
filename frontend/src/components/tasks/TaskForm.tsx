@@ -221,6 +221,7 @@ export default function TaskForm({ editTask, onClose }: TaskFormProps) {
               <input
                 type="number"
                 min="0"
+                max="1440"
                 value={estimatedMinutes}
                 onChange={(e) => setEstimatedMinutes(e.target.value)}
                 className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-input)] px-3.5 py-2 text-sm text-[var(--color-text-primary)] outline-none focus:border-[var(--color-text-secondary)]/40"
