@@ -12,6 +12,8 @@ interface UIState {
   setActiveWorkspaceId: (id: string | null) => void;
   activeSemesterId: string | null;
   setActiveSemesterId: (id: string | null) => void;
+  hasShownShutdownNudge: boolean;
+  setHasShownShutdownNudge: (value: boolean) => void;
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -26,4 +28,6 @@ export const useUIStore = create<UIState>((set) => ({
   setActiveWorkspaceId: (id) => set({ activeWorkspaceId: id }),
   activeSemesterId: null,
   setActiveSemesterId: (id) => set({ activeSemesterId: id }),
+  hasShownShutdownNudge: false,
+  setHasShownShutdownNudge: (value) => set({ hasShownShutdownNudge: value }),
 }));

@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import {
   BookOpen,
   Calendar,
+  CheckSquare,
   ChevronLeft,
   ChevronRight,
   Crosshair,
@@ -20,6 +21,7 @@ import SidebarStats from "./SidebarStats";
 const NAV_ITEMS = [
   { href: "/plan", label: "Plan", icon: Calendar },
   { href: "/focus", label: "Focus", icon: Crosshair },
+  { href: "/review", label: "Review", icon: CheckSquare },
   { href: "/projects", label: "Projects", icon: FolderOpen },
   { href: "/study", label: "Study", icon: BookOpen },
 ];
