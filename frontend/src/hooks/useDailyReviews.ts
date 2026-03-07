@@ -9,6 +9,19 @@ interface PaginatedResponse<T> {
   results: T[];
 }
 
+export function useDailyReviewsList(page: number = 1) {
+  return useQuery({
+    queryKey: ["daily-reviews", "list", page],
+    queryFn: async () => {
+      const { data } = await api.get<PaginatedResponse<DailyReview>>(
+        "/stats/reviews/",
+        { params: { page } }
+      );
+      return data;
+    },
+  });
+}
+
 export function useReviewSummary(date: string) {
   return useQuery({
     queryKey: ["review-summary", date],
