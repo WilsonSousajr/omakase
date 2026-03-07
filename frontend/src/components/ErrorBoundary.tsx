@@ -1,6 +1,6 @@
 "use client";
 
-import { Component, type ReactNode } from "react";
+import React, { Component, type ReactNode } from "react";
 
 interface Props {
   children: ReactNode;
@@ -8,15 +8,16 @@ interface Props {
 
 interface State {
   hasError: boolean;
+  resetKey: number;
 }
 
 export default class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
-    this.state = { hasError: false };
+    this.state = { hasError: false, resetKey: 0 };
   }
 
-  static getDerivedStateFromError(): State {
+  static getDerivedStateFromError(): Partial<State> {
     return { hasError: true };
   }
 
@@ -32,7 +33,7 @@ export default class ErrorBoundary extends Component<Props, State> {
               An unexpected error occurred. Try refreshing the page.
             </p>
             <button
-              onClick={() => this.setState({ hasError: false })}
+              onClick={() => this.setState((prev) => ({ hasError: false, resetKey: prev.resetKey + 1 }))}
               className="rounded-xl bg-[var(--color-button-primary)] px-4 py-1.5 text-xs font-medium text-[var(--color-button-primary-text)] transition-colors hover:bg-[var(--color-button-primary-hover)]"
             >
               Try Again
@@ -42,6 +43,6 @@ export default class ErrorBoundary extends Component<Props, State> {
       );
     }
 
-    return this.props.children;
+    return <React.Fragment key={this.state.resetKey}>{this.props.children}</React.Fragment>;
   }
 }

@@ -118,8 +118,8 @@ export function useToggleTaskComplete() {
       // Cancel outgoing refetches
       await queryClient.cancelQueries({ queryKey: ["tasks"] });
 
-      // Snapshot previous value
-      const previousTasks = queryClient.getQueryData(["tasks"]);
+      // Snapshot all task query keys for proper rollback
+      const previousQueriesData = queryClient.getQueriesData<Task[]>({ queryKey: ["tasks"] });
 
       // Optimistically update all task queries
       queryClient.setQueriesData<Task[]>(
@@ -136,13 +136,13 @@ export function useToggleTaskComplete() {
         )
       );
 
-      return { previousTasks };
+      return { previousQueriesData };
     },
     onError: (_err, _variables, context) => {
-      // Rollback on error
-      if (context?.previousTasks) {
-        queryClient.setQueryData(["tasks"], context.previousTasks);
-      }
+      // Rollback all task query keys
+      context?.previousQueriesData?.forEach(([queryKey, data]) => {
+        queryClient.setQueryData(queryKey, data);
+      });
     },
     onSettled: () => {
       // Refetch to sync with server

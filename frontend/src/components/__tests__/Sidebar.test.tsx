@@ -17,11 +17,12 @@ describe("Sidebar", () => {
     useUIStore.setState({ sidebarOpen: true, modalOpen: null });
   });
 
-  it("renders Plan and Focus nav links", () => {
+  it("renders Plan, Focus, and Projects nav links", () => {
     renderWithProviders(<Sidebar />);
 
     expect(screen.getByText("Plan")).toBeInTheDocument();
     expect(screen.getByText("Focus")).toBeInTheDocument();
+    expect(screen.getByText("Projects")).toBeInTheDocument();
   });
 
   it("shows Omakase text when sidebar is open", () => {

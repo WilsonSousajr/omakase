@@ -1,5 +1,6 @@
 import uuid
 
+from django.conf import settings
 from django.db import models
 
 
@@ -11,6 +12,9 @@ class SessionTypeChoices(models.TextChoices):
 
 class PomodoroSession(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="pomodoro_sessions", null=True, blank=True
+    )
     task = models.ForeignKey(
         "tasks.Task", on_delete=models.SET_NULL, null=True, blank=True, related_name="pomodoro_sessions"
     )

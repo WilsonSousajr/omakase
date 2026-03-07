@@ -1,7 +1,7 @@
 import pytest
 from django.utils import timezone
 
-from conftest import TagFactory, TaskFactory
+from conftest import DisciplineFactory, StudyBlockFactory, TagFactory, TaskFactory
 from tasks.serializers import (
     TagSerializer,
     TaskListSerializer,
@@ -76,6 +76,46 @@ class TestTaskSerializer:
 
 
 @pytest.mark.django_db
+class TestTaskDisciplineFK:
+    def test_task_with_discipline_serializes(self):
+        discipline = DisciplineFactory()
+        task = TaskFactory(discipline=discipline, area="study")
+        data = TaskListSerializer(task).data
+        assert str(data["discipline"]) == str(discipline.pk)
+        assert data["area"] == "study"
+
+    def test_task_create_with_discipline(self):
+        discipline = DisciplineFactory()
+        data = {
+            "title": "Study integrals",
+            "area": "study",
+            "discipline": str(discipline.pk),
+        }
+        serializer = TaskListSerializer(data=data)
+        assert serializer.is_valid(), serializer.errors
+        task = serializer.save()
+        assert task.discipline == discipline
+
+    def test_task_without_discipline(self):
+        task = TaskFactory(discipline=None, area="work")
+        data = TaskListSerializer(task).data
+        assert data["discipline"] is None
+
+    def test_discipline_set_null_on_delete(self):
+        discipline = DisciplineFactory()
+        task = TaskFactory(discipline=discipline)
+        discipline.delete()
+        task.refresh_from_db()
+        assert task.discipline is None
+
+    def test_task_detail_includes_discipline(self):
+        discipline = DisciplineFactory()
+        task = TaskFactory(discipline=discipline, area="study")
+        data = TaskSerializer(task).data
+        assert str(data["discipline"]) == str(discipline.pk)
+
+
+@pytest.mark.django_db
 class TestTaskReorderSerializer:
     def test_valid_item(self):
         import uuid
@@ -131,3 +171,43 @@ class TestTimeBlockSerializerValidation:
         }
         serializer = TimeBlockSerializer(data=data)
         assert serializer.is_valid()
+
+    def test_study_block_fk_serializes(self, study_block):
+        from conftest import TimeBlockFactory
+
+        tb = TimeBlockFactory(task=None, study_block=study_block)
+        data = TimeBlockSerializer(tb).data
+        assert str(data["study_block"]) == str(study_block.pk)
+        assert data["task"] is None
+
+    def test_both_task_and_study_block_rejected(self, task, study_block):
+        data = {
+            "task": str(task.id),
+            "study_block": str(study_block.pk),
+            "date": "2025-01-15",
+            "start_time": "09:00:00",
+            "end_time": "10:00:00",
+        }
+        serializer = TimeBlockSerializer(data=data)
+        assert not serializer.is_valid()
+        assert "non_field_errors" in serializer.errors
+
+    def test_neither_task_nor_study_block_rejected(self):
+        data = {
+            "date": "2025-01-15",
+            "start_time": "09:00:00",
+            "end_time": "10:00:00",
+        }
+        serializer = TimeBlockSerializer(data=data)
+        assert not serializer.is_valid()
+        assert "non_field_errors" in serializer.errors
+
+    def test_valid_with_study_block(self, study_block):
+        data = {
+            "study_block": str(study_block.pk),
+            "date": "2025-01-15",
+            "start_time": "09:00:00",
+            "end_time": "10:00:00",
+        }
+        serializer = TimeBlockSerializer(data=data)
+        assert serializer.is_valid(), serializer.errors

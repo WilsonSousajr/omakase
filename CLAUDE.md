@@ -1,6 +1,6 @@
 # Omakase
 
-Productivity app (Notion + Sunsama + Focusbrew). Currently Work module only.
+Productivity app (Notion + Sunsama + Focusbrew). Work + Study modules.
 
 ## Architecture
 
@@ -49,25 +49,43 @@ docker compose exec frontend pnpm lint       # Run linter
 
 ```
 backend/
+  accounts/        # Auth: register, JWT token, me endpoint
   omakase/         # Django project settings, urls, wsgi
-  tasks/           # Task, Tag, TimeBlock models + API
+  tasks/           # Task, Tag, TimeBlock, Workspace, Project models + API
   pomodoro/        # PomodoroSession model + API
+  study/           # Semester, Discipline, StudyBlock, ClassSchedule models + API
+  stats/           # Daily stats aggregation + DailyReview model + ReviewSummaryView
 frontend/
   src/
-    app/           # Next.js App Router pages (/plan, /focus)
-    components/    # React components (tasks/, calendar/, kanban/, focus/)
-    hooks/         # TanStack Query hooks (useTasks, useTags, useTimeBlocks, usePomodoro)
-    stores/        # Zustand stores (uiStore, pomodoroStore, calendarStore)
-    lib/           # Utilities (api, constants, utils)
-    types/         # TypeScript types
+    app/(auth)/    # Login + Register pages (no sidebar)
+    app/(main)/    # Plan + Focus + Review + Projects + Study pages (with sidebar)
+    components/    # React components (tasks/, calendar/, kanban/, focus/, projects/, study/, review/)
+    hooks/         # TanStack Query hooks (useTasks, useTags, useTimeBlocks, usePomodoro, useAuth, useWorkspaces, useProjects, useStats, useSemesters, useDisciplines, useStudyBlocks, useClassSchedules, useClassOccurrences, useDailyReviews)
+    stores/        # Zustand stores (uiStore, pomodoroStore, calendarStore, authStore)
+    lib/           # Utilities (api with JWT interceptors, constants, utils)
+    types/         # TypeScript types (task, tag, timeblock, pomodoro, auth, stats, semester, discipline, studyblock, classschedule, dailyreview)
 ```
 
 ## API Endpoints (all under /api/v1/)
 
-- `tasks/` — CRUD + `today/` + `reorder-bulk/`
-- `tags/` — CRUD, filterable by area
-- `timeblocks/` — CRUD, filterable by date range
-- `pomodoro/sessions/` — Create, list, patch (complete)
+- `auth/register/` — POST (AllowAny)
+- `auth/token/` — POST JWT obtain (AllowAny)
+- `auth/token/refresh/` — POST JWT refresh (AllowAny)
+- `auth/me/` — GET current user (IsAuthenticated)
+- `tasks/` — CRUD + `today/` + `reorder-bulk/` (user-scoped)
+- `tags/` — CRUD, filterable by area (user-scoped)
+- `timeblocks/` — CRUD, filterable by date range (user-scoped via task.user OR study_block.discipline.semester.user)
+- `workspaces/` — CRUD (user-scoped, annotated with project_count)
+- `projects/` — CRUD, filterable by workspace/status (user-scoped via workspace.user, annotated with task_count)
+- `pomodoro/sessions/` — Create, list, patch (user-scoped)
+- `stats/daily/` — GET daily stats (hours focused, blocks, streak, weekly hours)
+- `stats/review/` — GET review summary for a date (date param required, aggregates TimeBlock/Task/StudyBlock/PomodoroSession)
+- `stats/reviews/` — CRUD DailyReview (user-scoped, unique per user+date)
+- `study/semesters/` — CRUD (user-scoped, annotated with discipline_count)
+- `study/disciplines/` — CRUD, filterable by semester/status (user-scoped via semester.user, annotated with study_block_count)
+- `study/studyblocks/` — CRUD, filterable by discipline/type/status (user-scoped via discipline.semester.user)
+- `study/classschedules/` — CRUD, filterable by discipline/class_type/is_active (user-scoped via discipline.semester.user)
+- `study/class-occurrences/` — GET computed virtual class occurrences for a date range (date_from, date_to params required, max 90 days)
 
 ## Design System
 
@@ -84,7 +102,13 @@ frontend/
 - `.env` file is **required** — `docker compose up` will fail without it. Copy `.env.example` and fill in real values.
 - `SECRET_KEY` and `DATABASE_URL` raise `ImproperlyConfigured` if missing (no insecure fallbacks)
 - `DEBUG` defaults to `False` (must explicitly set `DJANGO_DEBUG=True` in `.env` for development)
-- DRF uses `AllowAny` permission by default (switch to `IsAuthenticated` when auth is implemented); `SessionAuthentication` is pre-configured
+- DRF uses `IsAuthenticated` permission by default; `JWTAuthentication` + `SessionAuthentication` configured
+- JWT: 60-min access tokens, 7-day refresh tokens (djangorestframework-simplejwt)
+- Auth endpoints (register, token) use explicit `AllowAny` override
+- Frontend: JWT tokens stored in localStorage via authStore, auto-attached by axios interceptor
+- Token refresh: 401 → auto-refresh with concurrent request queue (prevents multiple refresh calls)
+- Route groups: `(auth)` for login/register (no sidebar), `(main)` for plan/focus (with sidebar)
+- AuthGuard wraps root layout — redirects unauthenticated users to /login
 - CORS only allows explicit origins (no `CORS_ALLOW_ALL_ORIGINS`)
 - PostgreSQL port bound to `127.0.0.1` only (not exposed to network)
 - `reorder-bulk` endpoint capped at 100 items per request; uses `transaction.atomic()` + `select_for_update()` for race condition safety
@@ -93,7 +117,9 @@ frontend/
 
 ## Key Patterns
 
-- UUIDs as primary keys on all models
+- UUIDs as primary keys on all models (except User which uses Django's built-in int PK)
+- All models have `user` FK (nullable during migration phase) — ViewSets enforce user scoping via `get_queryset()` + `perform_create()`
+- When removing `queryset` from ViewSet, must add `basename` to `router.register()` — DRF can't auto-detect
 - TanStack Query for server state, Zustand for UI state
 - `TaskListSerializer` (lightweight) for list views, `TaskSerializer` (full with time_blocks) for detail
 - Tags: accept `tag_ids` on write, return nested `tags` on read
@@ -109,6 +135,57 @@ frontend/
 - `TaskCard` wrapped in `React.memo` — prevents re-render of every card when any sibling changes
 - `taskMap` in calendar views memoized with `useMemo` — prevents object recreation on every render
 - `TimeBlockSerializer.validate()` rejects `end_time <= start_time` at serializer level (400, not DB IntegrityError)
+- Workspace/Project hierarchy: Workspace → Project → Task (optional). Project scoped via `workspace.user`. Task has nullable `project` FK (SET_NULL on delete)
+- Annotated querysets (Count) must add explicit `.order_by()` — annotations lose model-level ordering, causing DRF pagination warnings
+- Workspace/Project serializers include computed `project_count`/`task_count` via annotation (not DB field)
+- Frontend: `useProjects` create/delete mutations invalidate both `["projects"]` and `["workspaces"]` queries (project_count changes)
+- Frontend: TaskCard receives optional `projects: Map<string, Project>` for O(1) project badge lookup (avoids n+1 queries)
+- Frontend: ProjectBadge uses FolderOpen icon + colored badge (same pattern as tag badges)
+- Frontend: Projects page groups projects by status (Active/Paused/Completed/Archived), uses modal for create/edit
+- Frontend: Sidebar workspace selector sets `activeWorkspaceId` in uiStore — used to filter projects page
+- Frontend: TaskForm project dropdown shows all user's projects (not filtered by workspace)
+- Frontend: `PROJECT_STATUSES` in constants.ts with derived `ProjectStatus` type
+- Stats app: DailyStatsView (read-only aggregation) + DailyReview model + ReviewSummaryView + DailyReviewViewSet
+- Frontend: `useDailyStats()` hook auto-refetches every 60s via `refetchInterval`
+- Frontend: SidebarStats renders at sidebar bottom (`mt-auto`), hidden when collapsed, sections hide when no data
+- Study hierarchy: Semester → Discipline → StudyBlock (parallels Workspace → Project → Task)
+- Discipline scoped via `semester.user`, StudyBlock via `discipline.semester.user` (same pattern as Project → workspace.user)
+- StudyBlock.save() syncs `is_completed ↔ status` (mirrors Task pattern)
+- TimeBlock polymorphic FK: nullable `task` + nullable `study_block`, CASCADE on delete, CheckConstraint requires at least one non-null
+- TimeBlockSerializer validates exactly one of task/study_block on write
+- TimeBlockViewSet uses Q(task__user) | Q(study_block__discipline__semester__user) with .distinct()
+- `block_type` field name (not `type`) to avoid Python reserved word conflict
+- Frontend: Study page shows semesters grid + disciplines grouped by status (mirrors Projects page)
+- Frontend: Discipline detail page at `/study/[disciplineId]` lists study blocks with type/status filters
+- Frontend: Sidebar has semester selector (parallels workspace selector) + BookOpen Study nav item
+- Frontend: `activeSemesterId` in uiStore filters discipline list on study page
+- Frontend: `useDisciplines` create/delete mutations invalidate both `["disciplines"]` and `["semesters"]` queries (discipline_count changes)
+- Frontend: `useStudyBlocks` create/delete mutations invalidate both `["studyblocks"]` and `["disciplines"]` queries (study_block_count changes)
+- Frontend: StudyBlockCard uses `React.memo` with discipline `Map<string, Discipline>` for O(1) lookup (same as TaskCard + projects)
+- Frontend: StudyBlockForm uses `modalOpen === "studyblock-form"`, DisciplineForm uses `"discipline-form"`, SemesterForm uses `"semester-form"`
+- Frontend: TimeBlockItem supports both task and study_block rendering — uses discipline color for study blocks, BookOpen icon
+- Frontend: TodayStudyBlocks panel in focus page shows scheduled study blocks below kanban (read-only, not draggable)
+- Frontend: Plan page drag handler supports `type: "studyblock"` — creates TimeBlock with `study_block` FK
+- ClassSchedule: recurring weekly class blocks (discipline FK, day_of_week 0-6, start/end_time, class_type, location, is_active)
+- ClassSchedule CheckConstraint: end_time > start_time, day_of_week 0-6
+- ClassOccurrenceView computes virtual occurrences on-the-fly (not persisted) for a date range, respects semester boundaries
+- Class occurrence composite IDs: `{schedule_id}-{date}` (since they're not DB rows)
+- ClassOccurrenceView: max 90-day range, requires both date_from and date_to params
+- Frontend: ClassBlockItem is read-only (dashed border, lighter bg, BookOpen icon, not draggable/resizable)
+- Frontend: CalendarDayView renders class occurrences before time blocks (class blocks layer behind interactive blocks)
+- Frontend: ClassScheduleForm uses `modalOpen === "classschedule-form"`, managed from discipline detail page
+- Frontend: Discipline detail page has class schedule management section with add/edit/delete
+- DailyReview in stats app — stores productivity_rating (1-5), win_of_the_day, is_shutdown + shutdown_at
+- DailyReview unique_together (user, date) — serializer validates via request context since user not in serializer fields
+- DailyReviewViewSet.perform_update auto-stamps shutdown_at when is_shutdown transitions to True
+- ReviewSummaryView aggregates TimeBlock, Task, StudyBlock, PomodoroSession data for any given date
+- Review page is a 6-step wizard: Summary → Rollover → Score → Win → Preview → Shutdown
+- Rollover = PATCH scheduled_date on tasks/study blocks (tomorrow, pick date, or null for backlog)
+- Study block "skip" action sets status="skipped" (not just clearing scheduled_date)
+- Shutdown nudge: toast on plan/focus pages when today's review has is_shutdown=true, shown once per session via uiStore flag
+- Frontend: useReviewSummary(date) hook for the aggregation endpoint, useDailyReview(date) for CRUD
+- Frontend: emitToast exported from Toast.tsx for programmatic toast messages
+- Frontend: Review wizard state (step, rating, win, reviewId) owned by page, each step is a pure component with props
 
 ## Drag & Drop (Plan Mode)
 
@@ -155,8 +232,8 @@ docker compose exec backend pip install -r requirements-dev.txt
 ```
 
 **Config:** `backend/pyproject.toml` — pytest settings + coverage config
-**Factories:** `backend/conftest.py` — TagFactory, TaskFactory, TimeBlockFactory, PomodoroSessionFactory
-**Test files:** `backend/{tasks,pomodoro}/tests/test_{models,serializers,views}.py`
+**Factories:** `backend/conftest.py` — TagFactory, TaskFactory, TimeBlockFactory, PomodoroSessionFactory, SemesterFactory, DisciplineFactory, StudyBlockFactory
+**Test files:** `backend/{tasks,pomodoro,study,stats}/tests/test_{models,serializers,views}.py`
 
 ### Frontend (Vitest + React Testing Library + MSW)
 
@@ -233,6 +310,11 @@ Types: feat, fix, test, chore, docs, refactor, ci, style
 - **Frontend "Focus" text**: Appears in both tab and timer label — use `getAllByText` not `getByText`
 - **Frontend next/link mock**: Must forward all props (especially `className`) via rest spread — `({ children, href, ...props }) => <a href={href} {...props}>{children}</a>` — otherwise `toHaveClass()` assertions fail
 - **factory-boy deprecation**: `TaskFactory._after_postgeneration` save warning — add `skip_postgeneration_save=True` in Meta to suppress
+- **UserFactory password**: Use `@post_generation` hook with manual `save()` — `PostGenerationMethodCall("set_password")` + `skip_postgeneration_save=True` would skip saving the hashed password
+- **Backend auth tests**: Use `authenticated_client` fixture (JWT Bearer token) — `api_client` fixture returns 401 on all user-scoped endpoints
+- **Frontend authStore tests**: Must use `vi.stubGlobal("localStorage", ...)` because store `.ts` files don't run in jsdom environment
+- **Frontend localStorage in authStore**: Wrap in try-catch — `loadTokens()` runs at module init time when localStorage may not be available
+- **Frontend SSR hydration + localStorage**: Components that read localStorage-backed Zustand state (e.g. `isAuthenticated`) must use a `hasMounted` gate (`useState(false)` + `useEffect` → `true`) to avoid hydration mismatch — server sees `null`, client sees stored value
 
 ## Local Environment Notes
 

@@ -1,12 +1,9 @@
 import type { Metadata } from "next";
 import { Outfit } from "next/font/google";
 import "./globals.css";
+import AuthGuard from "@/components/AuthGuard";
 import Providers from "@/components/Providers";
-import Sidebar from "@/components/Sidebar";
-import TopBar from "@/components/TopBar";
 import Toast from "@/components/Toast";
-import ErrorBoundary from "@/components/ErrorBoundary";
-import KeyboardShortcutProvider from "@/components/KeyboardShortcutProvider";
 
 const outfit = Outfit({ subsets: ["latin"] });
 
@@ -26,16 +23,10 @@ export default function RootLayout({
         className={`${outfit.className} flex h-screen bg-[#0a0a0a] text-white antialiased`}
       >
         <Providers>
-          <KeyboardShortcutProvider>
-            <Sidebar />
-            <div className="flex flex-1 flex-col overflow-hidden">
-              <TopBar />
-              <main className="flex-1 overflow-auto">
-                <ErrorBoundary>{children}</ErrorBoundary>
-              </main>
-            </div>
-            <Toast />
-          </KeyboardShortcutProvider>
+          <AuthGuard>
+            {children}
+          </AuthGuard>
+          <Toast />
         </Providers>
       </body>
     </html>

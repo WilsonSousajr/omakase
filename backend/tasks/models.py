@@ -1,9 +1,10 @@
 import uuid
 
+from django.conf import settings
 from django.core.validators import RegexValidator
 from django.db import models
 
-from .constants import DEFAULT_TAG_COLOR
+from .constants import DEFAULT_TAG_COLOR, DEFAULT_WORKSPACE_COLOR
 
 hex_color_validator = RegexValidator(
     regex=r"^#[0-9a-fA-F]{6}$",
@@ -30,8 +31,53 @@ class KanbanStatusChoices(models.TextChoices):
     DONE = "done", "Done"
 
 
+class ProjectStatusChoices(models.TextChoices):
+    ACTIVE = "active", "Active"
+    PAUSED = "paused", "Paused"
+    COMPLETED = "completed", "Completed"
+    ARCHIVED = "archived", "Archived"
+
+
+class Workspace(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="workspaces")
+    name = models.CharField(max_length=200)
+    color = models.CharField(max_length=7, default=DEFAULT_WORKSPACE_COLOR, validators=[hex_color_validator])
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["name"]
+
+    def __str__(self):
+        return self.name
+
+
+class Project(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    workspace = models.ForeignKey(Workspace, on_delete=models.CASCADE, related_name="projects")
+    name = models.CharField(max_length=200)
+    description = models.TextField(blank=True, default="")
+    color = models.CharField(max_length=7, default=DEFAULT_WORKSPACE_COLOR, validators=[hex_color_validator])
+    status = models.CharField(
+        max_length=20, choices=ProjectStatusChoices.choices, default=ProjectStatusChoices.ACTIVE
+    )
+    due_date = models.DateField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["name"]
+
+    def __str__(self):
+        return self.name
+
+
 class Tag(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="tags", null=True, blank=True
+    )
     name = models.CharField(max_length=100)
     color = models.CharField(max_length=7, default=DEFAULT_TAG_COLOR, validators=[hex_color_validator])
     area = models.CharField(max_length=20, choices=AreaChoices.choices, default=AreaChoices.WORK)
@@ -46,6 +92,13 @@ class Tag(models.Model):
 
 class Task(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="tasks", null=True, blank=True
+    )
+    project = models.ForeignKey(Project, on_delete=models.SET_NULL, null=True, blank=True, related_name="tasks")
+    discipline = models.ForeignKey(
+        "study.Discipline", on_delete=models.SET_NULL, null=True, blank=True, related_name="tasks"
+    )
     title = models.CharField(max_length=500)
     description = models.TextField(blank=True, default="")
     notes = models.TextField(blank=True, default="")
@@ -135,7 +188,10 @@ class Task(models.Model):
 
 class TimeBlock(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="time_blocks")
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, null=True, blank=True, related_name="time_blocks")
+    study_block = models.ForeignKey(
+        "study.StudyBlock", on_delete=models.CASCADE, null=True, blank=True, related_name="time_blocks"
+    )
     date = models.DateField()
     start_time = models.TimeField()
     end_time = models.TimeField()
@@ -149,7 +205,12 @@ class TimeBlock(models.Model):
                 check=models.Q(end_time__gt=models.F("start_time")),
                 name="timeblock_end_after_start",
             ),
+            models.CheckConstraint(
+                check=models.Q(task__isnull=False) | models.Q(study_block__isnull=False),
+                name="timeblock_has_task_or_study_block",
+            ),
         ]
 
     def __str__(self):
-        return f"{self.task.title} — {self.date} {self.start_time}-{self.end_time}"
+        label = self.task.title if self.task else (self.study_block.title if self.study_block else "Unlinked")
+        return f"{label} — {self.date} {self.start_time}-{self.end_time}"

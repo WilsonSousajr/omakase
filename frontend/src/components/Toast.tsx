@@ -14,13 +14,18 @@ interface ToastMessage {
 let toastId = 0;
 const listeners: Set<(msg: ToastMessage) => void> = new Set();
 
-function emitToast(message: string) {
+export function emitToast(message: string) {
   const msg = { id: ++toastId, message };
   listeners.forEach((fn) => fn(msg));
 }
 
 // Set up axios interceptor to catch errors globally
-api.interceptors.response.use(
+// Module-level guard prevents duplicate interceptors on HMR
+let interceptorId: number | null = null;
+if (interceptorId !== null) {
+  api.interceptors.response.eject(interceptorId);
+}
+interceptorId = api.interceptors.response.use(
   (res) => res,
   (error: AxiosError) => {
     const message =

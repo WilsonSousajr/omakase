@@ -1,6 +1,7 @@
 export interface TimeBlock {
   id: string;
-  task: string;
+  task: string | null;
+  study_block: string | null;
   date: string;
   start_time: string;
   end_time: string;
@@ -9,7 +10,8 @@ export interface TimeBlock {
 }
 
 export interface TimeBlockCreate {
-  task: string;
+  task?: string | null;
+  study_block?: string | null;
   date: string;
   start_time: string;
   end_time: string;

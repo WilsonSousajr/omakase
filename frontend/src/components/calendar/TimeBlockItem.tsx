@@ -3,17 +3,21 @@
 import { useCallback, useRef, useState, useEffect } from "react";
 import type { TimeBlock } from "@/types/timeblock";
 import type { Task } from "@/types/task";
+import type { StudyBlock } from "@/types/studyblock";
 import { PRIORITIES } from "@/lib/constants";
 import { useDraggable } from "@dnd-kit/core";
-import { X } from "lucide-react";
+import { BookOpen, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface TimeBlockItemProps {
   block: TimeBlock;
   task?: Task;
+  studyBlock?: StudyBlock;
+  disciplineColor?: string;
   onDelete: (id: string) => void;
   onResize: (id: string, newEndTime: string) => void;
   onToggleComplete?: (id: string, isCompleted: boolean) => void;
+  onToggleStudyBlockComplete?: (id: string, isCompleted: boolean) => void;
   slotHeight: number;
 }
 
@@ -32,9 +36,12 @@ function minutesToTime(minutes: number): string {
 export default function TimeBlockItem({
   block,
   task,
+  studyBlock,
+  disciplineColor,
   onDelete,
   onResize,
   onToggleComplete,
+  onToggleStudyBlockComplete,
   slotHeight,
 }: TimeBlockItemProps) {
   const startMin = timeToMinutes(block.start_time);
@@ -42,8 +49,12 @@ export default function TimeBlockItem({
   const durationSlots = (endMin - startMin) / 30;
   const height = durationSlots * slotHeight;
 
+  const isStudyBlock = !!studyBlock;
   const priority = task ? PRIORITIES.find((p) => p.value === task.priority) : null;
-  const color = priority?.color ?? "#a1a1aa"; // fallback to neutral gray
+  const studyPriority = studyBlock ? PRIORITIES.find((p) => p.value === studyBlock.priority) : null;
+  const color = isStudyBlock ? (disciplineColor ?? "#a1a1aa") : (priority?.color ?? "#a1a1aa");
+  const title = isStudyBlock ? studyBlock.title : (task?.title || "Task");
+  const isCompleted = isStudyBlock ? studyBlock.is_completed : task?.is_completed;
 
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: `timeblock-${block.id}`,
@@ -135,7 +146,9 @@ export default function TimeBlockItem({
         <button
           onClick={(e) => {
             e.stopPropagation();
-            if (task?.id) {
+            if (isStudyBlock && studyBlock) {
+              onToggleStudyBlockComplete?.(studyBlock.id, !studyBlock.is_completed);
+            } else if (task?.id) {
               onToggleComplete?.(task.id, !task.is_completed);
             }
           }}
@@ -144,13 +157,13 @@ export default function TimeBlockItem({
         >
           <div className={cn(
             "h-3.5 w-3.5 rounded border transition-all",
-            task?.is_completed
+            isCompleted
               ? "bg-blue-500 border-blue-500"
               : "border-current opacity-50 hover:opacity-100"
           )}
           style={{ borderColor: color }}
           >
-            {task?.is_completed && (
+            {isCompleted && (
               <svg className="h-full w-full text-white" viewBox="0 0 16 16">
                 <path fill="currentColor" d="M13 4L6 11L3 8" strokeWidth="2.5" stroke="currentColor" />
               </svg>
@@ -160,14 +173,15 @@ export default function TimeBlockItem({
 
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
+            {isStudyBlock && <BookOpen className="h-3 w-3 shrink-0" style={{ color }} />}
             <p className={cn(
               "truncate text-xs font-medium",
-              task?.is_completed && "line-through opacity-60"
+              isCompleted && "line-through opacity-60"
             )}
             style={{ color }}>
-              {task?.title || "Task"}
+              {title}
             </p>
-            {priority && (
+            {priority && !isStudyBlock && (
               <span
                 className="shrink-0 rounded-lg px-1 py-0.5 text-[9px] font-semibold leading-none"
                 style={{
@@ -176,6 +190,17 @@ export default function TimeBlockItem({
                 }}
               >
                 {priority.label}
+              </span>
+            )}
+            {studyPriority && isStudyBlock && (
+              <span
+                className="shrink-0 rounded-lg px-1 py-0.5 text-[9px] font-semibold leading-none"
+                style={{
+                  backgroundColor: `${studyPriority.color}25`,
+                  color: studyPriority.color,
+                }}
+              >
+                {studyPriority.label}
               </span>
             )}
           </div>

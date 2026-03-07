@@ -6,7 +6,7 @@ python_functions = ["test_*"]
 addopts = "--tb=short -q"
 
 [tool.coverage.run]
-source = ["tasks", "pomodoro"]
+source = ["accounts", "tasks", "pomodoro"]
 omit = ["*/migrations/*", "*/admin.py"]
 
 [tool.ruff]

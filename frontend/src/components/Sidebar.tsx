@@ -2,25 +2,40 @@
 
 import { cn } from "@/lib/utils";
 import {
+  BookOpen,
   Calendar,
+  CheckSquare,
   ChevronLeft,
   ChevronRight,
   Crosshair,
+  FolderOpen,
   LayoutDashboard,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useUIStore } from "@/stores/uiStore";
+import { useWorkspaces } from "@/hooks/useWorkspaces";
+import { useSemesters } from "@/hooks/useSemesters";
+import SidebarStats from "./SidebarStats";
 
 const NAV_ITEMS = [
   { href: "/plan", label: "Plan", icon: Calendar },
   { href: "/focus", label: "Focus", icon: Crosshair },
+  { href: "/review", label: "Review", icon: CheckSquare },
+  { href: "/projects", label: "Projects", icon: FolderOpen },
+  { href: "/study", label: "Study", icon: BookOpen },
 ];
 
 export default function Sidebar() {
   const pathname = usePathname();
   const sidebarOpen = useUIStore((s) => s.sidebarOpen);
   const toggleSidebar = useUIStore((s) => s.toggleSidebar);
+  const activeWorkspaceId = useUIStore((s) => s.activeWorkspaceId);
+  const setActiveWorkspaceId = useUIStore((s) => s.setActiveWorkspaceId);
+  const activeSemesterId = useUIStore((s) => s.activeSemesterId);
+  const setActiveSemesterId = useUIStore((s) => s.setActiveSemesterId);
+  const { data: workspaces = [] } = useWorkspaces();
+  const { data: semesters = [] } = useSemesters();
 
   return (
     <aside
@@ -29,22 +44,67 @@ export default function Sidebar() {
         sidebarOpen ? "w-48" : "w-14"
       )}
     >
-      <div className="flex items-center gap-2 border-b border-[var(--color-border)] p-3">
-        <LayoutDashboard className="h-5 w-5 shrink-0 text-[var(--color-text-secondary)]" />
-        {sidebarOpen && (
-          <span className="text-sm font-semibold text-[var(--color-text-primary)]">Omakase</span>
-        )}
-        <button
-          onClick={toggleSidebar}
-          className="ml-auto rounded-lg p-1 text-[var(--color-text-faint)] hover:bg-[var(--color-surface)] hover:text-[var(--color-text-secondary)]"
-        >
-          {sidebarOpen ? (
-            <ChevronLeft className="h-4 w-4" />
-          ) : (
+      <div className="flex items-center border-b border-[var(--color-border)] p-3">
+        {sidebarOpen ? (
+          <>
+            <LayoutDashboard className="h-5 w-5 shrink-0 text-[var(--color-text-secondary)]" />
+            <span className="ml-2 text-sm font-semibold text-[var(--color-text-primary)]">Omakase</span>
+            <button
+              onClick={toggleSidebar}
+              className="ml-auto rounded-lg p-1 text-[var(--color-text-faint)] hover:bg-[var(--color-surface)] hover:text-[var(--color-text-secondary)]"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+          </>
+        ) : (
+          <button
+            onClick={toggleSidebar}
+            className="mx-auto rounded-lg p-1 text-[var(--color-text-faint)] hover:bg-[var(--color-surface)] hover:text-[var(--color-text-secondary)]"
+          >
             <ChevronRight className="h-4 w-4" />
-          )}
-        </button>
+          </button>
+        )}
       </div>
+
+      {sidebarOpen && workspaces.length > 0 && (
+        <div className="border-b border-[var(--color-border)] px-3 py-2">
+          <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
+            Workspace
+          </label>
+          <select
+            value={activeWorkspaceId || ""}
+            onChange={(e) => setActiveWorkspaceId(e.target.value || null)}
+            className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-input)] px-2.5 py-1.5 text-xs text-[var(--color-text-primary)] outline-none focus:border-[var(--color-text-secondary)]/40"
+          >
+            <option value="">All workspaces</option>
+            {workspaces.map((ws) => (
+              <option key={ws.id} value={ws.id}>
+                {ws.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {sidebarOpen && semesters.length > 0 && (
+        <div className="border-b border-[var(--color-border)] px-3 py-2">
+          <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
+            Semester
+          </label>
+          <select
+            value={activeSemesterId || ""}
+            onChange={(e) => setActiveSemesterId(e.target.value || null)}
+            className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-input)] px-2.5 py-1.5 text-xs text-[var(--color-text-primary)] outline-none focus:border-[var(--color-text-secondary)]/40"
+          >
+            <option value="">All semesters</option>
+            {semesters.map((sem) => (
+              <option key={sem.id} value={sem.id}>
+                {sem.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       <nav className="flex flex-col gap-1 p-2">
         {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
@@ -66,6 +126,12 @@ export default function Sidebar() {
           );
         })}
       </nav>
+
+      {sidebarOpen && (
+        <div className="mt-auto">
+          <SidebarStats />
+        </div>
+      )}
     </aside>
   );
 }

@@ -5,6 +5,8 @@ import { format, startOfWeek, addDays } from "date-fns";
 import { useCalendarStore } from "@/stores/calendarStore";
 import { useTimeBlocks, useDeleteTimeBlock, useUpdateTimeBlock } from "@/hooks/useTimeBlocks";
 import { useTasks, useToggleTaskComplete } from "@/hooks/useTasks";
+import { useStudyBlocks, useUpdateStudyBlock } from "@/hooks/useStudyBlocks";
+import { useDisciplines } from "@/hooks/useDisciplines";
 import { useDroppable } from "@dnd-kit/core";
 import TimeBlockItem from "./TimeBlockItem";
 
@@ -41,19 +43,28 @@ export default function CalendarWeekView() {
 
   const { data: timeBlocks = [] } = useTimeBlocks(dateFrom, dateTo);
   const { data: tasks = [] } = useTasks();
+  const { data: studyBlocks = [] } = useStudyBlocks();
+  const { data: disciplines = [] } = useDisciplines();
   const deleteTimeBlock = useDeleteTimeBlock();
   const updateTimeBlock = useUpdateTimeBlock();
   const toggleComplete = useToggleTaskComplete();
+  const updateStudyBlock = useUpdateStudyBlock();
 
   const taskMap = useMemo(() => Object.fromEntries(tasks.map((t) => [t.id, t])), [tasks]);
+  const studyBlockMap = useMemo(() => Object.fromEntries(studyBlocks.map((sb) => [sb.id, sb])), [studyBlocks]);
+  const disciplineMap = useMemo(() => Object.fromEntries(disciplines.map((d) => [d.id, d])), [disciplines]);
 
   const handleToggleComplete = (id: string, isCompleted: boolean) => {
     toggleComplete.mutate({ id, is_completed: isCompleted });
   };
 
+  const handleToggleStudyBlockComplete = (id: string, isCompleted: boolean) => {
+    updateStudyBlock.mutate({ id, is_completed: isCompleted });
+  };
+
   function timeToOffset(time: string): number {
     const [h, m] = time.split(":").map(Number);
-    return ((h - 6) * 60 + m) / 30 * (SLOT_HEIGHT / 2);
+    return Math.max(0, ((h - 6) * 60 + m) / 30 * (SLOT_HEIGHT / 2));
   }
 
   const blocksByDate = timeBlocks.reduce(
@@ -110,24 +121,31 @@ export default function CalendarWeekView() {
                 ))}
 
                 {/* Time blocks */}
-                {dayBlocks.map((block) => (
-                  <div
-                    key={block.id}
-                    className="absolute left-0 right-0"
-                    style={{ top: `${timeToOffset(block.start_time)}px` }}
-                  >
-                    <TimeBlockItem
-                      block={block}
-                      task={taskMap[block.task]}
-                      onDelete={(id) => deleteTimeBlock.mutate(id)}
-                      onResize={(id, newEndTime) =>
-                        updateTimeBlock.mutate({ id, end_time: newEndTime })
-                      }
-                      onToggleComplete={handleToggleComplete}
-                      slotHeight={SLOT_HEIGHT}
-                    />
-                  </div>
-                ))}
+                {dayBlocks.map((block) => {
+                  const studyBlock = block.study_block ? studyBlockMap[block.study_block] : undefined;
+                  const discipline = studyBlock ? disciplineMap[studyBlock.discipline] : undefined;
+                  return (
+                    <div
+                      key={block.id}
+                      className="absolute left-0 right-0"
+                      style={{ top: `${timeToOffset(block.start_time)}px` }}
+                    >
+                      <TimeBlockItem
+                        block={block}
+                        task={block.task ? taskMap[block.task] : undefined}
+                        studyBlock={studyBlock}
+                        disciplineColor={discipline?.color}
+                        onDelete={(id) => deleteTimeBlock.mutate(id)}
+                        onResize={(id, newEndTime) =>
+                          updateTimeBlock.mutate({ id, end_time: newEndTime })
+                        }
+                        onToggleComplete={handleToggleComplete}
+                        onToggleStudyBlockComplete={handleToggleStudyBlockComplete}
+                        slotHeight={SLOT_HEIGHT}
+                      />
+                    </div>
+                  );
+                })}
               </div>
             </div>
           );

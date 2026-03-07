@@ -4,18 +4,22 @@ import { memo } from "react";
 import { cn } from "@/lib/utils";
 import { PRIORITIES } from "@/lib/constants";
 import type { Task } from "@/types/task";
+import type { Project } from "@/types/project";
 import { GripVertical, Pencil, Trash2, Calendar } from "lucide-react";
 import { format } from "date-fns";
+import ProjectBadge from "./ProjectBadge";
 
 interface TaskCardProps {
   task: Task;
   onEdit: (task: Task) => void;
   onDelete: (id: string) => void;
   onToggleComplete: (id: string, isCompleted: boolean) => void;
+  projects?: Map<string, Project>;
 }
 
-function TaskCard({ task, onEdit, onDelete, onToggleComplete }: TaskCardProps) {
+function TaskCard({ task, onEdit, onDelete, onToggleComplete, projects }: TaskCardProps) {
   const priority = PRIORITIES.find((p) => p.value === task.priority);
+  const project = task.project && projects ? projects.get(task.project) : null;
 
   return (
     <div
@@ -89,6 +93,9 @@ function TaskCard({ task, onEdit, onDelete, onToggleComplete }: TaskCardProps) {
               {tag.name}
             </span>
           ))}
+          {project && (
+            <ProjectBadge name={project.name} color={project.color} />
+          )}
           {task.scheduled_date && (
             <span className="flex items-center gap-1 text-[10px] text-[var(--color-text-muted)]">
               <Calendar className="h-3 w-3" />

@@ -153,6 +153,26 @@ rounded-lg px-1.5 py-0.5 text-[10px]
 style={{ backgroundColor: color + "20", color }}
 ```
 
+### Project Badge
+
+Same as tag badge but with a FolderOpen icon prefix. Appears in TaskCard metadata row alongside tags and scheduled date.
+
+```
+flex items-center gap-1 rounded-lg px-1.5 py-0.5 text-[10px]
+style={{ backgroundColor: color + "20", color }}
+Icon: FolderOpen h-2.5 w-2.5
+```
+
+### Project Card
+
+Uses the standard card pattern with a color dot indicator, description preview, task count, and optional due date.
+
+```
+Color dot: h-3 w-3 rounded-full (inline style backgroundColor)
+Task count: ListTodo icon + "N tasks" in text-[10px] text-[var(--color-text-muted)]
+Due date: CalendarDays icon + formatted date
+```
+
 ## Border Radius Scale
 
 | Component | Radius | Tailwind |
@@ -213,6 +233,77 @@ Toast uses elevated surface bg with red accent text:
 ```
 rounded-2xl border border-[#ef4444]/20 bg-[var(--color-surface-elevated)]
 text-[#ef4444] shadow-lg
+```
+
+### Sidebar Stats Panel
+
+Bottom-anchored panel in sidebar (`mt-auto`), only visible when sidebar is expanded. Two sections: "Today" and "This Week".
+
+```
+Container: border-t border-[var(--color-border)] px-3 py-3
+Section label: text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]
+Stat row: flex items-center gap-2, icon h-3.5 w-3.5 text-[var(--color-text-faint)]
+Stat text: text-xs text-[var(--color-text-secondary)]
+Progress bar: h-1 rounded-full bg-[var(--color-surface)], fill bg-[var(--color-text-secondary)]
+Weekly labels: text-[11px] text-[var(--color-text-faint)]
+```
+
+Icons: Clock (hours), BarChart3 (blocks), Flame (streak). Sections conditionally hidden when data is zero.
+
+### Study Components
+
+**SemesterCard:** Card with name, institution, discipline count, date range. Click-to-select with `ring-white/20` active indicator.
+
+**DisciplineCard:** Card with color dot, name, code, professor, block count, credits. Supports `onClick` for navigation to detail page.
+
+**StudyBlockCard:** `React.memo` wrapped. Checkbox (priority-colored when complete), title, priority/type/discipline badges. Edit/delete on hover. Uses `onPointerDown` stopPropagation on buttons.
+
+**DisciplineBadge:** BookOpen icon + colored badge (same pattern as ProjectBadge). Uses `color + "20"` for background alpha.
+
+**TodayStudyBlocks:** Focus page panel below kanban. Shows scheduled study blocks for today with completion toggles and discipline badges. Conditionally rendered (hidden when empty).
+
+**Calendar TimeBlock (study):** Uses discipline color instead of priority color, BookOpen icon prefix. Same resize/drag behavior as task time blocks.
+
+**ClassBlockItem (calendar):** Read-only calendar block for virtual class occurrences. Dashed border, ultra-light bg (`color + "0d"`), BookOpen icon, discipline name, class type badge, time range, optional location with MapPin icon. Not draggable, not resizable — purely informational.
+
+```
+Dashed border: border border-dashed, borderColor: color + "50"
+Ultra-light bg: backgroundColor: color + "0d"
+Title: text-xs font-medium, color: color + "c0"
+Type badge: text-[9px] font-semibold capitalize, bg: color + "18", color: color + "90"
+Time + location: text-[10px], color: color + "70" / "60"
+```
+
+**ClassScheduleForm:** Modal form for adding/editing recurring class schedules on a discipline. Day-of-week select, time range inputs, class type select, location text input. Uses `modalOpen === "classschedule-form"`.
+
+**Class Schedule List (discipline detail):** Inline management section below study blocks on `/study/[disciplineId]`. Each schedule row shows day, type badge, active status, time range, location. Edit (Pencil) and delete (Trash2) icons on hover.
+
+```
+Study form modals: "semester-form", "discipline-form", "studyblock-form", "classschedule-form"
+Study page: /study — semesters grid + disciplines grouped by status
+Discipline detail: /study/[disciplineId] — study blocks list + class schedule management
+Sidebar: BookOpen icon nav item + semester selector dropdown
+```
+
+### Review Components
+
+**Review Page:** 6-step wizard at `/review`. Step indicator: dot + line progress bar at top (`h-1.5 w-1.5 rounded-full`, connected by `h-px w-6` lines). Content area centered with `max-w-2xl`.
+
+**ReviewSummary (Step 0):** Stats row with 3 cards (hours focused, blocks completed/total, completion %). Completed items with green Check icon, incomplete items with amber Circle icon and `border-amber-500/20`.
+
+**ReviewRollover (Step 1):** Cards for each incomplete item with 4 action buttons (Tomorrow, Pick date, Backlog, Skip). Selected card dims with `opacity-60` and shows action label badge. "Apply & Continue" disabled until all items have decisions.
+
+**ReviewScore (Step 2):** 5 rating buttons (1-5) with labels. Selected button gets `ring-1 ring-white/20 bg-white/10`. Continue disabled until selection.
+
+**ReviewWin (Step 3):** Textarea with placeholder. Optional — has both "Skip" (ghost link) and "Continue" (primary button).
+
+**ReviewPreview (Step 4):** Read-only list of tomorrow's class occurrences (dashed border, discipline color dot), tasks, and study blocks.
+
+**ReviewShutdown (Step 5):** Centered Moon icon, two states: pre-shutdown ("Shut Down" primary button) and post-shutdown ("Great work today. Time to rest." with "Close" ghost button → `/plan`).
+
+```
+Sidebar nav order: Plan → Focus → Review → Projects → Study
+Review icon: CheckSquare from lucide-react
 ```
 
 ### Error Boundary

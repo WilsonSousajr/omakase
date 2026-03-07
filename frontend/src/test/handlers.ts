@@ -24,6 +24,8 @@ export function createMockTask(overrides = {}) {
     area: "work",
     kanban_status: "todo",
     tags: [],
+    project: null,
+    discipline: null,
     scheduled_date: null,
     due_date: null,
     estimated_minutes: null,
@@ -41,6 +43,7 @@ export function createMockTimeBlock(overrides = {}) {
   return {
     id: crypto.randomUUID(),
     task: crypto.randomUUID(),
+    study_block: null,
     date: "2025-01-15",
     start_time: "09:00:00",
     end_time: "10:00:00",
@@ -63,8 +66,178 @@ export function createMockPomodoroSession(overrides = {}) {
   };
 }
 
+export function createMockWorkspace(overrides = {}) {
+  return {
+    id: crypto.randomUUID(),
+    name: "Test Workspace",
+    color: "#a3a3a3",
+    project_count: 0,
+    created_at: "2025-01-01T00:00:00Z",
+    updated_at: "2025-01-01T00:00:00Z",
+    ...overrides,
+  };
+}
+
+export function createMockSemester(overrides = {}) {
+  return {
+    id: crypto.randomUUID(),
+    name: "2026.1",
+    institution: "UnB",
+    start_date: "2026-03-01",
+    end_date: "2026-07-15",
+    status: "active",
+    discipline_count: 0,
+    created_at: "2026-01-01T00:00:00Z",
+    updated_at: "2026-01-01T00:00:00Z",
+    ...overrides,
+  };
+}
+
+export function createMockDiscipline(overrides = {}) {
+  return {
+    id: crypto.randomUUID(),
+    semester: crypto.randomUUID(),
+    name: "Calculo 2",
+    code: "MAT0026",
+    professor: "Dr. Silva",
+    color: "#a3a3a3",
+    credits: 6,
+    target_grade: null,
+    status: "active",
+    study_block_count: 0,
+    created_at: "2026-01-01T00:00:00Z",
+    updated_at: "2026-01-01T00:00:00Z",
+    ...overrides,
+  };
+}
+
+export function createMockStudyBlock(overrides = {}) {
+  return {
+    id: crypto.randomUUID(),
+    discipline: crypto.randomUUID(),
+    title: "Chapter 5 Exercises",
+    block_type: "exercises",
+    priority: "medium",
+    status: "planned",
+    notes: "",
+    estimated_minutes: null,
+    scheduled_date: null,
+    due_date: null,
+    is_completed: false,
+    completed_at: null,
+    created_at: "2026-01-01T00:00:00Z",
+    updated_at: "2026-01-01T00:00:00Z",
+    ...overrides,
+  };
+}
+
+export function createMockClassSchedule(overrides = {}) {
+  return {
+    id: crypto.randomUUID(),
+    discipline: crypto.randomUUID(),
+    day_of_week: 0,
+    start_time: "10:00:00",
+    end_time: "11:40:00",
+    class_type: "lecture",
+    location: "Room 101",
+    is_active: true,
+    created_at: "2026-01-01T00:00:00Z",
+    updated_at: "2026-01-01T00:00:00Z",
+    ...overrides,
+  };
+}
+
+export function createMockClassOccurrence(overrides = {}) {
+  return {
+    id: `${crypto.randomUUID()}-2026-03-02`,
+    class_schedule_id: crypto.randomUUID(),
+    discipline_name: "Calculo 2",
+    discipline_color: "#3b82f6",
+    class_type: "lecture",
+    location: "Room 101",
+    date: "2026-03-02",
+    start_time: "10:00:00",
+    end_time: "11:40:00",
+    ...overrides,
+  };
+}
+
+export function createMockDailyReview(overrides = {}) {
+  return {
+    id: crypto.randomUUID(),
+    date: "2026-03-06",
+    productivity_rating: null,
+    win_of_the_day: "",
+    is_shutdown: false,
+    shutdown_at: null,
+    created_at: "2026-03-06T22:00:00Z",
+    updated_at: "2026-03-06T22:00:00Z",
+    ...overrides,
+  };
+}
+
+export function createMockReviewSummary(overrides = {}) {
+  return {
+    date: "2026-03-06",
+    hours_focused: 0,
+    blocks_completed: 0,
+    blocks_total: 0,
+    incomplete_tasks: [],
+    incomplete_study_blocks: [],
+    completed_items: [],
+    daily_review: null,
+    ...overrides,
+  };
+}
+
+export function createMockDailyStats(overrides = {}) {
+  return {
+    hours_focused_today: 0,
+    blocks_completed_today: 0,
+    blocks_total_today: 0,
+    current_streak: 0,
+    weekly_work_hours: 0,
+    weekly_study_hours: 0,
+    ...overrides,
+  };
+}
+
+export function createMockProject(overrides = {}) {
+  return {
+    id: crypto.randomUUID(),
+    workspace: crypto.randomUUID(),
+    name: "Test Project",
+    description: "",
+    color: "#a3a3a3",
+    status: "active",
+    due_date: null,
+    task_count: 0,
+    created_at: "2025-01-01T00:00:00Z",
+    updated_at: "2025-01-01T00:00:00Z",
+    ...overrides,
+  };
+}
+
 function paginated<T>(results: T[]) {
   return { count: results.length, next: null, previous: null, results };
+}
+
+export function createMockUser(overrides = {}) {
+  return {
+    id: 1,
+    username: "testuser",
+    email: "test@example.com",
+    date_joined: "2025-01-01T00:00:00Z",
+    ...overrides,
+  };
+}
+
+export function createMockTokens(overrides = {}) {
+  return {
+    access: "mock-access-token",
+    refresh: "mock-refresh-token",
+    ...overrides,
+  };
 }
 
 // Default mock data
@@ -76,6 +249,34 @@ const mockTasks = [
 ];
 
 export const handlers = [
+  // Auth
+  http.post(`${API_URL}/auth/register/`, async ({ request }) => {
+    const body = (await request.json()) as Record<string, unknown>;
+    if (body.username === "taken") {
+      return HttpResponse.json(
+        { username: ["A user with this username already exists."] },
+        { status: 400 }
+      );
+    }
+    return HttpResponse.json(createMockUser(body), { status: 201 });
+  }),
+  http.post(`${API_URL}/auth/token/`, async ({ request }) => {
+    const body = (await request.json()) as Record<string, unknown>;
+    if (body.password === "wrongpassword") {
+      return HttpResponse.json(
+        { detail: "No active account found with the given credentials" },
+        { status: 401 }
+      );
+    }
+    return HttpResponse.json(createMockTokens());
+  }),
+  http.post(`${API_URL}/auth/token/refresh/`, () =>
+    HttpResponse.json({ access: "new-access-token" })
+  ),
+  http.get(`${API_URL}/auth/me/`, () =>
+    HttpResponse.json(createMockUser())
+  ),
+
   // Tasks
   http.get(`${API_URL}/tasks/`, () =>
     HttpResponse.json(paginated(mockTasks))
@@ -139,4 +340,139 @@ export const handlers = [
     const body = (await request.json()) as Record<string, unknown>;
     return HttpResponse.json(createMockPomodoroSession({ id: params.id, ...body }));
   }),
+
+  // Workspaces
+  http.get(`${API_URL}/workspaces/`, () =>
+    HttpResponse.json(paginated([createMockWorkspace({ name: "Work" }), createMockWorkspace({ name: "Personal" })]))
+  ),
+  http.post(`${API_URL}/workspaces/`, async ({ request }) => {
+    const body = (await request.json()) as Record<string, unknown>;
+    return HttpResponse.json(createMockWorkspace(body), { status: 201 });
+  }),
+  http.patch(`${API_URL}/workspaces/:id/`, async ({ request, params }) => {
+    const body = (await request.json()) as Record<string, unknown>;
+    return HttpResponse.json(createMockWorkspace({ id: params.id, ...body }));
+  }),
+  http.delete(`${API_URL}/workspaces/:id/`, () =>
+    new HttpResponse(null, { status: 204 })
+  ),
+
+  // Projects
+  http.get(`${API_URL}/projects/`, () =>
+    HttpResponse.json(paginated([createMockProject({ name: "Project Alpha" }), createMockProject({ name: "Project Beta" })]))
+  ),
+  http.post(`${API_URL}/projects/`, async ({ request }) => {
+    const body = (await request.json()) as Record<string, unknown>;
+    return HttpResponse.json(createMockProject(body), { status: 201 });
+  }),
+  http.patch(`${API_URL}/projects/:id/`, async ({ request, params }) => {
+    const body = (await request.json()) as Record<string, unknown>;
+    return HttpResponse.json(createMockProject({ id: params.id, ...body }));
+  }),
+  http.delete(`${API_URL}/projects/:id/`, () =>
+    new HttpResponse(null, { status: 204 })
+  ),
+
+  // Stats
+  http.get(`${API_URL}/stats/daily/`, () =>
+    HttpResponse.json(createMockDailyStats({
+      hours_focused_today: 2.5,
+      blocks_completed_today: 3,
+      blocks_total_today: 5,
+      current_streak: 7,
+      weekly_work_hours: 12.0,
+      weekly_study_hours: 4.5,
+    }))
+  ),
+
+  // Daily Reviews
+  http.get(`${API_URL}/stats/review/`, () =>
+    HttpResponse.json(createMockReviewSummary())
+  ),
+  http.get(`${API_URL}/stats/reviews/`, () =>
+    HttpResponse.json(paginated([]))
+  ),
+  http.post(`${API_URL}/stats/reviews/`, async ({ request }) => {
+    const body = (await request.json()) as Record<string, unknown>;
+    return HttpResponse.json(createMockDailyReview(body), { status: 201 });
+  }),
+  http.patch(`${API_URL}/stats/reviews/:id/`, async ({ request, params }) => {
+    const body = (await request.json()) as Record<string, unknown>;
+    return HttpResponse.json(createMockDailyReview({ id: params.id, ...body }));
+  }),
+
+  // Semesters
+  http.get(`${API_URL}/study/semesters/`, () =>
+    HttpResponse.json(paginated([createMockSemester({ name: "2026.1" }), createMockSemester({ name: "2025.2" })]))
+  ),
+  http.post(`${API_URL}/study/semesters/`, async ({ request }) => {
+    const body = (await request.json()) as Record<string, unknown>;
+    return HttpResponse.json(createMockSemester(body), { status: 201 });
+  }),
+  http.patch(`${API_URL}/study/semesters/:id/`, async ({ request, params }) => {
+    const body = (await request.json()) as Record<string, unknown>;
+    return HttpResponse.json(createMockSemester({ id: params.id, ...body }));
+  }),
+  http.delete(`${API_URL}/study/semesters/:id/`, () =>
+    new HttpResponse(null, { status: 204 })
+  ),
+
+  // Disciplines
+  http.get(`${API_URL}/study/disciplines/`, () =>
+    HttpResponse.json(paginated([createMockDiscipline({ name: "Calculo 2" }), createMockDiscipline({ name: "Algebra Linear" })]))
+  ),
+  http.post(`${API_URL}/study/disciplines/`, async ({ request }) => {
+    const body = (await request.json()) as Record<string, unknown>;
+    return HttpResponse.json(createMockDiscipline(body), { status: 201 });
+  }),
+  http.patch(`${API_URL}/study/disciplines/:id/`, async ({ request, params }) => {
+    const body = (await request.json()) as Record<string, unknown>;
+    return HttpResponse.json(createMockDiscipline({ id: params.id, ...body }));
+  }),
+  http.delete(`${API_URL}/study/disciplines/:id/`, () =>
+    new HttpResponse(null, { status: 204 })
+  ),
+
+  // Study Blocks
+  http.get(`${API_URL}/study/studyblocks/`, () =>
+    HttpResponse.json(paginated([createMockStudyBlock({ title: "Chapter 5" }), createMockStudyBlock({ title: "Problem Set 3" })]))
+  ),
+  http.post(`${API_URL}/study/studyblocks/`, async ({ request }) => {
+    const body = (await request.json()) as Record<string, unknown>;
+    return HttpResponse.json(createMockStudyBlock(body), { status: 201 });
+  }),
+  http.patch(`${API_URL}/study/studyblocks/:id/`, async ({ request, params }) => {
+    const body = (await request.json()) as Record<string, unknown>;
+    return HttpResponse.json(createMockStudyBlock({ id: params.id, ...body }));
+  }),
+  http.delete(`${API_URL}/study/studyblocks/:id/`, () =>
+    new HttpResponse(null, { status: 204 })
+  ),
+
+  // Class Schedules
+  http.get(`${API_URL}/study/classschedules/`, () =>
+    HttpResponse.json(paginated([
+      createMockClassSchedule({ day_of_week: 0 }),
+      createMockClassSchedule({ day_of_week: 2 }),
+    ]))
+  ),
+  http.post(`${API_URL}/study/classschedules/`, async ({ request }) => {
+    const body = (await request.json()) as Record<string, unknown>;
+    return HttpResponse.json(createMockClassSchedule(body), { status: 201 });
+  }),
+  http.patch(`${API_URL}/study/classschedules/:id/`, async ({ request, params }) => {
+    const body = (await request.json()) as Record<string, unknown>;
+    return HttpResponse.json(createMockClassSchedule({ id: params.id, ...body }));
+  }),
+  http.delete(`${API_URL}/study/classschedules/:id/`, () =>
+    new HttpResponse(null, { status: 204 })
+  ),
+
+  // Class Occurrences
+  http.get(`${API_URL}/study/class-occurrences/`, () =>
+    HttpResponse.json([
+      createMockClassOccurrence({ date: "2026-03-02" }),
+      createMockClassOccurrence({ date: "2026-03-04", discipline_name: "Algebra Linear" }),
+    ])
+  ),
 ];

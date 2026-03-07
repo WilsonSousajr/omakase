@@ -3,6 +3,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import TaskCard from "../TaskCard";
 import type { Task } from "@/types/task";
+import type { Project } from "@/types/project";
 
 const mockTask: Task = {
   id: "task-1",
@@ -15,6 +16,7 @@ const mockTask: Task = {
   tags: [
     { id: "tag-1", name: "Backend", color: "#6366f1", area: "work", created_at: "2025-01-01T00:00:00Z" },
   ],
+  project: null,
   scheduled_date: "2025-01-15",
   due_date: null,
   estimated_minutes: null,
@@ -53,5 +55,31 @@ describe("TaskCard", () => {
     const buttons = screen.getAllByRole("button");
     await user.click(buttons[2]);
     expect(onDelete).toHaveBeenCalledWith("task-1");
+  });
+
+  it("shows project badge when task has project", () => {
+    const mockProject: Project = {
+      id: "proj-1",
+      workspace: "ws-1",
+      name: "My Project",
+      description: "",
+      color: "#f59e0b",
+      status: "active",
+      due_date: null,
+      task_count: 3,
+      created_at: "2025-01-01T00:00:00Z",
+      updated_at: "2025-01-01T00:00:00Z",
+    };
+    const projects = new Map([["proj-1", mockProject]]);
+    const taskWithProject = { ...mockTask, project: "proj-1" };
+    render(
+      <TaskCard task={taskWithProject} onEdit={vi.fn()} onDelete={vi.fn()} onToggleComplete={vi.fn()} projects={projects} />
+    );
+    expect(screen.getByText("My Project")).toBeInTheDocument();
+  });
+
+  it("does not show project badge when task has no project", () => {
+    render(<TaskCard task={mockTask} onEdit={vi.fn()} onDelete={vi.fn()} onToggleComplete={vi.fn()} />);
+    expect(screen.queryByText("My Project")).not.toBeInTheDocument();
   });
 });
