@@ -16,7 +16,7 @@ class DailyReviewSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
-        read_only_fields = ["id", "created_at", "updated_at"]
+        read_only_fields = ["id", "shutdown_at", "created_at", "updated_at"]
 
     def validate(self, data):
         request = self.context.get("request")

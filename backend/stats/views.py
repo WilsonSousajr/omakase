@@ -1,6 +1,6 @@
 import datetime
 
-from django.db.models import Q, Sum
+from django.db.models import DurationField, ExpressionWrapper, F, Q, Sum
 from django.db.models.functions import Coalesce
 from django.utils import timezone
 from rest_framework import viewsets
@@ -63,17 +63,24 @@ class DailyStatsView(APIView):
 
     def _current_streak(self, user, today):
         """Count consecutive days backward with at least 1 completed TimeBlock."""
-        dates = set(
+        dates = (
             TimeBlock.objects.filter(
                 Q(task__user=user, task__is_completed=True)
                 | Q(study_block__discipline__semester__user=user, study_block__is_completed=True),
-            ).values_list("date", flat=True).distinct()
+            )
+            .values_list("date", flat=True)
+            .distinct()
+            .order_by("-date")
         )
         streak = 0
         day = today
-        while day in dates:
-            streak += 1
-            day -= datetime.timedelta(days=1)
+        for d in dates:
+            if d == day:
+                streak += 1
+                day -= datetime.timedelta(days=1)
+            elif d < day:
+                # Gap found — streak is broken
+                break
         return streak
 
     def _weekly_hours_by_area(self, user, week_start, today, area):
@@ -83,12 +90,17 @@ class DailyStatsView(APIView):
             area_filter = Q(study_block__discipline__semester__user=user) | Q(task__user=user, task__area="study")
         else:
             area_filter = Q(task__user=user, task__area=area)
-        blocks = TimeBlock.objects.filter(date_filter & area_filter)
-        total_minutes = 0
-        for block in blocks:
-            start = datetime.datetime.combine(block.date, block.start_time)
-            end = datetime.datetime.combine(block.date, block.end_time)
-            total_minutes += (end - start).total_seconds() / 60
+        total_duration = (
+            TimeBlock.objects.filter(date_filter & area_filter)
+            .annotate(
+                duration=ExpressionWrapper(
+                    F("end_time") - F("start_time"),
+                    output_field=DurationField(),
+                )
+            )
+            .aggregate(total=Coalesce(Sum("duration"), datetime.timedelta()))["total"]
+        )
+        total_minutes = total_duration.total_seconds() / 60
         return round(total_minutes / 60, 1)
 
 
@@ -138,28 +150,29 @@ class ReviewSummaryView(APIView):
             is_completed=False,
         ).values("id", "title", "block_type", "priority", "estimated_minutes")
 
-        completed_items = []
+        completed_items_map = {}
         for block in blocks:
             is_task = block.task is not None
             linked = block.task if is_task else block.study_block
             if not linked:
                 continue
-            if is_task and not linked.is_completed:
-                continue
-            if not is_task and not linked.is_completed:
+            if not linked.is_completed:
                 continue
             start = datetime.datetime.combine(block.date, block.start_time)
             end = datetime.datetime.combine(block.date, block.end_time)
             actual_min = int((end - start).total_seconds() / 60)
-            completed_items.append(
-                {
-                    "id": str(linked.id),
+            item_id = str(linked.id)
+            if item_id in completed_items_map:
+                completed_items_map[item_id]["actual_minutes"] += actual_min
+            else:
+                completed_items_map[item_id] = {
+                    "id": item_id,
                     "title": linked.title,
                     "type": "task" if is_task else "studyblock",
                     "estimated_minutes": linked.estimated_minutes,
                     "actual_minutes": actual_min,
                 }
-            )
+        completed_items = list(completed_items_map.values())
 
         daily_review = DailyReview.objects.filter(
             user=user, date=review_date
@@ -195,6 +208,7 @@ class ReviewSummaryView(APIView):
 
 class DailyReviewViewSet(viewsets.ModelViewSet):
     serializer_class = DailyReviewSerializer
+    filterset_fields = ["date"]
 
     def get_queryset(self):
         return DailyReview.objects.filter(user=self.request.user)
