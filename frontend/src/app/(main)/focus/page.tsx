@@ -1,16 +1,16 @@
 "use client";
 
 import { useEffect } from "react";
-import { format } from "date-fns";
 import KanbanBoard from "@/components/kanban/KanbanBoard";
 import TodayStudyBlocks from "@/components/kanban/TodayStudyBlocks";
 import ActiveTaskPanel from "@/components/focus/ActiveTaskPanel";
 import { emitToast } from "@/components/Toast";
 import { useDailyReview } from "@/hooks/useDailyReviews";
+import { useToday } from "@/hooks/useToday";
 import { useUIStore } from "@/stores/uiStore";
 
 export default function FocusPage() {
-  const today = format(new Date(), "yyyy-MM-dd");
+  const today = useToday();
   const { data: todayReview } = useDailyReview(today);
   const hasShownShutdownNudge = useUIStore((s) => s.hasShownShutdownNudge);
   const setHasShownShutdownNudge = useUIStore((s) => s.setHasShownShutdownNudge);

@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { format } from "date-fns";
+import { useState, useEffect } from "react";
 import {
   useReviewSummary,
   useCreateDailyReview,
@@ -13,11 +12,12 @@ import ReviewScore from "@/components/review/ReviewScore";
 import ReviewWin from "@/components/review/ReviewWin";
 import ReviewPreview from "@/components/review/ReviewPreview";
 import ReviewShutdown from "@/components/review/ReviewShutdown";
+import { useToday } from "@/hooks/useToday";
 
 const STEPS = ["Summary", "Rollover", "Score", "Win", "Preview", "Shutdown"];
 
 export default function ReviewPage() {
-  const today = format(new Date(), "yyyy-MM-dd");
+  const today = useToday();
   const { data: summary, isLoading } = useReviewSummary(today);
   const createReview = useCreateDailyReview();
   const updateReview = useUpdateDailyReview();
@@ -28,6 +28,12 @@ export default function ReviewPage() {
   );
   const [rating, setRating] = useState<number | null>(null);
   const [win, setWin] = useState("");
+
+  useEffect(() => {
+    if (summary?.daily_review?.id && !reviewId) {
+      setReviewId(summary.daily_review.id);
+    }
+  }, [summary?.daily_review?.id, reviewId]);
 
   const ensureReview = async (): Promise<string> => {
     if (reviewId) return reviewId;

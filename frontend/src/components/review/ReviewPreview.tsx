@@ -1,6 +1,7 @@
 "use client";
 
 import { format, addDays } from "date-fns";
+import { useTomorrow } from "@/hooks/useToday";
 import { useTimeBlocks } from "@/hooks/useTimeBlocks";
 import { useTasks } from "@/hooks/useTasks";
 import { useStudyBlocks } from "@/hooks/useStudyBlocks";
@@ -11,7 +12,7 @@ interface Props {
 }
 
 export default function ReviewPreview({ onNext }: Props) {
-  const tomorrow = format(addDays(new Date(), 1), "yyyy-MM-dd");
+  const tomorrow = useTomorrow();
   const { data: timeBlocks = [] } = useTimeBlocks(tomorrow, tomorrow);
   const { data: tasks = [] } = useTasks({ scheduled_date: tomorrow });
   const { data: studyBlocks = [] } = useStudyBlocks({
