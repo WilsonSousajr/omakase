@@ -19,10 +19,15 @@ export default function ReviewShutdown({ onShutdown }: Props) {
 
   const handleShutdown = async () => {
     setIsShuttingDown(true);
-    await onShutdown();
-    setIsShuttingDown(false);
-    setIsDone(true);
-    setHasShownShutdownNudge(false);
+    try {
+      await onShutdown();
+      setIsDone(true);
+      setHasShownShutdownNudge(false);
+    } catch {
+      // Error handled by Toast interceptor
+    } finally {
+      setIsShuttingDown(false);
+    }
   };
 
   return (

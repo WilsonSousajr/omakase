@@ -36,6 +36,7 @@ export default function ReviewRollover({ summary, onNext }: Props) {
   ];
 
   const [decisions, setDecisions] = useState<Record<string, ItemDecision>>({});
+  const [isApplying, setIsApplying] = useState(false);
 
   if (allItems.length === 0) {
     return (
@@ -63,52 +64,59 @@ export default function ReviewRollover({ summary, onNext }: Props) {
   };
 
   const handleApply = async () => {
-    for (const item of allItems) {
-      const decision = decisions[item.id];
-      if (!decision) continue;
+    setIsApplying(true);
+    try {
+      for (const item of allItems) {
+        const decision = decisions[item.id];
+        if (!decision) continue;
 
-      if (item.itemType === "task") {
-        if (decision.action === "tomorrow") {
-          await updateTask.mutateAsync({
-            id: item.id,
-            scheduled_date: tomorrow,
-          });
-        } else if (decision.action === "pick" && decision.date) {
-          await updateTask.mutateAsync({
-            id: item.id,
-            scheduled_date: decision.date,
-          });
-        } else if (
-          decision.action === "backlog" ||
-          decision.action === "skip"
-        ) {
-          await updateTask.mutateAsync({ id: item.id, scheduled_date: null });
-        }
-      } else {
-        if (decision.action === "tomorrow") {
-          await updateStudyBlock.mutateAsync({
-            id: item.id,
-            scheduled_date: tomorrow,
-          });
-        } else if (decision.action === "pick" && decision.date) {
-          await updateStudyBlock.mutateAsync({
-            id: item.id,
-            scheduled_date: decision.date,
-          });
-        } else if (decision.action === "backlog") {
-          await updateStudyBlock.mutateAsync({
-            id: item.id,
-            scheduled_date: null,
-          });
-        } else if (decision.action === "skip") {
-          await updateStudyBlock.mutateAsync({
-            id: item.id,
-            status: "skipped",
-          });
+        if (item.itemType === "task") {
+          if (decision.action === "tomorrow") {
+            await updateTask.mutateAsync({
+              id: item.id,
+              scheduled_date: tomorrow,
+            });
+          } else if (decision.action === "pick" && decision.date) {
+            await updateTask.mutateAsync({
+              id: item.id,
+              scheduled_date: decision.date,
+            });
+          } else if (
+            decision.action === "backlog" ||
+            decision.action === "skip"
+          ) {
+            await updateTask.mutateAsync({ id: item.id, scheduled_date: null });
+          }
+        } else {
+          if (decision.action === "tomorrow") {
+            await updateStudyBlock.mutateAsync({
+              id: item.id,
+              scheduled_date: tomorrow,
+            });
+          } else if (decision.action === "pick" && decision.date) {
+            await updateStudyBlock.mutateAsync({
+              id: item.id,
+              scheduled_date: decision.date,
+            });
+          } else if (decision.action === "backlog") {
+            await updateStudyBlock.mutateAsync({
+              id: item.id,
+              scheduled_date: null,
+            });
+          } else if (decision.action === "skip") {
+            await updateStudyBlock.mutateAsync({
+              id: item.id,
+              status: "skipped",
+            });
+          }
         }
       }
+      onNext();
+    } catch {
+      // Error already handled by Toast interceptor
+    } finally {
+      setIsApplying(false);
     }
-    onNext();
   };
 
   const actionButtons: {
@@ -162,7 +170,12 @@ export default function ReviewRollover({ summary, onNext }: Props) {
                     onClick={() => {
                       if (action === "pick") {
                         const picked = prompt("Enter date (YYYY-MM-DD):");
-                        if (picked) setDecision(item.id, { action, date: picked });
+                        if (picked) {
+                          if (!/^\d{4}-\d{2}-\d{2}$/.test(picked) || isNaN(Date.parse(picked))) {
+                            return; // silently reject invalid dates
+                          }
+                          setDecision(item.id, { action, date: picked });
+                        }
                       } else {
                         setDecision(item.id, { action });
                       }
@@ -186,7 +199,7 @@ export default function ReviewRollover({ summary, onNext }: Props) {
       <div className="flex justify-end pt-2">
         <button
           onClick={handleApply}
-          disabled={!allDecided}
+          disabled={!allDecided || isApplying}
           className="rounded-xl bg-[var(--color-button-primary)] px-6 py-2 text-xs font-medium text-[var(--color-button-primary-text)] transition-colors hover:bg-[var(--color-button-primary-hover)] disabled:opacity-50"
         >
           Apply &amp; Continue
