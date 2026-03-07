@@ -1,13 +1,12 @@
 from datetime import date
 
 from django.db import transaction
+from django.db.models import Count
 from django_filters import rest_framework as filters
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
-
-from django.db.models import Count
 
 from .constants import REORDER_BULK_MAX_ITEMS
 from .models import Project, Tag, Task, TimeBlock, Workspace
@@ -71,15 +70,12 @@ class TaskViewSet(viewsets.ModelViewSet):
             tasks_by_id = {t.id: t for t in Task.objects.filter(
                 id__in=task_ids, user=self.request.user
             ).select_for_update()}
-            to_update = []
             for item in serializer.validated_data:
                 task = tasks_by_id.get(item["id"])
                 if task:
                     task.kanban_order = item["kanban_order"]
                     task.kanban_status = item["kanban_status"]
-                    to_update.append(task)
-            if to_update:
-                Task.objects.bulk_update(to_update, ["kanban_order", "kanban_status"])
+                    task.save()
         return Response({"status": "ok"})
 
 
@@ -125,12 +121,32 @@ class TimeBlockViewSet(viewsets.ModelViewSet):
             .distinct()
         )
 
+    def _validate_ownership(self, serializer):
+        task = serializer.validated_data.get("task")
+        study_block = serializer.validated_data.get("study_block")
+        if task and task.user != self.request.user:
+            raise PermissionDenied("You do not own this task.")
+        if study_block and study_block.discipline.semester.user != self.request.user:
+            raise PermissionDenied("You do not own this study block.")
+
+    def perform_create(self, serializer):
+        self._validate_ownership(serializer)
+        serializer.save()
+
+    def perform_update(self, serializer):
+        self._validate_ownership(serializer)
+        serializer.save()
+
 
 class WorkspaceViewSet(viewsets.ModelViewSet):
     serializer_class = WorkspaceSerializer
 
     def get_queryset(self):
-        return Workspace.objects.filter(user=self.request.user).annotate(project_count=Count("projects")).order_by("name")
+        return (
+            Workspace.objects.filter(user=self.request.user)
+            .annotate(project_count=Count("projects"))
+            .order_by("name")
+        )
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
@@ -147,9 +163,19 @@ class ProjectViewSet(viewsets.ModelViewSet):
     filterset_class = ProjectFilter
 
     def get_queryset(self):
-        return Project.objects.filter(workspace__user=self.request.user).annotate(task_count=Count("tasks")).order_by("name")
+        return (
+            Project.objects.filter(workspace__user=self.request.user)
+            .annotate(task_count=Count("tasks"))
+            .order_by("name")
+        )
 
     def perform_create(self, serializer):
+        workspace = serializer.validated_data.get("workspace")
+        if workspace and workspace.user != self.request.user:
+            raise PermissionDenied("You do not own this workspace.")
+        serializer.save()
+
+    def perform_update(self, serializer):
         workspace = serializer.validated_data.get("workspace")
         if workspace and workspace.user != self.request.user:
             raise PermissionDenied("You do not own this workspace.")

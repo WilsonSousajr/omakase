@@ -54,6 +54,12 @@ class DisciplineViewSet(viewsets.ModelViewSet):
             raise PermissionDenied("You do not own this semester.")
         serializer.save()
 
+    def perform_update(self, serializer):
+        semester = serializer.validated_data.get("semester")
+        if semester and semester.user != self.request.user:
+            raise PermissionDenied("You do not own this semester.")
+        serializer.save()
+
 
 class StudyBlockFilter(filters.FilterSet):
     class Meta:
@@ -69,6 +75,12 @@ class StudyBlockViewSet(viewsets.ModelViewSet):
         return StudyBlock.objects.filter(discipline__semester__user=self.request.user).select_related("discipline")
 
     def perform_create(self, serializer):
+        discipline = serializer.validated_data.get("discipline")
+        if discipline and discipline.semester.user != self.request.user:
+            raise PermissionDenied("You do not own this discipline.")
+        serializer.save()
+
+    def perform_update(self, serializer):
         discipline = serializer.validated_data.get("discipline")
         if discipline and discipline.semester.user != self.request.user:
             raise PermissionDenied("You do not own this discipline.")
@@ -92,6 +104,12 @@ class ClassScheduleViewSet(viewsets.ModelViewSet):
         )
 
     def perform_create(self, serializer):
+        discipline = serializer.validated_data.get("discipline")
+        if discipline and discipline.semester.user != self.request.user:
+            raise PermissionDenied("You do not own this discipline.")
+        serializer.save()
+
+    def perform_update(self, serializer):
         discipline = serializer.validated_data.get("discipline")
         if discipline and discipline.semester.user != self.request.user:
             raise PermissionDenied("You do not own this discipline.")

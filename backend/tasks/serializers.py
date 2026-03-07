@@ -1,4 +1,3 @@
-from django.db.models import Count
 from rest_framework import serializers
 
 from .models import Project, Tag, Task, TimeBlock, Workspace
@@ -58,6 +57,12 @@ class TaskListSerializer(serializers.ModelSerializer):
     tag_ids = serializers.PrimaryKeyRelatedField(
         many=True, queryset=Tag.objects.all(), write_only=True, source="tags", required=False
     )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        request = self.context.get("request")
+        if request and hasattr(request, "user"):
+            self.fields["tag_ids"].child_relation.queryset = Tag.objects.filter(user=request.user)
 
     class Meta:
         model = Task
