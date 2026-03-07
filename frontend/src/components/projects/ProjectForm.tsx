@@ -38,12 +38,18 @@ export default function ProjectForm({ editProject, onClose }: ProjectFormProps) 
     } else {
       setName("");
       setDescription("");
-      setWorkspaceId(workspaces[0]?.id || "");
       setColor("#a3a3a3");
       setStatus("active");
       setDueDate("");
     }
-  }, [editProject, workspaces]);
+  }, [editProject]);
+
+  // Separate effect for default workspace (only when creating)
+  useEffect(() => {
+    if (!editProject && workspaces.length > 0 && !workspaceId) {
+      setWorkspaceId(workspaces[0].id);
+    }
+  }, [editProject, workspaces, workspaceId]);
 
   if (modalOpen !== "project-form") return null;
 

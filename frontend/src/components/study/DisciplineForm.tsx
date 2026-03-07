@@ -42,7 +42,8 @@ export default function DisciplineForm({ editDiscipline, defaultSemesterId, onCl
       setTargetGrade(editDiscipline.target_grade?.toString() || "");
       setStatus(editDiscipline.status);
       defaultsInitialized.current = true;
-    } else if (!defaultsInitialized.current) {
+    } else {
+      defaultsInitialized.current = false;
       const defaultId = defaultSemesterId || semesters[0]?.id || "";
       if (defaultId) {
         setSemesterId(defaultId);

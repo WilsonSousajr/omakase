@@ -44,7 +44,8 @@ export default function StudyBlockForm({ editStudyBlock, defaultDisciplineId, on
       setScheduledDate(editStudyBlock.scheduled_date || "");
       setDueDate(editStudyBlock.due_date || "");
       defaultsInitialized.current = true;
-    } else if (!defaultsInitialized.current) {
+    } else {
+      defaultsInitialized.current = false;
       const defaultId = defaultDisciplineId || disciplines[0]?.id || "";
       if (defaultId) {
         setDisciplineId(defaultId);

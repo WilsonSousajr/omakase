@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { X } from "lucide-react";
 import { PRIORITIES, AREAS } from "@/lib/constants";
 import { useTags } from "@/hooks/useTags";
@@ -34,9 +34,11 @@ export default function TaskForm({ editTask, onClose }: TaskFormProps) {
   const [scheduledDate, setScheduledDate] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [estimatedMinutes, setEstimatedMinutes] = useState("");
+  const lastInitId = useRef<string | null>(null);
 
   useEffect(() => {
-    if (editTask) {
+    if (editTask && editTask.id !== lastInitId.current) {
+      lastInitId.current = editTask.id;
       setTitle(editTask.title);
       setDescription(editTask.description || "");
       setPriority(editTask.priority);
@@ -47,7 +49,8 @@ export default function TaskForm({ editTask, onClose }: TaskFormProps) {
       setScheduledDate(editTask.scheduled_date || "");
       setDueDate(editTask.due_date || "");
       setEstimatedMinutes(editTask.estimated_minutes?.toString() || "");
-    } else {
+    } else if (!editTask && lastInitId.current !== null) {
+      lastInitId.current = null;
       setTitle("");
       setDescription("");
       setPriority("medium");

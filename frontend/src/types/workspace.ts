@@ -9,7 +9,7 @@ export interface Workspace {
 
 export interface WorkspaceCreate {
   name: string;
-  color: string;
+  color?: string;
 }
 
 export type WorkspaceUpdate = Partial<WorkspaceCreate>;
