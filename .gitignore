@@ -44,3 +44,4 @@ coverage/
 
 # Git worktrees
 .worktrees/
+frontend/tsconfig.tsbuildinfo
