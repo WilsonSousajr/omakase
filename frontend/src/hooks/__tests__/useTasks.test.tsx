@@ -3,9 +3,10 @@ import { renderHook, waitFor } from "@testing-library/react";
 import { setupServer } from "msw/node";
 import { http, HttpResponse } from "msw";
 import { useTasks, useTodayTasks, useCreateTask, useUpdateTask, useDeleteTask, useReorderTasks } from "../useTasks";
+import { useTimeBlocks } from "../useTimeBlocks";
 import { createTestQueryClient } from "@/test/utils";
-import { QueryClientProvider } from "@tanstack/react-query";
-import { handlers, createMockTask } from "@/test/handlers";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { handlers, createMockTask, createMockTimeBlock } from "@/test/handlers";
 import type { ReactNode } from "react";
 
 const server = setupServer(...handlers);
@@ -17,6 +18,12 @@ afterAll(() => server.close());
 function wrapper({ children }: { children: ReactNode }) {
   const queryClient = createTestQueryClient();
   return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
+}
+
+function createWrapperWithClient(queryClient: QueryClient) {
+  return function Wrapper({ children }: { children: ReactNode }) {
+    return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
+  };
 }
 
 const API_URL = "http://localhost:8000/api/v1";
@@ -73,6 +80,39 @@ describe("useDeleteTask", () => {
   it("deletes task", async () => {
     const { result } = renderHook(() => useDeleteTask(), { wrapper });
     await expect(result.current.mutateAsync("abc")).resolves.toBeUndefined();
+  });
+
+  it("invalidates timeblocks cache after deleting a task", async () => {
+    let timeblockFetchCount = 0;
+    server.use(
+      http.get(`${API_URL}/timeblocks/`, () => {
+        timeblockFetchCount++;
+        return HttpResponse.json({
+          count: 1,
+          results: [createMockTimeBlock()],
+        });
+      })
+    );
+
+    const queryClient = createTestQueryClient();
+    const sharedWrapper = createWrapperWithClient(queryClient);
+
+    // Prime the timeblocks cache
+    const { result: tbResult } = renderHook(
+      () => useTimeBlocks("2026-03-08", "2026-03-08"),
+      { wrapper: sharedWrapper }
+    );
+    await waitFor(() => expect(tbResult.current.isSuccess).toBe(true));
+    const fetchCountAfterPrime = timeblockFetchCount;
+
+    // Delete a task — should invalidate timeblocks cache
+    const { result: deleteResult } = renderHook(() => useDeleteTask(), {
+      wrapper: sharedWrapper,
+    });
+    await deleteResult.current.mutateAsync("abc");
+
+    // The timeblocks endpoint should be re-fetched after task deletion
+    await waitFor(() => expect(timeblockFetchCount).toBeGreaterThan(fetchCountAfterPrime));
   });
 });
 

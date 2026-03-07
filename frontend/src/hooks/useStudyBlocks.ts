@@ -65,6 +65,7 @@ export function useDeleteStudyBlock() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["studyblocks"] });
       queryClient.invalidateQueries({ queryKey: ["disciplines"] });
+      queryClient.invalidateQueries({ queryKey: ["timeblocks"] });
     },
   });
 }

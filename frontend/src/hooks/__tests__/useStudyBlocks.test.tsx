@@ -2,10 +2,11 @@ import { describe, it, expect, beforeAll, afterAll, afterEach } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
 import { setupServer } from "msw/node";
 import { http, HttpResponse } from "msw";
-import { useStudyBlocks } from "../useStudyBlocks";
+import { useStudyBlocks, useDeleteStudyBlock } from "../useStudyBlocks";
+import { useTimeBlocks } from "../useTimeBlocks";
 import { createTestQueryClient } from "@/test/utils";
-import { QueryClientProvider } from "@tanstack/react-query";
-import { handlers, createMockStudyBlock } from "@/test/handlers";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { handlers, createMockStudyBlock, createMockTimeBlock } from "@/test/handlers";
 import type { ReactNode } from "react";
 
 const server = setupServer(...handlers);
@@ -86,5 +87,46 @@ describe("useStudyBlocks", () => {
     );
     const { result } = renderHook(() => useStudyBlocks(), { wrapper });
     await waitFor(() => expect(result.current.isError).toBe(true));
+  });
+});
+
+function createWrapperWithClient(queryClient: QueryClient) {
+  return function Wrapper({ children }: { children: ReactNode }) {
+    return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
+  };
+}
+
+describe("useDeleteStudyBlock", () => {
+  it("invalidates timeblocks cache after deleting a study block", async () => {
+    let timeblockFetchCount = 0;
+    server.use(
+      http.get(`${API_URL}/timeblocks/`, () => {
+        timeblockFetchCount++;
+        return HttpResponse.json({
+          count: 1,
+          results: [createMockTimeBlock()],
+        });
+      })
+    );
+
+    const queryClient = createTestQueryClient();
+    const sharedWrapper = createWrapperWithClient(queryClient);
+
+    // Prime the timeblocks cache
+    const { result: tbResult } = renderHook(
+      () => useTimeBlocks("2026-03-08", "2026-03-08"),
+      { wrapper: sharedWrapper }
+    );
+    await waitFor(() => expect(tbResult.current.isSuccess).toBe(true));
+    const fetchCountAfterPrime = timeblockFetchCount;
+
+    // Delete a study block — should invalidate timeblocks cache
+    const { result: deleteResult } = renderHook(() => useDeleteStudyBlock(), {
+      wrapper: sharedWrapper,
+    });
+    await deleteResult.current.mutateAsync("abc");
+
+    // The timeblocks endpoint should be re-fetched after study block deletion
+    await waitFor(() => expect(timeblockFetchCount).toBeGreaterThan(fetchCountAfterPrime));
   });
 });
