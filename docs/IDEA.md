@@ -1,3 +1,4 @@
+
 # Omakase — Detailed Feature Plan
 
 > This document serves as the complete feature specification for Omakase. Every feature is described with its purpose, behavior, data model considerations, edge cases, and implementation priority. This is a living document that should evolve as development progresses.
@@ -968,6 +969,44 @@ Generate a shareable summary of the week:
 - Offline support for focus mode
 - Collaborative features (study groups sharing schedules)
 - API for third-party integrations
+
+### Phase 6 — Native Apps
+
+**Goal:** Deliver a native experience on mobile and desktop for fast, reliable access with platform-specific capabilities.
+
+#### 6a. Mobile — iOS & Android
+
+- Native iOS app (Swift/SwiftUI)
+- Native Android app (Kotlin/Jetpack Compose)
+- Shared REST API backend (same DRF API, no BFF needed initially)
+- Push notifications for Pomodoro timer, upcoming time blocks, deadlines, and streak reminders
+- Offline-first architecture: local persistence (Core Data / Room) with background sync
+- Quick capture widget (iOS home screen widget, Android app widget)
+- Focus mode with system-level Do Not Disturb integration
+- Haptic feedback on timer events and task completion
+- Biometric authentication (Face ID / fingerprint)
+- Deep links for shared schedules and study blocks
+
+#### 6b. Desktop — macOS
+
+- Native macOS app (Swift/SwiftUI, AppKit where needed)
+- Menu bar companion: quick timer controls, next time block preview, quick capture
+- Full app window with sidebar navigation (mirrors web layout)
+- Native keyboard shortcuts and macOS menu integration
+- System notifications for Pomodoro transitions and upcoming blocks
+- Global hotkey for quick capture (e.g. `⌥⌘N` to add a task from anywhere)
+- Spotlight integration for searching tasks and study blocks
+- Calendar.app integration via EventKit
+- Auto-launch on login option
+- Handoff support between macOS and iOS apps
+
+#### Native App Strategy
+
+- **API-first**: All native apps consume the same `/api/v1/` endpoints — no app-specific backend changes
+- **Offline sync**: Conflict resolution strategy using last-write-wins with server timestamps; critical operations (task completion, timer state) queue and retry
+- **Authentication**: Same JWT flow with secure keychain/keystore storage (no localStorage)
+- **Shared design language**: Monochrome palette and Outfit font carry over, but respect platform conventions (SF Symbols on Apple, Material icons on Android)
+- **Release cadence**: Web-first for new features, native apps follow after API stabilization
 
 ---
 
