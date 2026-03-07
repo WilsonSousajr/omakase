@@ -83,9 +83,7 @@ class TestDailyStatsView:
         today = timezone.localdate()
         completed_task = TaskFactory(user=user, is_completed=True)
         incomplete_task = TaskFactory(user=user, is_completed=False)
-        TimeBlockFactory(
-            task=completed_task, date=today, start_time=datetime.time(9, 0), end_time=datetime.time(10, 0)
-        )
+        TimeBlockFactory(task=completed_task, date=today, start_time=datetime.time(9, 0), end_time=datetime.time(10, 0))
         TimeBlockFactory(
             task=incomplete_task, date=today, start_time=datetime.time(10, 0), end_time=datetime.time(11, 0)
         )
