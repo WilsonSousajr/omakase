@@ -495,6 +495,14 @@ The Daily Review activates at the user's configured shutdown time (e.g., 22:00) 
 
 6. **Shutdown confirmation**: "Great work today. Time to rest." The UI transitions to a calm shutdown screen. If the user tries to open planning or focus features after shutdown, a gentle reminder appears (not a hard block — just a nudge).
 
+### 8.3 Review History
+
+The review page has a **Today / History** tab bar above the wizard. "Today" shows the 6-step wizard (default). "History" shows a paginated list of past daily reviews, newest-first.
+
+Each history card shows a **compact view**: date (e.g. "Friday, March 6"), year label, rating dots (1-5, filled/unfilled), win excerpt (single line with quotes), and a moon icon if shutdown was completed. Clicking a card **expands** it to lazy-load the full review summary (hours focused, blocks, completion %, completed items, incomplete items). Data is cached by date — collapse and re-expand is instant.
+
+"Load more" button at the bottom fetches the next page. No backend changes needed — the existing `DailyReviewViewSet` list endpoint (without date filter) and `ReviewSummaryView` already support everything.
+
 ---
 
 ## 9. Analytics & Dashboards

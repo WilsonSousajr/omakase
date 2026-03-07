@@ -186,6 +186,10 @@ frontend/
 - Frontend: useReviewSummary(date) hook for the aggregation endpoint, useDailyReview(date) for CRUD
 - Frontend: emitToast exported from Toast.tsx for programmatic toast messages
 - Frontend: Review wizard state (step, rating, win, reviewId) owned by page, each step is a pure component with props
+- Frontend: Review page has Today/History tab bar (same pattern as MarkdownEditor tabs), tab state in useState (not URL)
+- Frontend: `useDailyReviewsList(page)` hook for paginated history, query key `["daily-reviews", "list", page]` (auto-invalidated by existing mutations)
+- Frontend: ReviewHistoryCard uses `React.memo`, lazy-loads summary via `useReviewSummary(date)` with `enabled: expanded`
+- Frontend: ReviewHistory accumulates pages via `useEffect` (page 1 replaces, subsequent pages append) — no `useInfiniteQuery`
 
 ## Drag & Drop (Plan Mode)
 

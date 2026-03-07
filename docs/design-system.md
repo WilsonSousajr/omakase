@@ -301,6 +301,12 @@ Sidebar: BookOpen icon nav item + semester selector dropdown
 
 **ReviewShutdown (Step 5):** Centered Moon icon, two states: pre-shutdown ("Shut Down" primary button) and post-shutdown ("Great work today. Time to rest." with "Close" ghost button → `/plan`).
 
+**Review Tab Bar:** Today / History tabs above wizard content. Same pattern as MarkdownEditor tabs: `border-b-2 border-[var(--color-text-primary)]` for active, `text-[var(--color-text-muted)]` for inactive. `px-4 py-2 text-xs font-medium capitalize`.
+
+**ReviewHistory:** Paginated list of past reviews (`space-y-3`). Empty state: centered muted text. "Load more" ghost button when more pages exist. Contained in `max-w-2xl` centered wrapper.
+
+**ReviewHistoryCard:** `React.memo` wrapped. Compact view: date + year (signature label style), 5 rating dots (`h-1.5 w-1.5 rounded-full`), win excerpt (`line-clamp-1`), Moon icon when shutdown, ChevronDown (rotates 180 on expand). Card: `rounded-2xl border bg-surface hover:bg-surface-hover`. Expanded view: lazy-loaded summary stats in `rounded-xl bg-bg p-3` cards, completed items (green Check), incomplete items (amber Circle). Loading spinner while fetching.
+
 ```
 Sidebar nav order: Plan → Focus → Review → Projects → Study
 Review icon: CheckSquare from lucide-react
