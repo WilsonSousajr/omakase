@@ -18,9 +18,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" suppressHydrationWarning>
       <body
-        className={`${outfit.className} flex h-screen bg-[#0a0a0a] text-white antialiased`}
+        className={`${outfit.className} flex h-screen bg-[var(--color-bg)] text-[var(--color-text-primary)] antialiased`}
       >
         <Providers>
           <AuthGuard>
