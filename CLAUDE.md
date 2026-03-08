@@ -28,6 +28,28 @@ pre-commit install         # Install git hooks
 
 Pre-commit runs automatically on `git commit`: ruff lint/format for Python, ESLint via lint-staged for TypeScript/TSX, detect-secrets, and standard file checks.
 
+## Docker Builds
+
+Both Dockerfiles use multi-stage builds with `dev` and `prod` targets:
+
+```bash
+# Dev (default — used by docker-compose up)
+docker-compose up                    # targets dev stage, bind mounts for hot reload
+
+# Production builds
+docker build --target prod -t omakase-frontend:prod ./frontend
+docker build --target prod -t omakase-backend:prod ./backend
+
+# Production via compose override
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml up
+```
+
+- **Frontend prod** uses Next.js standalone output (~200-250MB vs ~1.8GB dev). Non-root `nextjs` user (UID 1001)
+- **Backend prod** runs as non-root `django` user (UID 1001). Includes `collectstatic`
+- **`NEXT_PUBLIC_API_URL`** must be passed as build arg for prod (baked at build time by Next.js)
+- **`.dockerignore`** files exclude test files, dev tooling, and IDE artifacts from build context
+- CI enforces frontend prod image < 500MB via `docker-build` job
+
 ## Backend Commands
 
 ```bash
@@ -268,6 +290,8 @@ pnpm test:coverage   # with coverage report
 GitHub Actions (`.github/workflows/ci.yml`) runs on push to main and PRs:
 - **Frontend job:** pnpm install → lint → `tsc --noEmit` → test (with `--coverage --coverage.thresholds.lines=50`) → build
 - **Backend job:** PostgreSQL service → pip install → `ruff check` + `ruff format --check` → migrate → pytest with `--cov-fail-under=60`
+- **Docker lint job:** hadolint on both Dockerfiles (catches anti-patterns)
+- **Docker build job:** builds both prod images, verifies frontend image < 500MB (prevents size regression)
 - **Concurrency:** `ci-${{ github.ref }}` group with `cancel-in-progress: true` — prevents wasted CI minutes on rapid pushes
 
 ### Test Patterns
