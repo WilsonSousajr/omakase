@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { PROJECT_STATUSES } from "@/lib/constants";
+import ColorSwatchPicker from "@/components/ColorSwatchPicker";
 import { useWorkspaces } from "@/hooks/useWorkspaces";
 import { useCreateProject, useUpdateProject } from "@/hooks/useProjects";
 import { useUIStore } from "@/stores/uiStore";
@@ -147,37 +148,18 @@ export default function ProjectForm({ editProject, onClose }: ProjectFormProps) 
             </div>
           </div>
 
-          <div className="flex gap-3">
-            <div className="flex-1">
-              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
-                Color
-              </label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="color"
-                  value={color}
-                  onChange={(e) => setColor(e.target.value)}
-                  className="h-9 w-9 shrink-0 cursor-pointer rounded-lg border border-[var(--color-border)] bg-transparent"
-                />
-                <input
-                  type="text"
-                  value={color}
-                  onChange={(e) => setColor(e.target.value)}
-                  className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-input)] px-3.5 py-2 text-sm text-[var(--color-text-primary)] outline-none focus:border-[var(--color-text-secondary)]/40"
-                />
-              </div>
-            </div>
-            <div className="flex-1">
-              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
-                Due Date
-              </label>
-              <input
-                type="date"
-                value={dueDate}
-                onChange={(e) => setDueDate(e.target.value)}
-                className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-input)] px-3.5 py-2 text-sm text-[var(--color-text-primary)] outline-none focus:border-[var(--color-text-secondary)]/40"
-              />
-            </div>
+          <ColorSwatchPicker value={color} onChange={setColor} />
+
+          <div>
+            <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
+              Due Date
+            </label>
+            <input
+              type="date"
+              value={dueDate}
+              onChange={(e) => setDueDate(e.target.value)}
+              className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-input)] px-3.5 py-2 text-sm text-[var(--color-text-primary)] outline-none focus:border-[var(--color-text-secondary)]/40"
+            />
           </div>
 
           <div className="flex justify-end gap-2 pt-2">

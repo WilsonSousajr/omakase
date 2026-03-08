@@ -36,6 +36,8 @@ docker-compose.override.yml
 # OS
 .DS_Store
 Thumbs.db
+* 2.*
+* 2/
 
 # Coverage
 htmlcov/

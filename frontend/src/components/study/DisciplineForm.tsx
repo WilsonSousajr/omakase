@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { X } from "lucide-react";
 import { DISCIPLINE_STATUSES } from "@/lib/constants";
+import ColorSwatchPicker from "@/components/ColorSwatchPicker";
 import { useSemesters } from "@/hooks/useSemesters";
 import { useCreateDiscipline, useUpdateDiscipline } from "@/hooks/useDisciplines";
 import { useUIStore } from "@/stores/uiStore";
@@ -161,38 +162,19 @@ export default function DisciplineForm({ editDiscipline, defaultSemesterId, onCl
             </div>
           </div>
 
-          <div className="flex gap-3">
-            <div className="flex-1">
-              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
-                Color
-              </label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="color"
-                  value={color}
-                  onChange={(e) => setColor(e.target.value)}
-                  className="h-9 w-9 shrink-0 cursor-pointer rounded-lg border border-[var(--color-border)] bg-transparent"
-                />
-                <input
-                  type="text"
-                  value={color}
-                  onChange={(e) => setColor(e.target.value)}
-                  className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-input)] px-3.5 py-2 text-sm text-[var(--color-text-primary)] outline-none focus:border-[var(--color-text-secondary)]/40"
-                />
-              </div>
-            </div>
-            <div className="w-24">
-              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
-                Credits
-              </label>
-              <input
-                type="number"
-                value={credits}
-                onChange={(e) => setCredits(e.target.value)}
-                placeholder="0"
-                className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-input)] px-3.5 py-2 text-sm text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] outline-none focus:border-[var(--color-text-secondary)]/40"
-              />
-            </div>
+          <ColorSwatchPicker value={color} onChange={setColor} />
+
+          <div className="w-24">
+            <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
+              Credits
+            </label>
+            <input
+              type="number"
+              value={credits}
+              onChange={(e) => setCredits(e.target.value)}
+              placeholder="0"
+              className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-input)] px-3.5 py-2 text-sm text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] outline-none focus:border-[var(--color-text-secondary)]/40"
+            />
           </div>
 
           <div className="flex justify-end gap-2 pt-2">
