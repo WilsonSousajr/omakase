@@ -215,6 +215,7 @@ frontend/
 - Creating a time block in plan mode auto-sets `scheduled_date` so the task appears in focus mode's kanban (`/tasks/today/` filters by `scheduled_date`)
 - Moving a time block to a different day syncs the parent task/study block's `scheduled_date` to match
 - All time block mutations (create/update/delete) invalidate both `["timeblocks"]` and `["tasks"]` query caches
+- Deleting a task or study block must also invalidate `["timeblocks"]` — DB CASCADE deletes the time blocks, but stale frontend cache causes ghost blocks on the calendar
 - `/tasks/today/` accepts optional `?date=` query param — frontend sends client-local date to avoid server UTC mismatch
 - `useTodayTasks(date)` requires a date string (from `useToday()` hook) — no longer uses server `date.today()` as default
 - `useToday()` hook in `frontend/src/hooks/useToday.ts` returns local date as YYYY-MM-DD string
@@ -276,6 +277,7 @@ GitHub Actions (`.github/workflows/ci.yml`) runs on push to main and PRs:
 - Frontend hooks: `renderHook()` + MSW for API mocking
 - Frontend components: `renderWithProviders()` wrapper includes QueryClientProvider
 - Mock `@dnd-kit/*` in component tests that use drag-and-drop
+- **Bug fix tests are mandatory** — every bug fix MUST include a regression test that reproduces the bug (fails without the fix, passes with it). This prevents the same bug from recurring.
 
 ## Git Workflow (STRICT)
 
