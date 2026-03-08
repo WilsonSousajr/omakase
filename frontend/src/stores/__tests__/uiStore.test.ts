@@ -7,6 +7,7 @@ describe("uiStore", () => {
       sidebarOpen: true,
       modalOpen: null,
       activeTaskId: null,
+      editTask: null,
       activeWorkspaceId: null,
       activeSemesterId: null,
     });
@@ -62,5 +63,13 @@ describe("uiStore", () => {
     useUIStore.getState().setActiveSemesterId("sem-123");
     useUIStore.getState().setActiveSemesterId(null);
     expect(useUIStore.getState().activeSemesterId).toBeNull();
+  });
+
+  it("sets and clears edit task", () => {
+    const task = { id: "t-1", title: "Test" } as never;
+    useUIStore.getState().setEditTask(task);
+    expect(useUIStore.getState().editTask).toBe(task);
+    useUIStore.getState().setEditTask(null);
+    expect(useUIStore.getState().editTask).toBeNull();
   });
 });

@@ -32,6 +32,8 @@ const mockTask: Task = {
   tags: [
     { id: "tag-1", name: "Frontend", color: "#6366f1", area: "work", created_at: "2025-01-01T00:00:00Z" },
   ],
+  project: null,
+  discipline: null,
   scheduled_date: null,
   due_date: null,
   estimated_minutes: null,

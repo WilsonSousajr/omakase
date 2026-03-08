@@ -98,10 +98,7 @@ class ClassScheduleViewSet(viewsets.ModelViewSet):
     filterset_class = ClassScheduleFilter
 
     def get_queryset(self):
-        return (
-            ClassSchedule.objects.filter(discipline__semester__user=self.request.user)
-            .select_related("discipline")
-        )
+        return ClassSchedule.objects.filter(discipline__semester__user=self.request.user).select_related("discipline")
 
     def perform_create(self, serializer):
         discipline = serializer.validated_data.get("discipline")
@@ -151,13 +148,10 @@ class ClassOccurrenceView(APIView):
                 status=400,
             )
 
-        schedules = (
-            ClassSchedule.objects.filter(
-                discipline__semester__user=request.user,
-                is_active=True,
-            )
-            .select_related("discipline")
-        )
+        schedules = ClassSchedule.objects.filter(
+            discipline__semester__user=request.user,
+            is_active=True,
+        ).select_related("discipline")
 
         occurrences = []
         for schedule in schedules:
@@ -173,17 +167,19 @@ class ClassOccurrenceView(APIView):
             current = effective_start
             while current <= effective_end:
                 if current.weekday() == schedule.day_of_week:
-                    occurrences.append({
-                        "id": f"{schedule.id}-{current.isoformat()}",
-                        "class_schedule_id": schedule.id,
-                        "discipline_name": schedule.discipline.name,
-                        "discipline_color": schedule.discipline.color,
-                        "class_type": schedule.class_type,
-                        "location": schedule.location,
-                        "date": current,
-                        "start_time": schedule.start_time,
-                        "end_time": schedule.end_time,
-                    })
+                    occurrences.append(
+                        {
+                            "id": f"{schedule.id}-{current.isoformat()}",
+                            "class_schedule_id": schedule.id,
+                            "discipline_name": schedule.discipline.name,
+                            "discipline_color": schedule.discipline.color,
+                            "class_type": schedule.class_type,
+                            "location": schedule.location,
+                            "date": current,
+                            "start_time": schedule.start_time,
+                            "end_time": schedule.end_time,
+                        }
+                    )
                 current += datetime.timedelta(days=1)
 
         serializer = ClassOccurrenceSerializer(occurrences, many=True)

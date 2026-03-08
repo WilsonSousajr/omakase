@@ -37,6 +37,8 @@ const mockTask: Task = {
   due_date: null,
   estimated_minutes: null,
   kanban_order: 0,
+  project: null,
+  discipline: null,
   is_completed: false,
   completed_at: null,
   created_at: "2025-01-01T00:00:00Z",

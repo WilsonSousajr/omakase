@@ -25,15 +25,11 @@ class TestDailyReviewSerializer:
         assert data["is_shutdown"] is True
 
     def test_validate_productivity_rating_range(self):
-        serializer = DailyReviewSerializer(
-            data={"date": "2026-03-06", "productivity_rating": 6}
-        )
+        serializer = DailyReviewSerializer(data={"date": "2026-03-06", "productivity_rating": 6})
         assert not serializer.is_valid()
         assert "productivity_rating" in serializer.errors
 
     def test_validate_productivity_rating_zero(self):
-        serializer = DailyReviewSerializer(
-            data={"date": "2026-03-06", "productivity_rating": 0}
-        )
+        serializer = DailyReviewSerializer(data={"date": "2026-03-06", "productivity_rating": 0})
         assert not serializer.is_valid()
         assert "productivity_rating" in serializer.errors

@@ -35,13 +35,17 @@ export function useTasks(filters?: TaskFilters) {
   });
 }
 
-export function useTodayTasks() {
+export function useTodayTasks(date: string) {
   return useQuery({
-    queryKey: ["tasks", "today"],
+    queryKey: ["tasks", "today", date],
     queryFn: async () => {
-      const { data } = await api.get<PaginatedResponse<Task> | Task[]>("/tasks/today/");
+      const { data } = await api.get<PaginatedResponse<Task> | Task[]>(
+        "/tasks/today/",
+        { params: { date } }
+      );
       return Array.isArray(data) ? data : data.results;
     },
+    enabled: !!date,
   });
 }
 

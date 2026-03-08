@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeAll, afterAll, afterEach } from "vitest";
+import { describe, it, expect, beforeAll, afterAll, afterEach } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { setupServer } from "msw/node";
@@ -12,15 +12,14 @@ const server = setupServer(...handlers);
 beforeAll(() => server.listen());
 afterEach(() => {
   server.resetHandlers();
-  useUIStore.setState({ modalOpen: null });
+  useUIStore.setState({ modalOpen: null, editTask: null });
 });
 afterAll(() => server.close());
 
 describe("TaskForm", () => {
   it("renders empty form when modal is open", () => {
     useUIStore.setState({ modalOpen: "task-form" });
-    const onClose = vi.fn();
-    renderWithProviders(<TaskForm onClose={onClose} />);
+    renderWithProviders(<TaskForm />);
 
     expect(screen.getByPlaceholderText("Task title")).toBeInTheDocument();
     expect(screen.getByText("New Task")).toBeInTheDocument();
@@ -28,56 +27,57 @@ describe("TaskForm", () => {
 
   it("does not render when modal is closed", () => {
     useUIStore.setState({ modalOpen: null });
-    const onClose = vi.fn();
-    const { container } = renderWithProviders(<TaskForm onClose={onClose} />);
+    const { container } = renderWithProviders(<TaskForm />);
     expect(container.innerHTML).toBe("");
   });
 
   it("submits create task", async () => {
     const user = userEvent.setup();
     useUIStore.setState({ modalOpen: "task-form" });
-    const onClose = vi.fn();
-    renderWithProviders(<TaskForm onClose={onClose} />);
+    renderWithProviders(<TaskForm />);
 
     await user.type(screen.getByPlaceholderText("Task title"), "My new task");
     await user.click(screen.getByRole("button", { name: /create/i }));
 
-    await waitFor(() => expect(onClose).toHaveBeenCalled());
+    await waitFor(() => expect(useUIStore.getState().modalOpen).toBeNull());
   });
 
   it("title is required — submit with empty title does nothing", async () => {
     const user = userEvent.setup();
     useUIStore.setState({ modalOpen: "task-form" });
-    const onClose = vi.fn();
-    renderWithProviders(<TaskForm onClose={onClose} />);
+    renderWithProviders(<TaskForm />);
 
     // Try submitting without typing a title
     await user.click(screen.getByRole("button", { name: /create/i }));
-    expect(onClose).not.toHaveBeenCalled();
+    expect(useUIStore.getState().modalOpen).toBe("task-form");
   });
 
   it("renders edit mode with pre-filled data", () => {
-    useUIStore.setState({ modalOpen: "task-form" });
-    const editTask = {
-      id: "123",
-      title: "Existing task",
-      description: "Some description",
-      notes: "",
-      priority: "high" as const,
-      area: "work" as const,
-      kanban_status: "todo" as const,
-      tags: [],
-      scheduled_date: null,
-      due_date: null,
-      estimated_minutes: null,
-      kanban_order: 0,
-      is_completed: false,
-      completed_at: null,
-      created_at: "2025-01-01T00:00:00Z",
-      updated_at: "2025-01-01T00:00:00Z",
-    };
+    useUIStore.setState({
+      modalOpen: "task-form",
+      editTask: {
+        id: "123",
+        title: "Existing task",
+        description: "Some description",
+        notes: "",
+        priority: "high",
+        area: "work",
+        kanban_status: "todo",
+        tags: [],
+        project: null,
+        discipline: null,
+        scheduled_date: null,
+        due_date: null,
+        estimated_minutes: null,
+        kanban_order: 0,
+        is_completed: false,
+        completed_at: null,
+        created_at: "2025-01-01T00:00:00Z",
+        updated_at: "2025-01-01T00:00:00Z",
+      },
+    });
 
-    renderWithProviders(<TaskForm editTask={editTask} onClose={vi.fn()} />);
+    renderWithProviders(<TaskForm />);
 
     expect(screen.getByText("Edit Task")).toBeInTheDocument();
     expect(screen.getByDisplayValue("Existing task")).toBeInTheDocument();
@@ -87,7 +87,7 @@ describe("TaskForm", () => {
   it("tag selection toggles", async () => {
     const user = userEvent.setup();
     useUIStore.setState({ modalOpen: "task-form" });
-    renderWithProviders(<TaskForm onClose={vi.fn()} />);
+    renderWithProviders(<TaskForm />);
 
     // Wait for tags to load from MSW
     await waitFor(() => {

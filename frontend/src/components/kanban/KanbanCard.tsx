@@ -13,7 +13,8 @@ interface KanbanCardProps {
 }
 
 export default function KanbanCard({ task }: KanbanCardProps) {
-  const { activeTaskId, setActiveTaskId } = useUIStore();
+  const activeTaskId = useUIStore((s) => s.activeTaskId);
+  const setActiveTaskId = useUIStore((s) => s.setActiveTaskId);
   const priority = PRIORITIES.find((p) => p.value === task.priority);
   const isActive = activeTaskId === task.id;
 
@@ -41,20 +42,18 @@ export default function KanbanCard({ task }: KanbanCardProps) {
       style={style}
       onClick={() => setActiveTaskId(task.id)}
       className={cn(
-        "group cursor-pointer rounded-2xl border bg-[var(--color-surface)] p-4 transition-all duration-300",
+        "group cursor-grab rounded-2xl border bg-[var(--color-surface)] p-4 transition-all duration-300 active:cursor-grabbing",
         isActive
           ? "border-white/20 ring-1 ring-white/10"
           : "border-[var(--color-border)] hover:border-[var(--color-border-hover)]"
       )}
+      {...listeners}
+      {...attributes}
     >
       <div className="flex items-start gap-2">
-        <button
-          className="mt-0.5 cursor-grab text-[var(--color-text-faint)] hover:text-[var(--color-text-muted)] active:cursor-grabbing"
-          {...listeners}
-          {...attributes}
-        >
+        <div className="mt-0.5 text-[var(--color-text-faint)] group-hover:text-[var(--color-text-muted)]">
           <GripVertical className="h-4 w-4" />
-        </button>
+        </div>
 
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">

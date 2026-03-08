@@ -389,9 +389,30 @@ export const handlers = [
   http.get(`${API_URL}/stats/review/`, () =>
     HttpResponse.json(createMockReviewSummary())
   ),
-  http.get(`${API_URL}/stats/reviews/`, () =>
-    HttpResponse.json(paginated([]))
-  ),
+  http.get(`${API_URL}/stats/reviews/`, ({ request }) => {
+    const url = new URL(request.url);
+    if (url.searchParams.has("date")) {
+      return HttpResponse.json(paginated([]));
+    }
+    return HttpResponse.json(
+      paginated([
+        createMockDailyReview({
+          date: "2026-03-06",
+          productivity_rating: 4,
+          win_of_the_day: "Shipped the review feature",
+          is_shutdown: true,
+          shutdown_at: "2026-03-06T23:00:00Z",
+        }),
+        createMockDailyReview({
+          date: "2026-03-05",
+          productivity_rating: 3,
+          win_of_the_day: "",
+          is_shutdown: true,
+          shutdown_at: "2026-03-05T22:30:00Z",
+        }),
+      ])
+    );
+  }),
   http.post(`${API_URL}/stats/reviews/`, async ({ request }) => {
     const body = (await request.json()) as Record<string, unknown>;
     return HttpResponse.json(createMockDailyReview(body), { status: 201 });

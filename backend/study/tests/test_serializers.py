@@ -68,10 +68,7 @@ class TestSemesterSerializer:
         DisciplineFactory(semester=semester)
         DisciplineFactory(semester=semester)
         annotated = (
-            type(semester)
-            .objects.filter(pk=semester.pk)
-            .annotate(discipline_count=Count("disciplines"))
-            .first()
+            type(semester).objects.filter(pk=semester.pk).annotate(discipline_count=Count("disciplines")).first()
         )
         data = SemesterSerializer(annotated).data
         assert data["discipline_count"] == 2
@@ -86,9 +83,7 @@ class TestSemesterSerializer:
             start_date=datetime.date(2026, 3, 1),
             end_date=datetime.date(2026, 7, 15),
         )
-        serializer = SemesterSerializer(
-            semester, data={"end_date": "2026-01-01"}, partial=True
-        )
+        serializer = SemesterSerializer(semester, data={"end_date": "2026-01-01"}, partial=True)
         assert not serializer.is_valid()
 
 
@@ -114,10 +109,7 @@ class TestDisciplineSerializer:
         StudyBlockFactory(discipline=discipline)
         StudyBlockFactory(discipline=discipline)
         annotated = (
-            type(discipline)
-            .objects.filter(pk=discipline.pk)
-            .annotate(study_block_count=Count("study_blocks"))
-            .first()
+            type(discipline).objects.filter(pk=discipline.pk).annotate(study_block_count=Count("study_blocks")).first()
         )
         data = DisciplineSerializer(annotated).data
         assert data["study_block_count"] == 3
@@ -171,9 +163,7 @@ class TestStudyBlockSerializer:
 
     def test_is_completed_syncs_status(self):
         block = StudyBlockFactory(is_completed=False)
-        serializer = StudyBlockSerializer(
-            block, data={"is_completed": True}, partial=True
-        )
+        serializer = StudyBlockSerializer(block, data={"is_completed": True}, partial=True)
         assert serializer.is_valid(), serializer.errors
         updated = serializer.save()
         assert updated.status == "completed"
@@ -182,8 +172,13 @@ class TestStudyBlockSerializer:
     def test_all_block_types_valid(self):
         discipline = DisciplineFactory()
         for block_type in [
-            "theory", "exercises", "review", "assignment",
-            "exam_prep", "lab", "reading",
+            "theory",
+            "exercises",
+            "review",
+            "assignment",
+            "exam_prep",
+            "lab",
+            "reading",
         ]:
             data = {
                 "discipline": str(discipline.pk),

@@ -20,12 +20,12 @@ class DailyReviewSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         request = self.context.get("request")
-        if request and not self.instance:
+        if request and self.instance:
+            # Reject date changes on update to prevent unique constraint 500
+            if "date" in data and data["date"] != self.instance.date:
+                raise serializers.ValidationError({"date": "Cannot change the date of an existing review."})
+        elif request and not self.instance:
             date = data.get("date")
-            if date and DailyReview.objects.filter(
-                user=request.user, date=date
-            ).exists():
-                raise serializers.ValidationError(
-                    {"date": "A review for this date already exists."}
-                )
+            if date and DailyReview.objects.filter(user=request.user, date=date).exists():
+                raise serializers.ValidationError({"date": "A review for this date already exists."})
         return data

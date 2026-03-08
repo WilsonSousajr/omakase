@@ -1,7 +1,7 @@
 import pytest
 from django.utils import timezone
 
-from conftest import DisciplineFactory, StudyBlockFactory, TagFactory, TaskFactory
+from conftest import DisciplineFactory, TagFactory, TaskFactory
 from tasks.serializers import (
     TagSerializer,
     TaskListSerializer,

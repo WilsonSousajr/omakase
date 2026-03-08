@@ -5,15 +5,13 @@ import { useTasks, useDeleteTask, useToggleTaskComplete } from "@/hooks/useTasks
 import { useUIStore } from "@/stores/uiStore";
 import DraggableTaskCard from "./DraggableTaskCard";
 import TaskFilters from "./TaskFilters";
-import TaskForm from "./TaskForm";
 import type { Task } from "@/types/task";
 
 export default function TaskList() {
   const [search, setSearch] = useState("");
   const [priority, setPriority] = useState("");
-  const [editTask, setEditTask] = useState<Task | null>(null);
   const openModal = useUIStore((s) => s.openModal);
-  const closeModal = useUIStore((s) => s.closeModal);
+  const setEditTask = useUIStore((s) => s.setEditTask);
   const deleteTask = useDeleteTask();
   const toggleComplete = useToggleTaskComplete();
 
@@ -33,11 +31,6 @@ export default function TaskList() {
 
   const handleToggleComplete = (id: string, isCompleted: boolean) => {
     toggleComplete.mutate({ id, is_completed: isCompleted });
-  };
-
-  const handleCloseForm = () => {
-    setEditTask(null);
-    closeModal();
   };
 
   return (
@@ -78,8 +71,6 @@ export default function TaskList() {
           ))
         )}
       </div>
-
-      <TaskForm editTask={editTask} onClose={handleCloseForm} />
     </div>
   );
 }

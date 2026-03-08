@@ -59,9 +59,7 @@ class Project(models.Model):
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True, default="")
     color = models.CharField(max_length=7, default=DEFAULT_WORKSPACE_COLOR, validators=[hex_color_validator])
-    status = models.CharField(
-        max_length=20, choices=ProjectStatusChoices.choices, default=ProjectStatusChoices.ACTIVE
-    )
+    status = models.CharField(max_length=20, choices=ProjectStatusChoices.choices, default=ProjectStatusChoices.ACTIVE)
     due_date = models.DateField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

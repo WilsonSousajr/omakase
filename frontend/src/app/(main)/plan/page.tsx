@@ -100,12 +100,22 @@ export default function PlanPage() {
       const [endH, endM] = block.end_time.split(":").map(Number);
       const durationMin = (endH * 60 + endM) - (startH * 60 + startM);
 
-      updateTimeBlock.mutate({
-        id: block.id,
-        date,
-        start_time: time + ":00",
-        end_time: addMinutesToTime(time, durationMin),
-      });
+      try {
+        await updateTimeBlock.mutateAsync({
+          id: block.id,
+          date,
+          start_time: time + ":00",
+          end_time: addMinutesToTime(time, durationMin),
+        });
+        // Sync scheduled_date on the parent task/study block
+        if (block.task && block.date !== date) {
+          await updateTask.mutateAsync({ id: block.task, scheduled_date: date });
+        } else if (block.study_block && block.date !== date) {
+          await updateStudyBlock.mutateAsync({ id: block.study_block, scheduled_date: date });
+        }
+      } catch {
+        // Errors handled by global toast interceptor
+      }
     }
   };
 

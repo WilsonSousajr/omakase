@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import type { Task } from "@/types/task";
 
 interface UIState {
   sidebarOpen: boolean;
@@ -8,6 +9,8 @@ interface UIState {
   closeModal: () => void;
   activeTaskId: string | null;
   setActiveTaskId: (id: string | null) => void;
+  editTask: Task | null;
+  setEditTask: (task: Task | null) => void;
   activeWorkspaceId: string | null;
   setActiveWorkspaceId: (id: string | null) => void;
   activeSemesterId: string | null;
@@ -24,6 +27,8 @@ export const useUIStore = create<UIState>((set) => ({
   closeModal: () => set({ modalOpen: null }),
   activeTaskId: null,
   setActiveTaskId: (id) => set({ activeTaskId: id }),
+  editTask: null,
+  setEditTask: (task) => set({ editTask: task }),
   activeWorkspaceId: null,
   setActiveWorkspaceId: (id) => set({ activeWorkspaceId: id }),
   activeSemesterId: null,

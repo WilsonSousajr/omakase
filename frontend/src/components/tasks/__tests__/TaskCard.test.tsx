@@ -17,6 +17,7 @@ const mockTask: Task = {
     { id: "tag-1", name: "Backend", color: "#6366f1", area: "work", created_at: "2025-01-01T00:00:00Z" },
   ],
   project: null,
+  discipline: null,
   scheduled_date: "2025-01-15",
   due_date: null,
   estimated_minutes: null,

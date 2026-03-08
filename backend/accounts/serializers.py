@@ -11,19 +11,17 @@ class RegisterSerializer(serializers.Serializer):
 
     def validate_username(self, value):
         if User.objects.filter(username=value).exists():
-            raise serializers.ValidationError("A user with this username already exists.")
+            raise serializers.ValidationError("Unable to register with the provided credentials.")
         return value
 
     def validate_email(self, value):
         if User.objects.filter(email=value).exists():
-            raise serializers.ValidationError("A user with this email already exists.")
+            raise serializers.ValidationError("Unable to register with the provided credentials.")
         return value
 
     def validate(self, data):
         if data["password"] != data["password_confirm"]:
-            raise serializers.ValidationError(
-                {"password_confirm": "Passwords do not match."}
-            )
+            raise serializers.ValidationError({"password_confirm": "Passwords do not match."})
         return data
 
     def create(self, validated_data):
@@ -31,9 +29,7 @@ class RegisterSerializer(serializers.Serializer):
         try:
             return User.objects.create_user(**validated_data)
         except IntegrityError:
-            raise serializers.ValidationError(
-                {"username": "A user with this username already exists."}
-            )
+            raise serializers.ValidationError("Unable to register with the provided credentials.")
 
 
 class UserSerializer(serializers.ModelSerializer):

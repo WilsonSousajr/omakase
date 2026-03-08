@@ -1,11 +1,8 @@
-import uuid
-
 import pytest
 from rest_framework import status
 
-from conftest import ProjectFactory, TaskFactory, UserFactory, WorkspaceFactory
-from tasks.models import Project, Task, Workspace
-
+from conftest import ProjectFactory, TaskFactory, WorkspaceFactory
+from tasks.models import Project, Workspace
 
 # ── Workspace Model ──────────────────────────────────────────────────
 
