@@ -227,6 +227,9 @@ export function createMockUser(overrides = {}) {
     id: 1,
     username: "testuser",
     email: "test@example.com",
+    first_name: "",
+    last_name: "",
+    avatar_color: "#a3a3a3",
     date_joined: "2025-01-01T00:00:00Z",
     ...overrides,
   };
@@ -276,6 +279,20 @@ export const handlers = [
   http.get(`${API_URL}/auth/me/`, () =>
     HttpResponse.json(createMockUser())
   ),
+  http.patch(`${API_URL}/auth/me/`, async ({ request }) => {
+    const body = (await request.json()) as Record<string, unknown>;
+    return HttpResponse.json(createMockUser(body));
+  }),
+  http.post(`${API_URL}/auth/change-password/`, async ({ request }) => {
+    const body = (await request.json()) as Record<string, unknown>;
+    if (body.old_password === "wrongpassword") {
+      return HttpResponse.json(
+        { old_password: ["Current password is incorrect."] },
+        { status: 400 }
+      );
+    }
+    return HttpResponse.json({ detail: "Password changed successfully." });
+  }),
 
   // Tasks
   http.get(`${API_URL}/tasks/`, () =>

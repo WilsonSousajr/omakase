@@ -33,7 +33,7 @@ describe("authStore", () => {
   });
 
   it("setAuth stores user and tokens", () => {
-    const user = { id: 1, username: "test", email: "t@e.com", date_joined: "2025-01-01" };
+    const user = { id: 1, username: "test", email: "t@e.com", first_name: "", last_name: "", avatar_color: "#a3a3a3", date_joined: "2025-01-01" };
     const tokens = { access: "acc", refresh: "ref" };
 
     useAuthStore.getState().setAuth(user, tokens);
@@ -56,7 +56,7 @@ describe("authStore", () => {
   });
 
   it("setUser updates user without changing auth state", () => {
-    const user = { id: 1, username: "test", email: "t@e.com", date_joined: "2025-01-01" };
+    const user = { id: 1, username: "test", email: "t@e.com", first_name: "", last_name: "", avatar_color: "#a3a3a3", date_joined: "2025-01-01" };
 
     useAuthStore.getState().setUser(user);
 
@@ -64,7 +64,7 @@ describe("authStore", () => {
   });
 
   it("logout clears everything", () => {
-    const user = { id: 1, username: "test", email: "t@e.com", date_joined: "2025-01-01" };
+    const user = { id: 1, username: "test", email: "t@e.com", first_name: "", last_name: "", avatar_color: "#a3a3a3", date_joined: "2025-01-01" };
     const tokens = { access: "acc", refresh: "ref" };
 
     useAuthStore.getState().setAuth(user, tokens);
