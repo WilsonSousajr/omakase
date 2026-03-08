@@ -40,15 +40,12 @@ class DailyStatsView(APIView):
 
     def _hours_focused_today(self, user, today):
         """Sum duration_minutes from completed focus PomodoroSessions today."""
-        total = (
-            PomodoroSession.objects.filter(
-                user=user,
-                session_type="focus",
-                completed=True,
-                started_at__date=today,
-            )
-            .aggregate(total=Coalesce(Sum("duration_minutes"), 0))["total"]
-        )
+        total = PomodoroSession.objects.filter(
+            user=user,
+            session_type="focus",
+            completed=True,
+            started_at__date=today,
+        ).aggregate(total=Coalesce(Sum("duration_minutes"), 0))["total"]
         return round(total / 60, 1)
 
     def _blocks_today(self, user, today):
@@ -56,9 +53,7 @@ class DailyStatsView(APIView):
         user_filter = Q(task__user=user) | Q(study_block__discipline__semester__user=user)
         blocks = TimeBlock.objects.filter(user_filter, date=today).select_related("task", "study_block")
         total = blocks.count()
-        completed = blocks.filter(
-            Q(task__is_completed=True) | Q(study_block__is_completed=True)
-        ).count()
+        completed = blocks.filter(Q(task__is_completed=True) | Q(study_block__is_completed=True)).count()
         return completed, total
 
     def _current_streak(self, user, today):
@@ -127,16 +122,10 @@ class ReviewSummaryView(APIView):
 
         hours_focused = self._hours_focused(user, review_date)
 
-        user_filter = Q(task__user=user) | Q(
-            study_block__discipline__semester__user=user
-        )
-        blocks = TimeBlock.objects.filter(
-            user_filter, date=review_date
-        ).select_related("task", "study_block")
+        user_filter = Q(task__user=user) | Q(study_block__discipline__semester__user=user)
+        blocks = TimeBlock.objects.filter(user_filter, date=review_date).select_related("task", "study_block")
         blocks_total = blocks.count()
-        blocks_completed = blocks.filter(
-            Q(task__is_completed=True) | Q(study_block__is_completed=True)
-        ).count()
+        blocks_completed = blocks.filter(Q(task__is_completed=True) | Q(study_block__is_completed=True)).count()
 
         incomplete_tasks = Task.objects.filter(
             user=user,
@@ -174,12 +163,8 @@ class ReviewSummaryView(APIView):
                 }
         completed_items = list(completed_items_map.values())
 
-        daily_review = DailyReview.objects.filter(
-            user=user, date=review_date
-        ).first()
-        review_data = (
-            DailyReviewSerializer(daily_review).data if daily_review else None
-        )
+        daily_review = DailyReview.objects.filter(user=user, date=review_date).first()
+        review_data = DailyReviewSerializer(daily_review).data if daily_review else None
 
         return Response(
             {
@@ -195,14 +180,12 @@ class ReviewSummaryView(APIView):
         )
 
     def _hours_focused(self, user, date):
-        total = (
-            PomodoroSession.objects.filter(
-                user=user,
-                session_type="focus",
-                completed=True,
-                started_at__date=date,
-            ).aggregate(total=Coalesce(Sum("duration_minutes"), 0))["total"]
-        )
+        total = PomodoroSession.objects.filter(
+            user=user,
+            session_type="focus",
+            completed=True,
+            started_at__date=date,
+        ).aggregate(total=Coalesce(Sum("duration_minutes"), 0))["total"]
         return round(total / 60, 1)
 
 

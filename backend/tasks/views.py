@@ -67,9 +67,9 @@ class TaskViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         task_ids = [item["id"] for item in serializer.validated_data]
         with transaction.atomic():
-            tasks_by_id = {t.id: t for t in Task.objects.filter(
-                id__in=task_ids, user=self.request.user
-            ).select_for_update()}
+            tasks_by_id = {
+                t.id: t for t in Task.objects.filter(id__in=task_ids, user=self.request.user).select_for_update()
+            }
             for item in serializer.validated_data:
                 task = tasks_by_id.get(item["id"])
                 if task:
@@ -143,9 +143,7 @@ class WorkspaceViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return (
-            Workspace.objects.filter(user=self.request.user)
-            .annotate(project_count=Count("projects"))
-            .order_by("name")
+            Workspace.objects.filter(user=self.request.user).annotate(project_count=Count("projects")).order_by("name")
         )
 
     def perform_create(self, serializer):

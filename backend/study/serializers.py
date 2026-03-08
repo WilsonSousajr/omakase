@@ -9,8 +9,15 @@ class SemesterSerializer(serializers.ModelSerializer):
     class Meta:
         model = Semester
         fields = [
-            "id", "name", "institution", "start_date", "end_date",
-            "status", "discipline_count", "created_at", "updated_at",
+            "id",
+            "name",
+            "institution",
+            "start_date",
+            "end_date",
+            "status",
+            "discipline_count",
+            "created_at",
+            "updated_at",
         ]
         read_only_fields = ["id", "created_at", "updated_at"]
 
@@ -28,9 +35,18 @@ class DisciplineSerializer(serializers.ModelSerializer):
     class Meta:
         model = Discipline
         fields = [
-            "id", "semester", "name", "code", "professor", "color",
-            "credits", "target_grade", "status", "study_block_count",
-            "created_at", "updated_at",
+            "id",
+            "semester",
+            "name",
+            "code",
+            "professor",
+            "color",
+            "credits",
+            "target_grade",
+            "status",
+            "study_block_count",
+            "created_at",
+            "updated_at",
         ]
         read_only_fields = ["id", "created_at", "updated_at"]
 
@@ -39,9 +55,20 @@ class StudyBlockSerializer(serializers.ModelSerializer):
     class Meta:
         model = StudyBlock
         fields = [
-            "id", "discipline", "title", "block_type", "priority", "status",
-            "notes", "estimated_minutes", "scheduled_date", "due_date",
-            "is_completed", "completed_at", "created_at", "updated_at",
+            "id",
+            "discipline",
+            "title",
+            "block_type",
+            "priority",
+            "status",
+            "notes",
+            "estimated_minutes",
+            "scheduled_date",
+            "due_date",
+            "is_completed",
+            "completed_at",
+            "created_at",
+            "updated_at",
         ]
         read_only_fields = ["id", "completed_at", "created_at", "updated_at"]
 
@@ -50,8 +77,16 @@ class ClassScheduleSerializer(serializers.ModelSerializer):
     class Meta:
         model = ClassSchedule
         fields = [
-            "id", "discipline", "day_of_week", "start_time", "end_time",
-            "class_type", "location", "is_active", "created_at", "updated_at",
+            "id",
+            "discipline",
+            "day_of_week",
+            "start_time",
+            "end_time",
+            "class_type",
+            "location",
+            "is_active",
+            "created_at",
+            "updated_at",
         ]
         read_only_fields = ["id", "created_at", "updated_at"]
 

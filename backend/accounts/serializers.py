@@ -21,9 +21,7 @@ class RegisterSerializer(serializers.Serializer):
 
     def validate(self, data):
         if data["password"] != data["password_confirm"]:
-            raise serializers.ValidationError(
-                {"password_confirm": "Passwords do not match."}
-            )
+            raise serializers.ValidationError({"password_confirm": "Passwords do not match."})
         return data
 
     def create(self, validated_data):
@@ -31,9 +29,7 @@ class RegisterSerializer(serializers.Serializer):
         try:
             return User.objects.create_user(**validated_data)
         except IntegrityError:
-            raise serializers.ValidationError(
-                {"username": "A user with this username already exists."}
-            )
+            raise serializers.ValidationError({"username": "A user with this username already exists."})
 
 
 class UserSerializer(serializers.ModelSerializer):
