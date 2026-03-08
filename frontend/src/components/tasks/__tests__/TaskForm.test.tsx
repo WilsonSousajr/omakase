@@ -67,6 +67,8 @@ describe("TaskForm", () => {
       area: "work" as const,
       kanban_status: "todo" as const,
       tags: [],
+      project: null,
+      discipline: null,
       scheduled_date: null,
       due_date: null,
       estimated_minutes: null,
