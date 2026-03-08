@@ -18,7 +18,14 @@ from .serializers import DailyReviewSerializer
 class DailyStatsView(APIView):
     def get(self, request):
         user = request.user
-        today = timezone.localdate()
+        date_str = request.query_params.get("date")
+        if date_str:
+            try:
+                today = datetime.date.fromisoformat(date_str)
+            except ValueError:
+                today = timezone.localdate()
+        else:
+            today = timezone.localdate()
         week_start = today - datetime.timedelta(days=today.weekday())
 
         hours_focused_today = self._hours_focused_today(user, today)
@@ -203,5 +210,7 @@ class DailyReviewViewSet(viewsets.ModelViewSet):
         instance = serializer.instance
         if serializer.validated_data.get("is_shutdown") and not instance.is_shutdown:
             serializer.save(shutdown_at=timezone.now())
+        elif instance.is_shutdown and serializer.validated_data.get("is_shutdown") is False:
+            serializer.save(shutdown_at=None)
         else:
             serializer.save()
