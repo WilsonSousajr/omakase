@@ -17,6 +17,7 @@ import { useUIStore } from "@/stores/uiStore";
 import { useWorkspaces } from "@/hooks/useWorkspaces";
 import { useSemesters } from "@/hooks/useSemesters";
 import SidebarStats from "./SidebarStats";
+import ThemeToggle from "./ThemeToggle";
 
 const NAV_ITEMS = [
   { href: "/plan", label: "Plan", icon: Calendar },
@@ -127,11 +128,17 @@ export default function Sidebar() {
         })}
       </nav>
 
-      {sidebarOpen && (
-        <div className="mt-auto">
-          <SidebarStats />
+      <div className="mt-auto">
+        {sidebarOpen && <SidebarStats />}
+        <div
+          className={cn(
+            "flex items-center border-t border-[var(--color-border)] px-2 py-2",
+            sidebarOpen ? "justify-end" : "justify-center"
+          )}
+        >
+          <ThemeToggle />
         </div>
-      )}
+      </div>
     </aside>
   );
 }
