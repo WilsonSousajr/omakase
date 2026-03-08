@@ -8,6 +8,7 @@ import { useProjects } from "@/hooks/useProjects";
 import { useDisciplines } from "@/hooks/useDisciplines";
 import { useCreateTask, useUpdateTask } from "@/hooks/useTasks";
 import { useUIStore } from "@/stores/uiStore";
+import SubtaskChecklist from "./SubtaskChecklist";
 import type { Priority, Area } from "@/lib/constants";
 
 export default function TaskForm() {
@@ -263,6 +264,10 @@ export default function TaskForm() {
                 ))}
               </div>
             </div>
+          )}
+
+          {editTask && (
+            <SubtaskChecklist taskId={editTask.id} />
           )}
 
           <div className="flex justify-end gap-2 pt-2">
