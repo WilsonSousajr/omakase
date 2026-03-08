@@ -15,7 +15,11 @@ export default function ReviewHistory() {
     if (page === 1) {
       setAllReviews(data.results);
     } else {
-      setAllReviews((prev) => [...prev, ...data.results]);
+      setAllReviews((prev) => {
+        const existingIds = new Set(prev.map((r) => r.id));
+        const newReviews = data.results.filter((r) => !existingIds.has(r.id));
+        return [...prev, ...newReviews];
+      });
     }
   }, [data, page]);
 
