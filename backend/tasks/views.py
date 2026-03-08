@@ -43,8 +43,21 @@ class TaskViewSet(viewsets.ModelViewSet):
             return TaskListSerializer
         return TaskSerializer
 
+    def _validate_ownership(self, serializer):
+        project = serializer.validated_data.get("project")
+        discipline = serializer.validated_data.get("discipline")
+        if project and project.workspace.user != self.request.user:
+            raise PermissionDenied("You do not own this project.")
+        if discipline and discipline.semester.user != self.request.user:
+            raise PermissionDenied("You do not own this discipline.")
+
     def perform_create(self, serializer):
+        self._validate_ownership(serializer)
         serializer.save(user=self.request.user)
+
+    def perform_update(self, serializer):
+        self._validate_ownership(serializer)
+        serializer.save()
 
     @action(detail=False, methods=["get"])
     def today(self, request):

@@ -4,7 +4,14 @@ import uuid
 import pytest
 from rest_framework import status
 
-from conftest import TagFactory, TaskFactory, TimeBlockFactory
+from conftest import (
+    DisciplineFactory,
+    ProjectFactory,
+    TagFactory,
+    TaskFactory,
+    TimeBlockFactory,
+    WorkspaceFactory,
+)
 from tasks.models import Task, TimeBlock
 
 
@@ -420,3 +427,69 @@ class TestTimeBlockViewEdgeCases:
             format="json",
         )
         assert resp.status_code == status.HTTP_400_BAD_REQUEST
+
+
+@pytest.mark.django_db
+class TestTaskIDORPrevention:
+    """Test that users cannot assign another user's project/discipline to their tasks."""
+
+    def test_create_task_with_other_users_project_returns_403(self, authenticated_client, user):
+        other_workspace = WorkspaceFactory()  # different user
+        other_project = ProjectFactory(workspace=other_workspace)
+        resp = authenticated_client.post(
+            "/api/v1/tasks/",
+            {"title": "IDOR attempt", "project": str(other_project.pk)},
+            format="json",
+        )
+        assert resp.status_code == status.HTTP_403_FORBIDDEN
+
+    def test_patch_task_to_other_users_project_returns_403(self, authenticated_client, user):
+        task = TaskFactory(user=user)
+        other_workspace = WorkspaceFactory()
+        other_project = ProjectFactory(workspace=other_workspace)
+        resp = authenticated_client.patch(
+            f"/api/v1/tasks/{task.pk}/",
+            {"project": str(other_project.pk)},
+            format="json",
+        )
+        assert resp.status_code == status.HTTP_403_FORBIDDEN
+
+    def test_create_task_with_other_users_discipline_returns_403(self, authenticated_client, user):
+        other_discipline = DisciplineFactory()  # different user's semester
+        resp = authenticated_client.post(
+            "/api/v1/tasks/",
+            {"title": "IDOR attempt", "discipline": str(other_discipline.pk)},
+            format="json",
+        )
+        assert resp.status_code == status.HTTP_403_FORBIDDEN
+
+    def test_patch_task_to_other_users_discipline_returns_403(self, authenticated_client, user):
+        task = TaskFactory(user=user)
+        other_discipline = DisciplineFactory()
+        resp = authenticated_client.patch(
+            f"/api/v1/tasks/{task.pk}/",
+            {"discipline": str(other_discipline.pk)},
+            format="json",
+        )
+        assert resp.status_code == status.HTTP_403_FORBIDDEN
+
+    def test_create_task_with_own_project_succeeds(self, authenticated_client, user):
+        workspace = WorkspaceFactory(user=user)
+        project = ProjectFactory(workspace=workspace)
+        resp = authenticated_client.post(
+            "/api/v1/tasks/",
+            {"title": "My task", "project": str(project.pk)},
+            format="json",
+        )
+        assert resp.status_code == status.HTTP_201_CREATED
+        assert str(resp.data["project"]) == str(project.pk)
+
+    def test_create_task_with_own_discipline_succeeds(self, authenticated_client, user):
+        discipline = DisciplineFactory(semester__user=user)
+        resp = authenticated_client.post(
+            "/api/v1/tasks/",
+            {"title": "My task", "discipline": str(discipline.pk)},
+            format="json",
+        )
+        assert resp.status_code == status.HTTP_201_CREATED
+        assert str(resp.data["discipline"]) == str(discipline.pk)
