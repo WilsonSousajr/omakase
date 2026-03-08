@@ -8,16 +8,13 @@ import { useProjects } from "@/hooks/useProjects";
 import { useDisciplines } from "@/hooks/useDisciplines";
 import { useCreateTask, useUpdateTask } from "@/hooks/useTasks";
 import { useUIStore } from "@/stores/uiStore";
-import type { Task } from "@/types/task";
 import type { Priority, Area } from "@/lib/constants";
 
-interface TaskFormProps {
-  editTask?: Task | null;
-  onClose: () => void;
-}
-
-export default function TaskForm({ editTask, onClose }: TaskFormProps) {
+export default function TaskForm() {
   const modalOpen = useUIStore((s) => s.modalOpen);
+  const editTask = useUIStore((s) => s.editTask);
+  const setEditTask = useUIStore((s) => s.setEditTask);
+  const closeModal = useUIStore((s) => s.closeModal);
   const { data: tags = [] } = useTags();
   const { data: projects = [] } = useProjects();
   const { data: disciplines = [] } = useDisciplines();
@@ -66,6 +63,11 @@ export default function TaskForm({ editTask, onClose }: TaskFormProps) {
 
   if (modalOpen !== "task-form") return null;
 
+  const handleClose = () => {
+    setEditTask(null);
+    closeModal();
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
@@ -88,7 +90,7 @@ export default function TaskForm({ editTask, onClose }: TaskFormProps) {
     } else {
       await createTask.mutateAsync(payload);
     }
-    onClose();
+    handleClose();
   };
 
   const toggleTag = (id: string) => {
@@ -105,7 +107,7 @@ export default function TaskForm({ editTask, onClose }: TaskFormProps) {
             {editTask ? "Edit Task" : "New Task"}
           </h3>
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="rounded-lg p-1 text-[var(--color-text-faint)] hover:bg-white/5 hover:text-[var(--color-text-secondary)]"
           >
             <X className="h-4 w-4" />
@@ -266,7 +268,7 @@ export default function TaskForm({ editTask, onClose }: TaskFormProps) {
           <div className="flex justify-end gap-2 pt-2">
             <button
               type="button"
-              onClick={onClose}
+              onClick={handleClose}
               className="rounded-xl px-3 py-1.5 text-xs text-[var(--color-text-secondary)] hover:bg-white/5 hover:text-[var(--color-text-primary)]"
             >
               Cancel
