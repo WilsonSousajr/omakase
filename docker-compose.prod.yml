@@ -1,0 +1,23 @@
+# Production overrides — use with:
+#   docker-compose -f docker-compose.yml -f docker-compose.prod.yml up
+#
+# Targets prod stages, passes build args, overrides commands.
+# Note: volumes: [] expresses intent but docker-compose v1 merges
+# rather than replaces sequences. For standalone prod deployment,
+# build images with --target prod and run with docker run directly.
+services:
+  backend:
+    build:
+      context: ./backend
+      target: prod
+    volumes: []
+    command: gunicorn omakase.wsgi:application --bind 0.0.0.0:8000 --workers 3
+
+  frontend:
+    build:
+      context: ./frontend
+      target: prod
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000/api/v1}
+    volumes: []
+    command: node server.js
