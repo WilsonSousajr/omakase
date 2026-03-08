@@ -14,6 +14,17 @@ export function createMockTag(overrides = {}) {
   };
 }
 
+export function createMockSubtask(overrides = {}) {
+  return {
+    id: crypto.randomUUID(),
+    title: "Test Subtask",
+    is_completed: false,
+    order: 0,
+    created_at: "2026-01-01T00:00:00Z",
+    ...overrides,
+  };
+}
+
 export function createMockTask(overrides = {}) {
   return {
     id: crypto.randomUUID(),
@@ -301,6 +312,25 @@ export const handlers = [
   ),
   http.patch(`${API_URL}/tasks/reorder-bulk/`, () =>
     HttpResponse.json({ status: "ok" })
+  ),
+
+  // Subtasks
+  http.get(`${API_URL}/tasks/:taskId/subtasks/`, () =>
+    HttpResponse.json([
+      createMockSubtask({ title: "Subtask 1", order: 0 }),
+      createMockSubtask({ title: "Subtask 2", order: 1 }),
+    ])
+  ),
+  http.post(`${API_URL}/tasks/:taskId/subtasks/`, async ({ request }) => {
+    const body = (await request.json()) as Record<string, unknown>;
+    return HttpResponse.json(createMockSubtask(body), { status: 201 });
+  }),
+  http.patch(`${API_URL}/tasks/:taskId/subtasks/:id/`, async ({ request, params }) => {
+    const body = (await request.json()) as Record<string, unknown>;
+    return HttpResponse.json(createMockSubtask({ id: params.id, ...body }));
+  }),
+  http.delete(`${API_URL}/tasks/:taskId/subtasks/:id/`, () =>
+    new HttpResponse(null, { status: 204 })
   ),
 
   // Tags
