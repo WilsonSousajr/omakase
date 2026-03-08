@@ -167,6 +167,127 @@ class TestMe:
         assert "id" in resp.data
         assert "date_joined" in resp.data
 
+    def test_me_includes_profile_fields(self, authenticated_client):
+        resp = authenticated_client.get(self.URL)
+        assert resp.status_code == status.HTTP_200_OK
+        assert "first_name" in resp.data
+        assert "last_name" in resp.data
+        assert "avatar_color" in resp.data
+        assert resp.data["avatar_color"] == "#a3a3a3"
+
+    def test_me_patch_profile(self, authenticated_client, user):
+        resp = authenticated_client.patch(
+            self.URL,
+            {"first_name": "John", "last_name": "Doe", "avatar_color": "#ff5733"},
+        )
+        assert resp.status_code == status.HTTP_200_OK
+        assert resp.data["first_name"] == "John"
+        assert resp.data["last_name"] == "Doe"
+        assert resp.data["avatar_color"] == "#ff5733"
+
+    def test_me_patch_email(self, authenticated_client):
+        resp = authenticated_client.patch(
+            self.URL,
+            {"email": "newemail@example.com"},
+        )
+        assert resp.status_code == status.HTTP_200_OK
+        assert resp.data["email"] == "newemail@example.com"
+
+    def test_me_patch_email_uniqueness(self, authenticated_client):
+        User.objects.create_user(
+            username="other", email="taken@example.com", password="pass12345"
+        )
+        resp = authenticated_client.patch(
+            self.URL,
+            {"email": "taken@example.com"},
+        )
+        assert resp.status_code == status.HTTP_400_BAD_REQUEST
+        assert "email" in resp.data
+
+    def test_me_patch_invalid_avatar_color(self, authenticated_client):
+        resp = authenticated_client.patch(
+            self.URL,
+            {"avatar_color": "notacolor"},
+        )
+        assert resp.status_code == status.HTTP_400_BAD_REQUEST
+        assert "avatar_color" in resp.data
+
+    def test_me_patch_username_not_writable(self, authenticated_client, user):
+        resp = authenticated_client.patch(
+            self.URL,
+            {"first_name": "Test"},
+        )
+        assert resp.status_code == status.HTTP_200_OK
+        assert resp.data["username"] == user.username
+
     def test_me_unauthenticated(self, api_client):
         resp = api_client.get(self.URL)
+        assert resp.status_code == status.HTTP_401_UNAUTHORIZED
+
+
+# ── Change Password ──────────────────────────────────────────────────
+
+
+@pytest.mark.django_db
+class TestChangePassword:
+    URL = "/api/v1/auth/change-password/"
+
+    def test_change_password_success(self, authenticated_client, user):
+        resp = authenticated_client.post(
+            self.URL,
+            {
+                "old_password": "testpass123",
+                "new_password": "newpass12345",
+                "new_password_confirm": "newpass12345",
+            },
+        )
+        assert resp.status_code == status.HTTP_200_OK
+        assert resp.data["detail"] == "Password changed successfully."
+        user.refresh_from_db()
+        assert user.check_password("newpass12345")
+
+    def test_change_password_wrong_old(self, authenticated_client):
+        resp = authenticated_client.post(
+            self.URL,
+            {
+                "old_password": "wrongpassword",
+                "new_password": "newpass12345",
+                "new_password_confirm": "newpass12345",
+            },
+        )
+        assert resp.status_code == status.HTTP_400_BAD_REQUEST
+        assert "old_password" in resp.data
+
+    def test_change_password_mismatch(self, authenticated_client):
+        resp = authenticated_client.post(
+            self.URL,
+            {
+                "old_password": "testpass123",
+                "new_password": "newpass12345",
+                "new_password_confirm": "different123",
+            },
+        )
+        assert resp.status_code == status.HTTP_400_BAD_REQUEST
+        assert "new_password_confirm" in resp.data
+
+    def test_change_password_too_short(self, authenticated_client):
+        resp = authenticated_client.post(
+            self.URL,
+            {
+                "old_password": "testpass123",
+                "new_password": "short",
+                "new_password_confirm": "short",
+            },
+        )
+        assert resp.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_change_password_unauthenticated(self, api_client):
+        resp = api_client.post(
+            self.URL,
+            {
+                "old_password": "testpass123",
+                "new_password": "newpass12345",
+                "new_password_confirm": "newpass12345",
+            },
+        )
         assert resp.status_code == status.HTTP_401_UNAUTHORIZED
