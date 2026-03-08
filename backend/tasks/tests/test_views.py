@@ -530,9 +530,7 @@ class TestSubtaskViewSet:
     def test_delete_subtask(self, authenticated_client, user):
         task = TaskFactory(user=user)
         sub = SubtaskFactory(task=task)
-        resp = authenticated_client.delete(
-            f"/api/v1/tasks/{task.id}/subtasks/{sub.id}/"
-        )
+        resp = authenticated_client.delete(f"/api/v1/tasks/{task.id}/subtasks/{sub.id}/")
         assert resp.status_code == status.HTTP_204_NO_CONTENT
         assert Subtask.objects.count() == 0
 
@@ -540,9 +538,7 @@ class TestSubtaskViewSet:
         other_user = UserFactory()
         other_task = TaskFactory(user=other_user)
         SubtaskFactory(task=other_task)
-        resp = authenticated_client.get(
-            f"/api/v1/tasks/{other_task.id}/subtasks/"
-        )
+        resp = authenticated_client.get(f"/api/v1/tasks/{other_task.id}/subtasks/")
         assert resp.status_code == status.HTTP_200_OK
         assert len(resp.data) == 0
 
