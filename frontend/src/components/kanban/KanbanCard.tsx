@@ -13,7 +13,8 @@ interface KanbanCardProps {
 }
 
 export default function KanbanCard({ task }: KanbanCardProps) {
-  const { activeTaskId, setActiveTaskId } = useUIStore();
+  const activeTaskId = useUIStore((s) => s.activeTaskId);
+  const setActiveTaskId = useUIStore((s) => s.setActiveTaskId);
   const priority = PRIORITIES.find((p) => p.value === task.priority);
   const isActive = activeTaskId === task.id;
 
