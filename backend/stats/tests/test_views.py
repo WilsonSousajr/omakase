@@ -32,7 +32,6 @@ class TestDailyStatsView:
         assert resp.data["weekly_study_hours"] == 0
 
     def test_hours_focused_today(self, authenticated_client, user):
-        today = timezone.localdate()
         PomodoroSessionFactory(
             user=user,
             task__user=user,
@@ -88,7 +87,9 @@ class TestDailyStatsView:
         TimeBlockFactory(
             task=incomplete_task, date=today, start_time=datetime.time(10, 0), end_time=datetime.time(11, 0)
         )
-        TimeBlockFactory(task=completed_task, date=today, start_time=datetime.time(14, 0), end_time=datetime.time(15, 0))
+        TimeBlockFactory(
+            task=completed_task, date=today, start_time=datetime.time(14, 0), end_time=datetime.time(15, 0)
+        )
 
         resp = authenticated_client.get(self.URL)
         assert resp.data["blocks_total_today"] == 3
@@ -157,9 +158,7 @@ class TestDailyStatsView:
         week_start = today - datetime.timedelta(days=today.weekday())
         work_task = TaskFactory(user=user, area="work")
         study_task = TaskFactory(user=user, area="study")
-        TimeBlockFactory(
-            task=work_task, date=week_start, start_time=datetime.time(9, 0), end_time=datetime.time(11, 0)
-        )
+        TimeBlockFactory(task=work_task, date=week_start, start_time=datetime.time(9, 0), end_time=datetime.time(11, 0))
         TimeBlockFactory(
             task=study_task, date=week_start, start_time=datetime.time(13, 0), end_time=datetime.time(15, 0)
         )

@@ -62,7 +62,9 @@ class Semester(models.Model):
     institution = models.CharField(max_length=200, blank=True, default="")
     start_date = models.DateField()
     end_date = models.DateField()
-    status = models.CharField(max_length=20, choices=SemesterStatusChoices.choices, default=SemesterStatusChoices.ACTIVE)
+    status = models.CharField(
+        max_length=20, choices=SemesterStatusChoices.choices, default=SemesterStatusChoices.ACTIVE
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -191,9 +193,7 @@ class ClassSchedule(models.Model):
     day_of_week = models.IntegerField(choices=DAY_OF_WEEK_CHOICES)
     start_time = models.TimeField()
     end_time = models.TimeField()
-    class_type = models.CharField(
-        max_length=20, choices=ClassTypeChoices.choices, default=ClassTypeChoices.LECTURE
-    )
+    class_type = models.CharField(max_length=20, choices=ClassTypeChoices.choices, default=ClassTypeChoices.LECTURE)
     location = models.CharField(max_length=300, blank=True, default="")
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)

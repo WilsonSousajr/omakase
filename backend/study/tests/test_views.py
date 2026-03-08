@@ -3,7 +3,14 @@ import datetime
 import pytest
 from rest_framework import status
 
-from conftest import ClassScheduleFactory, DisciplineFactory, SemesterFactory, StudyBlockFactory, TaskFactory, TimeBlockFactory
+from conftest import (
+    ClassScheduleFactory,
+    DisciplineFactory,
+    SemesterFactory,
+    StudyBlockFactory,
+    TaskFactory,
+    TimeBlockFactory,
+)
 
 
 @pytest.mark.django_db
@@ -397,7 +404,9 @@ class TestClassOccurrenceView:
         )
         disc = DisciplineFactory(semester=sem, name="Calculo 2", color="#3b82f6")
         # Monday class, 10:00-11:40
-        ClassScheduleFactory(discipline=disc, day_of_week=0, start_time=datetime.time(10, 0), end_time=datetime.time(11, 40))
+        ClassScheduleFactory(
+            discipline=disc, day_of_week=0, start_time=datetime.time(10, 0), end_time=datetime.time(11, 40)
+        )
 
         # Query 2 weeks: March 2-13, 2026 (Mon 2nd, Mon 9th)
         resp = authenticated_client.get(f"{self.URL}?date_from=2026-03-02&date_to=2026-03-13")
