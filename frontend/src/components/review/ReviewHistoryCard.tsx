@@ -12,7 +12,7 @@ interface Props {
 
 function ReviewHistoryCard({ review }: Props) {
   const [expanded, setExpanded] = useState(false);
-  const { data: summary, isLoading } = useReviewSummary(review.date);
+  const { data: summary, isLoading } = useReviewSummary(expanded ? review.date : "");
 
   const date = new Date(review.date + "T00:00:00");
   const formatted = date.toLocaleDateString("en-US", {
