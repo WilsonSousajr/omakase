@@ -4,3 +4,19 @@ node_modules
 .env.*
 .git
 *.md
+
+# Test files
+coverage/
+src/test/
+src/**/__tests__/
+vitest.config.ts
+
+# Dev tooling
+.pnpm-store/
+tsconfig.tsbuildinfo
+eslint.config.mjs
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
