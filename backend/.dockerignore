@@ -5,3 +5,17 @@ staticfiles
 .env.*
 .git
 *.md
+
+# Test / dev artifacts
+.coverage
+.pytest_cache/
+.ruff_cache/
+htmlcov/
+conftest.py
+*/tests/
+requirements-dev.txt
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
