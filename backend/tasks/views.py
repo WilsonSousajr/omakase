@@ -9,9 +9,10 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 
 from .constants import REORDER_BULK_MAX_ITEMS
-from .models import Project, Tag, Task, TimeBlock, Workspace
+from .models import Project, Subtask, Tag, Task, TimeBlock, Workspace
 from .serializers import (
     ProjectSerializer,
+    SubtaskSerializer,
     TagSerializer,
     TaskListSerializer,
     TaskReorderSerializer,
@@ -98,6 +99,27 @@ class TaskViewSet(viewsets.ModelViewSet):
                     task.kanban_status = item["kanban_status"]
                     task.save()
         return Response({"status": "ok"})
+
+
+class SubtaskViewSet(viewsets.ModelViewSet):
+    serializer_class = SubtaskSerializer
+    pagination_class = None
+
+    def get_queryset(self):
+        return Subtask.objects.filter(
+            task_id=self.kwargs["task_pk"],
+            task__user=self.request.user,
+        )
+
+    def perform_create(self, serializer):
+        try:
+            task = Task.objects.get(
+                id=self.kwargs["task_pk"],
+                user=self.request.user,
+            )
+        except Task.DoesNotExist:
+            raise PermissionDenied("You do not own this task.")
+        serializer.save(task=task)
 
 
 class TagFilter(filters.FilterSet):
