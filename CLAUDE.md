@@ -186,6 +186,9 @@ frontend/
 - Frontend: useReviewSummary(date) hook for the aggregation endpoint, useDailyReview(date) for CRUD
 - Frontend: emitToast exported from Toast.tsx for programmatic toast messages
 - Frontend: Review wizard state (step, rating, win, reviewId) owned by page, each step is a pure component with props
+- Frontend: `editTask` state lives in uiStore (not local component state) — allows TaskForm to work from any page
+- Frontend: TaskForm is mounted globally in `app/(main)/layout.tsx` — reads `editTask` and `modalOpen` from uiStore
+- Frontend: KanbanCard (focus page) — entire card is drag surface (listeners on wrapper div), same pattern as plan page TaskCard
 - Frontend: Review page has Today/History tab bar (same pattern as MarkdownEditor tabs), tab state in useState (not URL)
 - Frontend: `useDailyReviewsList(page)` hook for paginated history, query key `["daily-reviews", "list", page]` (auto-invalidated by existing mutations)
 - Frontend: ReviewHistoryCard uses `React.memo`, lazy-loads summary via `useReviewSummary(date)` with `enabled: expanded`
@@ -198,6 +201,7 @@ frontend/
 - Edit/delete buttons use `onPointerDown` stopPropagation to avoid triggering drags
 - Dropping a task on a calendar slot creates a TimeBlock AND sets `scheduled_date` — chained with `mutateAsync` + try/catch (not fire-and-forget)
 - Existing time blocks can be repositioned by dragging within the calendar
+- Repositioning a time block to a different day also syncs the parent task/study block's `scheduled_date`
 
 ## Calendar Time Blocks
 
@@ -209,7 +213,11 @@ frontend/
 ## Plan ↔ Focus Mode Sync
 
 - Creating a time block in plan mode auto-sets `scheduled_date` so the task appears in focus mode's kanban (`/tasks/today/` filters by `scheduled_date`)
+- Moving a time block to a different day syncs the parent task/study block's `scheduled_date` to match
 - All time block mutations (create/update/delete) invalidate both `["timeblocks"]` and `["tasks"]` query caches
+- `/tasks/today/` accepts optional `?date=` query param — frontend sends client-local date to avoid server UTC mismatch
+- `useTodayTasks(date)` requires a date string (from `useToday()` hook) — no longer uses server `date.today()` as default
+- `useToday()` hook in `frontend/src/hooks/useToday.ts` returns local date as YYYY-MM-DD string
 
 ## Keyboard Shortcuts
 
@@ -319,6 +327,7 @@ Types: feat, fix, test, chore, docs, refactor, ci, style
 - **Frontend authStore tests**: Must use `vi.stubGlobal("localStorage", ...)` because store `.ts` files don't run in jsdom environment
 - **Frontend localStorage in authStore**: Wrap in try-catch — `loadTokens()` runs at module init time when localStorage may not be available
 - **Frontend SSR hydration + localStorage**: Components that read localStorage-backed Zustand state (e.g. `isAuthenticated`) must use a `hasMounted` gate (`useState(false)` + `useEffect` → `true`) to avoid hydration mismatch — server sees `null`, client sees stored value
+- **Timezone mismatch (Docker UTC)**: Backend runs in Docker (UTC). Never rely on server-side `date.today()` for user-facing "today" logic — always send the client's local date as a query param. The `/tasks/today/?date=` endpoint was added to fix tasks not showing in focus mode near midnight
 
 ## Local Environment Notes
 
