@@ -12,10 +12,6 @@ vi.mock("next/link", () => ({
   ),
 }));
 
-vi.mock("next-themes", () => ({
-  useTheme: () => ({ theme: "dark", setTheme: vi.fn() }),
-}));
-
 describe("Sidebar", () => {
   beforeEach(() => {
     useUIStore.setState({ sidebarOpen: true, modalOpen: null });

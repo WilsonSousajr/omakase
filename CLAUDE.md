@@ -111,13 +111,15 @@ frontend/
 
 ## Design System
 
-- **Monochrome palette** — wstech.tech-inspired, dark-only. See `docs/design-system.md` for full spec.
+- **Monochrome palette** — wstech.tech-inspired, light + dark themes. See `docs/design-system.md` for full spec.
+- **Theme:** `next-themes` with `attribute="class"`, `defaultTheme="system"`, `storageKey="omakase-theme"`. ThemeToggle in sidebar footer cycles system → light → dark.
+- **CSS variables:** Light values in `:root`, dark values in `.dark` class. Never use hardcoded `bg-white/*` or `text-white` — use overlay variables (`--color-hover-overlay`, `--color-overlay-medium`, `--color-ring-overlay`).
 - **Font:** Outfit (geometric sans-serif) via Next.js Google Fonts
 - **Signature:** Section labels use `text-[10px] font-semibold uppercase tracking-[0.15em]` (kanban headers, form labels, time labels)
-- **Colors:** CSS custom properties in `globals.css` `:root` — use `var(--color-*)` not hardcoded zinc/indigo
+- **Colors:** CSS custom properties in `globals.css` — use `var(--color-*)` not hardcoded zinc/indigo
 - **Accents:** Functional only — priority colors (gray/amber/orange/red) for badges and time blocks. Everything else is grayscale.
 - **Border radius:** `rounded-2xl` cards, `rounded-xl` inputs/buttons, `rounded-lg` badges
-- **Active states:** White/gray (no indigo) — `var(--color-surface-active)` for nav, `white/20` ring for cards
+- **Active states:** Gray (no indigo) — `var(--color-surface-active)` for nav, `var(--color-ring-overlay)` ring for cards
 
 ## Security & Configuration
 

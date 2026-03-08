@@ -7,6 +7,16 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
+// Mock next-themes
+vi.mock("next-themes", () => ({
+  useTheme: () => ({
+    theme: "dark",
+    setTheme: vi.fn(),
+    resolvedTheme: "dark",
+  }),
+  ThemeProvider: ({ children }: { children: React.ReactNode }) => children,
+}));
+
 // Mock next/navigation
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
