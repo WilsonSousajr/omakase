@@ -73,7 +73,7 @@ describe("SettingsPage", () => {
 
   it("renders change password button", () => {
     renderWithProviders(<SettingsPage />);
-    expect(screen.getByText("Change Password")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Change Password" })).toBeInTheDocument();
   });
 
   it("renders logout button", () => {
