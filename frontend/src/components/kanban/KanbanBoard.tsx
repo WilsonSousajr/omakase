@@ -12,13 +12,15 @@ import {
 import { useCallback, useEffect, useRef, useState } from "react";
 import { KANBAN_STATUSES, DRAG_ACTIVATION_DISTANCE, type KanbanStatus } from "@/lib/constants";
 import { useTodayTasks, useReorderTasks } from "@/hooks/useTasks";
+import { useToday } from "@/hooks/useToday";
 import type { Task } from "@/types/task";
 import KanbanColumn from "./KanbanColumn";
 
 const EMPTY_TASKS: Task[] = [];
 
 export default function KanbanBoard() {
-  const { data: serverTasks = EMPTY_TASKS, isLoading } = useTodayTasks();
+  const today = useToday();
+  const { data: serverTasks = EMPTY_TASKS, isLoading } = useTodayTasks(today);
   const reorderTasks = useReorderTasks();
   const [tasks, setTasks] = useState<Task[]>([]);
   const isDraggingRef = useRef(false);

@@ -46,8 +46,8 @@ describe("useTasks", () => {
 });
 
 describe("useTodayTasks", () => {
-  it("fetches today's tasks", async () => {
-    const { result } = renderHook(() => useTodayTasks(), { wrapper });
+  it("fetches today's tasks with date param", async () => {
+    const { result } = renderHook(() => useTodayTasks("2026-03-07"), { wrapper });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.data).toBeDefined();
   });

@@ -48,7 +48,15 @@ class TaskViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=["get"])
     def today(self, request):
-        tasks = self.get_queryset().filter(scheduled_date=date.today())
+        client_date = request.query_params.get("date")
+        if client_date:
+            try:
+                target_date = date.fromisoformat(client_date)
+            except ValueError:
+                target_date = date.today()
+        else:
+            target_date = date.today()
+        tasks = self.get_queryset().filter(scheduled_date=target_date)
         page = self.paginate_queryset(tasks)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
