@@ -29,7 +29,7 @@ function TimeSlot({ hour, half, date }: { hour: number; half: 0 | 1; date: strin
       ref={setNodeRef}
       className={`h-[${SLOT_HEIGHT / 2}px] border-b border-[var(--color-border)]/50 transition-colors ${
         half === 0 ? "border-t border-[var(--color-border)]" : ""
-      } ${isOver ? "bg-white/5" : ""}`}
+      } ${isOver ? "bg-[var(--color-hover-overlay)]" : ""}`}
       style={{ height: `${SLOT_HEIGHT / 2}px` }}
     />
   );

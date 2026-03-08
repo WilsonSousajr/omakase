@@ -156,7 +156,7 @@ export default function ReviewRollover({ summary, onNext }: Props) {
                   {item.title}
                 </span>
                 {decision && (
-                  <span className="rounded-lg bg-white/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
+                  <span className="rounded-lg bg-[var(--color-overlay-medium)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
                     {decision.action === "pick"
                       ? decision.date
                       : decision.action}
@@ -182,8 +182,8 @@ export default function ReviewRollover({ summary, onNext }: Props) {
                     }}
                     className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs transition-colors ${
                       decision?.action === action
-                        ? "bg-white/15 text-[var(--color-text-primary)]"
-                        : "text-[var(--color-text-secondary)] hover:bg-white/5 hover:text-[var(--color-text-primary)]"
+                        ? "bg-[var(--color-overlay-medium)] text-[var(--color-text-primary)]"
+                        : "text-[var(--color-text-secondary)] hover:bg-[var(--color-hover-overlay)] hover:text-[var(--color-text-primary)]"
                     }`}
                   >
                     <Icon className="h-3.5 w-3.5" />

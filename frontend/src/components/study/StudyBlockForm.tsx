@@ -89,7 +89,7 @@ export default function StudyBlockForm({ editStudyBlock, defaultDisciplineId, on
           </h3>
           <button
             onClick={onClose}
-            className="rounded-lg p-1 text-[var(--color-text-faint)] hover:bg-white/5 hover:text-[var(--color-text-secondary)]"
+            className="rounded-lg p-1 text-[var(--color-text-faint)] hover:bg-[var(--color-hover-overlay)] hover:text-[var(--color-text-secondary)]"
           >
             <X className="h-4 w-4" />
           </button>
@@ -230,7 +230,7 @@ export default function StudyBlockForm({ editStudyBlock, defaultDisciplineId, on
             <button
               type="button"
               onClick={onClose}
-              className="rounded-xl px-3 py-1.5 text-xs text-[var(--color-text-secondary)] hover:bg-white/5 hover:text-[var(--color-text-primary)]"
+              className="rounded-xl px-3 py-1.5 text-xs text-[var(--color-text-secondary)] hover:bg-[var(--color-hover-overlay)] hover:text-[var(--color-text-primary)]"
             >
               Cancel
             </button>

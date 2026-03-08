@@ -229,7 +229,7 @@ export default function DisciplineDetailPage() {
                       <span className="text-xs font-medium text-[var(--color-text-primary)]">
                         {day?.label || "Unknown"}
                       </span>
-                      <span className="rounded-lg bg-white/5 px-1.5 py-0.5 text-[9px] font-semibold text-[var(--color-text-muted)]">
+                      <span className="rounded-lg bg-[var(--color-hover-overlay)] px-1.5 py-0.5 text-[9px] font-semibold text-[var(--color-text-muted)]">
                         {type?.label || schedule.class_type}
                       </span>
                       {!schedule.is_active && (
@@ -246,7 +246,7 @@ export default function DisciplineDetailPage() {
                   <div className="flex shrink-0 items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                     <button
                       onClick={() => handleEditSchedule(schedule)}
-                      className="rounded-lg p-1.5 text-[var(--color-text-faint)] hover:bg-white/5 hover:text-[var(--color-text-secondary)]"
+                      className="rounded-lg p-1.5 text-[var(--color-text-faint)] hover:bg-[var(--color-hover-overlay)] hover:text-[var(--color-text-secondary)]"
                     >
                       <Pencil className="h-3.5 w-3.5" />
                     </button>

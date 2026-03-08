@@ -24,7 +24,7 @@ export default function KanbanColumn({ status, label, tasks }: KanbanColumnProps
       ref={setNodeRef}
       className={cn(
         "flex flex-1 flex-col rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg)]/50 transition-all duration-300",
-        isOver && "border-[var(--color-border-hover)] bg-white/5"
+        isOver && "border-[var(--color-border-hover)] bg-[var(--color-hover-overlay)]"
       )}
     >
       <div className="flex items-center gap-2 border-b border-[var(--color-border)] px-4 py-3">

@@ -44,7 +44,7 @@ export default function KanbanCard({ task }: KanbanCardProps) {
       className={cn(
         "group cursor-grab rounded-2xl border bg-[var(--color-surface)] p-4 transition-all duration-300 active:cursor-grabbing",
         isActive
-          ? "border-white/20 ring-1 ring-white/10"
+          ? "border-[var(--color-ring-overlay)] ring-1 ring-[var(--color-ring-overlay)]"
           : "border-[var(--color-border)] hover:border-[var(--color-border-hover)]"
       )}
       {...listeners}

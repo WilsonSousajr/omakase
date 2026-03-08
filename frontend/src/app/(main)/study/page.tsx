@@ -112,7 +112,7 @@ export default function StudyPage() {
                 key={semester.id}
                 className={`cursor-pointer rounded-2xl ring-2 transition-all ${
                   activeSemesterId === semester.id
-                    ? "ring-white/20"
+                    ? "ring-[var(--color-ring-overlay)]"
                     : "ring-transparent"
                 }`}
                 onClick={() => setActiveSemesterId(

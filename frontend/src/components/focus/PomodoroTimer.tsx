@@ -173,7 +173,7 @@ export default function PomodoroTimer() {
       <div className="flex items-center gap-3">
         <button
           onClick={reset}
-          className="rounded-full p-2 text-[var(--color-text-faint)] hover:bg-white/5 hover:text-[var(--color-text-secondary)]"
+          className="rounded-full p-2 text-[var(--color-text-faint)] hover:bg-[var(--color-hover-overlay)] hover:text-[var(--color-text-secondary)]"
         >
           <RotateCcw className="h-4 w-4" />
         </button>

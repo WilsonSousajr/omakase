@@ -61,7 +61,7 @@ export default function ReviewShutdown({ onShutdown }: Props) {
           </div>
           <button
             onClick={() => router.push("/plan")}
-            className="rounded-xl px-6 py-2 text-xs text-[var(--color-text-secondary)] hover:bg-white/5 hover:text-[var(--color-text-primary)]"
+            className="rounded-xl px-6 py-2 text-xs text-[var(--color-text-secondary)] hover:bg-[var(--color-hover-overlay)] hover:text-[var(--color-text-primary)]"
           >
             Close
           </button>

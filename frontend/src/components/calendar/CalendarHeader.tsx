@@ -25,19 +25,19 @@ export default function CalendarHeader() {
       <div className="flex items-center gap-2">
         <button
           onClick={goBack}
-          className="rounded-lg p-1 text-[var(--color-text-muted)] hover:bg-white/5 hover:text-[var(--color-text-secondary)]"
+          className="rounded-lg p-1 text-[var(--color-text-muted)] hover:bg-[var(--color-hover-overlay)] hover:text-[var(--color-text-secondary)]"
         >
           <ChevronLeft className="h-4 w-4" />
         </button>
         <button
           onClick={goToToday}
-          className="rounded-lg px-2 py-0.5 text-xs text-[var(--color-text-muted)] hover:bg-white/5 hover:text-[var(--color-text-secondary)]"
+          className="rounded-lg px-2 py-0.5 text-xs text-[var(--color-text-muted)] hover:bg-[var(--color-hover-overlay)] hover:text-[var(--color-text-secondary)]"
         >
           Today
         </button>
         <button
           onClick={goForward}
-          className="rounded-lg p-1 text-[var(--color-text-muted)] hover:bg-white/5 hover:text-[var(--color-text-secondary)]"
+          className="rounded-lg p-1 text-[var(--color-text-muted)] hover:bg-[var(--color-hover-overlay)] hover:text-[var(--color-text-secondary)]"
         >
           <ChevronRight className="h-4 w-4" />
         </button>

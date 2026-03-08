@@ -87,7 +87,7 @@ const StudyBlockCard = React.memo(function StudyBlockCard({
         <button
           onPointerDown={(e) => e.stopPropagation()}
           onClick={() => onEdit(block)}
-          className="rounded-lg p-1 text-[var(--color-text-faint)] hover:bg-white/5 hover:text-[var(--color-text-secondary)]"
+          className="rounded-lg p-1 text-[var(--color-text-faint)] hover:bg-[var(--color-hover-overlay)] hover:text-[var(--color-text-secondary)]"
         >
           <Pencil className="h-3.5 w-3.5" />
         </button>

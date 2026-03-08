@@ -57,7 +57,7 @@ export default function DisciplineCard({ discipline, onEdit, onDelete, onClick }
       <div className="flex shrink-0 gap-1 opacity-0 transition-opacity group-hover:opacity-100">
         <button
           onClick={(e) => { e.stopPropagation(); onEdit(discipline); }}
-          className="rounded-lg p-1 text-[var(--color-text-faint)] hover:bg-white/5 hover:text-[var(--color-text-secondary)]"
+          className="rounded-lg p-1 text-[var(--color-text-faint)] hover:bg-[var(--color-hover-overlay)] hover:text-[var(--color-text-secondary)]"
         >
           <Pencil className="h-3.5 w-3.5" />
         </button>

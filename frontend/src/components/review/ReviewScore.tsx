@@ -27,8 +27,8 @@ export default function ReviewScore({ rating, onRate, onNext }: Props) {
               onClick={() => onRate(value)}
               className={`flex flex-col items-center gap-1.5 rounded-2xl border px-4 py-3 transition-all ${
                 isSelected
-                  ? "border-[var(--color-text-primary)] bg-white/10 ring-1 ring-white/20"
-                  : "border-[var(--color-border)] hover:bg-white/5"
+                  ? "border-[var(--color-text-primary)] bg-[var(--color-overlay-medium)] ring-1 ring-[var(--color-ring-overlay)]"
+                  : "border-[var(--color-border)] hover:bg-[var(--color-hover-overlay)]"
               }`}
             >
               <span className="text-xl font-semibold text-[var(--color-text-primary)]">

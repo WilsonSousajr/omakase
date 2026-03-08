@@ -27,7 +27,7 @@ function WeekTimeSlot({ hour, half, date }: { hour: number; half: 0 | 1; date: s
       ref={setNodeRef}
       className={`border-b border-[var(--color-border)]/30 transition-colors ${
         half === 0 ? "border-t border-[var(--color-border)]/50" : ""
-      } ${isOver ? "bg-white/5" : ""}`}
+      } ${isOver ? "bg-[var(--color-hover-overlay)]" : ""}`}
       style={{ height: `${SLOT_HEIGHT / 2}px` }}
     />
   );

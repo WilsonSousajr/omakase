@@ -12,6 +12,10 @@ vi.mock("next/link", () => ({
   ),
 }));
 
+vi.mock("next-themes", () => ({
+  useTheme: () => ({ theme: "dark", setTheme: vi.fn() }),
+}));
+
 describe("Sidebar", () => {
   beforeEach(() => {
     useUIStore.setState({ sidebarOpen: true, modalOpen: null });
@@ -43,7 +47,8 @@ describe("Sidebar", () => {
     useUIStore.setState({ sidebarOpen: true });
     renderWithProviders(<Sidebar />);
 
-    const toggleButton = screen.getByRole("button");
+    const buttons = screen.getAllByRole("button");
+    const toggleButton = buttons[0]; // Sidebar collapse button (first button)
     fireEvent.click(toggleButton);
 
     expect(useUIStore.getState().sidebarOpen).toBe(false);
