@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import {
   useReviewSummary,
   useCreateDailyReview,
@@ -19,6 +20,7 @@ import { cn } from "@/lib/utils";
 const STEPS = ["Summary", "Rollover", "Score", "Win", "Preview", "Shutdown"];
 
 export default function ReviewPage() {
+  const t = useTranslations("review");
   const today = useToday();
   const { data: summary, isLoading } = useReviewSummary(today);
   const createReview = useCreateDailyReview();
@@ -78,18 +80,18 @@ export default function ReviewPage() {
     <div className="flex h-full flex-col">
       {/* Tab bar */}
       <div className="flex border-b border-[var(--color-border)]">
-        {(["today", "history"] as const).map((t) => (
+        {(["today", "history"] as const).map((tabKey) => (
           <button
-            key={t}
-            onClick={() => setTab(t)}
+            key={tabKey}
+            onClick={() => setTab(tabKey)}
             className={cn(
-              "px-4 py-2 text-xs font-medium capitalize transition-colors",
-              tab === t
+              "px-4 py-2 text-xs font-medium transition-colors",
+              tab === tabKey
                 ? "border-b-2 border-[var(--color-text-primary)] text-[var(--color-text-primary)]"
                 : "text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
             )}
           >
-            {t === "today" ? "Today" : "History"}
+            {tabKey === "today" ? t("today") : t("history")}
           </button>
         ))}
       </div>

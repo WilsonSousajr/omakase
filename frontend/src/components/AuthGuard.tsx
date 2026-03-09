@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -14,6 +15,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const { isLoading } = useMe();
+  const t = useTranslations("common");
 
   useEffect(() => {
     setHasMounted(true);
@@ -29,7 +31,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   if (!hasMounted) {
     return (
       <div className="flex h-screen items-center justify-center bg-[var(--color-bg)]">
-        <div className="text-sm text-[var(--color-text-muted)]">Loading...</div>
+        <div className="text-sm text-[var(--color-text-muted)]">{t("loading")}</div>
       </div>
     );
   }
@@ -41,7 +43,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   if (isAuthenticated && isLoading) {
     return (
       <div className="flex h-screen items-center justify-center bg-[var(--color-bg)]">
-        <div className="text-sm text-[var(--color-text-muted)]">Loading...</div>
+        <div className="text-sm text-[var(--color-text-muted)]">{t("loading")}</div>
       </div>
     );
   }
