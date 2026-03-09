@@ -72,9 +72,9 @@ describe("ReviewHistoryCard", () => {
     renderWithProviders(<ReviewHistoryCard review={baseReview} />);
     await userEvent.click(screen.getByRole("button"));
     await waitFor(() => {
-      expect(screen.getByText("Hours focused")).toBeInTheDocument();
+      expect(screen.getByText("Hours Focused")).toBeInTheDocument();
     });
-    expect(screen.getByText("Blocks")).toBeInTheDocument();
+    expect(screen.getByText("Blocks Completed")).toBeInTheDocument();
     expect(screen.getByText("Completion")).toBeInTheDocument();
   });
 

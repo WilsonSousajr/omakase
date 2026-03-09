@@ -29,7 +29,7 @@ describe("SemesterCard", () => {
   it("renders singular discipline count", () => {
     const oneDiscipline = { ...mockSemester, discipline_count: 1 };
     render(<SemesterCard semester={oneDiscipline} onEdit={vi.fn()} onDelete={vi.fn()} />);
-    expect(screen.getByText("1 discipline")).toBeInTheDocument();
+    expect(screen.getByText("1 disciplines")).toBeInTheDocument();
   });
 
   it("renders date range", () => {

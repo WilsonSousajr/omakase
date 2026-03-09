@@ -36,7 +36,7 @@ describe("DisciplineCard", () => {
   it("renders singular block count", () => {
     const oneBlock = { ...mockDiscipline, study_block_count: 1 };
     render(<DisciplineCard discipline={oneBlock} onEdit={vi.fn()} onDelete={vi.fn()} />);
-    expect(screen.getByText("1 block")).toBeInTheDocument();
+    expect(screen.getByText("1 blocks")).toBeInTheDocument();
   });
 
   it("hides code when empty", () => {

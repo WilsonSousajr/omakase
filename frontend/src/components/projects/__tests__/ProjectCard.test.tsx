@@ -29,7 +29,7 @@ describe("ProjectCard", () => {
   it("renders singular task count", () => {
     const oneTask = { ...mockProject, task_count: 1 };
     render(<ProjectCard project={oneTask} onEdit={vi.fn()} onDelete={vi.fn()} />);
-    expect(screen.getByText("1 task")).toBeInTheDocument();
+    expect(screen.getByText("1 tasks")).toBeInTheDocument();
   });
 
   it("renders due date when present", () => {
