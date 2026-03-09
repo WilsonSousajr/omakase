@@ -222,6 +222,22 @@ function paginated<T>(results: T[]) {
   return { count: results.length, next: null, previous: null, results };
 }
 
+export function createMockUserProfile(overrides = {}) {
+  return {
+    timezone: "UTC",
+    week_starts_on: "monday",
+    pomodoro_work_minutes: 25,
+    pomodoro_short_break_minutes: 5,
+    pomodoro_long_break_minutes: 15,
+    pomodoros_before_long_break: 4,
+    daily_work_goal_hours: 8.0,
+    daily_study_goal_hours: 4.0,
+    created_at: "2025-01-01T00:00:00Z",
+    updated_at: "2025-01-01T00:00:00Z",
+    ...overrides,
+  };
+}
+
 export function createMockUser(overrides = {}) {
   return {
     id: 1,
@@ -276,6 +292,13 @@ export const handlers = [
   http.get(`${API_URL}/auth/me/`, () =>
     HttpResponse.json(createMockUser())
   ),
+  http.get(`${API_URL}/auth/profile/`, () =>
+    HttpResponse.json(createMockUserProfile())
+  ),
+  http.patch(`${API_URL}/auth/profile/`, async ({ request }) => {
+    const body = (await request.json()) as Record<string, unknown>;
+    return HttpResponse.json(createMockUserProfile(body));
+  }),
 
   // Tasks
   http.get(`${API_URL}/tasks/`, () =>
