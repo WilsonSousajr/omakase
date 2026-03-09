@@ -17,7 +17,7 @@ describe("ClassBlockItem", () => {
   it("renders discipline name and class type", () => {
     render(<ClassBlockItem occurrence={mockOccurrence} slotHeight={40} />);
     expect(screen.getByText("Calculus II")).toBeInTheDocument();
-    expect(screen.getByText("lecture")).toBeInTheDocument();
+    expect(screen.getByText("Lecture")).toBeInTheDocument();
   });
 
   it("renders time range", () => {

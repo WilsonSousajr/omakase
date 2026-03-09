@@ -7,6 +7,7 @@ import type { StudyBlock } from "@/types/studyblock";
 import { PRIORITIES } from "@/lib/constants";
 import { useDraggable } from "@dnd-kit/core";
 import { BookOpen, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 
 interface TimeBlockItemProps {
@@ -44,6 +45,7 @@ export default function TimeBlockItem({
   onToggleStudyBlockComplete,
   slotHeight,
 }: TimeBlockItemProps) {
+  const t = useTranslations("calendar");
   const startMin = timeToMinutes(block.start_time);
   const endMin = timeToMinutes(block.end_time);
   const durationSlots = (endMin - startMin) / 30;
@@ -53,7 +55,7 @@ export default function TimeBlockItem({
   const priority = task ? PRIORITIES.find((p) => p.value === task.priority) : null;
   const studyPriority = studyBlock ? PRIORITIES.find((p) => p.value === studyBlock.priority) : null;
   const color = isStudyBlock ? (disciplineColor ?? "#a1a1aa") : (priority?.color ?? "#a1a1aa");
-  const title = isStudyBlock ? studyBlock.title : (task?.title || "Task");
+  const title = isStudyBlock ? studyBlock.title : (task?.title || t("untitledTask"));
   const isCompleted = isStudyBlock ? studyBlock.is_completed : task?.is_completed;
 
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({

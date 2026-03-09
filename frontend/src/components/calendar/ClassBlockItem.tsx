@@ -1,4 +1,7 @@
+"use client";
+
 import { BookOpen, MapPin } from "lucide-react";
+import { useTranslations } from "next-intl";
 import type { ClassOccurrence } from "@/types/classschedule";
 
 interface ClassBlockItemProps {
@@ -12,6 +15,7 @@ function timeToMinutes(time: string): number {
 }
 
 export default function ClassBlockItem({ occurrence, slotHeight }: ClassBlockItemProps) {
+  const t = useTranslations("constants");
   const startMin = timeToMinutes(occurrence.start_time);
   const endMin = timeToMinutes(occurrence.end_time);
   const durationSlots = (endMin - startMin) / 30;
@@ -36,13 +40,13 @@ export default function ClassBlockItem({ occurrence, slotHeight }: ClassBlockIte
           {occurrence.discipline_name}
         </p>
         <span
-          className="shrink-0 rounded-lg px-1 py-0.5 text-[9px] font-semibold capitalize leading-none"
+          className="shrink-0 rounded-lg px-1 py-0.5 text-[9px] font-semibold leading-none"
           style={{
             backgroundColor: `${color}18`,
             color: `${color}90`,
           }}
         >
-          {occurrence.class_type}
+          {t(`classTypes.${occurrence.class_type}`)}
         </span>
       </div>
       <div className="mt-0.5 flex items-center gap-2">

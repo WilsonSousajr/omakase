@@ -3,10 +3,12 @@
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useCalendarStore } from "@/stores/calendarStore";
 import { cn } from "@/lib/utils";
 
 export default function CalendarHeader() {
+  const t = useTranslations("calendar");
   const selectedDate = useCalendarStore((s) => s.selectedDate);
   const viewMode = useCalendarStore((s) => s.viewMode);
   const setViewMode = useCalendarStore((s) => s.setViewMode);
@@ -33,7 +35,7 @@ export default function CalendarHeader() {
           onClick={goToToday}
           className="rounded-lg px-2 py-0.5 text-xs text-[var(--color-text-muted)] hover:bg-[var(--color-hover-overlay)] hover:text-[var(--color-text-secondary)]"
         >
-          Today
+          {t("today")}
         </button>
         <button
           onClick={goForward}
@@ -52,13 +54,13 @@ export default function CalendarHeader() {
             key={mode}
             onClick={() => setViewMode(mode)}
             className={cn(
-              "px-3 py-1 text-xs capitalize",
+              "px-3 py-1 text-xs",
               viewMode === mode
                 ? "bg-[var(--color-surface-hover)] text-[var(--color-text-primary)]"
                 : "text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
             )}
           >
-            {mode}
+            {t(mode)}
           </button>
         ))}
       </div>

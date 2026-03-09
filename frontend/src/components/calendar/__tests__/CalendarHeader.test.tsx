@@ -30,8 +30,8 @@ describe("CalendarHeader", () => {
 
   it("renders day/week view toggle", () => {
     renderWithProviders(<CalendarHeader />);
-    expect(screen.getByText("day")).toBeInTheDocument();
-    expect(screen.getByText("week")).toBeInTheDocument();
+    expect(screen.getByText("Day")).toBeInTheDocument();
+    expect(screen.getByText("Week")).toBeInTheDocument();
   });
 
   it("clicking Today calls goToToday", async () => {
@@ -76,7 +76,7 @@ describe("CalendarHeader", () => {
     const user = userEvent.setup();
     renderWithProviders(<CalendarHeader />);
 
-    await user.click(screen.getByText("week"));
+    await user.click(screen.getByText("Week"));
     expect(useCalendarStore.getState().viewMode).toBe("week");
   });
 });
