@@ -16,19 +16,21 @@ import { usePathname } from "next/navigation";
 import { useUIStore } from "@/stores/uiStore";
 import { useWorkspaces } from "@/hooks/useWorkspaces";
 import { useSemesters } from "@/hooks/useSemesters";
+import { useTranslations } from "next-intl";
 import SidebarStats from "./SidebarStats";
 import ThemeToggle from "./ThemeToggle";
 import LocaleSwitcher from "./LocaleSwitcher";
 
 const NAV_ITEMS = [
-  { href: "/plan", label: "Plan", icon: Calendar },
-  { href: "/focus", label: "Focus", icon: Crosshair },
-  { href: "/review", label: "Review", icon: CheckSquare },
-  { href: "/projects", label: "Projects", icon: FolderOpen },
-  { href: "/study", label: "Study", icon: BookOpen },
+  { href: "/plan", label: "plan", icon: Calendar },
+  { href: "/focus", label: "focus", icon: Crosshair },
+  { href: "/review", label: "review", icon: CheckSquare },
+  { href: "/projects", label: "projects", icon: FolderOpen },
+  { href: "/study", label: "study", icon: BookOpen },
 ];
 
 export default function Sidebar() {
+  const t = useTranslations("sidebar");
   const pathname = usePathname();
   const sidebarOpen = useUIStore((s) => s.sidebarOpen);
   const toggleSidebar = useUIStore((s) => s.toggleSidebar);
@@ -71,14 +73,14 @@ export default function Sidebar() {
       {sidebarOpen && workspaces.length > 0 && (
         <div className="border-b border-[var(--color-border)] px-3 py-2">
           <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
-            Workspace
+            {t("workspace")}
           </label>
           <select
             value={activeWorkspaceId || ""}
             onChange={(e) => setActiveWorkspaceId(e.target.value || null)}
             className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-input)] px-2.5 py-1.5 text-xs text-[var(--color-text-primary)] outline-none focus:border-[var(--color-text-secondary)]/40"
           >
-            <option value="">All workspaces</option>
+            <option value="">{t("allWorkspaces")}</option>
             {workspaces.map((ws) => (
               <option key={ws.id} value={ws.id}>
                 {ws.name}
@@ -91,14 +93,14 @@ export default function Sidebar() {
       {sidebarOpen && semesters.length > 0 && (
         <div className="border-b border-[var(--color-border)] px-3 py-2">
           <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
-            Semester
+            {t("semester")}
           </label>
           <select
             value={activeSemesterId || ""}
             onChange={(e) => setActiveSemesterId(e.target.value || null)}
             className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-input)] px-2.5 py-1.5 text-xs text-[var(--color-text-primary)] outline-none focus:border-[var(--color-text-secondary)]/40"
           >
-            <option value="">All semesters</option>
+            <option value="">{t("allSemesters")}</option>
             {semesters.map((sem) => (
               <option key={sem.id} value={sem.id}>
                 {sem.name}
@@ -123,7 +125,7 @@ export default function Sidebar() {
               )}
             >
               <Icon className="h-4 w-4 shrink-0" />
-              {sidebarOpen && <span>{label}</span>}
+              {sidebarOpen && <span>{t(label)}</span>}
             </Link>
           );
         })}

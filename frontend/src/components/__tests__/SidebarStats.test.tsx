@@ -19,7 +19,7 @@ describe("SidebarStats", () => {
 
     expect(await screen.findByText("2.5h focused")).toBeInTheDocument();
     expect(screen.getByText("3/5 blocks")).toBeInTheDocument();
-    expect(screen.getByText("7 day streak")).toBeInTheDocument();
+    expect(screen.getByText("7d streak")).toBeInTheDocument();
   });
 
   it("renders weekly hours breakdown", async () => {
