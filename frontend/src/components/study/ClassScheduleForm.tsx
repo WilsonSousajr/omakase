@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { X } from "lucide-react";
 import { CLASS_TYPES, DAYS_OF_WEEK } from "@/lib/constants";
 import { useCreateClassSchedule, useUpdateClassSchedule } from "@/hooks/useClassSchedules";
@@ -14,6 +15,9 @@ interface ClassScheduleFormProps {
 }
 
 export default function ClassScheduleForm({ editSchedule, disciplineId, onClose }: ClassScheduleFormProps) {
+  const t = useTranslations("study");
+  const tc = useTranslations("constants");
+  const tco = useTranslations("common");
   const modalOpen = useUIStore((s) => s.modalOpen);
   const createSchedule = useCreateClassSchedule();
   const updateSchedule = useUpdateClassSchedule();
@@ -67,7 +71,7 @@ export default function ClassScheduleForm({ editSchedule, disciplineId, onClose 
       <div className="w-full max-w-md rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] shadow-2xl">
         <div className="flex items-center justify-between border-b border-[var(--color-border)] px-6 py-4">
           <h3 className="text-base font-semibold text-[var(--color-text-primary)]">
-            {editSchedule ? "Edit Class Schedule" : "New Class Schedule"}
+            {editSchedule ? t("editClassSchedule") : t("newClassSchedule")}
           </h3>
           <button
             onClick={onClose}
@@ -80,7 +84,7 @@ export default function ClassScheduleForm({ editSchedule, disciplineId, onClose 
         <form onSubmit={handleSubmit} className="space-y-4 p-6">
           <div>
             <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
-              Day of week
+              {t("dayOfWeek")}
             </label>
             <select
               value={dayOfWeek}
@@ -89,7 +93,7 @@ export default function ClassScheduleForm({ editSchedule, disciplineId, onClose 
             >
               {DAYS_OF_WEEK.map((d) => (
                 <option key={d.value} value={d.value}>
-                  {d.label}
+                  {tc(`daysOfWeek.${d.value}`)}
                 </option>
               ))}
             </select>
@@ -98,7 +102,7 @@ export default function ClassScheduleForm({ editSchedule, disciplineId, onClose 
           <div className="flex gap-3">
             <div className="flex-1">
               <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
-                Start time
+                {t("startTime")}
               </label>
               <input
                 type="time"
@@ -109,7 +113,7 @@ export default function ClassScheduleForm({ editSchedule, disciplineId, onClose 
             </div>
             <div className="flex-1">
               <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
-                End time
+                {t("endTime")}
               </label>
               <input
                 type="time"
@@ -123,27 +127,27 @@ export default function ClassScheduleForm({ editSchedule, disciplineId, onClose 
           <div className="flex gap-3">
             <div className="flex-1">
               <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
-                Type
+                {t("classType")}
               </label>
               <select
                 value={classType}
                 onChange={(e) => setClassType(e.target.value)}
                 className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-input)] px-3.5 py-2 text-sm text-[var(--color-text-primary)] outline-none focus:border-[var(--color-text-secondary)]/40"
               >
-                {CLASS_TYPES.map((t) => (
-                  <option key={t.value} value={t.value}>
-                    {t.label}
+                {CLASS_TYPES.map((ct) => (
+                  <option key={ct.value} value={ct.value}>
+                    {tc(`classTypes.${ct.value}`)}
                   </option>
                 ))}
               </select>
             </div>
             <div className="flex-1">
               <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
-                Location
+                {t("location")}
               </label>
               <input
                 type="text"
-                placeholder="Room, building..."
+                placeholder={t("locationFormPlaceholder")}
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
                 className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-input)] px-3.5 py-2.5 text-sm text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] outline-none focus:border-[var(--color-text-secondary)]/40"
@@ -157,14 +161,14 @@ export default function ClassScheduleForm({ editSchedule, disciplineId, onClose 
               onClick={onClose}
               className="rounded-xl px-3 py-1.5 text-xs text-[var(--color-text-secondary)] hover:bg-[var(--color-hover-overlay)] hover:text-[var(--color-text-primary)]"
             >
-              Cancel
+              {tco("cancel")}
             </button>
             <button
               type="submit"
               disabled={createSchedule.isPending || updateSchedule.isPending}
               className="rounded-xl bg-[var(--color-button-primary)] px-4 py-1.5 text-xs font-medium text-[var(--color-button-primary-text)] transition-colors hover:bg-[var(--color-button-primary-hover)] disabled:opacity-50"
             >
-              {editSchedule ? "Update" : "Create"}
+              {editSchedule ? tco("update") : tco("create")}
             </button>
           </div>
         </form>

@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useTranslations } from "next-intl";
 import { Pencil, Trash2, CalendarDays } from "lucide-react";
 import { format } from "date-fns";
 import { PRIORITIES, STUDY_BLOCK_TYPES } from "@/lib/constants";
@@ -23,6 +24,7 @@ const StudyBlockCard = React.memo(function StudyBlockCard({
   onDelete,
   onToggleComplete,
 }: StudyBlockCardProps) {
+  const tc = useTranslations("constants");
   const priority = PRIORITIES.find((p) => p.value === block.priority);
   const blockType = STUDY_BLOCK_TYPES.find((t) => t.value === block.block_type);
   const discipline = disciplines?.get(block.discipline);
@@ -63,12 +65,12 @@ const StudyBlockCard = React.memo(function StudyBlockCard({
               className="rounded-lg px-1.5 py-0.5 text-[10px]"
               style={{ backgroundColor: priority.color + "20", color: priority.color }}
             >
-              {priority.label}
+              {tc(`priorities.${priority.value}`)}
             </span>
           )}
           {blockType && (
             <span className="rounded-lg bg-[var(--color-surface-active)] px-1.5 py-0.5 text-[10px] text-[var(--color-text-secondary)]">
-              {blockType.label}
+              {tc(`studyBlockTypes.${blockType.value}`)}
             </span>
           )}
           {discipline && (

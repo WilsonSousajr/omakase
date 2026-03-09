@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useTranslations } from "next-intl";
 import { X } from "lucide-react";
 import { PRIORITIES, STUDY_BLOCK_TYPES, STUDY_BLOCK_STATUSES } from "@/lib/constants";
 import { useDisciplines } from "@/hooks/useDisciplines";
@@ -16,6 +17,9 @@ interface StudyBlockFormProps {
 }
 
 export default function StudyBlockForm({ editStudyBlock, defaultDisciplineId, onClose }: StudyBlockFormProps) {
+  const t = useTranslations("study");
+  const tc = useTranslations("constants");
+  const tco = useTranslations("common");
   const modalOpen = useUIStore((s) => s.modalOpen);
   const { data: disciplines = [] } = useDisciplines();
   const createStudyBlock = useCreateStudyBlock();
@@ -85,7 +89,7 @@ export default function StudyBlockForm({ editStudyBlock, defaultDisciplineId, on
       <div className="w-full max-w-lg rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] shadow-2xl">
         <div className="flex items-center justify-between border-b border-[var(--color-border)] px-6 py-4">
           <h3 className="text-base font-semibold text-[var(--color-text-primary)]">
-            {editStudyBlock ? "Edit Study Block" : "New Study Block"}
+            {editStudyBlock ? t("editStudyBlock") : t("newStudyBlock")}
           </h3>
           <button
             onClick={onClose}
@@ -99,7 +103,7 @@ export default function StudyBlockForm({ editStudyBlock, defaultDisciplineId, on
           <div>
             <input
               type="text"
-              placeholder="Study block title"
+              placeholder={t("blockTitleFormPlaceholder")}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               autoFocus
@@ -109,7 +113,7 @@ export default function StudyBlockForm({ editStudyBlock, defaultDisciplineId, on
 
           <div>
             <textarea
-              placeholder="Notes (optional)"
+              placeholder={t("notesPlaceholder")}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={2}
@@ -120,14 +124,14 @@ export default function StudyBlockForm({ editStudyBlock, defaultDisciplineId, on
           <div className="flex gap-3">
             <div className="flex-1">
               <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
-                Discipline
+                {t("discipline")}
               </label>
               <select
                 value={disciplineId}
                 onChange={(e) => setDisciplineId(e.target.value)}
                 className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-input)] px-3.5 py-2 text-sm text-[var(--color-text-primary)] outline-none focus:border-[var(--color-text-secondary)]/40"
               >
-                <option value="">Select discipline</option>
+                <option value="">{t("selectDiscipline")}</option>
                 {disciplines.map((d) => (
                   <option key={d.id} value={d.id}>
                     {d.name}{d.code ? ` (${d.code})` : ""}
@@ -137,16 +141,16 @@ export default function StudyBlockForm({ editStudyBlock, defaultDisciplineId, on
             </div>
             <div className="flex-1">
               <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
-                Type
+                {t("type")}
               </label>
               <select
                 value={blockType}
                 onChange={(e) => setBlockType(e.target.value as StudyBlockType)}
                 className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-input)] px-3.5 py-2 text-sm text-[var(--color-text-primary)] outline-none focus:border-[var(--color-text-secondary)]/40"
               >
-                {STUDY_BLOCK_TYPES.map((t) => (
-                  <option key={t.value} value={t.value}>
-                    {t.label}
+                {STUDY_BLOCK_TYPES.map((sbt) => (
+                  <option key={sbt.value} value={sbt.value}>
+                    {tc(`studyBlockTypes.${sbt.value}`)}
                   </option>
                 ))}
               </select>
@@ -156,7 +160,7 @@ export default function StudyBlockForm({ editStudyBlock, defaultDisciplineId, on
           <div className="flex gap-3">
             <div className="flex-1">
               <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
-                Priority
+                {t("priority")}
               </label>
               <select
                 value={priority}
@@ -165,14 +169,14 @@ export default function StudyBlockForm({ editStudyBlock, defaultDisciplineId, on
               >
                 {PRIORITIES.map((p) => (
                   <option key={p.value} value={p.value}>
-                    {p.label}
+                    {tc(`priorities.${p.value}`)}
                   </option>
                 ))}
               </select>
             </div>
             <div className="flex-1">
               <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
-                Status
+                {t("blockStatus")}
               </label>
               <select
                 value={status}
@@ -181,7 +185,7 @@ export default function StudyBlockForm({ editStudyBlock, defaultDisciplineId, on
               >
                 {STUDY_BLOCK_STATUSES.map((s) => (
                   <option key={s.value} value={s.value}>
-                    {s.label}
+                    {tc(`studyBlockStatuses.${s.value}`)}
                   </option>
                 ))}
               </select>
@@ -191,7 +195,7 @@ export default function StudyBlockForm({ editStudyBlock, defaultDisciplineId, on
           <div className="flex gap-3">
             <div className="flex-1">
               <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
-                Scheduled Date
+                {t("scheduledDate")}
               </label>
               <input
                 type="date"
@@ -202,7 +206,7 @@ export default function StudyBlockForm({ editStudyBlock, defaultDisciplineId, on
             </div>
             <div className="flex-1">
               <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
-                Due Date
+                {t("dueDate")}
               </label>
               <input
                 type="date"
@@ -213,7 +217,7 @@ export default function StudyBlockForm({ editStudyBlock, defaultDisciplineId, on
             </div>
             <div className="w-24">
               <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
-                Est. (min)
+                {t("estimatedMinutes")}
               </label>
               <input
                 type="number"
@@ -232,14 +236,14 @@ export default function StudyBlockForm({ editStudyBlock, defaultDisciplineId, on
               onClick={onClose}
               className="rounded-xl px-3 py-1.5 text-xs text-[var(--color-text-secondary)] hover:bg-[var(--color-hover-overlay)] hover:text-[var(--color-text-primary)]"
             >
-              Cancel
+              {tco("cancel")}
             </button>
             <button
               type="submit"
               disabled={!title.trim() || !disciplineId || createStudyBlock.isPending || updateStudyBlock.isPending}
               className="rounded-xl bg-[var(--color-button-primary)] px-4 py-1.5 text-xs font-medium text-[var(--color-button-primary-text)] transition-colors hover:bg-[var(--color-button-primary-hover)] disabled:opacity-50"
             >
-              {editStudyBlock ? "Update" : "Create"}
+              {editStudyBlock ? tco("update") : tco("create")}
             </button>
           </div>
         </form>
