@@ -14,7 +14,13 @@ import TimeSlot from "./TimeSlot";
 import CurrentTimeIndicator from "./CurrentTimeIndicator";
 import { timeToOffset, HOURS, SLOT_HEIGHT_WEEK } from "./calendarUtils";
 
-export default function CalendarWeekView() {
+interface CalendarWeekViewProps {
+  isDragging?: boolean;
+  onCreateRange?: (date: string, startTime: string, endTime: string) => void;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export default function CalendarWeekView({ isDragging, onCreateRange }: CalendarWeekViewProps) {
   const { selectedDate } = useCalendarStore();
   const weekStart = startOfWeek(selectedDate, { weekStartsOn: 1 });
   const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));

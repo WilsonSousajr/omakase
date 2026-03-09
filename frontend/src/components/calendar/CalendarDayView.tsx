@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 import { format } from "date-fns";
 import { useCalendarStore } from "@/stores/calendarStore";
 import { useTimeBlocks, useDeleteTimeBlock, useUpdateTimeBlock } from "@/hooks/useTimeBlocks";
@@ -8,16 +8,25 @@ import { useTasks, useToggleTaskComplete } from "@/hooks/useTasks";
 import { useStudyBlocks, useUpdateStudyBlock } from "@/hooks/useStudyBlocks";
 import { useDisciplines } from "@/hooks/useDisciplines";
 import { useClassOccurrences } from "@/hooks/useClassOccurrences";
+import { useClickToCreate } from "@/hooks/useClickToCreate";
 import TimeBlockItem from "./TimeBlockItem";
 import ClassBlockItem from "./ClassBlockItem";
 import TimeSlot from "./TimeSlot";
 import CurrentTimeIndicator from "./CurrentTimeIndicator";
+import CreationOverlay from "./CreationOverlay";
 import { timeToOffset, HOURS, SLOT_HEIGHT_DAY } from "./calendarUtils";
+import { CALENDAR_START_HOUR } from "@/lib/constants";
 
-export default function CalendarDayView() {
+interface CalendarDayViewProps {
+  isDragging?: boolean;
+  onCreateRange?: (date: string, startTime: string, endTime: string) => void;
+}
+
+export default function CalendarDayView({ isDragging = false, onCreateRange }: CalendarDayViewProps) {
   const { selectedDate } = useCalendarStore();
   const dateStr = format(selectedDate, "yyyy-MM-dd");
   const isToday = dateStr === format(new Date(), "yyyy-MM-dd");
+  const gridRef = useRef<HTMLDivElement>(null);
 
   const { data: timeBlocks = [] } = useTimeBlocks(dateStr, dateStr);
   const { data: tasks = [] } = useTasks();
@@ -28,6 +37,15 @@ export default function CalendarDayView() {
   const updateTimeBlock = useUpdateTimeBlock();
   const toggleComplete = useToggleTaskComplete();
   const updateStudyBlock = useUpdateStudyBlock();
+
+  const { isCreating, creationStart, creationEnd, handlers: clickHandlers } = useClickToCreate({
+    slotHeight: SLOT_HEIGHT_DAY,
+    startHour: CALENDAR_START_HOUR,
+    date: dateStr,
+    gridRef,
+    disabled: isDragging || !onCreateRange,
+    onCreateRange: onCreateRange ?? (() => {}),
+  });
 
   const taskMap = useMemo(() => Object.fromEntries(tasks.map((t) => [t.id, t])), [tasks]);
   const studyBlockMap = useMemo(() => Object.fromEntries(studyBlocks.map((sb) => [sb.id, sb])), [studyBlocks]);
@@ -60,7 +78,13 @@ export default function CalendarDayView() {
         </div>
 
         {/* Grid + blocks */}
-        <div className="relative flex-1">
+        <div
+          ref={gridRef}
+          className="relative flex-1"
+          onMouseDown={clickHandlers.onMouseDown}
+          onMouseMove={clickHandlers.onMouseMove}
+          onMouseUp={clickHandlers.onMouseUp}
+        >
           {/* Slots */}
           {HOURS.map((hour) => (
             <div key={hour}>
@@ -82,6 +106,15 @@ export default function CalendarDayView() {
 
           {/* Current time indicator */}
           <CurrentTimeIndicator slotHeight={SLOT_HEIGHT_DAY} isToday={isToday} />
+
+          {/* Creation overlay (click-to-create) */}
+          {isCreating && creationStart && creationEnd && (
+            <CreationOverlay
+              startTime={creationStart}
+              endTime={creationEnd}
+              slotHeight={SLOT_HEIGHT_DAY}
+            />
+          )}
 
           {/* Time blocks */}
           {timeBlocks.map((block) => {
