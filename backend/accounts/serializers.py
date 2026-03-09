@@ -2,6 +2,8 @@ from django.contrib.auth.models import User
 from django.db import IntegrityError
 from rest_framework import serializers
 
+from accounts.models import UserProfile
+
 
 class RegisterSerializer(serializers.Serializer):
     username = serializers.CharField(max_length=150)
@@ -37,3 +39,21 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ["id", "username", "email", "date_joined"]
         read_only_fields = fields
+
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserProfile
+        fields = [
+            "timezone",
+            "week_starts_on",
+            "pomodoro_work_minutes",
+            "pomodoro_short_break_minutes",
+            "pomodoro_long_break_minutes",
+            "pomodoros_before_long_break",
+            "daily_work_goal_hours",
+            "daily_study_goal_hours",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["created_at", "updated_at"]
