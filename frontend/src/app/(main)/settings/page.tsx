@@ -47,14 +47,16 @@ export default function SettingsPage() {
       { old_password: oldPassword, new_password: newPassword, new_password_confirm: newPasswordConfirm },
       {
         onSuccess: () => {
-          emitToast("Password changed");
-          setOldPassword("");
-          setNewPassword("");
-          setNewPasswordConfirm("");
+          emitToast("Password changed. Please log in again.");
+          logout();
         },
         onError: (err) => {
+          const data = (err as { response?: { data?: Record<string, string[]> } }).response?.data;
           const message =
-            (err as { response?: { data?: { old_password?: string[] } } }).response?.data?.old_password?.[0] ??
+            data?.old_password?.[0] ??
+            data?.new_password?.[0] ??
+            data?.new_password_confirm?.[0] ??
+            data?.non_field_errors?.[0] ??
             "Failed to change password.";
           setPasswordError(message);
         },

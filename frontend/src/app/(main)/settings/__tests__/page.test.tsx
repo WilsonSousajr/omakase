@@ -1,4 +1,5 @@
-import { screen } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { setupServer } from "msw/node";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
@@ -85,5 +86,34 @@ describe("SettingsPage", () => {
     useAuthStore.setState({ user: null });
     const { container } = renderWithProviders(<SettingsPage />);
     expect(container.innerHTML).toBe("");
+  });
+
+  it("logs out after successful password change", async () => {
+    const user = userEvent.setup();
+    renderWithProviders(<SettingsPage />);
+
+    await user.type(screen.getByPlaceholderText("Current password"), "testpass123");
+    await user.type(screen.getByPlaceholderText("New password"), "newStrongPass!1");
+    await user.type(screen.getByPlaceholderText("Confirm new password"), "newStrongPass!1");
+    await user.click(screen.getByRole("button", { name: "Change Password" }));
+
+    await waitFor(() => {
+      expect(useAuthStore.getState().isAuthenticated).toBe(false);
+      expect(useAuthStore.getState().tokens).toBeNull();
+    });
+  });
+
+  it("shows new_password validation errors", async () => {
+    const user = userEvent.setup();
+    renderWithProviders(<SettingsPage />);
+
+    await user.type(screen.getByPlaceholderText("Current password"), "testpass123");
+    await user.type(screen.getByPlaceholderText("New password"), "password1234");
+    await user.type(screen.getByPlaceholderText("Confirm new password"), "password1234");
+    await user.click(screen.getByRole("button", { name: "Change Password" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("This password is too common.")).toBeInTheDocument();
+    });
   });
 });

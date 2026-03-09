@@ -291,6 +291,12 @@ export const handlers = [
         { status: 400 }
       );
     }
+    if (body.new_password === "password1234") {
+      return HttpResponse.json(
+        { new_password: ["This password is too common."] },
+        { status: 400 }
+      );
+    }
     return HttpResponse.json({ detail: "Password changed successfully." });
   }),
 
