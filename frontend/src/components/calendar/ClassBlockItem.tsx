@@ -1,14 +1,10 @@
 import { BookOpen, MapPin } from "lucide-react";
 import type { ClassOccurrence } from "@/types/classschedule";
+import { timeToMinutes } from "./calendarUtils";
 
 interface ClassBlockItemProps {
   occurrence: ClassOccurrence;
   slotHeight: number;
-}
-
-function timeToMinutes(time: string): number {
-  const [h, m] = time.split(":").map(Number);
-  return h * 60 + m;
 }
 
 export default function ClassBlockItem({ occurrence, slotHeight }: ClassBlockItemProps) {

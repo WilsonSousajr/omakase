@@ -8,6 +8,7 @@ import { PRIORITIES } from "@/lib/constants";
 import { useDraggable } from "@dnd-kit/core";
 import { BookOpen, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { timeToMinutes, minutesToTime } from "./calendarUtils";
 
 interface TimeBlockItemProps {
   block: TimeBlock;
@@ -19,18 +20,6 @@ interface TimeBlockItemProps {
   onToggleComplete?: (id: string, isCompleted: boolean) => void;
   onToggleStudyBlockComplete?: (id: string, isCompleted: boolean) => void;
   slotHeight: number;
-}
-
-function timeToMinutes(time: string): number {
-  const [h, m] = time.split(":").map(Number);
-  return h * 60 + m;
-}
-
-function minutesToTime(minutes: number): string {
-  const clamped = Math.max(0, Math.min(minutes, 22 * 60));
-  const h = Math.floor(clamped / 60);
-  const m = clamped % 60;
-  return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}:00`;
 }
 
 export default function TimeBlockItem({
