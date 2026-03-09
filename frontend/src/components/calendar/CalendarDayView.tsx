@@ -11,11 +11,13 @@ import { useClassOccurrences } from "@/hooks/useClassOccurrences";
 import TimeBlockItem from "./TimeBlockItem";
 import ClassBlockItem from "./ClassBlockItem";
 import TimeSlot from "./TimeSlot";
+import CurrentTimeIndicator from "./CurrentTimeIndicator";
 import { timeToOffset, HOURS, SLOT_HEIGHT_DAY } from "./calendarUtils";
 
 export default function CalendarDayView() {
   const { selectedDate } = useCalendarStore();
   const dateStr = format(selectedDate, "yyyy-MM-dd");
+  const isToday = dateStr === format(new Date(), "yyyy-MM-dd");
 
   const { data: timeBlocks = [] } = useTimeBlocks(dateStr, dateStr);
   const { data: tasks = [] } = useTasks();
@@ -77,6 +79,9 @@ export default function CalendarDayView() {
               <ClassBlockItem occurrence={occ} slotHeight={SLOT_HEIGHT_DAY} />
             </div>
           ))}
+
+          {/* Current time indicator */}
+          <CurrentTimeIndicator slotHeight={SLOT_HEIGHT_DAY} isToday={isToday} />
 
           {/* Time blocks */}
           {timeBlocks.map((block) => {

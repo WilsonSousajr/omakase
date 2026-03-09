@@ -11,6 +11,7 @@ import { useClassOccurrences } from "@/hooks/useClassOccurrences";
 import TimeBlockItem from "./TimeBlockItem";
 import ClassBlockItem from "./ClassBlockItem";
 import TimeSlot from "./TimeSlot";
+import CurrentTimeIndicator from "./CurrentTimeIndicator";
 import { timeToOffset, HOURS, SLOT_HEIGHT_WEEK } from "./calendarUtils";
 
 export default function CalendarWeekView() {
@@ -111,6 +112,9 @@ export default function CalendarWeekView() {
                     <TimeSlot hour={hour} half={1} date={dayStr} height={SLOT_HEIGHT_WEEK / 2} />
                   </div>
                 ))}
+
+                {/* Current time indicator (only today column) */}
+                <CurrentTimeIndicator slotHeight={SLOT_HEIGHT_WEEK} isToday={isToday} />
 
                 {/* Class occurrences (read-only, dashed) */}
                 {dayOccurrences.map((occ) => (
