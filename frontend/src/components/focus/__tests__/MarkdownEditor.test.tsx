@@ -23,7 +23,7 @@ describe("MarkdownEditor", () => {
     const user = userEvent.setup();
     renderWithProviders(<MarkdownEditor taskId="task-1" initialContent="**Bold text**" />);
 
-    await user.click(screen.getByText("preview"));
+    await user.click(screen.getByText("Preview"));
 
     await waitFor(() => {
       expect(screen.getByText("Bold text")).toBeInTheDocument();
@@ -34,7 +34,7 @@ describe("MarkdownEditor", () => {
     const user = userEvent.setup();
     renderWithProviders(<MarkdownEditor taskId="task-1" initialContent="" />);
 
-    await user.click(screen.getByText("preview"));
+    await user.click(screen.getByText("Preview"));
 
     expect(screen.getByText("Nothing to preview")).toBeInTheDocument();
   });

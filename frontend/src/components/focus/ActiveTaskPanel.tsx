@@ -1,11 +1,14 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useUIStore } from "@/stores/uiStore";
 import { useTask } from "@/hooks/useTasks";
 import PomodoroTimer from "./PomodoroTimer";
 import MarkdownEditor from "./MarkdownEditor";
 
 export default function ActiveTaskPanel() {
+  const t = useTranslations("pomodoro");
+  const tTasks = useTranslations("tasks");
   const activeTaskId = useUIStore((s) => s.activeTaskId);
   const { data: task } = useTask(activeTaskId);
 
@@ -25,13 +28,13 @@ export default function ActiveTaskPanel() {
           </div>
 
           <div>
-            <h4 className="mb-2 text-xs font-medium text-[var(--color-text-secondary)]">Notes</h4>
+            <h4 className="mb-2 text-xs font-medium text-[var(--color-text-secondary)]">{tTasks("notes")}</h4>
             <MarkdownEditor taskId={task.id} initialContent={task.notes || ""} />
           </div>
         </>
       ) : (
         <div className="flex flex-col items-center justify-center py-8 text-[var(--color-text-faint)]">
-          <p className="text-xs">Select a task from the kanban board</p>
+          <p className="text-xs">{t("selectTask")}</p>
         </div>
       )}
     </div>
