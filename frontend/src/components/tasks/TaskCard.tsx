@@ -1,6 +1,7 @@
 "use client";
 
 import { memo } from "react";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { PRIORITIES } from "@/lib/constants";
 import type { Task } from "@/types/task";
@@ -18,6 +19,7 @@ interface TaskCardProps {
 }
 
 function TaskCard({ task, onEdit, onDelete, onToggleComplete, projects }: TaskCardProps) {
+  const tc = useTranslations("constants");
   const priority = PRIORITIES.find((p) => p.value === task.priority);
   const project = task.project && projects ? projects.get(task.project) : null;
 
@@ -69,7 +71,7 @@ function TaskCard({ task, onEdit, onDelete, onToggleComplete, projects }: TaskCa
                 color: priority.color,
               }}
             >
-              {priority.label}
+              {tc(`priorities.${priority.value}`)}
             </span>
           )}
         </div>

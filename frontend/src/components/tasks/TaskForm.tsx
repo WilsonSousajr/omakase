@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useTranslations } from "next-intl";
 import { X } from "lucide-react";
 import { PRIORITIES, AREAS } from "@/lib/constants";
 import { useTags } from "@/hooks/useTags";
@@ -20,6 +21,9 @@ export default function TaskForm() {
   const { data: disciplines = [] } = useDisciplines();
   const createTask = useCreateTask();
   const updateTask = useUpdateTask();
+  const t = useTranslations("tasks");
+  const tc = useTranslations("constants");
+  const tCommon = useTranslations("common");
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -104,7 +108,7 @@ export default function TaskForm() {
       <div className="w-full max-w-lg rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] shadow-2xl">
         <div className="flex items-center justify-between border-b border-[var(--color-border)] px-6 py-4">
           <h3 className="text-base font-semibold text-[var(--color-text-primary)]">
-            {editTask ? "Edit Task" : "New Task"}
+            {editTask ? t("editTask") : t("newTask")}
           </h3>
           <button
             onClick={handleClose}
@@ -118,7 +122,7 @@ export default function TaskForm() {
           <div>
             <input
               type="text"
-              placeholder="Task title"
+              placeholder={t("titlePlaceholder")}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               autoFocus
@@ -128,7 +132,7 @@ export default function TaskForm() {
 
           <div>
             <textarea
-              placeholder="Description (optional)"
+              placeholder={t("descriptionPlaceholder")}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={2}
@@ -138,7 +142,7 @@ export default function TaskForm() {
 
           <div className="flex gap-3">
             <div className="flex-1">
-              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">Priority</label>
+              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">{t("priority")}</label>
               <select
                 value={priority}
                 onChange={(e) => setPriority(e.target.value as Priority)}
@@ -146,13 +150,13 @@ export default function TaskForm() {
               >
                 {PRIORITIES.map((p) => (
                   <option key={p.value} value={p.value}>
-                    {p.label}
+                    {tc(`priorities.${p.value}`)}
                   </option>
                 ))}
               </select>
             </div>
             <div className="flex-1">
-              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">Area</label>
+              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">{t("area")}</label>
               <select
                 value={area}
                 onChange={(e) => setArea(e.target.value as Area)}
@@ -160,7 +164,7 @@ export default function TaskForm() {
               >
                 {AREAS.map((a) => (
                   <option key={a.value} value={a.value}>
-                    {a.label}
+                    {tc(`areas.${a.value}`)}
                   </option>
                 ))}
               </select>
@@ -168,13 +172,13 @@ export default function TaskForm() {
             <div className="flex-1">
               {area === "study" ? (
                 <>
-                  <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">Discipline</label>
+                  <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">{t("discipline")}</label>
                   <select
                     value={disciplineId}
                     onChange={(e) => setDisciplineId(e.target.value)}
                     className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-input)] px-3.5 py-2 text-sm text-[var(--color-text-primary)] outline-none focus:border-[var(--color-text-secondary)]/40"
                   >
-                    <option value="">None</option>
+                    <option value="">{t("none")}</option>
                     {disciplines.map((d) => (
                       <option key={d.id} value={d.id}>
                         {d.name}
@@ -184,13 +188,13 @@ export default function TaskForm() {
                 </>
               ) : (
                 <>
-                  <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">Project</label>
+                  <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">{t("project")}</label>
                   <select
                     value={projectId}
                     onChange={(e) => setProjectId(e.target.value)}
                     className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-input)] px-3.5 py-2 text-sm text-[var(--color-text-primary)] outline-none focus:border-[var(--color-text-secondary)]/40"
                   >
-                    <option value="">None</option>
+                    <option value="">{t("none")}</option>
                     {projects.map((p) => (
                       <option key={p.id} value={p.id}>
                         {p.name}
@@ -204,7 +208,7 @@ export default function TaskForm() {
 
           <div className="flex gap-3">
             <div className="flex-1">
-              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">Scheduled Date</label>
+              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">{t("scheduledDate")}</label>
               <input
                 type="date"
                 value={scheduledDate}
@@ -213,7 +217,7 @@ export default function TaskForm() {
               />
             </div>
             <div className="flex-1">
-              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">Due Date</label>
+              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">{t("dueDate")}</label>
               <input
                 type="date"
                 value={dueDate}
@@ -222,7 +226,7 @@ export default function TaskForm() {
               />
             </div>
             <div className="w-24">
-              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">Est. (min)</label>
+              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">{t("estimatedMinutes")}</label>
               <input
                 type="number"
                 min="0"
@@ -236,7 +240,7 @@ export default function TaskForm() {
 
           {tags.length > 0 && (
             <div>
-              <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">Tags</label>
+              <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">{t("tags")}</label>
               <div className="flex flex-wrap gap-1.5">
                 {tags.map((tag) => (
                   <button
@@ -271,14 +275,14 @@ export default function TaskForm() {
               onClick={handleClose}
               className="rounded-xl px-3 py-1.5 text-xs text-[var(--color-text-secondary)] hover:bg-[var(--color-hover-overlay)] hover:text-[var(--color-text-primary)]"
             >
-              Cancel
+              {tCommon("cancel")}
             </button>
             <button
               type="submit"
               disabled={!title.trim() || createTask.isPending || updateTask.isPending}
               className="rounded-xl bg-[var(--color-button-primary)] px-4 py-1.5 text-xs font-medium text-[var(--color-button-primary-text)] transition-colors hover:bg-[var(--color-button-primary-hover)] disabled:opacity-50"
             >
-              {editTask ? "Update" : "Create"}
+              {editTask ? tCommon("update") : tCommon("create")}
             </button>
           </div>
         </form>
