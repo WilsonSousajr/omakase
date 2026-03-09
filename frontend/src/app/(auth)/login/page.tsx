@@ -1,11 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { useLogin } from "@/hooks/useAuth";
 
 export default function LoginPage() {
+  const t = useTranslations("auth");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const login = useLogin();
@@ -22,14 +24,14 @@ export default function LoginPage() {
           Omakase
         </h1>
         <p className="mt-1 text-sm text-[var(--color-text-muted)]">
-          Sign in to your account
+          {t("signIn")}
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
-            Username
+            {t("username")}
           </label>
           <input
             type="text"
@@ -38,13 +40,12 @@ export default function LoginPage() {
             required
             autoFocus
             className="mt-1 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-input)] px-3 py-2 text-sm text-[var(--color-text-primary)] placeholder-[var(--color-text-faint)] outline-none focus:border-[var(--color-border-hover)]"
-            placeholder="Enter your username"
           />
         </div>
 
         <div>
           <label className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
-            Password
+            {t("password")}
           </label>
           <input
             type="password"
@@ -52,7 +53,6 @@ export default function LoginPage() {
             onChange={(e) => setPassword(e.target.value)}
             required
             className="mt-1 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-input)] px-3 py-2 text-sm text-[var(--color-text-primary)] placeholder-[var(--color-text-faint)] outline-none focus:border-[var(--color-border-hover)]"
-            placeholder="Enter your password"
           />
         </div>
 
@@ -67,17 +67,17 @@ export default function LoginPage() {
           disabled={login.isPending}
           className="w-full rounded-xl bg-[var(--color-button-primary)] py-2 text-sm font-medium text-[var(--color-button-primary-text)] hover:bg-[var(--color-button-primary-hover)] disabled:opacity-50"
         >
-          {login.isPending ? "Signing in..." : "Sign in"}
+          {login.isPending ? t("signingIn") : t("signIn")}
         </button>
       </form>
 
       <p className="text-center text-sm text-[var(--color-text-muted)]">
-        Don&apos;t have an account?{" "}
+        {t("noAccount")}{" "}
         <Link
           href="/register"
           className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
         >
-          Sign up
+          {t("signUp")}
         </Link>
       </p>
     </div>
