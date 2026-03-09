@@ -1,9 +1,8 @@
 "use client";
 
 import React from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useFormatter } from "next-intl";
 import { Pencil, Trash2, CalendarDays } from "lucide-react";
-import { format } from "date-fns";
 import { PRIORITIES, STUDY_BLOCK_TYPES } from "@/lib/constants";
 import type { StudyBlock } from "@/types/studyblock";
 import type { Discipline } from "@/types/discipline";
@@ -25,6 +24,7 @@ const StudyBlockCard = React.memo(function StudyBlockCard({
   onToggleComplete,
 }: StudyBlockCardProps) {
   const tc = useTranslations("constants");
+  const fmt = useFormatter();
   const priority = PRIORITIES.find((p) => p.value === block.priority);
   const blockType = STUDY_BLOCK_TYPES.find((t) => t.value === block.block_type);
   const discipline = disciplines?.get(block.discipline);
@@ -79,7 +79,7 @@ const StudyBlockCard = React.memo(function StudyBlockCard({
           {block.scheduled_date && (
             <span className="flex items-center gap-0.5 text-[10px] text-[var(--color-text-muted)]">
               <CalendarDays className="h-2.5 w-2.5" />
-              {format(new Date(block.scheduled_date + "T00:00:00"), "MMM d")}
+              {fmt.dateTime(new Date(block.scheduled_date + "T00:00:00"), { month: "short", day: "numeric" })}
             </span>
           )}
         </div>

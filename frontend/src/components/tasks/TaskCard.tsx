@@ -1,13 +1,12 @@
 "use client";
 
 import { memo } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useFormatter } from "next-intl";
 import { cn } from "@/lib/utils";
 import { PRIORITIES } from "@/lib/constants";
 import type { Task } from "@/types/task";
 import type { Project } from "@/types/project";
 import { GripVertical, Pencil, Trash2, Calendar } from "lucide-react";
-import { format } from "date-fns";
 import ProjectBadge from "./ProjectBadge";
 
 interface TaskCardProps {
@@ -20,6 +19,7 @@ interface TaskCardProps {
 
 function TaskCard({ task, onEdit, onDelete, onToggleComplete, projects }: TaskCardProps) {
   const tc = useTranslations("constants");
+  const fmt = useFormatter();
   const priority = PRIORITIES.find((p) => p.value === task.priority);
   const project = task.project && projects ? projects.get(task.project) : null;
 
@@ -101,7 +101,7 @@ function TaskCard({ task, onEdit, onDelete, onToggleComplete, projects }: TaskCa
           {task.scheduled_date && (
             <span className="flex items-center gap-1 text-[10px] text-[var(--color-text-muted)]">
               <Calendar className="h-3 w-3" />
-              {format(new Date(task.scheduled_date + "T00:00:00"), "MMM d")}
+              {fmt.dateTime(new Date(task.scheduled_date + "T00:00:00"), { month: "short", day: "numeric" })}
             </span>
           )}
         </div>

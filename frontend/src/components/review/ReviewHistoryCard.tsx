@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useFormatter } from "next-intl";
 import { ChevronDown, Moon, Check, Circle } from "lucide-react";
 import { useReviewSummary } from "@/hooks/useDailyReviews";
 import { cn } from "@/lib/utils";
@@ -13,11 +13,12 @@ interface Props {
 
 function ReviewHistoryCard({ review }: Props) {
   const t = useTranslations("review");
+  const fmt = useFormatter();
   const [expanded, setExpanded] = useState(false);
   const { data: summary, isLoading } = useReviewSummary(expanded ? review.date : "");
 
   const date = new Date(review.date + "T00:00:00");
-  const formatted = date.toLocaleDateString("en-US", {
+  const formatted = fmt.dateTime(date, {
     weekday: "long",
     month: "long",
     day: "numeric",

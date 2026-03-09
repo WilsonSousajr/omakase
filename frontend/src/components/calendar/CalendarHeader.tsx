@@ -1,14 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { format } from "date-fns";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useFormatter } from "next-intl";
 import { useCalendarStore } from "@/stores/calendarStore";
 import { cn } from "@/lib/utils";
 
 export default function CalendarHeader() {
   const t = useTranslations("calendar");
+  const fmt = useFormatter();
   const selectedDate = useCalendarStore((s) => s.selectedDate);
   const viewMode = useCalendarStore((s) => s.viewMode);
   const setViewMode = useCalendarStore((s) => s.setViewMode);
@@ -19,8 +19,8 @@ export default function CalendarHeader() {
   const [dateLabel, setDateLabel] = useState("");
 
   useEffect(() => {
-    setDateLabel(format(selectedDate, "MMMM d, yyyy"));
-  }, [selectedDate]);
+    setDateLabel(fmt.dateTime(selectedDate, { month: "long", day: "numeric", year: "numeric" }));
+  }, [selectedDate, fmt]);
 
   return (
     <div className="flex items-center justify-between border-b border-[var(--color-border)] px-5 py-3">

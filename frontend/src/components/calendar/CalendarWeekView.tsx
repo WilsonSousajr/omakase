@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { format, startOfWeek, addDays } from "date-fns";
+import { useFormatter } from "next-intl";
 import { useCalendarStore } from "@/stores/calendarStore";
 import { useTimeBlocks, useDeleteTimeBlock, useUpdateTimeBlock } from "@/hooks/useTimeBlocks";
 import { useTasks, useToggleTaskComplete } from "@/hooks/useTasks";
@@ -34,6 +35,7 @@ function WeekTimeSlot({ hour, half, date }: { hour: number; half: 0 | 1; date: s
 }
 
 export default function CalendarWeekView() {
+  const fmt = useFormatter();
   const { selectedDate } = useCalendarStore();
   const weekStart = startOfWeek(selectedDate, { weekStartsOn: 1 });
   const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
@@ -87,7 +89,7 @@ export default function CalendarWeekView() {
               className="flex items-start justify-end pr-1.5 text-[9px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-faint)]"
               style={{ height: `${SLOT_HEIGHT}px` }}
             >
-              {format(new Date(2000, 0, 1, hour), "ha")}
+              {fmt.dateTime(new Date(2000, 0, 1, hour), { hour: "numeric", hour12: true })}
             </div>
           ))}
         </div>
@@ -107,7 +109,7 @@ export default function CalendarWeekView() {
                     isToday ? "text-[var(--color-text-primary)]" : "text-[var(--color-text-muted)]"
                   }`}
                 >
-                  {format(day, "EEE d")}
+                  {fmt.dateTime(day, { weekday: "short", day: "numeric" })}
                 </span>
               </div>
 

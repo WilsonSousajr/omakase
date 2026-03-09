@@ -1,8 +1,7 @@
 "use client";
 
 import { Pencil, Trash2, ListTodo, CalendarDays } from "lucide-react";
-import { format } from "date-fns";
-import { useTranslations } from "next-intl";
+import { useTranslations, useFormatter } from "next-intl";
 import type { Project } from "@/types/project";
 
 interface ProjectCardProps {
@@ -13,6 +12,7 @@ interface ProjectCardProps {
 
 export default function ProjectCard({ project, onEdit, onDelete }: ProjectCardProps) {
   const t = useTranslations("projects");
+  const fmt = useFormatter();
 
   return (
     <div className="group flex items-start gap-3 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 transition-all duration-300 hover:bg-[var(--color-surface-hover)] hover:border-[var(--color-border-hover)]">
@@ -42,7 +42,7 @@ export default function ProjectCard({ project, onEdit, onDelete }: ProjectCardPr
           {project.due_date && (
             <span className="flex items-center gap-1 text-[10px] text-[var(--color-text-muted)]">
               <CalendarDays className="h-3 w-3" />
-              {format(new Date(project.due_date + "T00:00:00"), "MMM d, yyyy")}
+              {fmt.dateTime(new Date(project.due_date + "T00:00:00"), { month: "short", day: "numeric", year: "numeric" })}
             </span>
           )}
         </div>

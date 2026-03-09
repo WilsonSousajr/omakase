@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { useDroppable } from "@dnd-kit/core";
 import { format } from "date-fns";
+import { useFormatter } from "next-intl";
 import { useCalendarStore } from "@/stores/calendarStore";
 import { useTimeBlocks, useDeleteTimeBlock, useUpdateTimeBlock } from "@/hooks/useTimeBlocks";
 import { useTasks, useToggleTaskComplete } from "@/hooks/useTasks";
@@ -36,6 +37,7 @@ function TimeSlot({ hour, half, date }: { hour: number; half: 0 | 1; date: strin
 }
 
 export default function CalendarDayView() {
+  const fmt = useFormatter();
   const { selectedDate } = useCalendarStore();
   const dateStr = format(selectedDate, "yyyy-MM-dd");
 
@@ -77,7 +79,7 @@ export default function CalendarDayView() {
               className="flex items-start justify-end pr-2 text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-faint)]"
               style={{ height: `${SLOT_HEIGHT}px` }}
             >
-              {format(new Date(2000, 0, 1, hour), "h a")}
+              {fmt.dateTime(new Date(2000, 0, 1, hour), { hour: "numeric", hour12: true })}
             </div>
           ))}
         </div>

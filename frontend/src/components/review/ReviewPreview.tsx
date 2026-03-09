@@ -1,7 +1,7 @@
 "use client";
 
-import { useTranslations } from "next-intl";
-import { format, addDays } from "date-fns";
+import { useTranslations, useFormatter } from "next-intl";
+import { addDays } from "date-fns";
 import { useTomorrow } from "@/hooks/useToday";
 import { useTimeBlocks } from "@/hooks/useTimeBlocks";
 import { useTasks } from "@/hooks/useTasks";
@@ -14,6 +14,7 @@ interface Props {
 
 export default function ReviewPreview({ onNext }: Props) {
   const t = useTranslations("review");
+  const fmt = useFormatter();
   const tomorrow = useTomorrow();
   const { data: timeBlocks = [] } = useTimeBlocks(tomorrow, tomorrow);
   const { data: tasks = [] } = useTasks({ scheduled_date: tomorrow });
@@ -38,7 +39,7 @@ export default function ReviewPreview({ onNext }: Props) {
           {t("preview.title")}
         </h2>
         <p className="text-sm text-[var(--color-text-muted)]">
-          {format(addDays(new Date(), 1), "EEEE, MMMM d")}
+          {fmt.dateTime(addDays(new Date(), 1), { weekday: "long", month: "long", day: "numeric" })}
         </p>
       </div>
 

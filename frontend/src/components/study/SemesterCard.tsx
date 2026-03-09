@@ -1,8 +1,7 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useTranslations, useFormatter } from "next-intl";
 import { Pencil, Trash2, BookOpen, CalendarDays } from "lucide-react";
-import { format } from "date-fns";
 import type { Semester } from "@/types/semester";
 
 interface SemesterCardProps {
@@ -13,6 +12,7 @@ interface SemesterCardProps {
 
 export default function SemesterCard({ semester, onEdit, onDelete }: SemesterCardProps) {
   const t = useTranslations("study");
+  const fmt = useFormatter();
 
   return (
     <div className="group flex items-start gap-3 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 transition-all duration-300 hover:bg-[var(--color-surface-hover)] hover:border-[var(--color-border-hover)]">
@@ -34,7 +34,7 @@ export default function SemesterCard({ semester, onEdit, onDelete }: SemesterCar
           </span>
           <span className="flex items-center gap-1 text-[10px] text-[var(--color-text-muted)]">
             <CalendarDays className="h-3 w-3" />
-            {format(new Date(semester.start_date + "T00:00:00"), "MMM d")} – {format(new Date(semester.end_date + "T00:00:00"), "MMM d, yyyy")}
+            {fmt.dateTime(new Date(semester.start_date + "T00:00:00"), { month: "short", day: "numeric" })} – {fmt.dateTime(new Date(semester.end_date + "T00:00:00"), { month: "short", day: "numeric", year: "numeric" })}
           </span>
         </div>
       </div>
