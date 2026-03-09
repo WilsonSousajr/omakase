@@ -262,9 +262,18 @@ Icons: Clock (hours), BarChart3 (blocks), Flame (streak). Sections conditionally
 
 **TodayStudyBlocks:** Focus page panel below kanban. Shows scheduled study blocks for today with completion toggles and discipline badges. Conditionally rendered (hidden when empty).
 
-**Calendar TimeBlock (study):** Uses discipline color instead of priority color, BookOpen icon prefix. Same resize/drag behavior as task time blocks.
+**Calendar TimeBlock (Notion-style):** Left accent stripe (`w-1 rounded-l-xl`, priority/discipline color), white title text (`text-[var(--color-text-primary)]`), subtle border (`color + "25"`), ultra-light bg (`color + "12"`). `rounded-xl`, `transition-all duration-200`, `hover:shadow-lg hover:shadow-black/20`. `data-timeblock` attribute for click-to-create conflict avoidance.
 
-**ClassBlockItem (calendar):** Read-only calendar block for virtual class occurrences. Dashed border, ultra-light bg (`color + "0d"`), BookOpen icon, discipline name, class type badge, time range, optional location with MapPin icon. Not draggable, not resizable — purely informational.
+```
+Accent stripe: absolute left-0 top-0 bottom-0 w-1 rounded-l-xl, bg: color
+Border: borderColor: color + "25"
+Background: backgroundColor: color + "12"
+Title: text-xs font-medium text-[var(--color-text-primary)]
+Time: text-[10px] text-[var(--color-text-muted)]
+Padding: pl-3.5 pr-3 py-1.5
+```
+
+**ClassBlockItem (calendar):** Read-only calendar block for virtual class occurrences. Dashed border, ultra-light bg (`color + "0d"`), BookOpen icon, discipline name, class type badge, time range, optional location with MapPin icon. Not draggable, not resizable — purely informational. `data-classblock` attribute. `rounded-xl`.
 
 ```
 Dashed border: border border-dashed, borderColor: color + "50"
@@ -273,6 +282,18 @@ Title: text-xs font-medium, color: color + "c0"
 Type badge: text-[9px] font-semibold capitalize, bg: color + "18", color: color + "90"
 Time + location: text-[10px], color: color + "70" / "60"
 ```
+
+**CurrentTimeIndicator:** Red line (`bg-red-500 h-[2px]`) + dot (`w-2 h-2 rounded-full bg-red-500`) at current time position. Updates every 60s. Only renders when `isToday=true`. In week view, renders only in the today column.
+
+**CreationOverlay:** Ghost preview for click-to-create. Translucent (`bg-white/10 border-white/20 rounded-xl`), shows start/end time labels. `transition-opacity duration-100`.
+
+**Calendar Grid Lines:** Hour lines use `border-[var(--color-border)]/60`, half-hour lines use `border-[var(--color-border)]/20` — Notion-style visual hierarchy. Week view column borders: `/30`.
+
+**Calendar Header:** Today button is a visible pill (`rounded-xl border border-[var(--color-border)]`). Date label `text-base font-medium`. View toggle is a segmented control (`overflow-hidden rounded-xl`).
+
+**Week View Day Headers:** Two-line layout: day abbreviation + date number. Today's date gets a white circle (`rounded-full bg-white text-black w-6 h-6`). Today column has `bg-white/[0.02]` highlight.
+
+**Click-to-Create:** Draw on empty calendar space → CreationOverlay appears → mouseup opens TaskForm with pre-filled scheduled_date. Uses `useClickToCreate` hook with 5px dead zone, 15-min snap, dnd-kit conflict avoidance via `disabled` prop. Only available in day view.
 
 **ClassScheduleForm:** Modal form for adding/editing recurring class schedules on a discipline. Day-of-week select, time range inputs, class type select, location text input. Uses `modalOpen === "classschedule-form"`.
 
