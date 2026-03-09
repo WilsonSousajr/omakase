@@ -13,7 +13,6 @@ staticfiles
 htmlcov/
 conftest.py
 */tests/
-requirements-dev.txt
 
 # IDE / OS
 .vscode/
