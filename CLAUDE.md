@@ -71,7 +71,7 @@ docker compose exec frontend pnpm lint       # Run linter
 
 ```
 backend/
-  accounts/        # Auth: register, JWT token, me endpoint
+  accounts/        # Auth: register, JWT token, me endpoint, Profile model, change-password
   omakase/         # Django project settings, urls, wsgi
   tasks/           # Task, Tag, TimeBlock, Workspace, Project models + API
   pomodoro/        # PomodoroSession model + API
@@ -80,9 +80,9 @@ backend/
 frontend/
   src/
     app/(auth)/    # Login + Register pages (no sidebar)
-    app/(main)/    # Plan + Focus + Review + Projects + Study pages (with sidebar)
+    app/(main)/    # Plan + Focus + Review + Projects + Study + Settings pages (with sidebar)
     components/    # React components (tasks/, calendar/, kanban/, focus/, projects/, study/, review/)
-    hooks/         # TanStack Query hooks (useTasks, useTags, useTimeBlocks, usePomodoro, useAuth, useWorkspaces, useProjects, useStats, useSemesters, useDisciplines, useStudyBlocks, useClassSchedules, useClassOccurrences, useDailyReviews)
+    hooks/         # TanStack Query hooks (useTasks, useTags, useTimeBlocks, usePomodoro, useAuth [useMe, useLogin, useRegister, useUpdateProfile, useChangePassword, useLogout], useWorkspaces, useProjects, useStats, useSemesters, useDisciplines, useStudyBlocks, useClassSchedules, useClassOccurrences, useDailyReviews)
     stores/        # Zustand stores (uiStore, pomodoroStore, calendarStore, authStore)
     lib/           # Utilities (api with JWT interceptors, constants, utils)
     types/         # TypeScript types (task, tag, timeblock, pomodoro, auth, stats, semester, discipline, studyblock, classschedule, dailyreview)
@@ -93,7 +93,8 @@ frontend/
 - `auth/register/` — POST (AllowAny)
 - `auth/token/` — POST JWT obtain (AllowAny)
 - `auth/token/refresh/` — POST JWT refresh (AllowAny)
-- `auth/me/` — GET current user (IsAuthenticated)
+- `auth/me/` — GET/PATCH current user + profile (IsAuthenticated)
+- `auth/change-password/` — POST change password (IsAuthenticated)
 - `tasks/` — CRUD + `today/` + `reorder-bulk/` (user-scoped)
 - `tags/` — CRUD, filterable by area (user-scoped)
 - `timeblocks/` — CRUD, filterable by date range (user-scoped via task.user OR study_block.discipline.semester.user)
@@ -215,6 +216,15 @@ frontend/
 - Frontend: `useDailyReviewsList(page)` hook for paginated history, query key `["daily-reviews", "list", page]` (auto-invalidated by existing mutations)
 - Frontend: ReviewHistoryCard uses `React.memo`, lazy-loads summary via `useReviewSummary(date)` with `enabled: expanded`
 - Frontend: ReviewHistory accumulates pages via `useEffect` (page 1 replaces, subsequent pages append) — no `useInfiniteQuery`
+- Profile model: OneToOneField to User, auto-created via `post_save` signal in `accounts/signals.py`
+- Profile: `avatar_color` (hex, default `#a3a3a3`), `created_at`, `updated_at`
+- MeView: `RetrieveUpdateAPIView` — GET returns `UserSerializer`, PATCH uses `UpdateProfileSerializer` (writes to both User and Profile)
+- UpdateProfileSerializer: plain Serializer (not ModelSerializer) because it writes to two models (User + Profile)
+- ChangePasswordView: POST `/auth/change-password/`, validates old password + confirms new passwords match
+- Frontend: UserAvatar component with `getInitials()` helper — falls back: first+last → first[0:2] → username[0:2]
+- Frontend: Settings page at `/settings` — profile editing (name, email, avatar color), password change, logout
+- Frontend: Sidebar user section (above SidebarStats) — UserAvatar + username + Settings gear icon, links to `/settings`
+- Frontend: `useUpdateProfile()` PATCH `/auth/me/` → updates authStore + query cache. `useChangePassword()` POST `/auth/change-password/`
 
 ## Drag & Drop (Plan Mode)
 
@@ -268,7 +278,7 @@ docker compose exec backend pip install -r requirements-dev.txt
 
 **Config:** `backend/pyproject.toml` — pytest settings + coverage config
 **Factories:** `backend/conftest.py` — TagFactory, TaskFactory, TimeBlockFactory, PomodoroSessionFactory, SemesterFactory, DisciplineFactory, StudyBlockFactory
-**Test files:** `backend/{tasks,pomodoro,study,stats}/tests/test_{models,serializers,views}.py`
+**Test files:** `backend/{accounts,tasks,pomodoro,study,stats}/tests/test_{models,serializers,views}.py`
 
 ### Frontend (Vitest + React Testing Library + MSW)
 
