@@ -120,16 +120,23 @@ export default function TimeBlockItem({
   return (
     <div
       id={`timeblock-${block.id}`}
+      data-timeblock
       ref={setNodeRef}
       {...listeners}
       {...attributes}
-      className="group absolute inset-x-1 cursor-grab overflow-hidden rounded-lg border px-2 py-1 active:cursor-grabbing"
+      className="group absolute inset-x-1 cursor-grab overflow-hidden rounded-xl border pl-3.5 pr-3 py-1.5 active:cursor-grabbing transition-all duration-200 hover:shadow-lg hover:shadow-black/20"
       style={{
         ...style,
-        borderColor: `${color}40`,
-        backgroundColor: `${color}18`,
+        borderColor: `${color}25`,
+        backgroundColor: `${color}12`,
       }}
     >
+      {/* Left accent stripe */}
+      <div
+        className="absolute left-0 top-0 bottom-0 w-1 rounded-l-xl"
+        style={{ backgroundColor: color }}
+      />
+
       <div className="flex items-start justify-between">
         {/* Checkbox */}
         <button
@@ -164,10 +171,9 @@ export default function TimeBlockItem({
           <div className="flex items-center gap-1.5">
             {isStudyBlock && <BookOpen className="h-3 w-3 shrink-0" style={{ color }} />}
             <p className={cn(
-              "truncate text-xs font-medium",
+              "truncate text-xs font-medium text-[var(--color-text-primary)]",
               isCompleted && "line-through opacity-60"
-            )}
-            style={{ color }}>
+            )}>
               {title}
             </p>
             {priority && !isStudyBlock && (
@@ -193,7 +199,7 @@ export default function TimeBlockItem({
               </span>
             )}
           </div>
-          <p className="text-[10px]" style={{ color: `${color}90` }}>
+          <p className="text-[10px] text-[var(--color-text-muted)]">
             {block.start_time.slice(0, 5)} – {block.end_time.slice(0, 5)}
           </p>
         </div>
@@ -203,8 +209,7 @@ export default function TimeBlockItem({
             e.stopPropagation();
             onDelete(block.id);
           }}
-          className="shrink-0 rounded p-0.5 opacity-0 transition-opacity group-hover:opacity-100"
-          style={{ color }}
+          className="shrink-0 rounded p-0.5 text-[var(--color-text-muted)] opacity-0 transition-opacity group-hover:opacity-100"
           onPointerDown={(e) => e.stopPropagation()}
         >
           <X className="h-3 w-3" />
