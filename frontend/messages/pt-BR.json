@@ -67,7 +67,17 @@
     "notesPlaceholder": "Adicione notas...",
     "markdownPreview": "Visualizar",
     "markdownEdit": "Editar",
-    "deleteConfirm": "Excluir esta tarefa?"
+    "markdownPlaceholder": "Escreva notas em Markdown...",
+    "nothingToPreview": "Nada para visualizar",
+    "deleteConfirm": "Excluir esta tarefa?",
+    "dueDate": "Data de Entrega",
+    "estimatedMinutes": "Est. (min)",
+    "discipline": "Disciplina",
+    "none": "Nenhum",
+    "noTasks": "Nenhuma tarefa ainda",
+    "noTasksHint": "Clique em \"Nova Tarefa\" para começar",
+    "searchPlaceholder": "Buscar tarefas...",
+    "allPriorities": "Todas as prioridades"
   },
   "constants": {
     "priorities": {
@@ -93,9 +103,9 @@
       "archived": "Arquivado"
     },
     "semesterStatuses": {
-      "planned": "Planejado",
       "active": "Ativo",
-      "completed": "Concluído"
+      "completed": "Concluído",
+      "archived": "Arquivado"
     },
     "disciplineStatuses": {
       "active": "Ativa",
@@ -103,15 +113,16 @@
       "dropped": "Trancada"
     },
     "studyBlockTypes": {
-      "lecture_review": "Revisão de Aula",
-      "exercise": "Exercício",
-      "reading": "Leitura",
-      "project": "Projeto",
+      "theory": "Teoria",
+      "exercises": "Exercícios",
+      "review": "Revisão",
+      "assignment": "Trabalho",
       "exam_prep": "Preparação para Prova",
-      "other": "Outro"
+      "lab": "Laboratório",
+      "reading": "Leitura"
     },
     "studyBlockStatuses": {
-      "pending": "Pendente",
+      "planned": "Planejado",
       "in_progress": "Em Progresso",
       "completed": "Concluído",
       "skipped": "Pulado"
@@ -157,10 +168,14 @@
   "kanban": {
     "todo": "A Fazer",
     "inProgress": "Em Progresso",
-    "done": "Concluído"
+    "done": "Concluído",
+    "dropHere": "Solte tarefas aqui"
   },
   "calendar": {
-    "today": "Hoje"
+    "today": "Hoje",
+    "day": "Dia",
+    "week": "Semana",
+    "untitledTask": "Tarefa"
   },
   "projects": {
     "title": "Projetos",
@@ -226,7 +241,37 @@
     "disciplines_count": "{count} disciplinas",
     "blocks_count": "{count} blocos",
     "credits_count": "{count} créditos",
-    "todayStudyBlocks": "Blocos de Estudo de Hoje"
+    "todayStudyBlocks": "Blocos de Estudo de Hoje",
+    "backToStudy": "Voltar para Estudo",
+    "newBlock": "Novo Bloco",
+    "addClass": "Adicionar Aula",
+    "allTypes": "Todos os tipos",
+    "allStatuses": "Todos os status",
+    "loadingStudyBlocks": "Carregando blocos de estudo...",
+    "selectSemester": "Selecionar semestre",
+    "selectDiscipline": "Selecionar disciplina",
+    "noDisciplinesHintFiltered": "Crie uma disciplina para organizar seus blocos de estudo",
+    "noDisciplinesHintAll": "Selecione um semestre ou crie uma disciplina",
+    "noStudyBlocksHint": "Crie blocos de estudo para organizar suas sessões de estudo",
+    "noClassSchedules": "Nenhum horário de aula ainda. Adicione aulas recorrentes para vê-las no calendário.",
+    "inactive": "Inativo",
+    "status": "Status",
+    "scheduledDate": "Data Agendada",
+    "dueDate": "Data de Entrega",
+    "estimatedMinutes": "Est. (min)",
+    "priority": "Prioridade",
+    "notes": "Notas",
+    "notesPlaceholder": "Notas (opcional)",
+    "semesterNameFormPlaceholder": "Nome do semestre (ex. 2026.1)",
+    "institutionFormPlaceholder": "Instituição (opcional)",
+    "disciplineNameFormPlaceholder": "Nome da disciplina",
+    "professorFormPlaceholder": "Professor (opcional)",
+    "blockTitleFormPlaceholder": "Título do bloco de estudo",
+    "locationFormPlaceholder": "Sala, prédio...",
+    "classScheduleSection": "Horário de Aula",
+    "semester": "Semestre",
+    "type": "Tipo",
+    "unknown": "Desconhecido"
   },
   "review": {
     "title": "Revisão",
@@ -264,6 +309,7 @@
     },
     "win": {
       "title": "Qual foi sua conquista do dia?",
+      "subtitle": "Opcional — mas refletir sobre conquistas gera impulso.",
       "placeholder": "A coisa que fez o dia valer a pena...",
       "skip": "Pular"
     },
@@ -272,18 +318,24 @@
       "classes": "Aulas",
       "tasks": "Tarefas",
       "studyBlocks": "Blocos de Estudo",
-      "nothingScheduled": "Nada agendado para amanhã."
+      "nothingScheduled": "Nada agendado para amanhã.",
+      "nothingScheduledHint": "Você vai planejar pela manhã.",
+      "finish": "Finalizar"
     },
     "shutdown": {
       "title": "Fim do Dia",
       "preMessage": "Pronto para encerrar o dia?",
+      "preSubtitle": "Você fez um ótimo trabalho hoje. Hora de descansar e recarregar.",
+      "shuttingDown": "Encerrando...",
       "shutDown": "Encerrar",
       "postMessage": "Ótimo trabalho hoje. Hora de descansar.",
       "close": "Fechar"
     },
     "historySection": {
-      "noReviews": "Nenhuma revisão ainda.",
-      "loadMore": "Carregar mais"
+      "noReviews": "Nenhuma revisão ainda",
+      "noReviewsSubtitle": "Complete sua primeira revisão diária para vê-la aqui",
+      "loadMore": "Carregar mais",
+      "winOfTheDay": "Conquista do dia"
     }
   },
   "topbar": {

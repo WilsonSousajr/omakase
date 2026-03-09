@@ -67,7 +67,17 @@
     "notesPlaceholder": "Add notes...",
     "markdownPreview": "Preview",
     "markdownEdit": "Edit",
-    "deleteConfirm": "Delete this task?"
+    "markdownPlaceholder": "Write notes in Markdown...",
+    "nothingToPreview": "Nothing to preview",
+    "deleteConfirm": "Delete this task?",
+    "dueDate": "Due Date",
+    "estimatedMinutes": "Est. (min)",
+    "discipline": "Discipline",
+    "none": "None",
+    "noTasks": "No tasks yet",
+    "noTasksHint": "Click \"New Task\" to get started",
+    "searchPlaceholder": "Search tasks...",
+    "allPriorities": "All priorities"
   },
   "constants": {
     "priorities": {
@@ -93,9 +103,9 @@
       "archived": "Archived"
     },
     "semesterStatuses": {
-      "planned": "Planned",
       "active": "Active",
-      "completed": "Completed"
+      "completed": "Completed",
+      "archived": "Archived"
     },
     "disciplineStatuses": {
       "active": "Active",
@@ -103,15 +113,16 @@
       "dropped": "Dropped"
     },
     "studyBlockTypes": {
-      "lecture_review": "Lecture Review",
-      "exercise": "Exercise",
-      "reading": "Reading",
-      "project": "Project",
+      "theory": "Theory",
+      "exercises": "Exercises",
+      "review": "Review",
+      "assignment": "Assignment",
       "exam_prep": "Exam Prep",
-      "other": "Other"
+      "lab": "Lab",
+      "reading": "Reading"
     },
     "studyBlockStatuses": {
-      "pending": "Pending",
+      "planned": "Planned",
       "in_progress": "In Progress",
       "completed": "Completed",
       "skipped": "Skipped"
@@ -157,10 +168,14 @@
   "kanban": {
     "todo": "To Do",
     "inProgress": "In Progress",
-    "done": "Done"
+    "done": "Done",
+    "dropHere": "Drop tasks here"
   },
   "calendar": {
-    "today": "Today"
+    "today": "Today",
+    "day": "Day",
+    "week": "Week",
+    "untitledTask": "Task"
   },
   "projects": {
     "title": "Projects",
@@ -226,7 +241,37 @@
     "disciplines_count": "{count} disciplines",
     "blocks_count": "{count} blocks",
     "credits_count": "{count} credits",
-    "todayStudyBlocks": "Today's Study Blocks"
+    "todayStudyBlocks": "Today's Study Blocks",
+    "backToStudy": "Back to Study",
+    "newBlock": "New Block",
+    "addClass": "Add Class",
+    "allTypes": "All types",
+    "allStatuses": "All statuses",
+    "loadingStudyBlocks": "Loading study blocks...",
+    "selectSemester": "Select semester",
+    "selectDiscipline": "Select discipline",
+    "noDisciplinesHintFiltered": "Create a discipline to organize your study blocks",
+    "noDisciplinesHintAll": "Select a semester or create a discipline",
+    "noStudyBlocksHint": "Create study blocks to organize your study sessions",
+    "noClassSchedules": "No class schedules yet. Add recurring classes to see them on the calendar.",
+    "inactive": "Inactive",
+    "status": "Status",
+    "scheduledDate": "Scheduled Date",
+    "dueDate": "Due Date",
+    "estimatedMinutes": "Est. (min)",
+    "priority": "Priority",
+    "notes": "Notes",
+    "notesPlaceholder": "Notes (optional)",
+    "semesterNameFormPlaceholder": "Semester name (e.g. 2026.1)",
+    "institutionFormPlaceholder": "Institution (optional)",
+    "disciplineNameFormPlaceholder": "Discipline name",
+    "professorFormPlaceholder": "Professor (optional)",
+    "blockTitleFormPlaceholder": "Study block title",
+    "locationFormPlaceholder": "Room, building...",
+    "classScheduleSection": "Class Schedule",
+    "semester": "Semester",
+    "type": "Type",
+    "unknown": "Unknown"
   },
   "review": {
     "title": "Review",
@@ -264,6 +309,7 @@
     },
     "win": {
       "title": "What was your win of the day?",
+      "subtitle": "Optional — but reflecting on wins builds momentum.",
       "placeholder": "The one thing that made today count...",
       "skip": "Skip"
     },
@@ -272,18 +318,24 @@
       "classes": "Classes",
       "tasks": "Tasks",
       "studyBlocks": "Study Blocks",
-      "nothingScheduled": "Nothing scheduled for tomorrow."
+      "nothingScheduled": "Nothing scheduled for tomorrow.",
+      "nothingScheduledHint": "You'll plan in the morning.",
+      "finish": "Finish"
     },
     "shutdown": {
       "title": "End of Day",
       "preMessage": "Ready to shut down for the day?",
+      "preSubtitle": "You've done great work today. Time to rest and recharge.",
+      "shuttingDown": "Shutting down...",
       "shutDown": "Shut Down",
       "postMessage": "Great work today. Time to rest.",
       "close": "Close"
     },
     "historySection": {
-      "noReviews": "No reviews yet.",
-      "loadMore": "Load more"
+      "noReviews": "No past reviews yet",
+      "noReviewsSubtitle": "Complete your first daily review to see it here",
+      "loadMore": "Load more",
+      "winOfTheDay": "Win of the day"
     }
   },
   "topbar": {
