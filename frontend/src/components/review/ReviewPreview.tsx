@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { format, addDays } from "date-fns";
 import { useTomorrow } from "@/hooks/useToday";
 import { useTimeBlocks } from "@/hooks/useTimeBlocks";
@@ -12,6 +13,7 @@ interface Props {
 }
 
 export default function ReviewPreview({ onNext }: Props) {
+  const t = useTranslations("review");
   const tomorrow = useTomorrow();
   const { data: timeBlocks = [] } = useTimeBlocks(tomorrow, tomorrow);
   const { data: tasks = [] } = useTasks({ scheduled_date: tomorrow });
@@ -33,7 +35,7 @@ export default function ReviewPreview({ onNext }: Props) {
     <div className="space-y-6">
       <div className="text-center">
         <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">
-          Tomorrow&apos;s Preview
+          {t("preview.title")}
         </h2>
         <p className="text-sm text-[var(--color-text-muted)]">
           {format(addDays(new Date(), 1), "EEEE, MMMM d")}
@@ -41,9 +43,14 @@ export default function ReviewPreview({ onNext }: Props) {
       </div>
 
       {!hasContent ? (
-        <p className="text-center text-sm text-[var(--color-text-muted)]">
-          Nothing scheduled yet. You&apos;ll plan in the morning.
-        </p>
+        <div className="text-center">
+          <p className="text-sm text-[var(--color-text-muted)]">
+            {t("preview.nothingScheduled")}
+          </p>
+          <p className="mt-1 text-xs text-[var(--color-text-faint)]">
+            {t("preview.nothingScheduledHint")}
+          </p>
+        </div>
       ) : (
         <div className="space-y-2">
           {classOccurrences.map((occ) => (
@@ -91,7 +98,7 @@ export default function ReviewPreview({ onNext }: Props) {
           onClick={onNext}
           className="rounded-xl bg-[var(--color-button-primary)] px-6 py-2 text-xs font-medium text-[var(--color-button-primary-text)] transition-colors hover:bg-[var(--color-button-primary-hover)]"
         >
-          Finish
+          {t("preview.finish")}
         </button>
       </div>
     </div>

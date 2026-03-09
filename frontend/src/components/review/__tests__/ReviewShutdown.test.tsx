@@ -10,7 +10,7 @@ vi.mock("next/navigation", () => ({
 describe("ReviewShutdown", () => {
   it("renders shutdown prompt", () => {
     render(<ReviewShutdown onShutdown={vi.fn()} />);
-    expect(screen.getByText("Ready to shut down?")).toBeInTheDocument();
+    expect(screen.getByText("Ready to shut down for the day?")).toBeInTheDocument();
     expect(screen.getByText("Shut Down")).toBeInTheDocument();
   });
 

@@ -1,11 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { useDailyReviewsList } from "@/hooks/useDailyReviews";
 import ReviewHistoryCard from "./ReviewHistoryCard";
 import type { DailyReview } from "@/types/dailyreview";
 
 export default function ReviewHistory() {
+  const t = useTranslations("review");
+  const tc = useTranslations("common");
   const [page, setPage] = useState(1);
   const [allReviews, setAllReviews] = useState<DailyReview[]>([]);
   const { data, isLoading } = useDailyReviewsList(page);
@@ -35,10 +38,10 @@ export default function ReviewHistory() {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">
         <p className="text-sm text-[var(--color-text-muted)]">
-          No past reviews yet
+          {t("historySection.noReviews")}
         </p>
         <p className="mt-1 text-xs text-[var(--color-text-faint)]">
-          Complete your first daily review to see it here
+          {t("historySection.noReviewsSubtitle")}
         </p>
       </div>
     );
@@ -57,7 +60,7 @@ export default function ReviewHistory() {
             disabled={isLoading}
             className="rounded-xl border border-[var(--color-border)] px-6 py-2 text-xs font-medium text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-secondary)] disabled:opacity-50"
           >
-            {isLoading ? "Loading..." : "Load more"}
+            {isLoading ? tc("loading") : t("historySection.loadMore")}
           </button>
         </div>
       )}

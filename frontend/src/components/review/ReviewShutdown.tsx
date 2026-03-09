@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { Moon } from "lucide-react";
 import { useUIStore } from "@/stores/uiStore";
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export default function ReviewShutdown({ onShutdown }: Props) {
+  const t = useTranslations("review");
   const router = useRouter();
   const setHasShownShutdownNudge = useUIStore(
     (s) => s.setHasShownShutdownNudge
@@ -38,10 +40,10 @@ export default function ReviewShutdown({ onShutdown }: Props) {
         <>
           <div>
             <h2 className="text-xl font-semibold text-[var(--color-text-primary)]">
-              Ready to shut down?
+              {t("shutdown.preMessage")}
             </h2>
             <p className="mt-2 text-sm text-[var(--color-text-muted)]">
-              You&apos;ve done great work today. Time to rest and recharge.
+              {t("shutdown.preSubtitle")}
             </p>
           </div>
           <button
@@ -49,21 +51,21 @@ export default function ReviewShutdown({ onShutdown }: Props) {
             disabled={isShuttingDown}
             className="rounded-xl bg-[var(--color-button-primary)] px-8 py-2.5 text-sm font-medium text-[var(--color-button-primary-text)] transition-colors hover:bg-[var(--color-button-primary-hover)] disabled:opacity-50"
           >
-            {isShuttingDown ? "Shutting down..." : "Shut Down"}
+            {isShuttingDown ? t("shutdown.shuttingDown") : t("shutdown.shutDown")}
           </button>
         </>
       ) : (
         <>
           <div>
             <h2 className="text-xl font-semibold text-[var(--color-text-primary)]">
-              Great work today. Time to rest.
+              {t("shutdown.postMessage")}
             </h2>
           </div>
           <button
             onClick={() => router.push("/plan")}
             className="rounded-xl px-6 py-2 text-xs text-[var(--color-text-secondary)] hover:bg-[var(--color-hover-overlay)] hover:text-[var(--color-text-primary)]"
           >
-            Close
+            {t("shutdown.close")}
           </button>
         </>
       )}

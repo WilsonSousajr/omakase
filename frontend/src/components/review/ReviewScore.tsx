@@ -1,25 +1,27 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 interface Props {
   rating: number | null;
   onRate: (rating: number) => void;
   onNext: () => void;
 }
 
-const LABELS = ["Rough", "Below avg", "Decent", "Good", "Crushing it"];
-
 export default function ReviewScore({ rating, onRate, onNext }: Props) {
+  const t = useTranslations("review");
+  const tc = useTranslations("common");
+
   return (
     <div className="space-y-8 text-center">
       <div>
         <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">
-          How productive did you feel today?
+          {t("score.title")}
         </h2>
       </div>
 
       <div className="flex justify-center gap-3">
-        {LABELS.map((label, i) => {
-          const value = i + 1;
+        {[1, 2, 3, 4, 5].map((value) => {
           const isSelected = rating === value;
           return (
             <button
@@ -35,7 +37,7 @@ export default function ReviewScore({ rating, onRate, onNext }: Props) {
                 {value}
               </span>
               <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
-                {label}
+                {t(`score.labels.${value}`)}
               </span>
             </button>
           );
@@ -48,7 +50,7 @@ export default function ReviewScore({ rating, onRate, onNext }: Props) {
           disabled={rating === null}
           className="rounded-xl bg-[var(--color-button-primary)] px-6 py-2 text-xs font-medium text-[var(--color-button-primary-text)] transition-colors hover:bg-[var(--color-button-primary-hover)] disabled:opacity-50"
         >
-          Continue
+          {tc("continue")}
         </button>
       </div>
     </div>

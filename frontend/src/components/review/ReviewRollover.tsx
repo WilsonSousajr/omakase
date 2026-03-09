@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { format, addDays } from "date-fns";
 import { CalendarArrowUp, CalendarDays, Inbox, XCircle } from "lucide-react";
 import { useUpdateTask } from "@/hooks/useTasks";
@@ -20,6 +21,8 @@ interface Props {
 }
 
 export default function ReviewRollover({ summary, onNext }: Props) {
+  const t = useTranslations("review");
+  const tc = useTranslations("common");
   const updateTask = useUpdateTask();
   const updateStudyBlock = useUpdateStudyBlock();
   const tomorrow = format(addDays(new Date(), 1), "yyyy-MM-dd");
@@ -42,16 +45,16 @@ export default function ReviewRollover({ summary, onNext }: Props) {
     return (
       <div className="space-y-6 text-center">
         <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">
-          All done!
+          {t("rollover.allDone")}
         </h2>
         <p className="text-sm text-[var(--color-text-muted)]">
-          Everything scheduled for today was completed.
+          {t("rollover.allDoneSubtitle")}
         </p>
         <button
           onClick={onNext}
           className="rounded-xl bg-[var(--color-button-primary)] px-6 py-2 text-xs font-medium text-[var(--color-button-primary-text)] transition-colors hover:bg-[var(--color-button-primary-hover)]"
         >
-          Continue
+          {tc("continue")}
         </button>
       </div>
     );
@@ -124,20 +127,20 @@ export default function ReviewRollover({ summary, onNext }: Props) {
     icon: typeof CalendarArrowUp;
     label: string;
   }[] = [
-    { action: "tomorrow", icon: CalendarArrowUp, label: "Tomorrow" },
-    { action: "pick", icon: CalendarDays, label: "Pick date" },
-    { action: "backlog", icon: Inbox, label: "Backlog" },
-    { action: "skip", icon: XCircle, label: "Skip" },
+    { action: "tomorrow", icon: CalendarArrowUp, label: t("rollover.tomorrow") },
+    { action: "pick", icon: CalendarDays, label: t("rollover.pickDate") },
+    { action: "backlog", icon: Inbox, label: t("rollover.backlog") },
+    { action: "skip", icon: XCircle, label: t("rollover.skip") },
   ];
 
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">
-          Rollover Decisions
+          {t("rollover.title")}
         </h2>
         <p className="text-sm text-[var(--color-text-muted)]">
-          What should happen with each incomplete item?
+          {t("rollover.subtitle")}
         </p>
       </div>
 
@@ -202,7 +205,7 @@ export default function ReviewRollover({ summary, onNext }: Props) {
           disabled={!allDecided || isApplying}
           className="rounded-xl bg-[var(--color-button-primary)] px-6 py-2 text-xs font-medium text-[var(--color-button-primary-text)] transition-colors hover:bg-[var(--color-button-primary-hover)] disabled:opacity-50"
         >
-          Apply &amp; Continue
+          {isApplying ? t("rollover.applying") : t("rollover.applyAndContinue")}
         </button>
       </div>
     </div>
