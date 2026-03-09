@@ -17,21 +17,36 @@ vi.mock("next-themes", () => ({
   ThemeProvider: ({ children }: { children: React.ReactNode }) => children,
 }));
 
-// Mock next-intl
+// Mock next-intl — uses real English messages so tests assert on actual text
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const messages = require("../../messages/en.json");
+
+function resolve(obj: Record<string, unknown>, path: string): unknown {
+  return path.split(".").reduce((acc: unknown, part) => {
+    if (acc && typeof acc === "object") return (acc as Record<string, unknown>)[part];
+    return undefined;
+  }, obj);
+}
+
 vi.mock("next-intl", () => ({
   useTranslations: (namespace?: string) => {
+    const nsObj = namespace ? resolve(messages, namespace) : messages;
     const t = (key: string, params?: Record<string, unknown>) => {
-      const full = namespace ? `${namespace}.${key}` : key;
+      const val = resolve(nsObj as Record<string, unknown>, key);
+      if (typeof val !== "string") return namespace ? `${namespace}.${key}` : key;
       if (params) {
         return Object.entries(params).reduce(
           (str, [k, v]) => str.replace(`{${k}}`, String(v)),
-          full,
+          val,
         );
       }
-      return full;
+      return val;
     };
     t.rich = t;
-    t.raw = (key: string) => (namespace ? `${namespace}.${key}` : key);
+    t.raw = (key: string) => {
+      const val = resolve(nsObj as Record<string, unknown>, key);
+      return val ?? (namespace ? `${namespace}.${key}` : key);
+    };
     return t;
   },
   useFormatter: () => ({
