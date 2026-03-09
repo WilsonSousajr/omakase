@@ -170,3 +170,82 @@ class TestMe:
     def test_me_unauthenticated(self, api_client):
         resp = api_client.get(self.URL)
         assert resp.status_code == status.HTTP_401_UNAUTHORIZED
+
+
+# ── UserProfile ───────────────────────────────────────────────────────
+
+
+@pytest.mark.django_db
+class TestUserProfile:
+    URL = "/api/v1/auth/profile/"
+
+    def test_get_profile_returns_defaults(self, authenticated_client):
+        resp = authenticated_client.get(self.URL)
+        assert resp.status_code == status.HTTP_200_OK
+        assert resp.data["timezone"] == "UTC"
+        assert resp.data["week_starts_on"] == "monday"
+        assert resp.data["pomodoro_work_minutes"] == 25
+        assert resp.data["pomodoro_short_break_minutes"] == 5
+        assert resp.data["pomodoro_long_break_minutes"] == 15
+        assert resp.data["pomodoros_before_long_break"] == 4
+        assert float(resp.data["daily_work_goal_hours"]) == 8.0
+        assert float(resp.data["daily_study_goal_hours"]) == 4.0
+        assert "created_at" in resp.data
+        assert "updated_at" in resp.data
+
+    def test_patch_profile_updates_values(self, authenticated_client):
+        resp = authenticated_client.patch(
+            self.URL,
+            {
+                "pomodoro_work_minutes": 50,
+                "timezone": "America/Sao_Paulo",
+                "week_starts_on": "sunday",
+                "daily_work_goal_hours": 6.5,
+            },
+            format="json",
+        )
+        assert resp.status_code == status.HTTP_200_OK
+        assert resp.data["pomodoro_work_minutes"] == 50
+        assert resp.data["timezone"] == "America/Sao_Paulo"
+        assert resp.data["week_starts_on"] == "sunday"
+        assert float(resp.data["daily_work_goal_hours"]) == 6.5
+        # Defaults unchanged
+        assert resp.data["pomodoro_short_break_minutes"] == 5
+
+    def test_profile_auto_created_on_registration(self, api_client):
+        """Register a new user via API, then GET profile — should exist."""
+        api_client.post(
+            "/api/v1/auth/register/",
+            {
+                "username": "profileuser",
+                "email": "profile@example.com",
+                "password": "strongpass123",
+                "password_confirm": "strongpass123",
+            },
+        )
+        # Login
+        token_resp = api_client.post(
+            "/api/v1/auth/token/",
+            {"username": "profileuser", "password": "strongpass123"},
+        )
+        access = token_resp.data["access"]
+        api_client.credentials(HTTP_AUTHORIZATION=f"Bearer {access}")
+
+        resp = api_client.get(self.URL)
+        assert resp.status_code == status.HTTP_200_OK
+        assert resp.data["timezone"] == "UTC"
+
+    def test_profile_unauthenticated(self, api_client):
+        resp = api_client.get(self.URL)
+        assert resp.status_code == status.HTTP_401_UNAUTHORIZED
+
+    def test_profile_read_only_fields(self, authenticated_client):
+        """created_at and updated_at should not be writable."""
+        resp = authenticated_client.patch(
+            self.URL,
+            {"created_at": "2020-01-01T00:00:00Z"},
+            format="json",
+        )
+        assert resp.status_code == status.HTTP_200_OK
+        # created_at should NOT be the value we tried to set
+        assert resp.data["created_at"] != "2020-01-01T00:00:00Z"
