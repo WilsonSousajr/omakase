@@ -137,6 +137,10 @@ frontend/
 - `reorder-bulk` endpoint capped at 100 items per request; uses `transaction.atomic()` + `select_for_update()` for race condition safety
 - Next.js security headers: `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`
 - Pre-commit hooks configured (`.pre-commit-config.yaml`): ruff lint/format, detect-secrets, trailing-whitespace, no-commit-to-branch, frontend ESLint via lint-staged
+- `rest_framework_simplejwt.token_blacklist` in INSTALLED_APPS — enables refresh token blacklisting (used after password change)
+- Password change blacklists all outstanding refresh tokens and is rate-limited (5/hour via ScopedRateThrottle)
+- `AUTH_PASSWORD_VALIDATORS` enforced in both RegisterSerializer and ChangePasswordSerializer (not just model-level)
+- Frontend forces re-auth (logout + redirect) after successful password change
 
 ## Key Patterns
 
@@ -219,8 +223,8 @@ frontend/
 - Profile model: OneToOneField to User, auto-created via `post_save` signal in `accounts/signals.py`
 - Profile: `avatar_color` (hex, default `#a3a3a3`), `created_at`, `updated_at`
 - MeView: `RetrieveUpdateAPIView` — GET returns `UserSerializer`, PATCH uses `UpdateProfileSerializer` (writes to both User and Profile)
-- UpdateProfileSerializer: plain Serializer (not ModelSerializer) because it writes to two models (User + Profile)
-- ChangePasswordView: POST `/auth/change-password/`, validates old password + confirms new passwords match
+- UpdateProfileSerializer: plain Serializer (not ModelSerializer) because it writes to two models (User + Profile), wrapped in transaction.atomic()
+- ChangePasswordView: POST `/auth/change-password/`, validates old password + confirms new passwords match, enforces AUTH_PASSWORD_VALIDATORS, blacklists outstanding refresh tokens, rate-limited (5/hour via ScopedRateThrottle)
 - Frontend: UserAvatar component with `getInitials()` helper — falls back: first+last → first[0:2] → username[0:2]
 - Frontend: Settings page at `/settings` — profile editing (name, email, avatar color), password change, logout
 - Frontend: Sidebar user section (above SidebarStats) — UserAvatar + username + Settings gear icon, links to `/settings`
