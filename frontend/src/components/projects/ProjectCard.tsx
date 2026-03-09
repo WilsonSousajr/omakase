@@ -2,6 +2,7 @@
 
 import { Pencil, Trash2, ListTodo, CalendarDays } from "lucide-react";
 import { format } from "date-fns";
+import { useTranslations } from "next-intl";
 import type { Project } from "@/types/project";
 
 interface ProjectCardProps {
@@ -11,6 +12,8 @@ interface ProjectCardProps {
 }
 
 export default function ProjectCard({ project, onEdit, onDelete }: ProjectCardProps) {
+  const t = useTranslations("projects");
+
   return (
     <div className="group flex items-start gap-3 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 transition-all duration-300 hover:bg-[var(--color-surface-hover)] hover:border-[var(--color-border-hover)]">
       <div
@@ -34,7 +37,7 @@ export default function ProjectCard({ project, onEdit, onDelete }: ProjectCardPr
         <div className="mt-1.5 flex items-center gap-3">
           <span className="flex items-center gap-1 text-[10px] text-[var(--color-text-muted)]">
             <ListTodo className="h-3 w-3" />
-            {project.task_count} {project.task_count === 1 ? "task" : "tasks"}
+            {t("tasks", { count: project.task_count })}
           </span>
           {project.due_date && (
             <span className="flex items-center gap-1 text-[10px] text-[var(--color-text-muted)]">

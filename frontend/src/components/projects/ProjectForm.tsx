@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { PROJECT_STATUSES } from "@/lib/constants";
 import ColorSwatchPicker from "@/components/ColorSwatchPicker";
 import { useWorkspaces } from "@/hooks/useWorkspaces";
@@ -16,6 +17,9 @@ interface ProjectFormProps {
 }
 
 export default function ProjectForm({ editProject, onClose }: ProjectFormProps) {
+  const t = useTranslations("projects");
+  const tc = useTranslations("common");
+  const tConst = useTranslations("constants");
   const modalOpen = useUIStore((s) => s.modalOpen);
   const { data: workspaces = [] } = useWorkspaces();
   const createProject = useCreateProject();
@@ -80,7 +84,7 @@ export default function ProjectForm({ editProject, onClose }: ProjectFormProps) 
       <div className="w-full max-w-lg rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] shadow-2xl">
         <div className="flex items-center justify-between border-b border-[var(--color-border)] px-6 py-4">
           <h3 className="text-base font-semibold text-[var(--color-text-primary)]">
-            {editProject ? "Edit Project" : "New Project"}
+            {editProject ? t("editProject") : t("newProject")}
           </h3>
           <button
             onClick={onClose}
@@ -94,7 +98,7 @@ export default function ProjectForm({ editProject, onClose }: ProjectFormProps) 
           <div>
             <input
               type="text"
-              placeholder="Project name"
+              placeholder={t("namePlaceholder")}
               value={name}
               onChange={(e) => setName(e.target.value)}
               autoFocus
@@ -104,7 +108,7 @@ export default function ProjectForm({ editProject, onClose }: ProjectFormProps) 
 
           <div>
             <textarea
-              placeholder="Description (optional)"
+              placeholder={t("descriptionPlaceholder")}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={2}
@@ -115,14 +119,14 @@ export default function ProjectForm({ editProject, onClose }: ProjectFormProps) 
           <div className="flex gap-3">
             <div className="flex-1">
               <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
-                Workspace
+                {t("workspace")}
               </label>
               <select
                 value={workspaceId}
                 onChange={(e) => setWorkspaceId(e.target.value)}
                 className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-input)] px-3.5 py-2 text-sm text-[var(--color-text-primary)] outline-none focus:border-[var(--color-text-secondary)]/40"
               >
-                <option value="">Select workspace</option>
+                <option value="">{t("workspace")}</option>
                 {workspaces.map((ws) => (
                   <option key={ws.id} value={ws.id}>
                     {ws.name}
@@ -132,7 +136,7 @@ export default function ProjectForm({ editProject, onClose }: ProjectFormProps) 
             </div>
             <div className="flex-1">
               <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
-                Status
+                {t("status")}
               </label>
               <select
                 value={status}
@@ -141,7 +145,7 @@ export default function ProjectForm({ editProject, onClose }: ProjectFormProps) 
               >
                 {PROJECT_STATUSES.map((s) => (
                   <option key={s.value} value={s.value}>
-                    {s.label}
+                    {tConst(`projectStatuses.${s.value}`)}
                   </option>
                 ))}
               </select>
@@ -152,7 +156,7 @@ export default function ProjectForm({ editProject, onClose }: ProjectFormProps) 
 
           <div>
             <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
-              Due Date
+              {t("dueDate")}
             </label>
             <input
               type="date"
@@ -168,14 +172,14 @@ export default function ProjectForm({ editProject, onClose }: ProjectFormProps) 
               onClick={onClose}
               className="rounded-xl px-3 py-1.5 text-xs text-[var(--color-text-secondary)] hover:bg-[var(--color-hover-overlay)] hover:text-[var(--color-text-primary)]"
             >
-              Cancel
+              {tc("cancel")}
             </button>
             <button
               type="submit"
               disabled={!name.trim() || !workspaceId || createProject.isPending || updateProject.isPending}
               className="rounded-xl bg-[var(--color-button-primary)] px-4 py-1.5 text-xs font-medium text-[var(--color-button-primary-text)] transition-colors hover:bg-[var(--color-button-primary-hover)] disabled:opacity-50"
             >
-              {editProject ? "Update" : "Create"}
+              {editProject ? tc("update") : tc("create")}
             </button>
           </div>
         </form>
