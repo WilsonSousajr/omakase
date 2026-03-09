@@ -309,8 +309,29 @@ Sidebar: BookOpen icon nav item + semester selector dropdown
 
 ```
 Sidebar nav order: Plan → Focus → Review → Projects → Study
+Settings link: bottom of sidebar (above stats), Settings icon from lucide-react
 Review icon: CheckSquare from lucide-react
 ```
+
+### Settings Page
+
+Located at `/settings`. Three card sections stacked vertically in a `max-w-2xl` centered container.
+
+**Sections:**
+- **Pomodoro:** 2x2 grid of number inputs (work, short break, long break, sessions before long break)
+- **Daily Goals:** 2-column grid (work hours, study hours) with 0.5 step increments
+- **General:** 2-column grid (week starts on select, timezone text input)
+
+**Layout:**
+```
+Container: mx-auto max-w-2xl space-y-6 p-6
+Section card: rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5
+Section header: text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)] mb-4
+Input grid: grid grid-cols-2 gap-4
+Save button: top-right, primary button style with Save icon, disabled when no changes
+```
+
+Inputs and selects follow the standard input pattern (`rounded-xl`, `bg-[var(--color-input)]`, etc.). Success feedback via `emitToast("Settings saved successfully")`.
 
 ### Error Boundary
 

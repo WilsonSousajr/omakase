@@ -49,7 +49,7 @@ docker compose exec frontend pnpm lint       # Run linter
 
 ```
 backend/
-  accounts/        # Auth: register, JWT token, me endpoint
+  accounts/        # Auth: register, JWT token, me endpoint, user profile/preferences
   omakase/         # Django project settings, urls, wsgi
   tasks/           # Task, Tag, TimeBlock, Workspace, Project models + API
   pomodoro/        # PomodoroSession model + API
@@ -58,12 +58,12 @@ backend/
 frontend/
   src/
     app/(auth)/    # Login + Register pages (no sidebar)
-    app/(main)/    # Plan + Focus + Review + Projects + Study pages (with sidebar)
+    app/(main)/    # Plan + Focus + Review + Projects + Study + Settings pages (with sidebar)
     components/    # React components (tasks/, calendar/, kanban/, focus/, projects/, study/, review/)
-    hooks/         # TanStack Query hooks (useTasks, useTags, useTimeBlocks, usePomodoro, useAuth, useWorkspaces, useProjects, useStats, useSemesters, useDisciplines, useStudyBlocks, useClassSchedules, useClassOccurrences, useDailyReviews)
+    hooks/         # TanStack Query hooks (useTasks, useTags, useTimeBlocks, usePomodoro, useAuth, useWorkspaces, useProjects, useStats, useSemesters, useDisciplines, useStudyBlocks, useClassSchedules, useClassOccurrences, useDailyReviews, useUserProfile)
     stores/        # Zustand stores (uiStore, pomodoroStore, calendarStore, authStore)
     lib/           # Utilities (api with JWT interceptors, constants, utils)
-    types/         # TypeScript types (task, tag, timeblock, pomodoro, auth, stats, semester, discipline, studyblock, classschedule, dailyreview)
+    types/         # TypeScript types (task, tag, timeblock, pomodoro, auth, stats, semester, discipline, studyblock, classschedule, dailyreview, userprofile)
 ```
 
 ## API Endpoints (all under /api/v1/)
@@ -72,6 +72,7 @@ frontend/
 - `auth/token/` — POST JWT obtain (AllowAny)
 - `auth/token/refresh/` — POST JWT refresh (AllowAny)
 - `auth/me/` — GET current user (IsAuthenticated)
+- `auth/profile/` — GET+PATCH user preferences (IsAuthenticated, get_or_create for existing users)
 - `tasks/` — CRUD + `today/` + `reorder-bulk/` (user-scoped)
 - `tags/` — CRUD, filterable by area (user-scoped)
 - `timeblocks/` — CRUD, filterable by date range (user-scoped via task.user OR study_block.discipline.semester.user)
@@ -193,6 +194,13 @@ frontend/
 - Frontend: `useDailyReviewsList(page)` hook for paginated history, query key `["daily-reviews", "list", page]` (auto-invalidated by existing mutations)
 - Frontend: ReviewHistoryCard uses `React.memo`, lazy-loads summary via `useReviewSummary(date)` with `enabled: expanded`
 - Frontend: ReviewHistory accumulates pages via `useEffect` (page 1 replaces, subsequent pages append) — no `useInfiniteQuery`
+- UserProfile: OneToOne with User, auto-created via post_save signal. View uses get_or_create for existing users
+- UserProfile stores pomodoro durations, daily goals (work/study hours), timezone, week_starts_on
+- Frontend: Settings page at `/settings` with Pomodoro, Daily Goals, and General sections
+- Frontend: Sidebar has Settings link (gear icon) at bottom, above SidebarStats
+- Frontend: PomodoroTimer fetches user profile and syncs durations into pomodoroStore via useEffect + setDurations
+- Frontend: pomodoroStore has `durations` and `pomodorosBeforeLongBreak` as mutable state (not module-level constants)
+- Frontend: `setDurations` only updates `timeRemaining` when timer is not running (prevents resetting mid-session)
 
 ## Drag & Drop (Plan Mode)
 
