@@ -2,6 +2,8 @@ import pytest
 from django.contrib.auth.models import User
 from rest_framework import status
 from rest_framework.test import APIClient
+from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
+from rest_framework_simplejwt.tokens import RefreshToken
 
 
 @pytest.fixture
@@ -89,6 +91,34 @@ class TestRegister:
             },
         )
         assert resp.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_register_rejects_common_password(self, api_client):
+        """BUG-1 regression: AUTH_PASSWORD_VALIDATORS must reject common passwords."""
+        resp = api_client.post(
+            self.URL,
+            {
+                "username": "newuser",
+                "email": "new@example.com",
+                "password": "password1234",
+                "password_confirm": "password1234",
+            },
+        )
+        assert resp.status_code == status.HTTP_400_BAD_REQUEST
+        assert "password" in resp.data
+
+    def test_register_rejects_numeric_password(self, api_client):
+        """BUG-1 regression: NumericPasswordValidator must reject all-digit passwords."""
+        resp = api_client.post(
+            self.URL,
+            {
+                "username": "newuser",
+                "email": "new@example.com",
+                "password": "12345678",
+                "password_confirm": "12345678",
+            },
+        )
+        assert resp.status_code == status.HTTP_400_BAD_REQUEST
+        assert "password" in resp.data
 
 
 # ── Token Obtain ──────────────────────────────────────────────────────
@@ -218,6 +248,17 @@ class TestMe:
         assert resp.status_code == status.HTTP_200_OK
         assert resp.data["username"] == user.username
 
+    def test_me_patch_preserves_avatar_color(self, authenticated_client, user):
+        """BUG-10 regression: PATCH without avatar_color must not reset it."""
+        user.profile.avatar_color = "#ff5733"
+        user.profile.save()
+        resp = authenticated_client.patch(
+            self.URL,
+            {"first_name": "Updated"},
+        )
+        assert resp.status_code == status.HTTP_200_OK
+        assert resp.data["avatar_color"] == "#ff5733"
+
     def test_me_unauthenticated(self, api_client):
         resp = api_client.get(self.URL)
         assert resp.status_code == status.HTTP_401_UNAUTHORIZED
@@ -278,6 +319,39 @@ class TestChangePassword:
             },
         )
         assert resp.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_change_password_rejects_common_password(self, authenticated_client):
+        """BUG-1 regression: AUTH_PASSWORD_VALIDATORS must reject common passwords."""
+        resp = authenticated_client.post(
+            self.URL,
+            {
+                "old_password": "testpass123",
+                "new_password": "password1234",
+                "new_password_confirm": "password1234",
+            },
+        )
+        assert resp.status_code == status.HTTP_400_BAD_REQUEST
+        assert "new_password" in resp.data
+
+    def test_change_password_blacklists_tokens(self, authenticated_client, user):
+        """BUG-2 regression: outstanding tokens must be blacklisted after password change."""
+        # Create an outstanding token for the user
+        RefreshToken.for_user(user)
+        assert OutstandingToken.objects.filter(user=user).exists()
+
+        resp = authenticated_client.post(
+            self.URL,
+            {
+                "old_password": "testpass123",
+                "new_password": "newpass12345",
+                "new_password_confirm": "newpass12345",
+            },
+        )
+        assert resp.status_code == status.HTTP_200_OK
+        # All outstanding tokens should now be blacklisted
+        outstanding = OutstandingToken.objects.filter(user=user)
+        for ot in outstanding:
+            assert BlacklistedToken.objects.filter(token=ot).exists()
 
     def test_change_password_unauthenticated(self, api_client):
         resp = api_client.post(

@@ -120,6 +120,20 @@ class TestUpdateProfileSerializer:
         assert user.first_name == "Only"
         assert user.last_name == ""
 
+    def test_partial_update_preserves_avatar_color(self, user):
+        """BUG-10 regression: PATCH without avatar_color must not reset it."""
+        user.profile.avatar_color = "#ff5733"
+        user.profile.save()
+        request = make_request(user)
+        serializer = UpdateProfileSerializer(
+            data={"first_name": "Test"},
+            context={"request": request},
+        )
+        assert serializer.is_valid(), serializer.errors
+        serializer.save()
+        user.profile.refresh_from_db()
+        assert user.profile.avatar_color == "#ff5733"
+
 
 @pytest.mark.django_db
 class TestChangePasswordSerializer:
@@ -171,6 +185,34 @@ class TestChangePasswordSerializer:
                 "old_password": "testpass123",
                 "new_password": "short",
                 "new_password_confirm": "short",
+            },
+            context={"request": request},
+        )
+        assert not serializer.is_valid()
+        assert "new_password" in serializer.errors
+
+    def test_new_password_too_common(self, user):
+        """BUG-1 regression: AUTH_PASSWORD_VALIDATORS must be enforced."""
+        request = make_request(user)
+        serializer = ChangePasswordSerializer(
+            data={
+                "old_password": "testpass123",
+                "new_password": "password1234",
+                "new_password_confirm": "password1234",
+            },
+            context={"request": request},
+        )
+        assert not serializer.is_valid()
+        assert "new_password" in serializer.errors
+
+    def test_new_password_entirely_numeric(self, user):
+        """BUG-1 regression: NumericPasswordValidator must reject all-digit passwords."""
+        request = make_request(user)
+        serializer = ChangePasswordSerializer(
+            data={
+                "old_password": "testpass123",
+                "new_password": "12345678",
+                "new_password_confirm": "12345678",
             },
             context={"request": request},
         )
