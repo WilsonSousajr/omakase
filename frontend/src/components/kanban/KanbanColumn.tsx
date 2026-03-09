@@ -2,6 +2,7 @@
 
 import { useDroppable } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import type { Task } from "@/types/task";
 import type { KanbanStatus } from "@/lib/constants";
@@ -14,6 +15,7 @@ interface KanbanColumnProps {
 }
 
 export default function KanbanColumn({ status, label, tasks }: KanbanColumnProps) {
+  const t = useTranslations("kanban");
   const { setNodeRef, isOver } = useDroppable({
     id: `column-${status}`,
     data: { type: "column", status },
@@ -46,7 +48,7 @@ export default function KanbanColumn({ status, label, tasks }: KanbanColumnProps
 
         {tasks.length === 0 && (
           <div className="flex items-center justify-center py-8 text-xs text-[var(--color-text-faint)]">
-            Drop tasks here
+            {t("dropHere")}
           </div>
         )}
       </div>
