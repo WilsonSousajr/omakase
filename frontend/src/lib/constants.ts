@@ -108,6 +108,8 @@ export const CALENDAR_START_HOUR = 6;
 export const CALENDAR_END_HOUR = 22;
 export const CALENDAR_SNAP_MINUTES = 15;
 export const MIN_TIMEBLOCK_MINUTES = 15;
+export const SLOT_HEIGHT_DAY = 48;
+export const SLOT_HEIGHT_WEEK = 40;
 
 // Toast
 export const TOAST_DURATION_MS = 4000;

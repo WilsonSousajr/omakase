@@ -16,7 +16,8 @@ export default function ClassBlockItem({ occurrence, slotHeight }: ClassBlockIte
 
   return (
     <div
-      className="absolute inset-x-1 overflow-hidden rounded-lg border border-dashed px-2 py-1"
+      data-classblock
+      className="absolute inset-x-1 overflow-hidden rounded-xl border border-dashed px-2 py-1"
       style={{
         height: `${height}px`,
         borderColor: `${color}50`,
