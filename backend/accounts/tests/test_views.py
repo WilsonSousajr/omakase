@@ -194,9 +194,7 @@ class TestMe:
         assert resp.data["email"] == "newemail@example.com"
 
     def test_me_patch_email_uniqueness(self, authenticated_client):
-        User.objects.create_user(
-            username="other", email="taken@example.com", password="pass12345"
-        )
+        User.objects.create_user(username="other", email="taken@example.com", password="pass12345")
         resp = authenticated_client.patch(
             self.URL,
             {"email": "taken@example.com"},
