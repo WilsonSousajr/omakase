@@ -10,6 +10,7 @@ import {
   Crosshair,
   FolderOpen,
   LayoutDashboard,
+  Settings,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -127,11 +128,23 @@ export default function Sidebar() {
         })}
       </nav>
 
-      {sidebarOpen && (
-        <div className="mt-auto">
-          <SidebarStats />
-        </div>
-      )}
+      <div className="mt-auto">
+        <nav className="p-2">
+          <Link
+            href="/settings"
+            className={cn(
+              "flex items-center gap-2 rounded-xl px-2.5 py-2 text-sm transition-colors",
+              pathname.startsWith("/settings")
+                ? "bg-[var(--color-surface-active)] text-[var(--color-text-primary)]"
+                : "text-[var(--color-text-muted)] hover:bg-[var(--color-surface)] hover:text-[var(--color-text-secondary)]"
+            )}
+          >
+            <Settings className="h-4 w-4 shrink-0" />
+            {sidebarOpen && <span>Settings</span>}
+          </Link>
+        </nav>
+        {sidebarOpen && <SidebarStats />}
+      </div>
     </aside>
   );
 }
