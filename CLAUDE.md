@@ -47,7 +47,7 @@ docker-compose -f docker-compose.yml -f docker-compose.prod.yml up
 - **Frontend prod** uses Next.js standalone output (~200-250MB vs ~1.8GB dev). Non-root `nextjs` user (UID 1001)
 - **Backend prod** runs as non-root `django` user (UID 1001). Includes `collectstatic`
 - **`NEXT_PUBLIC_API_URL`** must be passed as build arg for prod (baked at build time by Next.js)
-- **`.dockerignore`** files exclude test files, dev tooling, and IDE artifacts from build context
+- **`.dockerignore`** files exclude build artifacts, IDE files, and (frontend only) test files from build context. Backend keeps test files in context because the dev stage needs them at build time.
 - CI enforces frontend prod image < 500MB via `docker-build` job
 
 ## Backend Commands
