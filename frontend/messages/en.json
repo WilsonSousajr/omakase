@@ -1,0 +1,296 @@
+{
+  "common": {
+    "cancel": "Cancel",
+    "continue": "Continue",
+    "create": "Create",
+    "update": "Update",
+    "delete": "Delete",
+    "save": "Save",
+    "loading": "Loading...",
+    "add": "Add",
+    "edit": "Edit",
+    "close": "Close",
+    "back": "Back",
+    "search": "Search",
+    "noResults": "No results",
+    "confirm": "Confirm",
+    "apply": "Apply",
+    "skip": "Skip",
+    "reset": "Reset",
+    "done": "Done"
+  },
+  "auth": {
+    "signIn": "Sign in",
+    "signUp": "Sign up",
+    "username": "Username",
+    "password": "Password",
+    "confirmPassword": "Confirm password",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?",
+    "register": "Register",
+    "signingIn": "Signing in...",
+    "registering": "Registering..."
+  },
+  "sidebar": {
+    "plan": "Plan",
+    "focus": "Focus",
+    "review": "Review",
+    "projects": "Projects",
+    "study": "Study",
+    "workspace": "Workspace",
+    "allWorkspaces": "All workspaces",
+    "semester": "Semester",
+    "allSemesters": "All semesters"
+  },
+  "stats": {
+    "today": "Today",
+    "thisWeek": "This Week",
+    "hoursFocused": "{hours}h focused",
+    "blocks": "{count} blocks",
+    "streak": "{days}d streak",
+    "weeklyHours": "Weekly hours"
+  },
+  "tasks": {
+    "newTask": "New Task",
+    "editTask": "Edit Task",
+    "title": "Title",
+    "titlePlaceholder": "What needs to be done?",
+    "description": "Description",
+    "descriptionPlaceholder": "Add a description...",
+    "priority": "Priority",
+    "area": "Area",
+    "tags": "Tags",
+    "project": "Project",
+    "noProject": "No project",
+    "scheduledDate": "Scheduled Date",
+    "notes": "Notes",
+    "notesPlaceholder": "Add notes...",
+    "markdownPreview": "Preview",
+    "markdownEdit": "Edit",
+    "deleteConfirm": "Delete this task?"
+  },
+  "constants": {
+    "priorities": {
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High",
+      "urgent": "Urgent"
+    },
+    "areas": {
+      "work": "Work",
+      "personal": "Personal",
+      "study": "Study"
+    },
+    "kanbanStatuses": {
+      "todo": "To Do",
+      "in_progress": "In Progress",
+      "done": "Done"
+    },
+    "projectStatuses": {
+      "active": "Active",
+      "paused": "Paused",
+      "completed": "Completed",
+      "archived": "Archived"
+    },
+    "semesterStatuses": {
+      "planned": "Planned",
+      "active": "Active",
+      "completed": "Completed"
+    },
+    "disciplineStatuses": {
+      "active": "Active",
+      "completed": "Completed",
+      "dropped": "Dropped"
+    },
+    "studyBlockTypes": {
+      "lecture_review": "Lecture Review",
+      "exercise": "Exercise",
+      "reading": "Reading",
+      "project": "Project",
+      "exam_prep": "Exam Prep",
+      "other": "Other"
+    },
+    "studyBlockStatuses": {
+      "pending": "Pending",
+      "in_progress": "In Progress",
+      "completed": "Completed",
+      "skipped": "Skipped"
+    },
+    "classTypes": {
+      "lecture": "Lecture",
+      "lab": "Lab",
+      "tutorial": "Tutorial",
+      "seminar": "Seminar",
+      "other": "Other"
+    },
+    "daysOfWeek": {
+      "0": "Monday",
+      "1": "Tuesday",
+      "2": "Wednesday",
+      "3": "Thursday",
+      "4": "Friday",
+      "5": "Saturday",
+      "6": "Sunday"
+    },
+    "daysOfWeekShort": {
+      "0": "Mon",
+      "1": "Tue",
+      "2": "Wed",
+      "3": "Thu",
+      "4": "Fri",
+      "5": "Sat",
+      "6": "Sun"
+    }
+  },
+  "pomodoro": {
+    "focus": "Focus",
+    "shortBreak": "Short Break",
+    "longBreak": "Long Break",
+    "start": "Start",
+    "pause": "Pause",
+    "reset": "Reset",
+    "sessionComplete": "Session complete!",
+    "activeTask": "Active Task",
+    "noActiveTask": "No active task",
+    "selectTask": "Click a task to select it"
+  },
+  "kanban": {
+    "todo": "To Do",
+    "inProgress": "In Progress",
+    "done": "Done"
+  },
+  "calendar": {
+    "today": "Today"
+  },
+  "projects": {
+    "title": "Projects",
+    "newProject": "New Project",
+    "editProject": "Edit Project",
+    "name": "Name",
+    "namePlaceholder": "Project name",
+    "description": "Description",
+    "descriptionPlaceholder": "Project description...",
+    "workspace": "Workspace",
+    "status": "Status",
+    "color": "Color",
+    "dueDate": "Due Date",
+    "tasks": "{count} tasks",
+    "noProjects": "No projects yet. Create one to get started.",
+    "deleteConfirm": "Delete this project?"
+  },
+  "study": {
+    "semesters": "Semesters",
+    "disciplines": "Disciplines",
+    "studyBlocks": "Study Blocks",
+    "classSchedules": "Class Schedules",
+    "newSemester": "New Semester",
+    "editSemester": "Edit Semester",
+    "semesterName": "Name",
+    "semesterNamePlaceholder": "e.g. 2026/1",
+    "institution": "Institution",
+    "institutionPlaceholder": "University name",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "noSemesters": "No semesters yet. Create one to get started.",
+    "deleteSemesterConfirm": "Delete this semester?",
+    "newDiscipline": "New Discipline",
+    "editDiscipline": "Edit Discipline",
+    "disciplineName": "Name",
+    "disciplineNamePlaceholder": "e.g. Calculus I",
+    "code": "Code",
+    "codePlaceholder": "e.g. MATH101",
+    "professor": "Professor",
+    "professorPlaceholder": "Professor name",
+    "credits": "Credits",
+    "noDisciplines": "No disciplines yet. Add one to get started.",
+    "deleteDisciplineConfirm": "Delete this discipline?",
+    "newStudyBlock": "New Study Block",
+    "editStudyBlock": "Edit Study Block",
+    "blockTitle": "Title",
+    "blockTitlePlaceholder": "What are you studying?",
+    "discipline": "Discipline",
+    "blockType": "Type",
+    "blockStatus": "Status",
+    "noStudyBlocks": "No study blocks yet.",
+    "deleteStudyBlockConfirm": "Delete this study block?",
+    "newClassSchedule": "New Class Schedule",
+    "editClassSchedule": "Edit Class Schedule",
+    "dayOfWeek": "Day of Week",
+    "startTime": "Start Time",
+    "endTime": "End Time",
+    "classType": "Class Type",
+    "location": "Location",
+    "locationPlaceholder": "e.g. Room 301",
+    "active": "Active",
+    "deleteScheduleConfirm": "Delete this class schedule?",
+    "disciplines_count": "{count} disciplines",
+    "blocks_count": "{count} blocks",
+    "credits_count": "{count} credits",
+    "todayStudyBlocks": "Today's Study Blocks"
+  },
+  "review": {
+    "title": "Review",
+    "today": "Today",
+    "history": "History",
+    "summary": {
+      "title": "Today's Summary",
+      "hoursFocused": "Hours Focused",
+      "blocksCompleted": "Blocks Completed",
+      "completionRate": "Completion",
+      "completed": "Completed",
+      "incomplete": "Incomplete"
+    },
+    "rollover": {
+      "title": "Rollover Decisions",
+      "subtitle": "What should happen with each incomplete item?",
+      "allDone": "All done!",
+      "allDoneSubtitle": "Everything scheduled for today was completed.",
+      "tomorrow": "Tomorrow",
+      "pickDate": "Pick date",
+      "backlog": "Backlog",
+      "skip": "Skip",
+      "applying": "Applying...",
+      "applyAndContinue": "Apply & Continue"
+    },
+    "score": {
+      "title": "How productive did you feel today?",
+      "labels": {
+        "1": "Rough",
+        "2": "Below avg",
+        "3": "Decent",
+        "4": "Good",
+        "5": "Crushing it"
+      }
+    },
+    "win": {
+      "title": "What was your win of the day?",
+      "placeholder": "The one thing that made today count...",
+      "skip": "Skip"
+    },
+    "preview": {
+      "title": "Tomorrow's Preview",
+      "classes": "Classes",
+      "tasks": "Tasks",
+      "studyBlocks": "Study Blocks",
+      "nothingScheduled": "Nothing scheduled for tomorrow."
+    },
+    "shutdown": {
+      "title": "End of Day",
+      "preMessage": "Ready to shut down for the day?",
+      "shutDown": "Shut Down",
+      "postMessage": "Great work today. Time to rest.",
+      "close": "Close"
+    },
+    "historySection": {
+      "noReviews": "No reviews yet.",
+      "loadMore": "Load more"
+    }
+  },
+  "topbar": {
+    "newTask": "New Task"
+  },
+  "errors": {
+    "generic": "Something went wrong",
+    "tryAgain": "Try Again"
+  }
+}
