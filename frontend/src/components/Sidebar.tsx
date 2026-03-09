@@ -18,6 +18,7 @@ import { useWorkspaces } from "@/hooks/useWorkspaces";
 import { useSemesters } from "@/hooks/useSemesters";
 import SidebarStats from "./SidebarStats";
 import ThemeToggle from "./ThemeToggle";
+import LocaleSwitcher from "./LocaleSwitcher";
 
 const NAV_ITEMS = [
   { href: "/plan", label: "Plan", icon: Calendar },
@@ -136,6 +137,7 @@ export default function Sidebar() {
             sidebarOpen ? "justify-end" : "justify-center"
           )}
         >
+          <LocaleSwitcher />
           <ThemeToggle />
         </div>
       </div>
