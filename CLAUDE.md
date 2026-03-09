@@ -218,6 +218,21 @@ frontend/
 - Frontend: ReviewHistoryCard uses `React.memo`, lazy-loads summary via `useReviewSummary(date)` with `enabled: expanded`
 - Frontend: ReviewHistory accumulates pages via `useEffect` (page 1 replaces, subsequent pages append) — no `useInfiniteQuery`
 
+## i18n (Internationalization)
+
+- **Library:** `next-intl` in client-only mode (no middleware, no URL routing)
+- **Locales:** English (`en`) + Portuguese BR (`pt-BR`), default `en`
+- **Messages:** `frontend/messages/en.json` and `frontend/messages/pt-BR.json` — organized by domain namespace
+- **Locale store:** `localeStore` (Zustand + localStorage, key `omakase-locale`) — same pattern as authStore
+- **Provider:** `NextIntlClientProvider` in `Providers.tsx`, reads locale from `localeStore` with `hasMounted` gate
+- **Config:** `frontend/src/i18n/config.ts` (locales, defaultLocale), `frontend/src/i18n/getMessages.ts` (message loader)
+- **LocaleSwitcher:** Sidebar footer toggle (EN / PT-BR), compact icon buttons
+- **Constants strategy:** `constants.ts` unchanged — at render sites use `tc(\`priorities.${value}\`)` not `priority.label`
+- **Common translations:** `const tco = useTranslations("common")` for shared buttons (cancel, save, loading...)
+- **Date formatting:** Use `useFormatter().dateTime(date, options)` for locale-aware display dates. Keep `date-fns` `format()` for API date strings (`yyyy-MM-dd`).
+- **Test mock:** `setup.ts` mocks `next-intl` with real English messages for assertions against actual text
+- **Adding new strings:** Add key to both `en.json` and `pt-BR.json`, use `t("key")` in component
+
 ## Drag & Drop (Plan Mode)
 
 - Uses `@dnd-kit/core` with `PointerSensor` (`DRAG_ACTIVATION_DISTANCE` in constants)

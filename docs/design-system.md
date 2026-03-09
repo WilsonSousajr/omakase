@@ -332,6 +332,61 @@ Storage key: "omakase-theme"
 
 Uses `hasMounted` gate to avoid SSR hydration mismatch (same pattern as AuthGuard).
 
+### Locale Switcher
+
+Located in sidebar footer alongside ThemeToggle. Toggles between EN and PT-BR. Uses Zustand `localeStore` with localStorage persistence.
+
+```
+Button: rounded-lg px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.15em]
+Active: bg-[var(--color-surface-active)] text-[var(--color-text-primary)]
+Inactive: text-[var(--color-text-faint)] hover:text-[var(--color-text-secondary)]
+Storage key: "omakase-locale"
+```
+
+## Internationalization (i18n)
+
+Uses `next-intl` in client-only mode (no middleware, no URL routing). Locale is stored in Zustand and toggled via sidebar UI.
+
+### Translation Key Conventions
+
+Keys organized by domain namespace in `messages/{locale}.json`:
+
+| Namespace | Contents |
+|-----------|----------|
+| `common` | Shared buttons (cancel, continue, save, delete, loading...) |
+| `auth` | Login/register form labels |
+| `sidebar` | Navigation items, workspace/semester selectors |
+| `tasks` | Task form labels, placeholders, empty states |
+| `constants` | Enum display values (priorities, areas, statuses, types, days) |
+| `pomodoro` | Timer labels, session types |
+| `kanban` | Column headers, drop zone text |
+| `calendar` | View mode labels, date-related UI |
+| `projects` | Project form labels, empty states |
+| `study` | Semester/discipline/study block/class schedule form labels |
+| `review` | All 6 wizard steps, history section |
+| `stats` | Sidebar stats labels |
+| `topbar` | Top bar actions |
+| `errors` | Error messages |
+
+### Usage Patterns
+
+```tsx
+// Single namespace
+const t = useTranslations("tasks");
+t("title")  // → "Title"
+
+// Constants (enum labels)
+const tc = useTranslations("constants");
+tc(`priorities.${priority.value}`)  // → "High"
+
+// Parameterized strings
+t("tasks", { count: 5 })  // → "5 tasks"
+
+// Date formatting (locale-aware)
+const fmt = useFormatter();
+fmt.dateTime(date, { month: "short", day: "numeric" })  // → "Mar 9" (en) / "9 de mar." (pt-BR)
+```
+
 ### Error Boundary
 
 `ErrorBoundary` component wraps `<main>` content in root layout. On render error, shows centered message with "Try Again" button (primary button style). Uses class component (`getDerivedStateFromError`).
