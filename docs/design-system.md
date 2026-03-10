@@ -309,29 +309,48 @@ Sidebar: BookOpen icon nav item + semester selector dropdown
 
 ```
 Sidebar nav order: Plan → Focus → Review → Projects → Study
-Settings link: bottom of sidebar (above stats), Settings icon from lucide-react
+Sidebar bottom: User avatar section → SidebarStats (both inside mt-auto)
+Settings link: user avatar section links to /settings, Settings gear icon from lucide-react
 Review icon: CheckSquare from lucide-react
+Settings icon: Settings (gear) from lucide-react
+```
+
+### User Avatar
+
+Initials-based avatar with user-selected background color. Uses `style={{ backgroundColor }}` (dynamic). White text, `rounded-full`, `font-semibold`.
+
+| Size | Class | Usage |
+|------|-------|-------|
+| `sm` | `h-7 w-7 text-[10px]` | Collapsed sidebar |
+| `md` | `h-8 w-8 text-xs` | Expanded sidebar |
+| `lg` | `h-16 w-16 text-xl` | Settings page preview |
+
+Initials logic: `first_name[0] + last_name[0]` → `first_name[0:2]` → `username[0:2]`. Component is `React.memo` wrapped.
+
+### Sidebar User Section
+
+Bottom-anchored section inside `mt-auto` block, above `SidebarStats`, with `border-t`. Links to `/settings`.
+
+```
+Expanded: UserAvatar(md) + username (text-xs, truncated) + Settings gear icon (h-3.5 w-3.5 text-faint)
+Collapsed: UserAvatar(sm) only, centered
+Container: hover:bg-[var(--color-surface)] transition-colors
 ```
 
 ### Settings Page
 
-Located at `/settings`. Three card sections stacked vertically in a `max-w-2xl` centered container.
+Full page at `/settings` with `max-w-2xl mx-auto`. Six card sections stacked vertically:
 
-**Sections:**
-- **Pomodoro:** 2x2 grid of number inputs (work, short break, long break, sessions before long break)
-- **Daily Goals:** 2-column grid (work hours, study hours) with 0.5 step increments
-- **General:** 2-column grid (week starts on select, timezone text input)
-
-**Layout:**
 ```
-Container: mx-auto max-w-2xl space-y-6 p-6
-Section card: rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5
-Section header: text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)] mb-4
-Input grid: grid grid-cols-2 gap-4
-Save button: top-right, primary button style with Save icon, disabled when no changes
+Profile card: UserAvatar(lg) preview + ColorSwatchPicker + readonly username + editable name/email fields + Save button
+Pomodoro card: 2x2 grid of number inputs (work, short break, long break, sessions before long break) + Save button with Save icon
+Daily Goals card: 2-column grid (work hours, study hours) with 0.5 step increments
+General card: 2-column grid (week starts on select, timezone text input)
+Password card: old/new/confirm password inputs + Change Password button
+Logout card: red text ghost button ("Log out") with hover:bg-red-400/10
 ```
 
-Inputs and selects follow the standard input pattern (`rounded-xl`, `bg-[var(--color-input)]`, etc.). Success feedback via `emitToast("Settings saved successfully")`.
+All sections use `rounded-2xl border bg-surface p-5`. Inputs follow standard input pattern. Labels use signature `text-[10px]` uppercase style. Preferences save button disabled when no changes. Success feedback via `emitToast`.
 
 ### Error Boundary
 

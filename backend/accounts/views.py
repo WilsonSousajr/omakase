@@ -1,8 +1,16 @@
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
+from rest_framework.throttling import ScopedRateThrottle
+from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
 
 from accounts.models import UserProfile
-from accounts.serializers import RegisterSerializer, UserProfileSerializer, UserSerializer
+from accounts.serializers import (
+    ChangePasswordSerializer,
+    RegisterSerializer,
+    UpdateProfileSerializer,
+    UserProfileSerializer,
+    UserSerializer,
+)
 
 
 class RegisterView(generics.CreateAPIView):
@@ -19,12 +27,21 @@ class RegisterView(generics.CreateAPIView):
         )
 
 
-class MeView(generics.RetrieveAPIView):
+class MeView(generics.RetrieveUpdateAPIView):
     serializer_class = UserSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_object(self):
         return self.request.user
+
+    def update(self, request, *args, **kwargs):
+        serializer = UpdateProfileSerializer(
+            data=request.data,
+            context={"request": request},
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(UserSerializer(request.user).data)
 
 
 class UserProfileView(generics.RetrieveUpdateAPIView):
@@ -33,3 +50,21 @@ class UserProfileView(generics.RetrieveUpdateAPIView):
     def get_object(self):
         profile, _ = UserProfile.objects.get_or_create(user=self.request.user)
         return profile
+
+
+class ChangePasswordView(generics.GenericAPIView):
+    serializer_class = ChangePasswordSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "password_change"
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        # Blacklist all outstanding refresh tokens for this user
+        for token in OutstandingToken.objects.filter(user=request.user):
+            BlacklistedToken.objects.get_or_create(token=token)
+
+        return Response({"detail": "Password changed successfully."})

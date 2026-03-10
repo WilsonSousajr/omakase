@@ -1,9 +1,34 @@
 import uuid
 
 from django.conf import settings
+from django.core.validators import RegexValidator
 from django.db import models
-from django.db.models.signals import post_save
-from django.dispatch import receiver
+
+hex_color_validator = RegexValidator(
+    regex=r"^#[0-9a-fA-F]{6}$",
+    message="Color must be a valid hex color (e.g. #ff0000)",
+)
+
+DEFAULT_AVATAR_COLOR = "#a3a3a3"
+
+
+class Profile(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="profile",
+    )
+    avatar_color = models.CharField(
+        max_length=7,
+        default=DEFAULT_AVATAR_COLOR,
+        validators=[hex_color_validator],
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Profile({self.user.username})"
 
 
 class UserProfile(models.Model):
@@ -11,7 +36,7 @@ class UserProfile(models.Model):
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name="profile",
+        related_name="user_profile",
     )
     timezone = models.CharField(max_length=50, default="UTC")
     week_starts_on = models.CharField(
@@ -29,10 +54,4 @@ class UserProfile(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"Profile for {self.user.username}"
-
-
-@receiver(post_save, sender=settings.AUTH_USER_MODEL)
-def create_user_profile(sender, instance, created, **kwargs):
-    if created:
-        UserProfile.objects.create(user=instance)
+        return f"UserProfile for {self.user.username}"

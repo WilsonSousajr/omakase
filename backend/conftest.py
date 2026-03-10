@@ -9,7 +9,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from pomodoro.models import PomodoroSession
 from stats.models import DailyReview
 from study.models import ClassSchedule, Discipline, Semester, StudyBlock
-from tasks.models import Project, Tag, Task, TimeBlock, Workspace
+from tasks.models import Project, Subtask, Tag, Task, TimeBlock, Workspace
 
 
 class UserFactory(factory.django.DjangoModelFactory):
@@ -71,6 +71,16 @@ class TaskFactory(factory.django.DjangoModelFactory):
         if not create or not extracted:
             return
         self.tags.add(*extracted)
+
+
+class SubtaskFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = Subtask
+
+    task = factory.SubFactory(TaskFactory)
+    title = factory.Sequence(lambda n: f"Subtask {n}")
+    is_completed = False
+    order = factory.Sequence(lambda n: n)
 
 
 class TimeBlockFactory(factory.django.DjangoModelFactory):

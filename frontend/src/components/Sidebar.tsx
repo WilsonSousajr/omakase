@@ -14,10 +14,12 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useAuthStore } from "@/stores/authStore";
 import { useUIStore } from "@/stores/uiStore";
 import { useWorkspaces } from "@/hooks/useWorkspaces";
 import { useSemesters } from "@/hooks/useSemesters";
 import SidebarStats from "./SidebarStats";
+import UserAvatar from "./UserAvatar";
 
 const NAV_ITEMS = [
   { href: "/plan", label: "Plan", icon: Calendar },
@@ -35,6 +37,7 @@ export default function Sidebar() {
   const setActiveWorkspaceId = useUIStore((s) => s.setActiveWorkspaceId);
   const activeSemesterId = useUIStore((s) => s.activeSemesterId);
   const setActiveSemesterId = useUIStore((s) => s.setActiveSemesterId);
+  const user = useAuthStore((s) => s.user);
   const { data: workspaces = [] } = useWorkspaces();
   const { data: semesters = [] } = useSemesters();
 
@@ -129,20 +132,25 @@ export default function Sidebar() {
       </nav>
 
       <div className="mt-auto">
-        <nav className="p-2">
+        {user && (
           <Link
             href="/settings"
             className={cn(
-              "flex items-center gap-2 rounded-xl px-2.5 py-2 text-sm transition-colors",
-              pathname.startsWith("/settings")
-                ? "bg-[var(--color-surface-active)] text-[var(--color-text-primary)]"
-                : "text-[var(--color-text-muted)] hover:bg-[var(--color-surface)] hover:text-[var(--color-text-secondary)]"
+              "flex items-center border-t border-[var(--color-border)] transition-colors hover:bg-[var(--color-surface)]",
+              sidebarOpen ? "gap-2 px-3 py-2.5" : "justify-center py-2.5"
             )}
           >
-            <Settings className="h-4 w-4 shrink-0" />
-            {sidebarOpen && <span>Settings</span>}
+            <UserAvatar user={user} size={sidebarOpen ? "md" : "sm"} />
+            {sidebarOpen && (
+              <>
+                <span className="flex-1 truncate text-xs text-[var(--color-text-secondary)]">
+                  {user.username}
+                </span>
+                <Settings className="h-3.5 w-3.5 shrink-0 text-[var(--color-text-faint)]" />
+              </>
+            )}
           </Link>
-        </nav>
+        )}
         {sidebarOpen && <SidebarStats />}
       </div>
     </aside>

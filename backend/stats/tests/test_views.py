@@ -146,10 +146,10 @@ class TestDailyStatsView:
         week_start = target_date - datetime.timedelta(days=target_date.weekday())  # Monday March 2
         tuesday = week_start + datetime.timedelta(days=1)
         task = TaskFactory(user=user, area="work")
-        # 2-hour block on Monday
+        # 2-hour block on week_start
         TimeBlockFactory(task=task, date=week_start, start_time=datetime.time(9, 0), end_time=datetime.time(11, 0))
-        # 1.5-hour block on Tuesday
-        TimeBlockFactory(task=task, date=tuesday, start_time=datetime.time(14, 0), end_time=datetime.time(15, 30))
+        # 1.5-hour block on today (guaranteed <= today, avoids future-date on Mondays)
+        TimeBlockFactory(task=task, date=today, start_time=datetime.time(14, 0), end_time=datetime.time(15, 30))
 
         resp = authenticated_client.get(self.URL, {"date": target_date.isoformat()})
         assert resp.data["weekly_work_hours"] == 3.5
