@@ -10,6 +10,7 @@ import { useCreateTask, useUpdateTask } from "@/hooks/useTasks";
 import { useCreateTimeBlock } from "@/hooks/useTimeBlocks";
 import { useUIStore } from "@/stores/uiStore";
 import { useCalendarStore } from "@/stores/calendarStore";
+import SubtaskChecklist from "./SubtaskChecklist";
 import type { Priority, Area } from "@/lib/constants";
 
 export default function TaskForm() {
@@ -283,6 +284,10 @@ export default function TaskForm() {
                 ))}
               </div>
             </div>
+          )}
+
+          {editTask && (
+            <SubtaskChecklist taskId={editTask.id} />
           )}
 
           <div className="flex justify-end gap-2 pt-2">

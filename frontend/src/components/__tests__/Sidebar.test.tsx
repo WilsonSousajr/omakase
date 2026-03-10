@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { screen, fireEvent } from "@testing-library/react";
 import { renderWithProviders } from "@/test/utils";
+import { createMockUser } from "@/test/handlers";
+import { useAuthStore } from "@/stores/authStore";
 import { useUIStore } from "@/stores/uiStore";
 import Sidebar from "../Sidebar";
 
@@ -15,6 +17,7 @@ vi.mock("next/link", () => ({
 describe("Sidebar", () => {
   beforeEach(() => {
     useUIStore.setState({ sidebarOpen: true, modalOpen: null });
+    useAuthStore.setState({ user: createMockUser(), isAuthenticated: true });
   });
 
   it("renders Plan, Focus, and Projects nav links", () => {
@@ -47,6 +50,26 @@ describe("Sidebar", () => {
     fireEvent.click(toggleButton);
 
     expect(useUIStore.getState().sidebarOpen).toBe(false);
+  });
+
+  it("shows user avatar and username when sidebar is open", () => {
+    useUIStore.setState({ sidebarOpen: true });
+    renderWithProviders(<Sidebar />);
+    expect(screen.getByText("testuser")).toBeInTheDocument();
+    expect(screen.getByText("TE")).toBeInTheDocument();
+  });
+
+  it("shows only user avatar when sidebar is collapsed", () => {
+    useUIStore.setState({ sidebarOpen: false });
+    renderWithProviders(<Sidebar />);
+    expect(screen.getByText("TE")).toBeInTheDocument();
+    expect(screen.queryByText("testuser")).not.toBeInTheDocument();
+  });
+
+  it("user section links to settings", () => {
+    renderWithProviders(<Sidebar />);
+    const settingsLink = screen.getByText("testuser").closest("a");
+    expect(settingsLink).toHaveAttribute("href", "/settings");
   });
 
   it("active link has active styling when pathname matches", () => {

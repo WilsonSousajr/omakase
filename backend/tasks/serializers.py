@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Project, Tag, Task, TimeBlock, Workspace
+from .models import Project, Subtask, Tag, Task, TimeBlock, Workspace
 
 
 class WorkspaceSerializer(serializers.ModelSerializer):
@@ -60,6 +60,13 @@ class TimeBlockSerializer(serializers.ModelSerializer):
         return data
 
 
+class SubtaskSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Subtask
+        fields = ["id", "title", "is_completed", "order", "created_at"]
+        read_only_fields = ["id", "created_at"]
+
+
 class TaskListSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True, read_only=True)
     tag_ids = serializers.PrimaryKeyRelatedField(
@@ -99,9 +106,10 @@ class TaskListSerializer(serializers.ModelSerializer):
 
 class TaskSerializer(TaskListSerializer):
     time_blocks = TimeBlockSerializer(many=True, read_only=True)
+    subtasks = SubtaskSerializer(many=True, read_only=True)
 
     class Meta(TaskListSerializer.Meta):
-        fields = TaskListSerializer.Meta.fields + ["notes", "time_blocks"]
+        fields = TaskListSerializer.Meta.fields + ["notes", "time_blocks", "subtasks"]
 
 
 class TaskReorderSerializer(serializers.Serializer):
