@@ -7,7 +7,9 @@ import { useTags } from "@/hooks/useTags";
 import { useProjects } from "@/hooks/useProjects";
 import { useDisciplines } from "@/hooks/useDisciplines";
 import { useCreateTask, useUpdateTask } from "@/hooks/useTasks";
+import { useCreateTimeBlock } from "@/hooks/useTimeBlocks";
 import { useUIStore } from "@/stores/uiStore";
+import { useCalendarStore } from "@/stores/calendarStore";
 import SubtaskChecklist from "./SubtaskChecklist";
 import type { Priority, Area } from "@/lib/constants";
 
@@ -21,6 +23,9 @@ export default function TaskForm() {
   const { data: disciplines = [] } = useDisciplines();
   const createTask = useCreateTask();
   const updateTask = useUpdateTask();
+  const createTimeBlock = useCreateTimeBlock();
+  const creationDraft = useCalendarStore((s) => s.creationDraft);
+  const clearCreationDraft = useCalendarStore((s) => s.clearCreationDraft);
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -56,16 +61,17 @@ export default function TaskForm() {
       setProjectId("");
       setDisciplineId("");
       setSelectedTagIds([]);
-      setScheduledDate("");
+      setScheduledDate(creationDraft?.date ?? "");
       setDueDate("");
       setEstimatedMinutes("");
     }
-  }, [editTask]);
+  }, [editTask, creationDraft]);
 
   if (modalOpen !== "task-form") return null;
 
   const handleClose = () => {
     setEditTask(null);
+    clearCreationDraft();
     closeModal();
   };
 
@@ -89,8 +95,22 @@ export default function TaskForm() {
     if (editTask) {
       await updateTask.mutateAsync({ id: editTask.id, ...payload });
     } else {
-      await createTask.mutateAsync(payload);
+      const newTask = await createTask.mutateAsync(payload);
+      // If opened via click-to-create, also create a TimeBlock with the drawn times
+      if (creationDraft) {
+        try {
+          await createTimeBlock.mutateAsync({
+            task: newTask.id,
+            date: creationDraft.date,
+            start_time: creationDraft.startTime + ":00",
+            end_time: creationDraft.endTime + ":00",
+          });
+        } catch {
+          // TimeBlock creation failed but task was created — acceptable degradation
+        }
+      }
     }
+    clearCreationDraft();
     handleClose();
   };
 

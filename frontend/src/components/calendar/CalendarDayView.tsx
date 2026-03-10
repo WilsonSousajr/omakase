@@ -1,7 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
-import { useDroppable } from "@dnd-kit/core";
+import { useMemo, useRef } from "react";
 import { format } from "date-fns";
 import { useCalendarStore } from "@/stores/calendarStore";
 import { useTimeBlocks, useDeleteTimeBlock, useUpdateTimeBlock } from "@/hooks/useTimeBlocks";
@@ -9,35 +8,25 @@ import { useTasks, useToggleTaskComplete } from "@/hooks/useTasks";
 import { useStudyBlocks, useUpdateStudyBlock } from "@/hooks/useStudyBlocks";
 import { useDisciplines } from "@/hooks/useDisciplines";
 import { useClassOccurrences } from "@/hooks/useClassOccurrences";
+import { useClickToCreate } from "@/hooks/useClickToCreate";
 import TimeBlockItem from "./TimeBlockItem";
 import ClassBlockItem from "./ClassBlockItem";
+import TimeSlot from "./TimeSlot";
+import CurrentTimeIndicator from "./CurrentTimeIndicator";
+import CreationOverlay from "./CreationOverlay";
+import { timeToOffset, HOURS, SLOT_HEIGHT_DAY } from "./calendarUtils";
+import { CALENDAR_START_HOUR } from "@/lib/constants";
 
-const HOURS = Array.from({ length: 17 }, (_, i) => i + 6); // 06:00 - 22:00
-const SLOT_HEIGHT = 48;
-
-function TimeSlot({ hour, half, date }: { hour: number; half: 0 | 1; date: string }) {
-  const time = `${hour.toString().padStart(2, "0")}:${half === 0 ? "00" : "30"}`;
-  const droppableId = `slot-${date}-${time}`;
-
-  const { setNodeRef, isOver } = useDroppable({
-    id: droppableId,
-    data: { type: "timeslot", date, time },
-  });
-
-  return (
-    <div
-      ref={setNodeRef}
-      className={`h-[${SLOT_HEIGHT / 2}px] border-b border-[var(--color-border)]/50 transition-colors ${
-        half === 0 ? "border-t border-[var(--color-border)]" : ""
-      } ${isOver ? "bg-white/5" : ""}`}
-      style={{ height: `${SLOT_HEIGHT / 2}px` }}
-    />
-  );
+interface CalendarDayViewProps {
+  isDragging?: boolean;
+  onCreateRange?: (date: string, startTime: string, endTime: string) => void;
 }
 
-export default function CalendarDayView() {
+export default function CalendarDayView({ isDragging = false, onCreateRange }: CalendarDayViewProps) {
   const { selectedDate } = useCalendarStore();
   const dateStr = format(selectedDate, "yyyy-MM-dd");
+  const isToday = dateStr === format(new Date(), "yyyy-MM-dd");
+  const gridRef = useRef<HTMLDivElement>(null);
 
   const { data: timeBlocks = [] } = useTimeBlocks(dateStr, dateStr);
   const { data: tasks = [] } = useTasks();
@@ -48,6 +37,15 @@ export default function CalendarDayView() {
   const updateTimeBlock = useUpdateTimeBlock();
   const toggleComplete = useToggleTaskComplete();
   const updateStudyBlock = useUpdateStudyBlock();
+
+  const { isCreating, creationStart, creationEnd, handlers: clickHandlers } = useClickToCreate({
+    slotHeight: SLOT_HEIGHT_DAY,
+    startHour: CALENDAR_START_HOUR,
+    date: dateStr,
+    gridRef,
+    disabled: isDragging || !onCreateRange,
+    onCreateRange: onCreateRange ?? (() => {}),
+  });
 
   const taskMap = useMemo(() => Object.fromEntries(tasks.map((t) => [t.id, t])), [tasks]);
   const studyBlockMap = useMemo(() => Object.fromEntries(studyBlocks.map((sb) => [sb.id, sb])), [studyBlocks]);
@@ -61,11 +59,6 @@ export default function CalendarDayView() {
     updateStudyBlock.mutate({ id, is_completed: isCompleted });
   };
 
-  function timeToOffset(time: string): number {
-    const [h, m] = time.split(":").map(Number);
-    return Math.max(0, ((h - 6) * 60 + m) / 30 * (SLOT_HEIGHT / 2));
-  }
-
   return (
     <div className="flex-1 overflow-auto">
       <div className="relative flex">
@@ -74,21 +67,29 @@ export default function CalendarDayView() {
           {HOURS.map((hour) => (
             <div
               key={hour}
-              className="flex items-start justify-end pr-2 text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-faint)]"
-              style={{ height: `${SLOT_HEIGHT}px` }}
+              className="relative flex items-start justify-end pr-2 text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-faint)]"
+              style={{ height: `${SLOT_HEIGHT_DAY}px` }}
             >
-              {format(new Date(2000, 0, 1, hour), "h a")}
+              <span className="relative -top-[5px]">
+                {format(new Date(2000, 0, 1, hour), "h a")}
+              </span>
             </div>
           ))}
         </div>
 
         {/* Grid + blocks */}
-        <div className="relative flex-1">
+        <div
+          ref={gridRef}
+          className="relative flex-1"
+          onMouseDown={clickHandlers.onMouseDown}
+          onMouseMove={clickHandlers.onMouseMove}
+          onMouseUp={clickHandlers.onMouseUp}
+        >
           {/* Slots */}
           {HOURS.map((hour) => (
             <div key={hour}>
-              <TimeSlot hour={hour} half={0} date={dateStr} />
-              <TimeSlot hour={hour} half={1} date={dateStr} />
+              <TimeSlot hour={hour} half={0} date={dateStr} height={SLOT_HEIGHT_DAY / 2} />
+              <TimeSlot hour={hour} half={1} date={dateStr} height={SLOT_HEIGHT_DAY / 2} />
             </div>
           ))}
 
@@ -97,11 +98,23 @@ export default function CalendarDayView() {
             <div
               key={occ.id}
               className="absolute left-0 right-0"
-              style={{ top: `${timeToOffset(occ.start_time)}px` }}
+              style={{ top: `${timeToOffset(occ.start_time, SLOT_HEIGHT_DAY)}px` }}
             >
-              <ClassBlockItem occurrence={occ} slotHeight={SLOT_HEIGHT} />
+              <ClassBlockItem occurrence={occ} slotHeight={SLOT_HEIGHT_DAY} />
             </div>
           ))}
+
+          {/* Current time indicator */}
+          <CurrentTimeIndicator slotHeight={SLOT_HEIGHT_DAY} isToday={isToday} />
+
+          {/* Creation overlay (click-to-create) */}
+          {isCreating && creationStart && creationEnd && (
+            <CreationOverlay
+              startTime={creationStart}
+              endTime={creationEnd}
+              slotHeight={SLOT_HEIGHT_DAY}
+            />
+          )}
 
           {/* Time blocks */}
           {timeBlocks.map((block) => {
@@ -111,7 +124,7 @@ export default function CalendarDayView() {
               <div
                 key={block.id}
                 className="absolute left-0 right-0"
-                style={{ top: `${timeToOffset(block.start_time)}px` }}
+                style={{ top: `${timeToOffset(block.start_time, SLOT_HEIGHT_DAY)}px` }}
               >
                 <TimeBlockItem
                   block={block}
@@ -124,7 +137,7 @@ export default function CalendarDayView() {
                   }
                   onToggleComplete={handleToggleComplete}
                   onToggleStudyBlockComplete={handleToggleStudyBlockComplete}
-                  slotHeight={SLOT_HEIGHT}
+                  slotHeight={SLOT_HEIGHT_DAY}
                 />
               </div>
             );
