@@ -10,6 +10,17 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  docker-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: frontend/Dockerfile
+      - uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: backend/Dockerfile
+
   frontend:
     runs-on: ubuntu-latest
     defaults:
@@ -68,3 +79,23 @@ jobs:
       - run: ruff format --check .
       - run: python manage.py migrate --noinput
       - run: pytest --cov --cov-report=term-missing --cov-fail-under=60
+
+  docker-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build frontend prod image
+        run: docker build --target prod -t omakase-frontend:prod ./frontend
+      - name: Build backend prod image
+        run: docker build --target prod -t omakase-backend:prod ./backend
+        env:
+          DJANGO_SECRET_KEY: build-only-not-runtime
+      - name: Verify frontend image size under 500MB
+        run: |
+          SIZE=$(docker image inspect omakase-frontend:prod --format='{{.Size}}')
+          MAX=$((500 * 1024 * 1024))
+          echo "Frontend image size: $((SIZE / 1024 / 1024))MB"
+          if [ "$SIZE" -gt "$MAX" ]; then
+            echo "FAIL: Frontend image exceeds 500MB threshold"
+            exit 1
+          fi
