@@ -7,12 +7,14 @@ from rest_framework import status
 from conftest import (
     DisciplineFactory,
     ProjectFactory,
+    SubtaskFactory,
     TagFactory,
     TaskFactory,
     TimeBlockFactory,
+    UserFactory,
     WorkspaceFactory,
 )
-from tasks.models import Task, TimeBlock
+from tasks.models import Subtask, Task, TimeBlock
 
 
 @pytest.mark.django_db
@@ -493,3 +495,61 @@ class TestTaskIDORPrevention:
         )
         assert resp.status_code == status.HTTP_201_CREATED
         assert str(resp.data["discipline"]) == str(discipline.pk)
+
+
+@pytest.mark.django_db
+class TestSubtaskViewSet:
+    def test_list_subtasks(self, authenticated_client, user):
+        task = TaskFactory(user=user)
+        SubtaskFactory(task=task, title="Sub 1")
+        SubtaskFactory(task=task, title="Sub 2")
+        resp = authenticated_client.get(f"/api/v1/tasks/{task.id}/subtasks/")
+        assert resp.status_code == status.HTTP_200_OK
+        assert len(resp.data) == 2
+
+    def test_create_subtask(self, authenticated_client, user):
+        task = TaskFactory(user=user)
+        resp = authenticated_client.post(
+            f"/api/v1/tasks/{task.id}/subtasks/",
+            {"title": "New sub"},
+        )
+        assert resp.status_code == status.HTTP_201_CREATED
+        assert resp.data["title"] == "New sub"
+        assert resp.data["is_completed"] is False
+
+    def test_update_subtask(self, authenticated_client, user):
+        task = TaskFactory(user=user)
+        sub = SubtaskFactory(task=task)
+        resp = authenticated_client.patch(
+            f"/api/v1/tasks/{task.id}/subtasks/{sub.id}/",
+            {"is_completed": True},
+        )
+        assert resp.status_code == status.HTTP_200_OK
+        assert resp.data["is_completed"] is True
+
+    def test_delete_subtask(self, authenticated_client, user):
+        task = TaskFactory(user=user)
+        sub = SubtaskFactory(task=task)
+        resp = authenticated_client.delete(f"/api/v1/tasks/{task.id}/subtasks/{sub.id}/")
+        assert resp.status_code == status.HTTP_204_NO_CONTENT
+        assert Subtask.objects.count() == 0
+
+    def test_user_scoping(self, authenticated_client, user):
+        other_user = UserFactory()
+        other_task = TaskFactory(user=other_user)
+        SubtaskFactory(task=other_task)
+        resp = authenticated_client.get(f"/api/v1/tasks/{other_task.id}/subtasks/")
+        assert resp.status_code == status.HTTP_200_OK
+        assert len(resp.data) == 0
+
+    def test_create_on_other_users_task_denied(self, authenticated_client, user):
+        other_user = UserFactory()
+        other_task = TaskFactory(user=other_user)
+        resp = authenticated_client.post(
+            f"/api/v1/tasks/{other_task.id}/subtasks/",
+            {"title": "Sneaky sub"},
+        )
+        assert resp.status_code in (
+            status.HTTP_403_FORBIDDEN,
+            status.HTTP_404_NOT_FOUND,
+        )

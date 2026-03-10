@@ -1,7 +1,7 @@
 import pytest
 from django.utils import timezone
 
-from conftest import DisciplineFactory, TagFactory, TaskFactory
+from conftest import DisciplineFactory, SubtaskFactory, TagFactory, TaskFactory
 from tasks.serializers import (
     TagSerializer,
     TaskListSerializer,
@@ -73,6 +73,22 @@ class TestTaskSerializer:
         assert "notes" in data
         assert "time_blocks" in data
         assert data["notes"] == "Some notes"
+
+    def test_includes_subtasks(self):
+        task = TaskFactory()
+        SubtaskFactory(task=task, title="Step 1", order=0)
+        SubtaskFactory(task=task, title="Step 2", order=1)
+        data = TaskSerializer(task).data
+        assert "subtasks" in data
+        assert len(data["subtasks"]) == 2
+        assert data["subtasks"][0]["title"] == "Step 1"
+        assert data["subtasks"][1]["title"] == "Step 2"
+
+    def test_subtasks_not_in_list_serializer(self):
+        task = TaskFactory()
+        SubtaskFactory(task=task)
+        data = TaskListSerializer(task).data
+        assert "subtasks" not in data
 
 
 @pytest.mark.django_db

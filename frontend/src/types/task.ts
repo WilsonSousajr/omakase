@@ -1,3 +1,4 @@
+import type { Subtask } from "./subtask";
 import type { Tag } from "./tag";
 import type { TimeBlock } from "./timeblock";
 
@@ -21,6 +22,7 @@ export interface Task {
   created_at: string;
   updated_at: string;
   time_blocks?: TimeBlock[];
+  subtasks?: Subtask[];
 }
 
 export interface TaskCreate {
