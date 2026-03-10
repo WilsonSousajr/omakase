@@ -24,6 +24,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     # Third party
     "rest_framework",
+    "rest_framework_simplejwt.token_blacklist",
     "corsheaders",
     "django_filters",
     # Local
@@ -118,6 +119,7 @@ REST_FRAMEWORK = {
     ],
     "DEFAULT_THROTTLE_RATES": {
         "anon": "20/minute",
+        "password_change": "5/hour",
     },
 }
 

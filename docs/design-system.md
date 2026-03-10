@@ -309,8 +309,44 @@ Sidebar: BookOpen icon nav item + semester selector dropdown
 
 ```
 Sidebar nav order: Plan → Focus → Review → Projects → Study
+Sidebar bottom: User avatar section → SidebarStats (both inside mt-auto)
 Review icon: CheckSquare from lucide-react
+Settings icon: Settings (gear) from lucide-react
 ```
+
+### User Avatar
+
+Initials-based avatar with user-selected background color. Uses `style={{ backgroundColor }}` (dynamic). White text, `rounded-full`, `font-semibold`.
+
+| Size | Class | Usage |
+|------|-------|-------|
+| `sm` | `h-7 w-7 text-[10px]` | Collapsed sidebar |
+| `md` | `h-8 w-8 text-xs` | Expanded sidebar |
+| `lg` | `h-16 w-16 text-xl` | Settings page preview |
+
+Initials logic: `first_name[0] + last_name[0]` → `first_name[0:2]` → `username[0:2]`. Component is `React.memo` wrapped.
+
+### Sidebar User Section
+
+Bottom-anchored section inside `mt-auto` block, above `SidebarStats`, with `border-t`. Links to `/settings`.
+
+```
+Expanded: UserAvatar(md) + username (text-xs, truncated) + Settings gear icon (h-3.5 w-3.5 text-faint)
+Collapsed: UserAvatar(sm) only, centered
+Container: hover:bg-[var(--color-surface)] transition-colors
+```
+
+### Settings Page
+
+Full page at `/settings` with `max-w-lg mx-auto`. Three card sections:
+
+```
+Profile card: UserAvatar(lg) preview + ColorSwatchPicker + readonly username + editable name/email fields + Save button
+Password card: old/new/confirm password inputs + Change Password button
+Logout card: red text ghost button ("Log out") with hover:bg-red-400/10
+```
+
+All sections use `rounded-2xl border bg-surface p-5`. Inputs follow standard input pattern. Labels use signature `text-[10px]` uppercase style.
 
 ### Error Boundary
 
