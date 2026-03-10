@@ -28,6 +28,28 @@ pre-commit install         # Install git hooks
 
 Pre-commit runs automatically on `git commit`: ruff lint/format for Python, ESLint via lint-staged for TypeScript/TSX, detect-secrets, and standard file checks.
 
+## Docker Builds
+
+Both Dockerfiles use multi-stage builds with `dev` and `prod` targets:
+
+```bash
+# Dev (default — used by docker-compose up)
+docker-compose up                    # targets dev stage, bind mounts for hot reload
+
+# Production builds
+docker build --target prod -t omakase-frontend:prod ./frontend
+docker build --target prod -t omakase-backend:prod ./backend
+
+# Production via compose override
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml up
+```
+
+- **Frontend prod** uses Next.js standalone output (~200-250MB vs ~1.8GB dev). Non-root `nextjs` user (UID 1001)
+- **Backend prod** runs as non-root `django` user (UID 1001). Includes `collectstatic`
+- **`NEXT_PUBLIC_API_URL`** must be passed as build arg for prod (baked at build time by Next.js)
+- **`.dockerignore`** files exclude build artifacts, IDE files, and (frontend only) test files from build context. Backend keeps test files in context because the dev stage needs them at build time.
+- CI enforces frontend prod image < 500MB via `docker-build` job
+
 ## Backend Commands
 
 ```bash
@@ -215,6 +237,7 @@ frontend/
 - Creating a time block in plan mode auto-sets `scheduled_date` so the task appears in focus mode's kanban (`/tasks/today/` filters by `scheduled_date`)
 - Moving a time block to a different day syncs the parent task/study block's `scheduled_date` to match
 - All time block mutations (create/update/delete) invalidate both `["timeblocks"]` and `["tasks"]` query caches
+- Deleting a task or study block must also invalidate `["timeblocks"]` — DB CASCADE deletes the time blocks, but stale frontend cache causes ghost blocks on the calendar
 - `/tasks/today/` accepts optional `?date=` query param — frontend sends client-local date to avoid server UTC mismatch
 - `useTodayTasks(date)` requires a date string (from `useToday()` hook) — no longer uses server `date.today()` as default
 - `useToday()` hook in `frontend/src/hooks/useToday.ts` returns local date as YYYY-MM-DD string
@@ -267,6 +290,8 @@ pnpm test:coverage   # with coverage report
 GitHub Actions (`.github/workflows/ci.yml`) runs on push to main and PRs:
 - **Frontend job:** pnpm install → lint → `tsc --noEmit` → test (with `--coverage --coverage.thresholds.lines=50`) → build
 - **Backend job:** PostgreSQL service → pip install → `ruff check` + `ruff format --check` → migrate → pytest with `--cov-fail-under=60`
+- **Docker lint job:** hadolint on both Dockerfiles (catches anti-patterns)
+- **Docker build job:** builds both prod images, verifies frontend image < 500MB (prevents size regression)
 - **Concurrency:** `ci-${{ github.ref }}` group with `cancel-in-progress: true` — prevents wasted CI minutes on rapid pushes
 
 ### Test Patterns
@@ -276,6 +301,7 @@ GitHub Actions (`.github/workflows/ci.yml`) runs on push to main and PRs:
 - Frontend hooks: `renderHook()` + MSW for API mocking
 - Frontend components: `renderWithProviders()` wrapper includes QueryClientProvider
 - Mock `@dnd-kit/*` in component tests that use drag-and-drop
+- **Bug fix tests are mandatory** — every bug fix MUST include a regression test that reproduces the bug (fails without the fix, passes with it). This prevents the same bug from recurring.
 
 ## Git Workflow (STRICT)
 
