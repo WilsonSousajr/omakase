@@ -6,14 +6,14 @@ staticfiles
 .git
 *.md
 
-# Test / dev artifacts
+# Test / dev artifacts (build output only — not source files)
+# Note: conftest.py, */tests/, and requirements-dev.txt are NOT excluded
+# because the dev Dockerfile stage needs them at build time.
+# .dockerignore applies to the entire build context, not per-stage.
 .coverage
 .pytest_cache/
 .ruff_cache/
 htmlcov/
-conftest.py
-*/tests/
-requirements-dev.txt
 
 # IDE / OS
 .vscode/

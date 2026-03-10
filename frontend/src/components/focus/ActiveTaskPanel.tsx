@@ -5,6 +5,7 @@ import { useUIStore } from "@/stores/uiStore";
 import { useTask } from "@/hooks/useTasks";
 import PomodoroTimer from "./PomodoroTimer";
 import MarkdownEditor from "./MarkdownEditor";
+import SubtaskChecklist from "@/components/tasks/SubtaskChecklist";
 
 export default function ActiveTaskPanel() {
   const t = useTranslations("pomodoro");
@@ -26,6 +27,8 @@ export default function ActiveTaskPanel() {
               <p className="text-xs text-[var(--color-text-muted)]">{task.description}</p>
             )}
           </div>
+
+          <SubtaskChecklist taskId={task.id} />
 
           <div>
             <h4 className="mb-2 text-xs font-medium text-[var(--color-text-secondary)]">{tTasks("notes")}</h4>

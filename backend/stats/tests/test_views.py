@@ -143,14 +143,17 @@ class TestDailyStatsView:
     def test_weekly_work_hours(self, authenticated_client, user):
         today = timezone.localdate()
         week_start = today - datetime.timedelta(days=today.weekday())
-        task = TaskFactory(user=user, area="work")
-        # 2-hour block on Monday
-        TimeBlockFactory(task=task, date=week_start, start_time=datetime.time(9, 0), end_time=datetime.time(11, 0))
-        # 1.5-hour block on Tuesday
+        # Use Tuesday as reference date so both blocks are <= reference_date
+        # (fixes flaky failure when CI runs on Monday — date__lte=today
+        # excludes Tuesday's block when today is Monday)
         tuesday = week_start + datetime.timedelta(days=1)
-        TimeBlockFactory(task=task, date=tuesday, start_time=datetime.time(14, 0), end_time=datetime.time(15, 30))
+        task = TaskFactory(user=user, area="work")
+        # 2-hour block on week_start
+        TimeBlockFactory(task=task, date=week_start, start_time=datetime.time(9, 0), end_time=datetime.time(11, 0))
+        # 1.5-hour block on today (guaranteed <= today, avoids future-date on Mondays)
+        TimeBlockFactory(task=task, date=today, start_time=datetime.time(14, 0), end_time=datetime.time(15, 30))
 
-        resp = authenticated_client.get(self.URL)
+        resp = authenticated_client.get(self.URL, {"date": str(tuesday)})
         assert resp.data["weekly_work_hours"] == 3.5
 
     def test_weekly_study_hours_separate(self, authenticated_client, user):

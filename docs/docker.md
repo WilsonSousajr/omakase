@@ -40,9 +40,9 @@ Both services exclude test files and dev tooling from the build context:
 
 **Frontend excludes:** `coverage/`, `src/test/`, `src/**/__tests__/`, `vitest.config.ts`, `.pnpm-store/`, `tsconfig.tsbuildinfo`, `eslint.config.mjs`
 
-**Backend excludes:** `.coverage`, `.pytest_cache/`, `.ruff_cache/`, `htmlcov/`, `conftest.py`, `*/tests/`, `requirements-dev.txt`
+**Backend excludes:** `.coverage`, `.pytest_cache/`, `.ruff_cache/`, `htmlcov/`
 
-Safe for dev because `docker-compose.yml` uses bind mounts (`./backend:/app`, `./frontend:/app`) which override image contents at runtime.
+**Important:** Backend `.dockerignore` does NOT exclude `conftest.py`, `*/tests/`, or `requirements-dev.txt` because `.dockerignore` applies to the entire build context (not per-stage). The `dev` stage needs `requirements-dev.txt` for its explicit `COPY` instruction, and test files are needed for `COPY . .` in the base stage.
 
 ## Production Compose
 

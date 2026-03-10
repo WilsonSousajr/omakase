@@ -5,8 +5,10 @@ import api from "@/lib/api";
 import { useAuthStore } from "@/stores/authStore";
 import type {
   AuthTokens,
+  ChangePasswordPayload,
   LoginCredentials,
   RegisterCredentials,
+  UpdateProfilePayload,
   User,
 } from "@/types/auth";
 
@@ -77,6 +79,34 @@ export function useRegister() {
         setAuth(result.user!, result.tokens!);
         router.push("/plan");
       }
+    },
+  });
+}
+
+export function useUpdateProfile() {
+  const setUser = useAuthStore((s) => s.setUser);
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (payload: UpdateProfilePayload) => {
+      const { data } = await api.patch<User>("/auth/me/", payload);
+      return data;
+    },
+    onSuccess: (user) => {
+      setUser(user);
+      queryClient.setQueryData(["auth", "me"], user);
+    },
+  });
+}
+
+export function useChangePassword() {
+  return useMutation({
+    mutationFn: async (payload: ChangePasswordPayload) => {
+      const { data } = await api.post<{ detail: string }>(
+        "/auth/change-password/",
+        payload
+      );
+      return data;
     },
   });
 }

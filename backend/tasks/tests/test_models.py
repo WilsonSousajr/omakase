@@ -2,8 +2,8 @@ import pytest
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 
-from conftest import TagFactory, TaskFactory, TimeBlockFactory
-from tasks.models import Tag, Task, TimeBlock
+from conftest import SubtaskFactory, TagFactory, TaskFactory, TimeBlockFactory
+from tasks.models import Subtask, Tag, Task, TimeBlock
 
 
 @pytest.mark.django_db
@@ -163,3 +163,33 @@ class TestTaskCompletionSync:
         task.refresh_from_db()
         assert task.is_completed is False
         assert task.completed_at is None
+
+
+@pytest.mark.django_db
+class TestSubtask:
+    def test_create_subtask(self, task):
+        sub = Subtask.objects.create(task=task, title="Do thing", order=0)
+        assert sub.title == "Do thing"
+        assert sub.is_completed is False
+        assert sub.pk is not None
+
+    def test_defaults(self, task):
+        sub = Subtask.objects.create(task=task, title="Step")
+        assert sub.is_completed is False
+        assert sub.order == 0
+
+    def test_subtask_ordering(self, task):
+        s2 = SubtaskFactory(task=task, title="Second", order=1)
+        s1 = SubtaskFactory(task=task, title="First", order=0)
+        subs = list(task.subtasks.all())
+        assert subs[0] == s1
+        assert subs[1] == s2
+
+    def test_cascade_delete_with_task(self, task):
+        SubtaskFactory(task=task)
+        task.delete()
+        assert Subtask.objects.count() == 0
+
+    def test_str_representation(self, task):
+        sub = SubtaskFactory(task=task, title="Review PR")
+        assert str(sub) == "Review PR"
