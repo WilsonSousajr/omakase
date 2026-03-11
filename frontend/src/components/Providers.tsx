@@ -30,7 +30,7 @@ function IntlProvider({ children }: { children: React.ReactNode }) {
   if (!messages) return null;
 
   return (
-    <NextIntlClientProvider locale={activeLocale} messages={messages}>
+    <NextIntlClientProvider locale={activeLocale} messages={messages} timeZone={Intl.DateTimeFormat().resolvedOptions().timeZone}>
       {children}
     </NextIntlClientProvider>
   );
