@@ -116,6 +116,39 @@ describe("TimeBlockItem", () => {
     expect(onToggle).toHaveBeenCalledWith("task-1", true);
   });
 
+  it("renders left accent stripe with priority color", () => {
+    const { container } = render(
+      <TimeBlockItem
+        block={mockBlock}
+        task={mockTask}
+        onDelete={vi.fn()}
+        onResize={vi.fn()}
+        slotHeight={40}
+      />
+    );
+    // Accent stripe is first child div inside the wrapper
+    const wrapper = container.firstChild as HTMLElement;
+    const stripe = wrapper.querySelector(".rounded-l-xl") as HTMLElement;
+    expect(stripe).not.toBeNull();
+    // High priority = #f97316 (orange) — DOM serializes as rgb
+    expect(stripe.style.backgroundColor).toBe("rgb(249, 115, 22)");
+  });
+
+  it("uses rounded-xl and transition-all on wrapper", () => {
+    const { container } = render(
+      <TimeBlockItem
+        block={mockBlock}
+        task={mockTask}
+        onDelete={vi.fn()}
+        onResize={vi.fn()}
+        slotHeight={40}
+      />
+    );
+    const wrapper = container.firstChild as HTMLElement;
+    expect(wrapper.className).toContain("rounded-xl");
+    expect(wrapper.className).toContain("transition-all");
+  });
+
   it("applies line-through when completed", () => {
     const completedTask = { ...mockTask, is_completed: true };
     render(

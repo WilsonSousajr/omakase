@@ -258,10 +258,19 @@ frontend/
 
 ## Calendar Time Blocks
 
-- Time blocks are colored by task priority (gray/amber/orange/red), not a fixed color
+- **Notion-style accent stripe design:** Left colored stripe (`w-1`) carries priority/discipline color, white title text for readability
 - Priority badge shown inline next to task title
 - Bottom resize handle (visible on hover) allows dragging to change `end_time` — snaps to 15-min increments, min 15 min, max 22:00
 - Resize uses native mouse events (mousedown/mousemove/mouseup), not dnd-kit; height driven by React state (not DOM manipulation)
+- `data-timeblock` / `data-classblock` attributes on blocks prevent click-to-create from triggering on them
+- **Shared utilities:** `calendarUtils.ts` exports `timeToOffset`, `timeToMinutes`, `minutesToTime`, `HOURS`, `SLOT_HEIGHT_DAY`, `SLOT_HEIGHT_WEEK`
+- **Shared TimeSlot component:** Unified droppable slot used by both DayView and WeekView
+- **CurrentTimeIndicator:** Red line + dot at current time, updates every 60s, only renders for today
+- **Grid line hierarchy:** Hour lines `/60` opacity, half-hour lines `/20` opacity (Notion Calendar style)
+- **Click-to-create (day view only):** `useClickToCreate` hook with 5px dead zone, 15-min snap. Drawing creates `CreationOverlay`, mouseup opens TaskForm. `calendarStore.creationDraft` carries date/startTime/endTime. TaskForm creates TimeBlock after task creation if draft exists.
+- **WeekView class occurrences:** Renders ClassBlockItem per column (was missing before)
+- **WeekView day headers:** Two-line layout (day name + date number), today circle highlight, today column `bg-white/[0.02]`
+- **CalendarHeader:** Pill-style Today button, larger date label, segmented view toggle
 
 ## Plan ↔ Focus Mode Sync
 

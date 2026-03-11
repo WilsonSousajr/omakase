@@ -3,15 +3,11 @@
 import { BookOpen, MapPin } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { ClassOccurrence } from "@/types/classschedule";
+import { timeToMinutes } from "./calendarUtils";
 
 interface ClassBlockItemProps {
   occurrence: ClassOccurrence;
   slotHeight: number;
-}
-
-function timeToMinutes(time: string): number {
-  const [h, m] = time.split(":").map(Number);
-  return h * 60 + m;
 }
 
 export default function ClassBlockItem({ occurrence, slotHeight }: ClassBlockItemProps) {
@@ -24,7 +20,8 @@ export default function ClassBlockItem({ occurrence, slotHeight }: ClassBlockIte
 
   return (
     <div
-      className="absolute inset-x-1 overflow-hidden rounded-lg border border-dashed px-2 py-1"
+      data-classblock
+      className="absolute inset-x-1 overflow-hidden rounded-xl border border-dashed px-2 py-1"
       style={{
         height: `${height}px`,
         borderColor: `${color}50`,

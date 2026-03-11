@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { DndContext, type DragEndEvent, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import TaskList from "@/components/tasks/TaskList";
 import Calendar from "@/components/calendar/Calendar";
@@ -11,6 +11,7 @@ import { useUpdateStudyBlock } from "@/hooks/useStudyBlocks";
 import { useDailyReview } from "@/hooks/useDailyReviews";
 import { useToday } from "@/hooks/useToday";
 import { useUIStore } from "@/stores/uiStore";
+import { useCalendarStore } from "@/stores/calendarStore";
 import type { Task } from "@/types/task";
 import type { StudyBlock } from "@/types/studyblock";
 import type { TimeBlock } from "@/types/timeblock";
@@ -29,11 +30,14 @@ export default function PlanPage() {
   const updateTimeBlock = useUpdateTimeBlock();
   const updateTask = useUpdateTask();
   const updateStudyBlock = useUpdateStudyBlock();
+  const [isDragging, setIsDragging] = useState(false);
 
   const today = useToday();
   const { data: todayReview } = useDailyReview(today);
   const hasShownShutdownNudge = useUIStore((s) => s.hasShownShutdownNudge);
   const setHasShownShutdownNudge = useUIStore((s) => s.setHasShownShutdownNudge);
+  const openModal = useUIStore((s) => s.openModal);
+  const setCreationDraft = useCalendarStore((s) => s.setCreationDraft);
 
   useEffect(() => {
     if (todayReview?.is_shutdown && !hasShownShutdownNudge) {
@@ -46,7 +50,12 @@ export default function PlanPage() {
     useSensor(PointerSensor, { activationConstraint: { distance: DRAG_ACTIVATION_DISTANCE } })
   );
 
+  const handleDragStart = () => {
+    setIsDragging(true);
+  };
+
   const handleDragEnd = async (event: DragEndEvent) => {
+    setIsDragging(false);
     const { active, over } = event;
     if (!over) return;
 
@@ -119,14 +128,22 @@ export default function PlanPage() {
     }
   };
 
+  const handleCreateRange = useCallback(
+    (date: string, startTime: string, endTime: string) => {
+      setCreationDraft({ date, startTime, endTime });
+      openModal("task-form");
+    },
+    [setCreationDraft, openModal],
+  );
+
   return (
-    <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+    <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div className="flex h-full">
         <div className="w-[400px] shrink-0 border-r border-[var(--color-border)]">
           <TaskList />
         </div>
         <div className="flex-1">
-          <Calendar />
+          <Calendar isDragging={isDragging} onCreateRange={handleCreateRange} />
         </div>
       </div>
     </DndContext>
