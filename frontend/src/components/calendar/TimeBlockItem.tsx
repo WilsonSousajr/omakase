@@ -47,9 +47,9 @@ export default function TimeBlockItem({
   const title = isStudyBlock ? studyBlock.title : (task?.title || t("untitledTask"));
   const isCompleted = isStudyBlock ? studyBlock.is_completed : task?.is_completed;
 
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `timeblock-${block.id}`,
-    data: { type: "timeblock", block },
+    data: { type: "timeblock", block, title, color },
   });
 
   // --- Resize logic via native mouse events ---
@@ -113,10 +113,7 @@ export default function TimeBlockItem({
 
   const style = {
     height: `${resizeHeight ?? height}px`,
-    transform: transform
-      ? `translate(${transform.x}px, ${transform.y}px)`
-      : undefined,
-    opacity: isDragging ? 0.5 : 1,
+    opacity: isDragging ? 0 : 1,
   };
 
   return (
@@ -126,7 +123,7 @@ export default function TimeBlockItem({
       ref={setNodeRef}
       {...listeners}
       {...attributes}
-      className="group absolute inset-x-1 cursor-grab overflow-hidden rounded-xl border pl-3.5 pr-3 py-1.5 active:cursor-grabbing transition-all duration-200 hover:shadow-lg hover:shadow-black/20"
+      className="group absolute inset-x-1 cursor-grab overflow-hidden rounded-xl border pl-3.5 pr-3 py-1.5 active:cursor-grabbing transition-[opacity,box-shadow] duration-200 hover:shadow-lg hover:shadow-black/20"
       style={{
         ...style,
         borderColor: `${color}25`,

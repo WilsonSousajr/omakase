@@ -17,7 +17,7 @@ export default function DraggableTaskCard({
   onDelete,
   onToggleComplete,
 }: DraggableTaskCardProps) {
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `task-${task.id}`,
     data: { type: "task", task },
   });
@@ -26,10 +26,7 @@ export default function DraggableTaskCard({
     <div
       ref={setNodeRef}
       style={{
-        transform: transform
-          ? `translate(${transform.x}px, ${transform.y}px)`
-          : undefined,
-        opacity: isDragging ? 0.5 : 1,
+        opacity: isDragging ? 0 : 1,
         cursor: isDragging ? "grabbing" : "grab",
       }}
       {...listeners}
