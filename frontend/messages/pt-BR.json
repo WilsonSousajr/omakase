@@ -29,7 +29,10 @@
     "hasAccount": "Já tem uma conta?",
     "register": "Cadastrar",
     "signingIn": "Entrando...",
-    "registering": "Cadastrando..."
+    "registering": "Cadastrando...",
+    "email": "Email",
+    "invalidCredentials": "Usuário ou senha inválidos.",
+    "registrationFailed": "Falha no cadastro. Tente novamente."
   },
   "sidebar": {
     "plan": "Plano",
@@ -191,7 +194,11 @@
     "dueDate": "Data de Entrega",
     "tasks": "{count} tarefas",
     "noProjects": "Nenhum projeto ainda. Crie um para começar.",
-    "deleteConfirm": "Excluir este projeto?"
+    "deleteConfirm": "Excluir este projeto?",
+    "workspaces": "Workspaces",
+    "all": "Todos",
+    "workspaceNamePlaceholder": "Nome...",
+    "new": "Novo"
   },
   "study": {
     "semesters": "Semestres",
@@ -343,6 +350,60 @@
   },
   "errors": {
     "generic": "Algo deu errado",
-    "tryAgain": "Tentar Novamente"
+    "tryAgain": "Tentar Novamente",
+    "unexpectedError": "Ocorreu um erro inesperado. Tente atualizar a página."
+  },
+  "settings": {
+    "title": "Configurações",
+    "profile": "Perfil",
+    "username": "Usuário",
+    "firstName": "Nome",
+    "lastName": "Sobrenome",
+    "firstNamePlaceholder": "Nome",
+    "lastNamePlaceholder": "Sobrenome",
+    "email": "Email",
+    "emailPlaceholder": "Email",
+    "saving": "Salvando...",
+    "pomodoro": "Pomodoro",
+    "workMinutes": "Trabalho (minutos)",
+    "shortBreakMinutes": "Pausa curta (minutos)",
+    "longBreakMinutes": "Pausa longa (minutos)",
+    "sessionsBeforeLongBreak": "Sessões antes da pausa longa",
+    "dailyGoals": "Metas Diárias",
+    "workHours": "Horas de trabalho",
+    "studyHours": "Horas de estudo",
+    "general": "Geral",
+    "weekStartsOn": "Semana começa em",
+    "monday": "Segunda-feira",
+    "sunday": "Domingo",
+    "timezone": "Fuso horário",
+    "timezonePlaceholder": "ex. America/Sao_Paulo",
+    "changePassword": "Alterar Senha",
+    "currentPassword": "Senha Atual",
+    "currentPasswordPlaceholder": "Senha atual",
+    "newPassword": "Nova Senha",
+    "newPasswordPlaceholder": "Nova senha",
+    "confirmNewPassword": "Confirmar Nova Senha",
+    "confirmNewPasswordPlaceholder": "Confirmar nova senha",
+    "passwordsDoNotMatch": "As senhas não coincidem.",
+    "changing": "Alterando...",
+    "failedToChangePassword": "Falha ao alterar a senha.",
+    "settingsSaved": "Configurações salvas com sucesso",
+    "profileUpdated": "Perfil atualizado",
+    "passwordChanged": "Senha alterada. Faça login novamente.",
+    "logOut": "Sair"
+  },
+  "subtasks": {
+    "title": "Subtarefas",
+    "loading": "Carregando subtarefas...",
+    "addPlaceholder": "Adicionar subtarefa...",
+    "deleteAriaLabel": "Excluir subtarefa"
+  },
+  "plan": {
+    "shutdownNudge": "Você encerrou o dia. Descanse bem!"
+  },
+  "accessibility": {
+    "toggleTheme": "Alternar tema",
+    "toggleLanguage": "Alternar idioma"
   }
 }

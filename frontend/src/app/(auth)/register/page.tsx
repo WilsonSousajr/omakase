@@ -37,7 +37,7 @@ export default function RegisterPage() {
         return String(msg);
       }
     }
-    return "Registration failed. Please try again.";
+    return t("registrationFailed");
   }
 
   const errorMessage = getErrorMessage();
@@ -70,7 +70,7 @@ export default function RegisterPage() {
 
         <div>
           <label className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
-            Email
+            {t("email")}
           </label>
           <input
             type="email"

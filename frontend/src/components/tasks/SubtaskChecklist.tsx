@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { X, Plus } from "lucide-react";
+import { useTranslations } from "next-intl";
 import {
   useSubtasks,
   useCreateSubtask,
@@ -18,6 +19,7 @@ export default function SubtaskChecklist({ taskId }: SubtaskChecklistProps) {
   const createSubtask = useCreateSubtask(taskId);
   const updateSubtask = useUpdateSubtask(taskId);
   const deleteSubtask = useDeleteSubtask(taskId);
+  const t = useTranslations("subtasks");
   const [newTitle, setNewTitle] = useState("");
 
   const completedCount = subtasks.filter((s) => s.is_completed).length;
@@ -49,7 +51,7 @@ export default function SubtaskChecklist({ taskId }: SubtaskChecklistProps) {
     return (
       <div className="py-2">
         <p className="text-xs text-[var(--color-text-faint)]">
-          Loading subtasks...
+          {t("loading")}
         </p>
       </div>
     );
@@ -59,7 +61,7 @@ export default function SubtaskChecklist({ taskId }: SubtaskChecklistProps) {
     <div>
       <div className="mb-2 flex items-center gap-2">
         <h4 className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
-          Subtasks
+          {t("title")}
         </h4>
         {totalCount > 0 && (
           <span className="text-[10px] font-medium text-[var(--color-text-faint)]">
@@ -92,7 +94,7 @@ export default function SubtaskChecklist({ taskId }: SubtaskChecklistProps) {
             <button
               type="button"
               onClick={() => handleDelete(subtask.id)}
-              aria-label="Delete subtask"
+              aria-label={t("deleteAriaLabel")}
               className="shrink-0 rounded p-0.5 text-[var(--color-text-faint)] opacity-0 transition-opacity hover:text-[var(--color-text-secondary)] group-hover:opacity-100"
             >
               <X className="h-3 w-3" />
@@ -105,7 +107,7 @@ export default function SubtaskChecklist({ taskId }: SubtaskChecklistProps) {
         <Plus className="h-3.5 w-3.5 shrink-0 text-[var(--color-text-faint)]" />
         <input
           type="text"
-          placeholder="Add subtask..."
+          placeholder={t("addPlaceholder")}
           value={newTitle}
           onChange={(e) => setNewTitle(e.target.value)}
           onKeyDown={handleKeyDown}

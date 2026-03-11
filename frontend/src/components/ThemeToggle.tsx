@@ -2,12 +2,14 @@
 
 import { useTheme } from "next-themes";
 import { Monitor, Moon, Sun } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 
 const THEME_CYCLE = { system: "light", light: "dark", dark: "system" } as const;
 
 export default function ThemeToggle() {
   const { theme, setTheme } = useTheme();
+  const t = useTranslations("accessibility");
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => setMounted(true), []);
@@ -22,7 +24,7 @@ export default function ThemeToggle() {
 
   return (
     <button
-      aria-label="Toggle theme"
+      aria-label={t("toggleTheme")}
       onClick={() =>
         setTheme(THEME_CYCLE[(theme as keyof typeof THEME_CYCLE) ?? "system"])
       }

@@ -108,7 +108,7 @@ export default function ProjectsPage() {
       {/* Workspace selector bar */}
       <div className="mb-6">
         <label className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
-          Workspaces
+          {t("workspaces")}
         </label>
         <div className="flex flex-wrap items-center gap-2">
           <button
@@ -120,7 +120,7 @@ export default function ProjectsPage() {
                 : "text-[var(--color-text-muted)] hover:bg-[var(--color-surface)] hover:text-[var(--color-text-secondary)]"
             )}
           >
-            All
+            {t("all")}
           </button>
           {workspaces.map((ws) => (
             <div key={ws.id} className="group flex items-center">
@@ -182,7 +182,7 @@ export default function ProjectsPage() {
               <input
                 ref={newWsInputRef}
                 type="text"
-                placeholder="Name..."
+                placeholder={t("workspaceNamePlaceholder")}
                 value={newWorkspaceName}
                 onChange={(e) => setNewWorkspaceName(e.target.value)}
                 onKeyDown={(e) => {
@@ -212,7 +212,7 @@ export default function ProjectsPage() {
               className="flex items-center gap-1 rounded-xl px-2.5 py-1.5 text-xs text-[var(--color-text-faint)] transition-colors hover:bg-[var(--color-surface)] hover:text-[var(--color-text-secondary)]"
             >
               <Plus className="h-3.5 w-3.5" />
-              New
+              {t("new")}
             </button>
           )}
         </div>

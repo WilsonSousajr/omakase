@@ -58,7 +58,7 @@ export default function LoginPage() {
 
         {login.error && (
           <p className="text-sm text-red-400">
-            Invalid username or password.
+            {t("invalidCredentials")}
           </p>
         )}
 

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Save } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import ColorSwatchPicker from "@/components/ColorSwatchPicker";
 import UserAvatar from "@/components/UserAvatar";
@@ -12,6 +13,8 @@ import { useAuthStore } from "@/stores/authStore";
 import type { UserProfileUpdate } from "@/types/userprofile";
 
 export default function SettingsPage() {
+  const t = useTranslations("settings");
+  const tco = useTranslations("common");
   const user = useAuthStore((s) => s.user);
   const updateProfile = useUpdateProfile();
   const changePassword = useChangePassword();
@@ -64,7 +67,7 @@ export default function SettingsPage() {
     try {
       await updateUserProfile.mutateAsync(prefsForm);
       setPrefsChanged(false);
-      emitToast("Settings saved successfully");
+      emitToast(t("settingsSaved"));
     } catch {
       // Error toast handled by global interceptor
     }
@@ -74,7 +77,7 @@ export default function SettingsPage() {
     e.preventDefault();
     updateProfile.mutate(
       { first_name: firstName, last_name: lastName, email, avatar_color: avatarColor },
-      { onSuccess: () => emitToast("Profile updated") }
+      { onSuccess: () => emitToast(t("profileUpdated")) }
     );
   }
 
@@ -82,14 +85,14 @@ export default function SettingsPage() {
     e.preventDefault();
     setPasswordError("");
     if (newPassword !== newPasswordConfirm) {
-      setPasswordError("New passwords do not match.");
+      setPasswordError(t("passwordsDoNotMatch"));
       return;
     }
     changePassword.mutate(
       { old_password: oldPassword, new_password: newPassword, new_password_confirm: newPasswordConfirm },
       {
         onSuccess: () => {
-          emitToast("Password changed. Please log in again.");
+          emitToast(t("passwordChanged"));
           logout();
         },
         onError: (err) => {
@@ -99,7 +102,7 @@ export default function SettingsPage() {
             data?.new_password?.[0] ??
             data?.new_password_confirm?.[0] ??
             data?.non_field_errors?.[0] ??
-            "Failed to change password.";
+            t("failedToChangePassword");
           setPasswordError(message);
         },
       }
@@ -113,11 +116,11 @@ export default function SettingsPage() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-6 p-6">
-      <h1 className="text-lg font-semibold text-[var(--color-text-primary)]">Settings</h1>
+      <h1 className="text-lg font-semibold text-[var(--color-text-primary)]">{t("title")}</h1>
 
       {/* Profile Section */}
       <form onSubmit={handleProfileSubmit} className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
-        <h2 className="mb-4 text-sm font-semibold text-[var(--color-text-primary)]">Profile</h2>
+        <h2 className="mb-4 text-sm font-semibold text-[var(--color-text-primary)]">{t("profile")}</h2>
 
         <div className="mb-4 flex items-center gap-4">
           <UserAvatar user={previewUser} size="lg" />
@@ -127,40 +130,40 @@ export default function SettingsPage() {
         </div>
 
         <div className="mb-3">
-          <label className={labelClass}>Username</label>
+          <label className={labelClass}>{t("username")}</label>
           <p className="text-sm text-[var(--color-text-secondary)]">{user.username}</p>
         </div>
 
         <div className="mb-3">
-          <label className={labelClass}>First Name</label>
+          <label className={labelClass}>{t("firstName")}</label>
           <input
             type="text"
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
             className={inputClass}
-            placeholder="First name"
+            placeholder={t("firstNamePlaceholder")}
           />
         </div>
 
         <div className="mb-3">
-          <label className={labelClass}>Last Name</label>
+          <label className={labelClass}>{t("lastName")}</label>
           <input
             type="text"
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
             className={inputClass}
-            placeholder="Last name"
+            placeholder={t("lastNamePlaceholder")}
           />
         </div>
 
         <div className="mb-4">
-          <label className={labelClass}>Email</label>
+          <label className={labelClass}>{t("email")}</label>
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className={inputClass}
-            placeholder="Email"
+            placeholder={t("emailPlaceholder")}
           />
         </div>
 
@@ -169,7 +172,7 @@ export default function SettingsPage() {
           disabled={updateProfile.isPending}
           className="rounded-xl bg-[var(--color-button-primary)] px-4 py-1.5 text-xs font-medium text-[var(--color-button-primary-text)] transition-colors hover:bg-[var(--color-button-primary-hover)] disabled:opacity-50"
         >
-          {updateProfile.isPending ? "Saving..." : "Save"}
+          {updateProfile.isPending ? t("saving") : tco("save")}
         </button>
       </form>
 
@@ -177,7 +180,7 @@ export default function SettingsPage() {
       <section className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
-            Pomodoro
+            {t("pomodoro")}
           </h2>
           <button
             onClick={handlePrefsSave}
@@ -185,33 +188,33 @@ export default function SettingsPage() {
             className="flex items-center gap-1.5 rounded-xl bg-[var(--color-button-primary)] px-3 py-1.5 text-xs font-medium text-[var(--color-button-primary-text)] transition-colors hover:bg-[var(--color-button-primary-hover)] disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <Save className="h-3.5 w-3.5" />
-            {updateUserProfile.isPending ? "Saving..." : "Save"}
+            {updateUserProfile.isPending ? t("saving") : tco("save")}
           </button>
         </div>
         <div className="grid grid-cols-2 gap-4">
           <NumberField
-            label="Work (minutes)"
+            label={t("workMinutes")}
             value={prefsForm.pomodoro_work_minutes ?? 25}
             onChange={(v) => handlePrefsChange("pomodoro_work_minutes", v)}
             min={1}
             max={120}
           />
           <NumberField
-            label="Short break (minutes)"
+            label={t("shortBreakMinutes")}
             value={prefsForm.pomodoro_short_break_minutes ?? 5}
             onChange={(v) => handlePrefsChange("pomodoro_short_break_minutes", v)}
             min={1}
             max={60}
           />
           <NumberField
-            label="Long break (minutes)"
+            label={t("longBreakMinutes")}
             value={prefsForm.pomodoro_long_break_minutes ?? 15}
             onChange={(v) => handlePrefsChange("pomodoro_long_break_minutes", v)}
             min={1}
             max={60}
           />
           <NumberField
-            label="Sessions before long break"
+            label={t("sessionsBeforeLongBreak")}
             value={prefsForm.pomodoros_before_long_break ?? 4}
             onChange={(v) => handlePrefsChange("pomodoros_before_long_break", v)}
             min={1}
@@ -223,11 +226,11 @@ export default function SettingsPage() {
       {/* Daily Goals Section */}
       <section className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
         <h2 className="mb-4 text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
-          Daily Goals
+          {t("dailyGoals")}
         </h2>
         <div className="grid grid-cols-2 gap-4">
           <NumberField
-            label="Work hours"
+            label={t("workHours")}
             value={prefsForm.daily_work_goal_hours ?? 8}
             onChange={(v) => handlePrefsChange("daily_work_goal_hours", v)}
             min={0}
@@ -235,7 +238,7 @@ export default function SettingsPage() {
             step={0.5}
           />
           <NumberField
-            label="Study hours"
+            label={t("studyHours")}
             value={prefsForm.daily_study_goal_hours ?? 4}
             onChange={(v) => handlePrefsChange("daily_study_goal_hours", v)}
             min={0}
@@ -248,32 +251,32 @@ export default function SettingsPage() {
       {/* General Section */}
       <section className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
         <h2 className="mb-4 text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
-          General
+          {t("general")}
         </h2>
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
-              Week starts on
+              {t("weekStartsOn")}
             </label>
             <select
               value={prefsForm.week_starts_on ?? "monday"}
               onChange={(e) => handlePrefsChange("week_starts_on", e.target.value)}
               className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-input)] px-3 py-2 text-sm text-[var(--color-text-primary)] outline-none focus:border-[var(--color-text-secondary)]/40"
             >
-              <option value="monday">Monday</option>
-              <option value="sunday">Sunday</option>
+              <option value="monday">{t("monday")}</option>
+              <option value="sunday">{t("sunday")}</option>
             </select>
           </div>
           <div>
             <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
-              Timezone
+              {t("timezone")}
             </label>
             <input
               type="text"
               value={prefsForm.timezone ?? "UTC"}
               onChange={(e) => handlePrefsChange("timezone", e.target.value)}
               className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-input)] px-3 py-2 text-sm text-[var(--color-text-primary)] outline-none focus:border-[var(--color-text-secondary)]/40"
-              placeholder="e.g. America/Sao_Paulo"
+              placeholder={t("timezonePlaceholder")}
             />
           </div>
         </div>
@@ -281,42 +284,42 @@ export default function SettingsPage() {
 
       {/* Password Section */}
       <form onSubmit={handlePasswordSubmit} className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
-        <h2 className="mb-4 text-sm font-semibold text-[var(--color-text-primary)]">Change Password</h2>
+        <h2 className="mb-4 text-sm font-semibold text-[var(--color-text-primary)]">{t("changePassword")}</h2>
 
         {passwordError && (
           <p className="mb-3 text-xs text-red-400">{passwordError}</p>
         )}
 
         <div className="mb-3">
-          <label className={labelClass}>Current Password</label>
+          <label className={labelClass}>{t("currentPassword")}</label>
           <input
             type="password"
             value={oldPassword}
             onChange={(e) => setOldPassword(e.target.value)}
             className={inputClass}
-            placeholder="Current password"
+            placeholder={t("currentPasswordPlaceholder")}
           />
         </div>
 
         <div className="mb-3">
-          <label className={labelClass}>New Password</label>
+          <label className={labelClass}>{t("newPassword")}</label>
           <input
             type="password"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
             className={inputClass}
-            placeholder="New password"
+            placeholder={t("newPasswordPlaceholder")}
           />
         </div>
 
         <div className="mb-4">
-          <label className={labelClass}>Confirm New Password</label>
+          <label className={labelClass}>{t("confirmNewPassword")}</label>
           <input
             type="password"
             value={newPasswordConfirm}
             onChange={(e) => setNewPasswordConfirm(e.target.value)}
             className={inputClass}
-            placeholder="Confirm new password"
+            placeholder={t("confirmNewPasswordPlaceholder")}
           />
         </div>
 
@@ -325,7 +328,7 @@ export default function SettingsPage() {
           disabled={changePassword.isPending || !oldPassword || !newPassword || !newPasswordConfirm}
           className="rounded-xl bg-[var(--color-button-primary)] px-4 py-1.5 text-xs font-medium text-[var(--color-button-primary-text)] transition-colors hover:bg-[var(--color-button-primary-hover)] disabled:opacity-50"
         >
-          {changePassword.isPending ? "Changing..." : "Change Password"}
+          {changePassword.isPending ? t("changing") : t("changePassword")}
         </button>
       </form>
 
@@ -336,7 +339,7 @@ export default function SettingsPage() {
           onClick={logout}
           className="rounded-xl px-4 py-1.5 text-xs font-medium text-red-400 transition-colors hover:bg-red-400/10"
         >
-          Log out
+          {t("logOut")}
         </button>
       </div>
     </div>

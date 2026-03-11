@@ -29,7 +29,10 @@
     "hasAccount": "Already have an account?",
     "register": "Register",
     "signingIn": "Signing in...",
-    "registering": "Registering..."
+    "registering": "Registering...",
+    "email": "Email",
+    "invalidCredentials": "Invalid username or password.",
+    "registrationFailed": "Registration failed. Please try again."
   },
   "sidebar": {
     "plan": "Plan",
@@ -191,7 +194,11 @@
     "dueDate": "Due Date",
     "tasks": "{count} tasks",
     "noProjects": "No projects yet. Create one to get started.",
-    "deleteConfirm": "Delete this project?"
+    "deleteConfirm": "Delete this project?",
+    "workspaces": "Workspaces",
+    "all": "All",
+    "workspaceNamePlaceholder": "Name...",
+    "new": "New"
   },
   "study": {
     "semesters": "Semesters",
@@ -343,6 +350,60 @@
   },
   "errors": {
     "generic": "Something went wrong",
-    "tryAgain": "Try Again"
+    "tryAgain": "Try Again",
+    "unexpectedError": "An unexpected error occurred. Try refreshing the page."
+  },
+  "settings": {
+    "title": "Settings",
+    "profile": "Profile",
+    "username": "Username",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "firstNamePlaceholder": "First name",
+    "lastNamePlaceholder": "Last name",
+    "email": "Email",
+    "emailPlaceholder": "Email",
+    "saving": "Saving...",
+    "pomodoro": "Pomodoro",
+    "workMinutes": "Work (minutes)",
+    "shortBreakMinutes": "Short break (minutes)",
+    "longBreakMinutes": "Long break (minutes)",
+    "sessionsBeforeLongBreak": "Sessions before long break",
+    "dailyGoals": "Daily Goals",
+    "workHours": "Work hours",
+    "studyHours": "Study hours",
+    "general": "General",
+    "weekStartsOn": "Week starts on",
+    "monday": "Monday",
+    "sunday": "Sunday",
+    "timezone": "Timezone",
+    "timezonePlaceholder": "e.g. America/Sao_Paulo",
+    "changePassword": "Change Password",
+    "currentPassword": "Current Password",
+    "currentPasswordPlaceholder": "Current password",
+    "newPassword": "New Password",
+    "newPasswordPlaceholder": "New password",
+    "confirmNewPassword": "Confirm New Password",
+    "confirmNewPasswordPlaceholder": "Confirm new password",
+    "passwordsDoNotMatch": "New passwords do not match.",
+    "changing": "Changing...",
+    "failedToChangePassword": "Failed to change password.",
+    "settingsSaved": "Settings saved successfully",
+    "profileUpdated": "Profile updated",
+    "passwordChanged": "Password changed. Please log in again.",
+    "logOut": "Log out"
+  },
+  "subtasks": {
+    "title": "Subtasks",
+    "loading": "Loading subtasks...",
+    "addPlaceholder": "Add subtask...",
+    "deleteAriaLabel": "Delete subtask"
+  },
+  "plan": {
+    "shutdownNudge": "You've shut down for the day. Rest well!"
+  },
+  "accessibility": {
+    "toggleTheme": "Toggle theme",
+    "toggleLanguage": "Toggle language"
   }
 }

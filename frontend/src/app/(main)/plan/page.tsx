@@ -1,9 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { DndContext, type DragEndEvent, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
+import { DndContext, DragOverlay, type DragEndEvent, type DragStartEvent, PointerSensor, useSensor, useSensors, closestCenter } from "@dnd-kit/core";
 import TaskList from "@/components/tasks/TaskList";
 import Calendar from "@/components/calendar/Calendar";
+import { useTranslations } from "next-intl";
 import { emitToast } from "@/components/Toast";
 import { useCreateTimeBlock, useUpdateTimeBlock } from "@/hooks/useTimeBlocks";
 import { useUpdateTask } from "@/hooks/useTasks";
@@ -15,7 +16,7 @@ import { useCalendarStore } from "@/stores/calendarStore";
 import type { Task } from "@/types/task";
 import type { StudyBlock } from "@/types/studyblock";
 import type { TimeBlock } from "@/types/timeblock";
-import { DRAG_ACTIVATION_DISTANCE, DEFAULT_TIMEBLOCK_MINUTES } from "@/lib/constants";
+import { DRAG_ACTIVATION_DISTANCE, DEFAULT_TIMEBLOCK_MINUTES, PRIORITIES } from "@/lib/constants";
 
 function addMinutesToTime(time: string, minutes: number): string {
   const [h, m] = time.split(":").map(Number);
@@ -26,11 +27,18 @@ function addMinutesToTime(time: string, minutes: number): string {
 }
 
 export default function PlanPage() {
+  const t = useTranslations("plan");
   const createTimeBlock = useCreateTimeBlock();
   const updateTimeBlock = useUpdateTimeBlock();
   const updateTask = useUpdateTask();
   const updateStudyBlock = useUpdateStudyBlock();
   const [isDragging, setIsDragging] = useState(false);
+  const [activeDrag, setActiveDrag] = useState<
+    | { type: "task"; task: Task }
+    | { type: "studyblock"; studyBlock: StudyBlock }
+    | { type: "timeblock"; block: TimeBlock; title: string; color: string }
+    | null
+  >(null);
 
   const today = useToday();
   const { data: todayReview } = useDailyReview(today);
@@ -41,7 +49,7 @@ export default function PlanPage() {
 
   useEffect(() => {
     if (todayReview?.is_shutdown && !hasShownShutdownNudge) {
-      emitToast("You've shut down for the day. Rest well!");
+      emitToast(t("shutdownNudge"));
       setHasShownShutdownNudge(true);
     }
   }, [todayReview, hasShownShutdownNudge, setHasShownShutdownNudge]);
@@ -50,12 +58,14 @@ export default function PlanPage() {
     useSensor(PointerSensor, { activationConstraint: { distance: DRAG_ACTIVATION_DISTANCE } })
   );
 
-  const handleDragStart = () => {
+  const handleDragStart = (event: DragStartEvent) => {
     setIsDragging(true);
+    setActiveDrag(event.active.data.current as typeof activeDrag);
   };
 
   const handleDragEnd = async (event: DragEndEvent) => {
     setIsDragging(false);
+    setActiveDrag(null);
     const { active, over } = event;
     if (!over) return;
 
@@ -71,60 +81,61 @@ export default function PlanPage() {
 
     const { date, time } = overData;
 
-    if (activeData.type === "task") {
-      const duration = activeData.task.estimated_minutes || DEFAULT_TIMEBLOCK_MINUTES;
-      try {
-        await createTimeBlock.mutateAsync({
-          task: activeData.task.id,
-          date,
-          start_time: time + ":00",
-          end_time: addMinutesToTime(time, duration),
-        });
-        // Set scheduled_date so the task appears in focus mode
+    // Fire all mutations in parallel so React 18 batches the cache
+    // invalidations into a single re-render (prevents intermediate glitch state)
+    try {
+      if (activeData.type === "task") {
+        const duration = activeData.task.estimated_minutes || DEFAULT_TIMEBLOCK_MINUTES;
+        const promises: Promise<unknown>[] = [
+          createTimeBlock.mutateAsync({
+            task: activeData.task.id,
+            date,
+            start_time: time + ":00",
+            end_time: addMinutesToTime(time, duration),
+          }),
+        ];
         if (activeData.task.scheduled_date !== date) {
-          await updateTask.mutateAsync({ id: activeData.task.id, scheduled_date: date });
+          promises.push(updateTask.mutateAsync({ id: activeData.task.id, scheduled_date: date }));
         }
-      } catch {
-        // Errors handled by global toast interceptor
-      }
-    } else if (activeData.type === "studyblock") {
-      const sb = activeData.studyBlock;
-      const duration = sb.estimated_minutes || DEFAULT_TIMEBLOCK_MINUTES;
-      try {
-        await createTimeBlock.mutateAsync({
-          study_block: sb.id,
-          date,
-          start_time: time + ":00",
-          end_time: addMinutesToTime(time, duration),
-        });
+        await Promise.all(promises);
+      } else if (activeData.type === "studyblock") {
+        const sb = activeData.studyBlock;
+        const duration = sb.estimated_minutes || DEFAULT_TIMEBLOCK_MINUTES;
+        const promises: Promise<unknown>[] = [
+          createTimeBlock.mutateAsync({
+            study_block: sb.id,
+            date,
+            start_time: time + ":00",
+            end_time: addMinutesToTime(time, duration),
+          }),
+        ];
         if (sb.scheduled_date !== date) {
-          await updateStudyBlock.mutateAsync({ id: sb.id, scheduled_date: date });
+          promises.push(updateStudyBlock.mutateAsync({ id: sb.id, scheduled_date: date }));
         }
-      } catch {
-        // Errors handled by global toast interceptor
-      }
-    } else if (activeData.type === "timeblock") {
-      const block = activeData.block;
-      const [startH, startM] = block.start_time.split(":").map(Number);
-      const [endH, endM] = block.end_time.split(":").map(Number);
-      const durationMin = (endH * 60 + endM) - (startH * 60 + startM);
+        await Promise.all(promises);
+      } else if (activeData.type === "timeblock") {
+        const block = activeData.block;
+        const [startH, startM] = block.start_time.split(":").map(Number);
+        const [endH, endM] = block.end_time.split(":").map(Number);
+        const durationMin = (endH * 60 + endM) - (startH * 60 + startM);
 
-      try {
-        await updateTimeBlock.mutateAsync({
-          id: block.id,
-          date,
-          start_time: time + ":00",
-          end_time: addMinutesToTime(time, durationMin),
-        });
-        // Sync scheduled_date on the parent task/study block
+        const promises: Promise<unknown>[] = [
+          updateTimeBlock.mutateAsync({
+            id: block.id,
+            date,
+            start_time: time + ":00",
+            end_time: addMinutesToTime(time, durationMin),
+          }),
+        ];
         if (block.task && block.date !== date) {
-          await updateTask.mutateAsync({ id: block.task, scheduled_date: date });
+          promises.push(updateTask.mutateAsync({ id: block.task, scheduled_date: date }));
         } else if (block.study_block && block.date !== date) {
-          await updateStudyBlock.mutateAsync({ id: block.study_block, scheduled_date: date });
+          promises.push(updateStudyBlock.mutateAsync({ id: block.study_block, scheduled_date: date }));
         }
-      } catch {
-        // Errors handled by global toast interceptor
+        await Promise.all(promises);
       }
+    } catch {
+      // Errors handled by global toast interceptor
     }
   };
 
@@ -137,7 +148,7 @@ export default function PlanPage() {
   );
 
   return (
-    <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div className="flex h-full">
         <div className="w-[400px] shrink-0 border-r border-[var(--color-border)]">
           <TaskList />
@@ -146,6 +157,53 @@ export default function PlanPage() {
           <Calendar isDragging={isDragging} onCreateRange={handleCreateRange} />
         </div>
       </div>
+
+      <DragOverlay dropAnimation={null}>
+        {activeDrag?.type === "task" && (() => {
+          const priority = PRIORITIES.find((p) => p.value === activeDrag.task.priority);
+          return (
+            <div className="w-[350px] rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-3 shadow-xl shadow-black/25">
+              <div className="flex items-center gap-2">
+                <span className="truncate text-sm font-medium text-[var(--color-text-primary)]">
+                  {activeDrag.task.title}
+                </span>
+                {priority && (
+                  <span
+                    className="shrink-0 rounded-lg px-1.5 py-0.5 text-[10px] font-medium"
+                    style={{ backgroundColor: priority.color + "20", color: priority.color }}
+                  >
+                    {priority.label}
+                  </span>
+                )}
+              </div>
+            </div>
+          );
+        })()}
+        {activeDrag?.type === "timeblock" && (
+          <div
+            className="relative w-[200px] rounded-xl border pl-3.5 pr-3 py-1.5 shadow-xl shadow-black/25"
+            style={{
+              borderColor: `${activeDrag.color}25`,
+              backgroundColor: `${activeDrag.color}12`,
+            }}
+          >
+            <div
+              className="absolute left-0 top-0 bottom-0 w-1 rounded-l-xl"
+              style={{ backgroundColor: activeDrag.color }}
+            />
+            <p className="truncate text-xs font-medium text-[var(--color-text-primary)]">
+              {activeDrag.title}
+            </p>
+          </div>
+        )}
+        {activeDrag?.type === "studyblock" && (
+          <div className="w-[350px] rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-3 shadow-xl shadow-black/25">
+            <span className="truncate text-sm font-medium text-[var(--color-text-primary)]">
+              {activeDrag.studyBlock.title}
+            </span>
+          </div>
+        )}
+      </DragOverlay>
     </DndContext>
   );
 }
