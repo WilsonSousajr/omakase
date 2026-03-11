@@ -364,12 +364,13 @@ GitHub Actions (`.github/workflows/ci.yml`) runs on push to main and PRs:
 
 ### Gitflow
 
-- **main** — production-ready, only receives merges from feature/release branches
+- **main** — production-ready, protected. **NEVER create PRs directly to main.**
+- **develop** — integration branch. All feature/fix PRs target `develop`, not `main`.
 - **feat/<name>** — feature branches for new functionality
 - **fix/<name>** — bugfix branches
 - **chore/<name>** — maintenance, refactoring, tooling
 - **test/<name>** — test-only additions
-- Always branch from `main`, always PR back to `main`
+- Always branch from `develop`, always PR back to `develop`
 - Branch names should be descriptive: `feat/pomodoro-timer`, not `feat/stuff`
 
 ### Commit Message Convention
@@ -413,3 +414,6 @@ Types: feat, fix, test, chore, docs, refactor, ci, style
 - **Always update `/docs`** — maintain `docs/` as the self-reference documentation for all modules, features, architecture decisions, and implementation details. When you need to understand how something works, look here first. Update after every significant change.
 - **Delete plan files after completing a plan** — once a plan is fully implemented, remove the plan file from `docs/plans/`
 - **Always update `docs/design-system.md`** when making any frontend UI/UX changes — keep it current with colors, spacing, typography, component patterns, and design decisions
+- **Always clean up worktrees** — after finishing work on a branch (merged, abandoned, or PR created), immediately remove the worktree with `git worktree remove` or `rm -rf` + `git worktree prune`. Never leave stale worktrees around.
+
+When I report a bug, don't start by trying to fix it. Instead, start by writing a test that reproduces the bug. Then, have subagents try to fix the bug and prove it with a passing test.
