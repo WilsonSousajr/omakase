@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useRef } from "react";
 import { Plus, Pencil, Trash2, X, Check } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { PROJECT_STATUSES } from "@/lib/constants";
 import { useProjects, useDeleteProject } from "@/hooks/useProjects";
@@ -12,6 +13,9 @@ import ProjectForm from "@/components/projects/ProjectForm";
 import type { Project } from "@/types/project";
 
 export default function ProjectsPage() {
+  const t = useTranslations("projects");
+  const tc = useTranslations("common");
+  const tConst = useTranslations("constants");
   const activeWorkspaceId = useUIStore((s) => s.activeWorkspaceId);
   const setActiveWorkspaceId = useUIStore((s) => s.setActiveWorkspaceId);
   const openModal = useUIStore((s) => s.openModal);
@@ -91,13 +95,13 @@ export default function ProjectsPage() {
   return (
     <div className="h-full overflow-auto p-6">
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-lg font-semibold text-[var(--color-text-primary)]">Projects</h1>
+        <h1 className="text-lg font-semibold text-[var(--color-text-primary)]">{t("title")}</h1>
         <button
           onClick={handleNew}
           className="flex items-center gap-1.5 rounded-xl bg-[var(--color-button-primary)] px-3 py-1.5 text-xs font-medium text-[var(--color-button-primary-text)] transition-colors hover:bg-[var(--color-button-primary-hover)]"
         >
           <Plus className="h-3.5 w-3.5" />
-          New Project
+          {t("newProject")}
         </button>
       </div>
 
@@ -216,14 +220,11 @@ export default function ProjectsPage() {
 
       {isLoading ? (
         <div className="flex items-center justify-center py-12">
-          <span className="text-sm text-[var(--color-text-muted)]">Loading projects...</span>
+          <span className="text-sm text-[var(--color-text-muted)]">{tc("loading")}</span>
         </div>
       ) : projects.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12">
-          <p className="text-sm text-[var(--color-text-muted)]">No projects yet</p>
-          <p className="mt-1 text-xs text-[var(--color-text-faint)]">
-            Create a project to organize your tasks
-          </p>
+          <p className="text-sm text-[var(--color-text-muted)]">{t("noProjects")}</p>
         </div>
       ) : (
         <div className="space-y-8">
@@ -233,7 +234,7 @@ export default function ProjectsPage() {
             return (
               <section key={statusDef.value}>
                 <h2 className="mb-3 text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
-                  {statusDef.label}
+                  {tConst(`projectStatuses.${statusDef.value}`)}
                   <span className="ml-2 text-[var(--color-text-faint)]">{items.length}</span>
                 </h2>
                 <div className="grid gap-2">

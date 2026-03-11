@@ -1,0 +1,348 @@
+{
+  "common": {
+    "cancel": "Cancelar",
+    "continue": "Continuar",
+    "create": "Criar",
+    "update": "Atualizar",
+    "delete": "Excluir",
+    "save": "Salvar",
+    "loading": "Carregando...",
+    "add": "Adicionar",
+    "edit": "Editar",
+    "close": "Fechar",
+    "back": "Voltar",
+    "search": "Buscar",
+    "noResults": "Nenhum resultado",
+    "confirm": "Confirmar",
+    "apply": "Aplicar",
+    "skip": "Pular",
+    "reset": "Redefinir",
+    "done": "Concluído"
+  },
+  "auth": {
+    "signIn": "Entrar",
+    "signUp": "Cadastrar",
+    "username": "Usuário",
+    "password": "Senha",
+    "confirmPassword": "Confirmar senha",
+    "noAccount": "Não tem uma conta?",
+    "hasAccount": "Já tem uma conta?",
+    "register": "Cadastrar",
+    "signingIn": "Entrando...",
+    "registering": "Cadastrando..."
+  },
+  "sidebar": {
+    "plan": "Plano",
+    "focus": "Foco",
+    "review": "Revisão",
+    "projects": "Projetos",
+    "study": "Estudo",
+    "workspace": "Workspace",
+    "allWorkspaces": "Todos os workspaces",
+    "semester": "Semestre",
+    "allSemesters": "Todos os semestres"
+  },
+  "stats": {
+    "today": "Hoje",
+    "thisWeek": "Esta Semana",
+    "hoursFocused": "{hours}h focado",
+    "blocks": "{count} blocos",
+    "streak": "{days}d de sequência",
+    "weeklyHours": "Horas semanais"
+  },
+  "tasks": {
+    "newTask": "Nova Tarefa",
+    "editTask": "Editar Tarefa",
+    "title": "Título",
+    "titlePlaceholder": "O que precisa ser feito?",
+    "description": "Descrição",
+    "descriptionPlaceholder": "Adicione uma descrição...",
+    "priority": "Prioridade",
+    "area": "Área",
+    "tags": "Tags",
+    "project": "Projeto",
+    "noProject": "Sem projeto",
+    "scheduledDate": "Data Agendada",
+    "notes": "Notas",
+    "notesPlaceholder": "Adicione notas...",
+    "markdownPreview": "Visualizar",
+    "markdownEdit": "Editar",
+    "markdownPlaceholder": "Escreva notas em Markdown...",
+    "nothingToPreview": "Nada para visualizar",
+    "deleteConfirm": "Excluir esta tarefa?",
+    "dueDate": "Data de Entrega",
+    "estimatedMinutes": "Est. (min)",
+    "discipline": "Disciplina",
+    "none": "Nenhum",
+    "noTasks": "Nenhuma tarefa ainda",
+    "noTasksHint": "Clique em \"Nova Tarefa\" para começar",
+    "searchPlaceholder": "Buscar tarefas...",
+    "allPriorities": "Todas as prioridades"
+  },
+  "constants": {
+    "priorities": {
+      "low": "Baixa",
+      "medium": "Média",
+      "high": "Alta",
+      "urgent": "Urgente"
+    },
+    "areas": {
+      "work": "Trabalho",
+      "personal": "Pessoal",
+      "study": "Estudo"
+    },
+    "kanbanStatuses": {
+      "todo": "A Fazer",
+      "in_progress": "Em Progresso",
+      "done": "Concluído"
+    },
+    "projectStatuses": {
+      "active": "Ativo",
+      "paused": "Pausado",
+      "completed": "Concluído",
+      "archived": "Arquivado"
+    },
+    "semesterStatuses": {
+      "active": "Ativo",
+      "completed": "Concluído",
+      "archived": "Arquivado"
+    },
+    "disciplineStatuses": {
+      "active": "Ativa",
+      "completed": "Concluída",
+      "dropped": "Trancada"
+    },
+    "studyBlockTypes": {
+      "theory": "Teoria",
+      "exercises": "Exercícios",
+      "review": "Revisão",
+      "assignment": "Trabalho",
+      "exam_prep": "Preparação para Prova",
+      "lab": "Laboratório",
+      "reading": "Leitura"
+    },
+    "studyBlockStatuses": {
+      "planned": "Planejado",
+      "in_progress": "Em Progresso",
+      "completed": "Concluído",
+      "skipped": "Pulado"
+    },
+    "classTypes": {
+      "lecture": "Aula Teórica",
+      "lab": "Laboratório",
+      "tutorial": "Monitoria",
+      "seminar": "Seminário",
+      "other": "Outro"
+    },
+    "daysOfWeek": {
+      "0": "Segunda",
+      "1": "Terça",
+      "2": "Quarta",
+      "3": "Quinta",
+      "4": "Sexta",
+      "5": "Sábado",
+      "6": "Domingo"
+    },
+    "daysOfWeekShort": {
+      "0": "Seg",
+      "1": "Ter",
+      "2": "Qua",
+      "3": "Qui",
+      "4": "Sex",
+      "5": "Sáb",
+      "6": "Dom"
+    }
+  },
+  "pomodoro": {
+    "focus": "Foco",
+    "shortBreak": "Pausa Curta",
+    "longBreak": "Pausa Longa",
+    "start": "Iniciar",
+    "pause": "Pausar",
+    "reset": "Redefinir",
+    "sessionComplete": "Sessão concluída!",
+    "activeTask": "Tarefa Ativa",
+    "noActiveTask": "Nenhuma tarefa ativa",
+    "selectTask": "Clique em uma tarefa para selecioná-la"
+  },
+  "kanban": {
+    "todo": "A Fazer",
+    "inProgress": "Em Progresso",
+    "done": "Concluído",
+    "dropHere": "Solte tarefas aqui"
+  },
+  "calendar": {
+    "today": "Hoje",
+    "day": "Dia",
+    "week": "Semana",
+    "untitledTask": "Tarefa"
+  },
+  "projects": {
+    "title": "Projetos",
+    "newProject": "Novo Projeto",
+    "editProject": "Editar Projeto",
+    "name": "Nome",
+    "namePlaceholder": "Nome do projeto",
+    "description": "Descrição",
+    "descriptionPlaceholder": "Descrição do projeto...",
+    "workspace": "Workspace",
+    "status": "Status",
+    "color": "Cor",
+    "dueDate": "Data de Entrega",
+    "tasks": "{count} tarefas",
+    "noProjects": "Nenhum projeto ainda. Crie um para começar.",
+    "deleteConfirm": "Excluir este projeto?"
+  },
+  "study": {
+    "semesters": "Semestres",
+    "disciplines": "Disciplinas",
+    "studyBlocks": "Blocos de Estudo",
+    "classSchedules": "Horários de Aula",
+    "newSemester": "Novo Semestre",
+    "editSemester": "Editar Semestre",
+    "semesterName": "Nome",
+    "semesterNamePlaceholder": "ex. 2026/1",
+    "institution": "Instituição",
+    "institutionPlaceholder": "Nome da universidade",
+    "startDate": "Data de Início",
+    "endDate": "Data de Término",
+    "noSemesters": "Nenhum semestre ainda. Crie um para começar.",
+    "deleteSemesterConfirm": "Excluir este semestre?",
+    "newDiscipline": "Nova Disciplina",
+    "editDiscipline": "Editar Disciplina",
+    "disciplineName": "Nome",
+    "disciplineNamePlaceholder": "ex. Cálculo I",
+    "code": "Código",
+    "codePlaceholder": "ex. MAT101",
+    "professor": "Professor",
+    "professorPlaceholder": "Nome do professor",
+    "credits": "Créditos",
+    "noDisciplines": "Nenhuma disciplina ainda. Adicione uma para começar.",
+    "deleteDisciplineConfirm": "Excluir esta disciplina?",
+    "newStudyBlock": "Novo Bloco de Estudo",
+    "editStudyBlock": "Editar Bloco de Estudo",
+    "blockTitle": "Título",
+    "blockTitlePlaceholder": "O que você vai estudar?",
+    "discipline": "Disciplina",
+    "blockType": "Tipo",
+    "blockStatus": "Status",
+    "noStudyBlocks": "Nenhum bloco de estudo ainda.",
+    "deleteStudyBlockConfirm": "Excluir este bloco de estudo?",
+    "newClassSchedule": "Novo Horário de Aula",
+    "editClassSchedule": "Editar Horário de Aula",
+    "dayOfWeek": "Dia da Semana",
+    "startTime": "Horário de Início",
+    "endTime": "Horário de Término",
+    "classType": "Tipo de Aula",
+    "location": "Local",
+    "locationPlaceholder": "ex. Sala 301",
+    "active": "Ativo",
+    "deleteScheduleConfirm": "Excluir este horário de aula?",
+    "disciplines_count": "{count} disciplinas",
+    "blocks_count": "{count} blocos",
+    "credits_count": "{count} créditos",
+    "todayStudyBlocks": "Blocos de Estudo de Hoje",
+    "backToStudy": "Voltar para Estudo",
+    "newBlock": "Novo Bloco",
+    "addClass": "Adicionar Aula",
+    "allTypes": "Todos os tipos",
+    "allStatuses": "Todos os status",
+    "loadingStudyBlocks": "Carregando blocos de estudo...",
+    "selectSemester": "Selecionar semestre",
+    "selectDiscipline": "Selecionar disciplina",
+    "noDisciplinesHintFiltered": "Crie uma disciplina para organizar seus blocos de estudo",
+    "noDisciplinesHintAll": "Selecione um semestre ou crie uma disciplina",
+    "noStudyBlocksHint": "Crie blocos de estudo para organizar suas sessões de estudo",
+    "noClassSchedules": "Nenhum horário de aula ainda. Adicione aulas recorrentes para vê-las no calendário.",
+    "inactive": "Inativo",
+    "status": "Status",
+    "scheduledDate": "Data Agendada",
+    "dueDate": "Data de Entrega",
+    "estimatedMinutes": "Est. (min)",
+    "priority": "Prioridade",
+    "notes": "Notas",
+    "notesPlaceholder": "Notas (opcional)",
+    "semesterNameFormPlaceholder": "Nome do semestre (ex. 2026.1)",
+    "institutionFormPlaceholder": "Instituição (opcional)",
+    "disciplineNameFormPlaceholder": "Nome da disciplina",
+    "professorFormPlaceholder": "Professor (opcional)",
+    "blockTitleFormPlaceholder": "Título do bloco de estudo",
+    "locationFormPlaceholder": "Sala, prédio...",
+    "classScheduleSection": "Horário de Aula",
+    "semester": "Semestre",
+    "type": "Tipo",
+    "unknown": "Desconhecido"
+  },
+  "review": {
+    "title": "Revisão",
+    "today": "Hoje",
+    "history": "Histórico",
+    "summary": {
+      "title": "Resumo de Hoje",
+      "hoursFocused": "Horas Focado",
+      "blocksCompleted": "Blocos Concluídos",
+      "completionRate": "Conclusão",
+      "completed": "Concluído",
+      "incomplete": "Incompleto"
+    },
+    "rollover": {
+      "title": "Decisões de Rollover",
+      "subtitle": "O que fazer com cada item incompleto?",
+      "allDone": "Tudo feito!",
+      "allDoneSubtitle": "Tudo que estava agendado para hoje foi concluído.",
+      "tomorrow": "Amanhã",
+      "pickDate": "Escolher data",
+      "backlog": "Backlog",
+      "skip": "Pular",
+      "applying": "Aplicando...",
+      "applyAndContinue": "Aplicar e Continuar"
+    },
+    "score": {
+      "title": "Quão produtivo você se sentiu hoje?",
+      "labels": {
+        "1": "Difícil",
+        "2": "Abaixo da média",
+        "3": "Razoável",
+        "4": "Bom",
+        "5": "Arrasando"
+      }
+    },
+    "win": {
+      "title": "Qual foi sua conquista do dia?",
+      "subtitle": "Opcional — mas refletir sobre conquistas gera impulso.",
+      "placeholder": "A coisa que fez o dia valer a pena...",
+      "skip": "Pular"
+    },
+    "preview": {
+      "title": "Prévia de Amanhã",
+      "classes": "Aulas",
+      "tasks": "Tarefas",
+      "studyBlocks": "Blocos de Estudo",
+      "nothingScheduled": "Nada agendado para amanhã.",
+      "nothingScheduledHint": "Você vai planejar pela manhã.",
+      "finish": "Finalizar"
+    },
+    "shutdown": {
+      "title": "Fim do Dia",
+      "preMessage": "Pronto para encerrar o dia?",
+      "preSubtitle": "Você fez um ótimo trabalho hoje. Hora de descansar e recarregar.",
+      "shuttingDown": "Encerrando...",
+      "shutDown": "Encerrar",
+      "postMessage": "Ótimo trabalho hoje. Hora de descansar.",
+      "close": "Fechar"
+    },
+    "historySection": {
+      "noReviews": "Nenhuma revisão ainda",
+      "noReviewsSubtitle": "Complete sua primeira revisão diária para vê-la aqui",
+      "loadMore": "Carregar mais",
+      "winOfTheDay": "Conquista do dia"
+    }
+  },
+  "topbar": {
+    "newTask": "Nova Tarefa"
+  },
+  "errors": {
+    "generic": "Algo deu errado",
+    "tryAgain": "Tentar Novamente"
+  }
+}

@@ -1,6 +1,7 @@
 "use client";
 
 import { memo, useState } from "react";
+import { useTranslations, useFormatter } from "next-intl";
 import { ChevronDown, Moon, Check, Circle } from "lucide-react";
 import { useReviewSummary } from "@/hooks/useDailyReviews";
 import { cn } from "@/lib/utils";
@@ -11,11 +12,13 @@ interface Props {
 }
 
 function ReviewHistoryCard({ review }: Props) {
+  const t = useTranslations("review");
+  const fmt = useFormatter();
   const [expanded, setExpanded] = useState(false);
   const { data: summary, isLoading } = useReviewSummary(expanded ? review.date : "");
 
   const date = new Date(review.date + "T00:00:00");
-  const formatted = date.toLocaleDateString("en-US", {
+  const formatted = fmt.dateTime(date, {
     weekday: "long",
     month: "long",
     day: "numeric",
@@ -91,12 +94,12 @@ function ReviewHistoryCard({ review }: Props) {
               {/* Stats row */}
               <div className="flex gap-3">
                 {[
-                  { label: "Hours focused", value: `${summary.hours_focused}h` },
+                  { label: t("summary.hoursFocused"), value: `${summary.hours_focused}h` },
                   {
-                    label: "Blocks",
+                    label: t("summary.blocksCompleted"),
                     value: `${summary.blocks_completed}/${summary.blocks_total}`,
                   },
-                  { label: "Completion", value: `${completionPct}%` },
+                  { label: t("summary.completionRate"), value: `${completionPct}%` },
                 ].map((stat) => (
                   <div
                     key={stat.label}
@@ -116,7 +119,7 @@ function ReviewHistoryCard({ review }: Props) {
               {review.win_of_the_day && (
                 <div>
                   <h4 className="mb-1 text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
-                    Win of the day
+                    {t("historySection.winOfTheDay")}
                   </h4>
                   <p className="text-sm text-[var(--color-text-secondary)]">
                     {review.win_of_the_day}
@@ -128,7 +131,7 @@ function ReviewHistoryCard({ review }: Props) {
               {summary.completed_items.length > 0 && (
                 <div>
                   <h4 className="mb-1.5 text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
-                    Completed
+                    {t("summary.completed")}
                   </h4>
                   <div className="space-y-1">
                     {summary.completed_items.map((item) => (
@@ -151,7 +154,7 @@ function ReviewHistoryCard({ review }: Props) {
                 summary.incomplete_study_blocks.length > 0) && (
                 <div>
                   <h4 className="mb-1.5 text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
-                    Incomplete
+                    {t("summary.incomplete")}
                   </h4>
                   <div className="space-y-1">
                     {summary.incomplete_tasks.map((task) => (

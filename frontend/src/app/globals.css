@@ -2,11 +2,37 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* Light mode (default) */
 :root {
+  --color-bg: #ffffff;
+  --color-surface: #f5f5f5;
+  --color-surface-hover: #ebebeb;
+  --color-surface-elevated: #ffffff;
+  --color-surface-active: rgba(0, 0, 0, 0.06);
+  --color-border: #e5e5e5;
+  --color-border-hover: #d4d4d4;
+  --color-input: #fafafa;
+  --color-text-primary: #0a0a0a;
+  --color-text-secondary: #525252;
+  --color-text-muted: #737373;
+  --color-text-faint: #a3a3a3;
+  --color-button-primary: #171717;
+  --color-button-primary-hover: #262626;
+  --color-button-primary-text: #ffffff;
+  --color-hover-overlay: rgba(0, 0, 0, 0.04);
+  --color-overlay-medium: rgba(0, 0, 0, 0.06);
+  --color-ring-overlay: rgba(0, 0, 0, 0.10);
+  --color-scrollbar: #d4d4d4;
+  --color-scrollbar-hover: #a3a3a3;
+}
+
+/* Dark mode */
+.dark {
   --color-bg: #0a0a0a;
   --color-surface: #141414;
   --color-surface-hover: #1a1a1a;
   --color-surface-elevated: #1e1e1e;
+  --color-surface-active: rgba(255, 255, 255, 0.08);
   --color-border: #232323;
   --color-border-hover: #2a2a2a;
   --color-input: #0e0e0e;
@@ -14,10 +40,14 @@
   --color-text-secondary: #a3a3a3;
   --color-text-muted: #737373;
   --color-text-faint: #525252;
-  --color-surface-active: rgba(255, 255, 255, 0.08);
   --color-button-primary: #e5e5e5;
   --color-button-primary-hover: #d4d4d4;
   --color-button-primary-text: #0a0a0a;
+  --color-hover-overlay: rgba(255, 255, 255, 0.05);
+  --color-overlay-medium: rgba(255, 255, 255, 0.10);
+  --color-ring-overlay: rgba(255, 255, 255, 0.10);
+  --color-scrollbar: #232323;
+  --color-scrollbar-hover: #2a2a2a;
 }
 
 ::-webkit-scrollbar {
@@ -30,10 +60,10 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #232323;
+  background: var(--color-scrollbar);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #2a2a2a;
+  background: var(--color-scrollbar-hover);
 }

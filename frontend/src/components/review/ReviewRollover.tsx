@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { format, addDays } from "date-fns";
 import { CalendarArrowUp, CalendarDays, Inbox, XCircle } from "lucide-react";
 import { useUpdateTask } from "@/hooks/useTasks";
@@ -20,6 +21,8 @@ interface Props {
 }
 
 export default function ReviewRollover({ summary, onNext }: Props) {
+  const t = useTranslations("review");
+  const tc = useTranslations("common");
   const updateTask = useUpdateTask();
   const updateStudyBlock = useUpdateStudyBlock();
   const tomorrow = format(addDays(new Date(), 1), "yyyy-MM-dd");
@@ -42,16 +45,16 @@ export default function ReviewRollover({ summary, onNext }: Props) {
     return (
       <div className="space-y-6 text-center">
         <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">
-          All done!
+          {t("rollover.allDone")}
         </h2>
         <p className="text-sm text-[var(--color-text-muted)]">
-          Everything scheduled for today was completed.
+          {t("rollover.allDoneSubtitle")}
         </p>
         <button
           onClick={onNext}
           className="rounded-xl bg-[var(--color-button-primary)] px-6 py-2 text-xs font-medium text-[var(--color-button-primary-text)] transition-colors hover:bg-[var(--color-button-primary-hover)]"
         >
-          Continue
+          {tc("continue")}
         </button>
       </div>
     );
@@ -124,20 +127,20 @@ export default function ReviewRollover({ summary, onNext }: Props) {
     icon: typeof CalendarArrowUp;
     label: string;
   }[] = [
-    { action: "tomorrow", icon: CalendarArrowUp, label: "Tomorrow" },
-    { action: "pick", icon: CalendarDays, label: "Pick date" },
-    { action: "backlog", icon: Inbox, label: "Backlog" },
-    { action: "skip", icon: XCircle, label: "Skip" },
+    { action: "tomorrow", icon: CalendarArrowUp, label: t("rollover.tomorrow") },
+    { action: "pick", icon: CalendarDays, label: t("rollover.pickDate") },
+    { action: "backlog", icon: Inbox, label: t("rollover.backlog") },
+    { action: "skip", icon: XCircle, label: t("rollover.skip") },
   ];
 
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">
-          Rollover Decisions
+          {t("rollover.title")}
         </h2>
         <p className="text-sm text-[var(--color-text-muted)]">
-          What should happen with each incomplete item?
+          {t("rollover.subtitle")}
         </p>
       </div>
 
@@ -156,7 +159,7 @@ export default function ReviewRollover({ summary, onNext }: Props) {
                   {item.title}
                 </span>
                 {decision && (
-                  <span className="rounded-lg bg-white/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
+                  <span className="rounded-lg bg-[var(--color-overlay-medium)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
                     {decision.action === "pick"
                       ? decision.date
                       : decision.action}
@@ -182,8 +185,8 @@ export default function ReviewRollover({ summary, onNext }: Props) {
                     }}
                     className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs transition-colors ${
                       decision?.action === action
-                        ? "bg-white/15 text-[var(--color-text-primary)]"
-                        : "text-[var(--color-text-secondary)] hover:bg-white/5 hover:text-[var(--color-text-primary)]"
+                        ? "bg-[var(--color-overlay-medium)] text-[var(--color-text-primary)]"
+                        : "text-[var(--color-text-secondary)] hover:bg-[var(--color-hover-overlay)] hover:text-[var(--color-text-primary)]"
                     }`}
                   >
                     <Icon className="h-3.5 w-3.5" />
@@ -202,7 +205,7 @@ export default function ReviewRollover({ summary, onNext }: Props) {
           disabled={!allDecided || isApplying}
           className="rounded-xl bg-[var(--color-button-primary)] px-6 py-2 text-xs font-medium text-[var(--color-button-primary-text)] transition-colors hover:bg-[var(--color-button-primary-hover)] disabled:opacity-50"
         >
-          Apply &amp; Continue
+          {isApplying ? t("rollover.applying") : t("rollover.applyAndContinue")}
         </button>
       </div>
     </div>

@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeSanitize from "rehype-sanitize";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { NOTES_DEBOUNCE_MS } from "@/lib/constants";
 import { useUpdateTask } from "@/hooks/useTasks";
@@ -13,7 +14,13 @@ interface MarkdownEditorProps {
   initialContent: string;
 }
 
+const TAB_LABEL_KEYS = {
+  write: "markdownEdit",
+  preview: "markdownPreview",
+} as const;
+
 export default function MarkdownEditor({ taskId, initialContent }: MarkdownEditorProps) {
+  const t = useTranslations("tasks");
   const [content, setContent] = useState(initialContent);
   const [tab, setTab] = useState<"write" | "preview">("write");
   const updateTask = useUpdateTask();
@@ -50,18 +57,18 @@ export default function MarkdownEditor({ taskId, initialContent }: MarkdownEdito
   return (
     <div className="flex flex-col rounded-2xl border border-[var(--color-border)]">
       <div className="flex border-b border-[var(--color-border)]">
-        {(["write", "preview"] as const).map((t) => (
+        {(["write", "preview"] as const).map((tabKey) => (
           <button
-            key={t}
-            onClick={() => setTab(t)}
+            key={tabKey}
+            onClick={() => setTab(tabKey)}
             className={cn(
-              "px-3 py-1.5 text-xs capitalize transition-colors",
-              tab === t
+              "px-3 py-1.5 text-xs transition-colors",
+              tab === tabKey
                 ? "border-b-2 border-[var(--color-text-primary)] text-[var(--color-text-primary)]"
                 : "text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
             )}
           >
-            {t}
+            {t(TAB_LABEL_KEYS[tabKey])}
           </button>
         ))}
       </div>
@@ -70,7 +77,7 @@ export default function MarkdownEditor({ taskId, initialContent }: MarkdownEdito
         <textarea
           value={content}
           onChange={(e) => handleChange(e.target.value)}
-          placeholder="Write notes in Markdown..."
+          placeholder={t("markdownPlaceholder")}
           className="min-h-[200px] flex-1 resize-none bg-transparent p-3 text-sm text-[var(--color-text-secondary)] placeholder-[var(--color-text-faint)] outline-none"
         />
       ) : (
@@ -78,7 +85,7 @@ export default function MarkdownEditor({ taskId, initialContent }: MarkdownEdito
           {content ? (
             <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeSanitize]}>{content}</ReactMarkdown>
           ) : (
-            <p className="text-[var(--color-text-faint)]">Nothing to preview</p>
+            <p className="text-[var(--color-text-faint)]">{t("nothingToPreview")}</p>
           )}
         </div>
       )}

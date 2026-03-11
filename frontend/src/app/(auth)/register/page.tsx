@@ -2,11 +2,13 @@
 
 import axios from "axios";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { useRegister } from "@/hooks/useAuth";
 
 export default function RegisterPage() {
+  const t = useTranslations("auth");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -47,14 +49,14 @@ export default function RegisterPage() {
           Omakase
         </h1>
         <p className="mt-1 text-sm text-[var(--color-text-muted)]">
-          Create your account
+          {t("register")}
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
-            Username
+            {t("username")}
           </label>
           <input
             type="text"
@@ -63,7 +65,6 @@ export default function RegisterPage() {
             required
             autoFocus
             className="mt-1 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-input)] px-3 py-2 text-sm text-[var(--color-text-primary)] placeholder-[var(--color-text-faint)] outline-none focus:border-[var(--color-border-hover)]"
-            placeholder="Choose a username"
           />
         </div>
 
@@ -77,13 +78,12 @@ export default function RegisterPage() {
             onChange={(e) => setEmail(e.target.value)}
             required
             className="mt-1 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-input)] px-3 py-2 text-sm text-[var(--color-text-primary)] placeholder-[var(--color-text-faint)] outline-none focus:border-[var(--color-border-hover)]"
-            placeholder="you@example.com"
           />
         </div>
 
         <div>
           <label className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
-            Password
+            {t("password")}
           </label>
           <input
             type="password"
@@ -92,13 +92,12 @@ export default function RegisterPage() {
             required
             minLength={8}
             className="mt-1 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-input)] px-3 py-2 text-sm text-[var(--color-text-primary)] placeholder-[var(--color-text-faint)] outline-none focus:border-[var(--color-border-hover)]"
-            placeholder="At least 8 characters"
           />
         </div>
 
         <div>
           <label className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
-            Confirm password
+            {t("confirmPassword")}
           </label>
           <input
             type="password"
@@ -107,7 +106,6 @@ export default function RegisterPage() {
             required
             minLength={8}
             className="mt-1 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-input)] px-3 py-2 text-sm text-[var(--color-text-primary)] placeholder-[var(--color-text-faint)] outline-none focus:border-[var(--color-border-hover)]"
-            placeholder="Repeat your password"
           />
         </div>
 
@@ -120,17 +118,17 @@ export default function RegisterPage() {
           disabled={register.isPending}
           className="w-full rounded-xl bg-[var(--color-button-primary)] py-2 text-sm font-medium text-[var(--color-button-primary-text)] hover:bg-[var(--color-button-primary-hover)] disabled:opacity-50"
         >
-          {register.isPending ? "Creating account..." : "Create account"}
+          {register.isPending ? t("registering") : t("register")}
         </button>
       </form>
 
       <p className="text-center text-sm text-[var(--color-text-muted)]">
-        Already have an account?{" "}
+        {t("hasAccount")}{" "}
         <Link
           href="/login"
           className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
         >
-          Sign in
+          {t("signIn")}
         </Link>
       </p>
     </div>

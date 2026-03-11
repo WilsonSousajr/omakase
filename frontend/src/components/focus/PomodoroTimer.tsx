@@ -2,16 +2,17 @@
 
 import { useEffect, useRef, useCallback } from "react";
 import { Pause, Play, RotateCcw } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { usePomodoroStore } from "@/stores/pomodoroStore";
 import { useCreatePomodoroSession, useCompletePomodoroSession } from "@/hooks/usePomodoro";
 import { useUIStore } from "@/stores/uiStore";
 import { useUserProfile } from "@/hooks/useUserProfile";
 
-const SESSION_LABELS = {
-  focus: "Focus",
-  short_break: "Short Break",
-  long_break: "Long Break",
+const SESSION_LABEL_KEYS = {
+  focus: "focus",
+  short_break: "shortBreak",
+  long_break: "longBreak",
 } as const;
 
 const SESSION_COLORS = {
@@ -27,6 +28,7 @@ const RING_COLORS = {
 } as const;
 
 export default function PomodoroTimer() {
+  const t = useTranslations("pomodoro");
   const sessionType = usePomodoroStore((s) => s.sessionType);
   const timeRemaining = usePomodoroStore((s) => s.timeRemaining);
   const isRunning = usePomodoroStore((s) => s.isRunning);
@@ -146,7 +148,7 @@ export default function PomodoroTimer() {
                 : "text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
             )}
           >
-            {SESSION_LABELS[type]}
+            {t(SESSION_LABEL_KEYS[type])}
           </button>
         ))}
       </div>
@@ -180,7 +182,7 @@ export default function PomodoroTimer() {
             {minutes.toString().padStart(2, "0")}:{seconds.toString().padStart(2, "0")}
           </span>
           <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
-            {SESSION_LABELS[sessionType]}
+            {t(SESSION_LABEL_KEYS[sessionType])}
           </span>
         </div>
       </div>
@@ -189,7 +191,7 @@ export default function PomodoroTimer() {
       <div className="flex items-center gap-3">
         <button
           onClick={reset}
-          className="rounded-full p-2 text-[var(--color-text-faint)] hover:bg-white/5 hover:text-[var(--color-text-secondary)]"
+          className="rounded-full p-2 text-[var(--color-text-faint)] hover:bg-[var(--color-hover-overlay)] hover:text-[var(--color-text-secondary)]"
         >
           <RotateCcw className="h-4 w-4" />
         </button>

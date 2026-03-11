@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useTranslations } from "next-intl";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Plus, Calendar, Pencil, Trash2 } from "lucide-react";
 import { STUDY_BLOCK_TYPES, STUDY_BLOCK_STATUSES, DAYS_OF_WEEK, CLASS_TYPES } from "@/lib/constants";
@@ -16,6 +17,9 @@ import type { ClassSchedule } from "@/types/classschedule";
 import type { Discipline } from "@/types/discipline";
 
 export default function DisciplineDetailPage() {
+  const t = useTranslations("study");
+  const tc = useTranslations("constants");
+  const tco = useTranslations("common");
   const params = useParams();
   const router = useRouter();
   const disciplineId = params.disciplineId as string;
@@ -103,7 +107,7 @@ export default function DisciplineDetailPage() {
           className="mb-3 flex items-center gap-1 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
         >
           <ArrowLeft className="h-3 w-3" />
-          Back to Study
+          {t("backToStudy")}
         </button>
 
         <div className="flex items-center gap-3">
@@ -115,7 +119,7 @@ export default function DisciplineDetailPage() {
           )}
           <div>
             <h1 className="text-lg font-semibold text-[var(--color-text-primary)]">
-              {discipline?.name || "Discipline"}
+              {discipline?.name || t("discipline")}
             </h1>
             {discipline?.code && (
               <p className="text-xs text-[var(--color-text-faint)]">{discipline.code}</p>
@@ -126,7 +130,7 @@ export default function DisciplineDetailPage() {
             className="ml-auto flex items-center gap-1.5 rounded-xl bg-[var(--color-button-primary)] px-3 py-1.5 text-xs font-medium text-[var(--color-button-primary-text)] transition-colors hover:bg-[var(--color-button-primary-hover)]"
           >
             <Plus className="h-3.5 w-3.5" />
-            New Block
+            {t("newBlock")}
           </button>
         </div>
       </div>
@@ -135,31 +139,31 @@ export default function DisciplineDetailPage() {
       <div className="mb-4 flex gap-3">
         <div>
           <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
-            Type
+            {t("type")}
           </label>
           <select
             value={filterType}
             onChange={(e) => setFilterType(e.target.value)}
             className="rounded-xl border border-[var(--color-border)] bg-[var(--color-input)] px-2.5 py-1.5 text-xs text-[var(--color-text-primary)] outline-none focus:border-[var(--color-text-secondary)]/40"
           >
-            <option value="">All types</option>
-            {STUDY_BLOCK_TYPES.map((t) => (
-              <option key={t.value} value={t.value}>{t.label}</option>
+            <option value="">{t("allTypes")}</option>
+            {STUDY_BLOCK_TYPES.map((sbt) => (
+              <option key={sbt.value} value={sbt.value}>{tc(`studyBlockTypes.${sbt.value}`)}</option>
             ))}
           </select>
         </div>
         <div>
           <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
-            Status
+            {t("blockStatus")}
           </label>
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
             className="rounded-xl border border-[var(--color-border)] bg-[var(--color-input)] px-2.5 py-1.5 text-xs text-[var(--color-text-primary)] outline-none focus:border-[var(--color-text-secondary)]/40"
           >
-            <option value="">All statuses</option>
+            <option value="">{t("allStatuses")}</option>
             {STUDY_BLOCK_STATUSES.map((s) => (
-              <option key={s.value} value={s.value}>{s.label}</option>
+              <option key={s.value} value={s.value}>{tc(`studyBlockStatuses.${s.value}`)}</option>
             ))}
           </select>
         </div>
@@ -168,13 +172,13 @@ export default function DisciplineDetailPage() {
       {/* Study blocks list */}
       {isLoading ? (
         <div className="flex items-center justify-center py-12">
-          <span className="text-sm text-[var(--color-text-muted)]">Loading study blocks...</span>
+          <span className="text-sm text-[var(--color-text-muted)]">{t("loadingStudyBlocks")}</span>
         </div>
       ) : filteredBlocks.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12">
-          <p className="text-sm text-[var(--color-text-muted)]">No study blocks yet</p>
+          <p className="text-sm text-[var(--color-text-muted)]">{t("noStudyBlocks")}</p>
           <p className="mt-1 text-xs text-[var(--color-text-faint)]">
-            Create study blocks to organize your study sessions
+            {t("noStudyBlocksHint")}
           </p>
         </div>
       ) : (
@@ -198,7 +202,7 @@ export default function DisciplineDetailPage() {
           <div className="flex items-center gap-2">
             <Calendar className="h-4 w-4 text-[var(--color-text-muted)]" />
             <h2 className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
-              Class Schedule
+              {t("classScheduleSection")}
             </h2>
           </div>
           <button
@@ -206,19 +210,19 @@ export default function DisciplineDetailPage() {
             className="flex items-center gap-1.5 rounded-xl bg-[var(--color-button-primary)] px-3 py-1.5 text-xs font-medium text-[var(--color-button-primary-text)] transition-colors hover:bg-[var(--color-button-primary-hover)]"
           >
             <Plus className="h-3.5 w-3.5" />
-            Add Class
+            {t("addClass")}
           </button>
         </div>
 
         {classSchedules.length === 0 ? (
           <p className="py-6 text-center text-xs text-[var(--color-text-faint)]">
-            No class schedules yet. Add recurring classes to see them on the calendar.
+            {t("noClassSchedules")}
           </p>
         ) : (
           <div className="grid gap-2">
             {classSchedules.map((schedule) => {
               const day = DAYS_OF_WEEK.find((d) => d.value === schedule.day_of_week);
-              const type = CLASS_TYPES.find((t) => t.value === schedule.class_type);
+              const classTypeObj = CLASS_TYPES.find((ct) => ct.value === schedule.class_type);
               return (
                 <div
                   key={schedule.id}
@@ -227,14 +231,14 @@ export default function DisciplineDetailPage() {
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-medium text-[var(--color-text-primary)]">
-                        {day?.label || "Unknown"}
+                        {day ? tc(`daysOfWeek.${day.value}`) : t("unknown")}
                       </span>
-                      <span className="rounded-lg bg-white/5 px-1.5 py-0.5 text-[9px] font-semibold text-[var(--color-text-muted)]">
-                        {type?.label || schedule.class_type}
+                      <span className="rounded-lg bg-[var(--color-hover-overlay)] px-1.5 py-0.5 text-[9px] font-semibold text-[var(--color-text-muted)]">
+                        {classTypeObj ? tc(`classTypes.${classTypeObj.value}`) : schedule.class_type}
                       </span>
                       {!schedule.is_active && (
                         <span className="rounded-lg bg-red-500/10 px-1.5 py-0.5 text-[9px] font-semibold text-red-400">
-                          Inactive
+                          {t("inactive")}
                         </span>
                       )}
                     </div>
@@ -246,7 +250,7 @@ export default function DisciplineDetailPage() {
                   <div className="flex shrink-0 items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                     <button
                       onClick={() => handleEditSchedule(schedule)}
-                      className="rounded-lg p-1.5 text-[var(--color-text-faint)] hover:bg-white/5 hover:text-[var(--color-text-secondary)]"
+                      className="rounded-lg p-1.5 text-[var(--color-text-faint)] hover:bg-[var(--color-hover-overlay)] hover:text-[var(--color-text-secondary)]"
                     >
                       <Pencil className="h-3.5 w-3.5" />
                     </button>

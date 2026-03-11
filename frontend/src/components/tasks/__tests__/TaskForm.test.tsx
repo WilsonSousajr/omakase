@@ -21,7 +21,7 @@ describe("TaskForm", () => {
     useUIStore.setState({ modalOpen: "task-form" });
     renderWithProviders(<TaskForm />);
 
-    expect(screen.getByPlaceholderText("Task title")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("What needs to be done?")).toBeInTheDocument();
     expect(screen.getByText("New Task")).toBeInTheDocument();
   });
 
@@ -36,7 +36,7 @@ describe("TaskForm", () => {
     useUIStore.setState({ modalOpen: "task-form" });
     renderWithProviders(<TaskForm />);
 
-    await user.type(screen.getByPlaceholderText("Task title"), "My new task");
+    await user.type(screen.getByPlaceholderText("What needs to be done?"), "My new task");
     await user.click(screen.getByRole("button", { name: /create/i }));
 
     await waitFor(() => expect(useUIStore.getState().modalOpen).toBeNull());

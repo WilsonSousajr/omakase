@@ -1,50 +1,58 @@
 # Omakase Design System
 
-Monochrome design inspired by wstech.tech, with Sunsama-style productivity layout. Dark-only theme.
+Monochrome design inspired by wstech.tech, with Sunsama-style productivity layout. Supports light and dark themes via `next-themes`.
 
 ## Color Tokens
 
-Defined as CSS custom properties in `frontend/src/app/globals.css` under `:root`.
+Defined as CSS custom properties in `frontend/src/app/globals.css`. Light values in `:root` (default), dark values in `.dark` class. `next-themes` toggles the `.dark` class on `<html>`.
 
 ### Backgrounds & Surfaces
 
-| Token | Hex | Usage |
-|-------|-----|-------|
-| `--color-bg` | `#0a0a0a` | Page background, sidebar |
-| `--color-surface` | `#141414` | Cards, panels, kanban columns |
-| `--color-surface-hover` | `#1a1a1a` | Card hover, active toggle states |
-| `--color-surface-elevated` | `#1e1e1e` | Modals, toasts, popovers |
-| `--color-surface-active` | `rgba(255,255,255,0.08)` | Active nav items, selected states |
+| Token | Light | Dark | Usage |
+|-------|-------|------|-------|
+| `--color-bg` | `#ffffff` | `#0a0a0a` | Page background, sidebar |
+| `--color-surface` | `#f5f5f5` | `#141414` | Cards, panels, kanban columns |
+| `--color-surface-hover` | `#ebebeb` | `#1a1a1a` | Card hover, active toggle states |
+| `--color-surface-elevated` | `#ffffff` | `#1e1e1e` | Modals, toasts, popovers |
+| `--color-surface-active` | `rgba(0,0,0,0.06)` | `rgba(255,255,255,0.08)` | Active nav items, selected states |
 
 ### Borders
 
-| Token | Hex | Usage |
-|-------|-----|-------|
-| `--color-border` | `#232323` | Card/section borders, dividers |
-| `--color-border-hover` | `#2a2a2a` | Border hover states, drag-over |
+| Token | Light | Dark | Usage |
+|-------|-------|------|-------|
+| `--color-border` | `#e5e5e5` | `#232323` | Card/section borders, dividers |
+| `--color-border-hover` | `#d4d4d4` | `#2a2a2a` | Border hover states, drag-over |
 
 ### Inputs
 
-| Token | Hex | Usage |
-|-------|-----|-------|
-| `--color-input` | `#0e0e0e` | Input/textarea/select backgrounds |
+| Token | Light | Dark | Usage |
+|-------|-------|------|-------|
+| `--color-input` | `#fafafa` | `#0e0e0e` | Input/textarea/select backgrounds |
 
 ### Text
 
-| Token | Hex | Usage |
-|-------|-----|-------|
-| `--color-text-primary` | `#ffffff` | Headings, titles, active text |
-| `--color-text-secondary` | `#a3a3a3` | Body text, descriptions |
-| `--color-text-muted` | `#737373` | Labels, hints, metadata |
-| `--color-text-faint` | `#525252` | Disabled text, icons, timestamps |
+| Token | Light | Dark | Usage |
+|-------|-------|------|-------|
+| `--color-text-primary` | `#0a0a0a` | `#ffffff` | Headings, titles, active text |
+| `--color-text-secondary` | `#525252` | `#a3a3a3` | Body text, descriptions |
+| `--color-text-muted` | `#737373` | `#737373` | Labels, hints, metadata |
+| `--color-text-faint` | `#a3a3a3` | `#525252` | Disabled text, icons, timestamps |
 
 ### Buttons
 
-| Token | Hex | Usage |
-|-------|-----|-------|
-| `--color-button-primary` | `#e5e5e5` | Primary button background |
-| `--color-button-primary-hover` | `#d4d4d4` | Primary button hover |
-| `--color-button-primary-text` | `#0a0a0a` | Primary button text |
+| Token | Light | Dark | Usage |
+|-------|-------|------|-------|
+| `--color-button-primary` | `#171717` | `#e5e5e5` | Primary button background |
+| `--color-button-primary-hover` | `#262626` | `#d4d4d4` | Primary button hover |
+| `--color-button-primary-text` | `#ffffff` | `#0a0a0a` | Primary button text |
+
+### Overlays
+
+| Token | Light | Dark | Usage |
+|-------|-------|------|-------|
+| `--color-hover-overlay` | `rgba(0,0,0,0.04)` | `rgba(255,255,255,0.05)` | Subtle hover feedback |
+| `--color-overlay-medium` | `rgba(0,0,0,0.06)` | `rgba(255,255,255,0.10)` | Medium emphasis backgrounds |
+| `--color-ring-overlay` | `rgba(0,0,0,0.10)` | `rgba(255,255,255,0.10)` | Ring/border accents |
 
 ### Functional Accent Colors (priorities/tags only)
 
@@ -109,7 +117,7 @@ transition-colors hover:bg-[var(--color-button-primary-hover)]
 ```
 rounded-xl px-3 py-1.5 text-xs
 text-[var(--color-text-secondary)]
-hover:bg-white/5 hover:text-[var(--color-text-primary)]
+hover:bg-[var(--color-hover-overlay)] hover:text-[var(--color-text-primary)]
 ```
 
 ### Icon Button
@@ -117,7 +125,7 @@ hover:bg-white/5 hover:text-[var(--color-text-primary)]
 ```
 rounded-lg p-2
 text-[var(--color-text-faint)]
-hover:bg-white/5 hover:text-[var(--color-text-secondary)]
+hover:bg-[var(--color-hover-overlay)] hover:text-[var(--color-text-secondary)]
 ```
 
 ### Danger Button
@@ -214,17 +222,17 @@ Session labels use the uppercase tracking signature for differentiation.
 | Context | Pattern |
 |---------|---------|
 | Sidebar nav | `bg-[var(--color-surface-active)] text-[var(--color-text-primary)]` |
-| Kanban card | `border-white/20 ring-1 ring-white/10` |
+| Kanban card | `border-[var(--color-ring-overlay)] ring-1 ring-[var(--color-ring-overlay)]` |
 | Toggle active | `bg-[var(--color-surface-hover)] text-[var(--color-text-primary)]` |
-| Drop zone | `bg-white/5` |
+| Drop zone | `bg-[var(--color-hover-overlay)]` |
 | Tab active | `border-b-2 border-[var(--color-text-primary)]` |
 
 ## Scrollbar
 
 ```css
 ::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-thumb { background: #232323; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #2a2a2a; }
+::-webkit-scrollbar-thumb { background: var(--color-scrollbar); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-scrollbar-hover); }
 ```
 
 ## Error States
@@ -252,7 +260,7 @@ Icons: Clock (hours), BarChart3 (blocks), Flame (streak). Sections conditionally
 
 ### Study Components
 
-**SemesterCard:** Card with name, institution, discipline count, date range. Click-to-select with `ring-white/20` active indicator.
+**SemesterCard:** Card with name, institution, discipline count, date range. Click-to-select with `ring-[var(--color-ring-overlay)]` active indicator.
 
 **DisciplineCard:** Card with color dot, name, code, professor, block count, credits. Supports `onClick` for navigation to detail page.
 
@@ -314,7 +322,7 @@ Sidebar: BookOpen icon nav item + semester selector dropdown
 
 **ReviewRollover (Step 1):** Cards for each incomplete item with 4 action buttons (Tomorrow, Pick date, Backlog, Skip). Selected card dims with `opacity-60` and shows action label badge. "Apply & Continue" disabled until all items have decisions.
 
-**ReviewScore (Step 2):** 5 rating buttons (1-5) with labels. Selected button gets `ring-1 ring-white/20 bg-white/10`. Continue disabled until selection.
+**ReviewScore (Step 2):** 5 rating buttons (1-5) with labels. Selected button gets `ring-1 ring-[var(--color-ring-overlay)] bg-[var(--color-overlay-medium)]`. Continue disabled until selection.
 
 **ReviewWin (Step 3):** Textarea with placeholder. Optional — has both "Skip" (ghost link) and "Continue" (primary button).
 
@@ -334,6 +342,73 @@ Sidebar bottom: User avatar section → SidebarStats (both inside mt-auto)
 Settings link: user avatar section links to /settings, Settings gear icon from lucide-react
 Review icon: CheckSquare from lucide-react
 Settings icon: Settings (gear) from lucide-react
+```
+
+### Theme Toggle
+
+Located in sidebar footer. Cycles through system → light → dark themes. Uses `next-themes` for localStorage persistence and system preference detection.
+
+```
+Icons: Monitor (system), Sun (light), Moon (dark)
+Button: rounded-lg p-1.5 text-[var(--color-text-faint)] hover:bg-[var(--color-surface)]
+Storage key: "omakase-theme"
+```
+
+Uses `hasMounted` gate to avoid SSR hydration mismatch (same pattern as AuthGuard).
+
+### Locale Switcher
+
+Located in sidebar footer alongside ThemeToggle. Toggles between EN and PT-BR. Uses Zustand `localeStore` with localStorage persistence.
+
+```
+Button: rounded-lg px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.15em]
+Active: bg-[var(--color-surface-active)] text-[var(--color-text-primary)]
+Inactive: text-[var(--color-text-faint)] hover:text-[var(--color-text-secondary)]
+Storage key: "omakase-locale"
+```
+
+## Internationalization (i18n)
+
+Uses `next-intl` in client-only mode (no middleware, no URL routing). Locale is stored in Zustand and toggled via sidebar UI.
+
+### Translation Key Conventions
+
+Keys organized by domain namespace in `messages/{locale}.json`:
+
+| Namespace | Contents |
+|-----------|----------|
+| `common` | Shared buttons (cancel, continue, save, delete, loading...) |
+| `auth` | Login/register form labels |
+| `sidebar` | Navigation items, workspace/semester selectors |
+| `tasks` | Task form labels, placeholders, empty states |
+| `constants` | Enum display values (priorities, areas, statuses, types, days) |
+| `pomodoro` | Timer labels, session types |
+| `kanban` | Column headers, drop zone text |
+| `calendar` | View mode labels, date-related UI |
+| `projects` | Project form labels, empty states |
+| `study` | Semester/discipline/study block/class schedule form labels |
+| `review` | All 6 wizard steps, history section |
+| `stats` | Sidebar stats labels |
+| `topbar` | Top bar actions |
+| `errors` | Error messages |
+
+### Usage Patterns
+
+```tsx
+// Single namespace
+const t = useTranslations("tasks");
+t("title")  // → "Title"
+
+// Constants (enum labels)
+const tc = useTranslations("constants");
+tc(`priorities.${priority.value}`)  // → "High"
+
+// Parameterized strings
+t("tasks", { count: 5 })  // → "5 tasks"
+
+// Date formatting (locale-aware)
+const fmt = useFormatter();
+fmt.dateTime(date, { month: "short", day: "numeric" })  // → "Mar 9" (en) / "9 de mar." (pt-BR)
 ```
 
 ### User Avatar

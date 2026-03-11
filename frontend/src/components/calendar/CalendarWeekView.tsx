@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { format, startOfWeek, addDays } from "date-fns";
+import { useFormatter } from "next-intl";
 import { useCalendarStore } from "@/stores/calendarStore";
 import { useTimeBlocks, useDeleteTimeBlock, useUpdateTimeBlock } from "@/hooks/useTimeBlocks";
 import { useTasks, useToggleTaskComplete } from "@/hooks/useTasks";
@@ -21,6 +22,7 @@ interface CalendarWeekViewProps {
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export default function CalendarWeekView({ isDragging, onCreateRange }: CalendarWeekViewProps) {
+  const fmt = useFormatter();
   const { selectedDate } = useCalendarStore();
   const weekStart = startOfWeek(selectedDate, { weekStartsOn: 1 });
   const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
@@ -79,7 +81,7 @@ export default function CalendarWeekView({ isDragging, onCreateRange }: Calendar
               style={{ height: `${SLOT_HEIGHT_WEEK}px` }}
             >
               <span className="relative -top-[5px]">
-                {format(new Date(2000, 0, 1, hour), "ha")}
+                {fmt.dateTime(new Date(2000, 0, 1, hour), { hour: "numeric", hour12: true })}
               </span>
             </div>
           ))}
@@ -99,7 +101,7 @@ export default function CalendarWeekView({ isDragging, onCreateRange }: Calendar
                 <span className={`text-[10px] font-medium uppercase ${
                   isToday ? "text-[var(--color-text-secondary)]" : "text-[var(--color-text-faint)]"
                 }`}>
-                  {format(day, "EEE")}
+                  {fmt.dateTime(day, { weekday: "short" })}
                 </span>
                 <span className={`mt-0.5 flex h-6 w-6 items-center justify-center text-xs font-semibold ${
                   isToday

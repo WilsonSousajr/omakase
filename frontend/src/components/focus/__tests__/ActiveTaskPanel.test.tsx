@@ -42,7 +42,7 @@ describe("ActiveTaskPanel", () => {
 
   it("shows placeholder when no active task", () => {
     renderWithProviders(<ActiveTaskPanel />);
-    expect(screen.getByText("Select a task from the kanban board")).toBeInTheDocument();
+    expect(screen.getByText("Click a task to select it")).toBeInTheDocument();
   });
 
   it("shows task details when activeTaskId is set", async () => {

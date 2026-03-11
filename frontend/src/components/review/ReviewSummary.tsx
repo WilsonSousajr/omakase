@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Check, Circle } from "lucide-react";
 import type { ReviewSummary as ReviewSummaryType } from "@/types/dailyreview";
 
@@ -9,6 +10,9 @@ interface Props {
 }
 
 export default function ReviewSummary({ summary, onNext }: Props) {
+  const t = useTranslations("review");
+  const tc = useTranslations("common");
+
   const completionPct =
     summary.blocks_total > 0
       ? Math.round((summary.blocks_completed / summary.blocks_total) * 100)
@@ -18,7 +22,7 @@ export default function ReviewSummary({ summary, onNext }: Props) {
     <div className="space-y-6">
       <div>
         <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">
-          Today&apos;s Review
+          {t("summary.title")}
         </h2>
         <p className="text-sm text-[var(--color-text-muted)]">{summary.date}</p>
       </div>
@@ -26,12 +30,12 @@ export default function ReviewSummary({ summary, onNext }: Props) {
       {/* Stats row */}
       <div className="flex gap-4">
         {[
-          { label: "Hours focused", value: `${summary.hours_focused}h` },
+          { label: t("summary.hoursFocused"), value: `${summary.hours_focused}h` },
           {
-            label: "Blocks",
+            label: t("summary.blocksCompleted"),
             value: `${summary.blocks_completed}/${summary.blocks_total}`,
           },
-          { label: "Completion", value: `${completionPct}%` },
+          { label: t("summary.completionRate"), value: `${completionPct}%` },
         ].map((stat) => (
           <div
             key={stat.label}
@@ -51,7 +55,7 @@ export default function ReviewSummary({ summary, onNext }: Props) {
       {summary.completed_items.length > 0 && (
         <div>
           <h3 className="mb-2 text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
-            Completed
+            {t("summary.completed")}
           </h3>
           <div className="space-y-1.5">
             {summary.completed_items.map((item) => (
@@ -79,7 +83,7 @@ export default function ReviewSummary({ summary, onNext }: Props) {
         summary.incomplete_study_blocks.length > 0) && (
         <div>
           <h3 className="mb-2 text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
-            Incomplete
+            {t("summary.incomplete")}
           </h3>
           <div className="space-y-1.5">
             {summary.incomplete_tasks.map((task) => (
@@ -113,7 +117,7 @@ export default function ReviewSummary({ summary, onNext }: Props) {
           onClick={onNext}
           className="rounded-xl bg-[var(--color-button-primary)] px-6 py-2 text-xs font-medium text-[var(--color-button-primary-text)] transition-colors hover:bg-[var(--color-button-primary-hover)]"
         >
-          Continue
+          {tc("continue")}
         </button>
       </div>
     </div>

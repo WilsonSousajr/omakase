@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { X } from "lucide-react";
 import { SEMESTER_STATUSES } from "@/lib/constants";
 import { useCreateSemester, useUpdateSemester } from "@/hooks/useSemesters";
@@ -14,6 +15,9 @@ interface SemesterFormProps {
 }
 
 export default function SemesterForm({ editSemester, onClose }: SemesterFormProps) {
+  const t = useTranslations("study");
+  const tc = useTranslations("constants");
+  const tco = useTranslations("common");
   const modalOpen = useUIStore((s) => s.modalOpen);
   const createSemester = useCreateSemester();
   const updateSemester = useUpdateSemester();
@@ -67,11 +71,11 @@ export default function SemesterForm({ editSemester, onClose }: SemesterFormProp
       <div className="w-full max-w-lg rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] shadow-2xl">
         <div className="flex items-center justify-between border-b border-[var(--color-border)] px-6 py-4">
           <h3 className="text-base font-semibold text-[var(--color-text-primary)]">
-            {editSemester ? "Edit Semester" : "New Semester"}
+            {editSemester ? t("editSemester") : t("newSemester")}
           </h3>
           <button
             onClick={onClose}
-            className="rounded-lg p-1 text-[var(--color-text-faint)] hover:bg-white/5 hover:text-[var(--color-text-secondary)]"
+            className="rounded-lg p-1 text-[var(--color-text-faint)] hover:bg-[var(--color-hover-overlay)] hover:text-[var(--color-text-secondary)]"
           >
             <X className="h-4 w-4" />
           </button>
@@ -81,7 +85,7 @@ export default function SemesterForm({ editSemester, onClose }: SemesterFormProp
           <div>
             <input
               type="text"
-              placeholder="Semester name (e.g. 2026.1)"
+              placeholder={t("semesterNameFormPlaceholder")}
               value={name}
               onChange={(e) => setName(e.target.value)}
               autoFocus
@@ -92,7 +96,7 @@ export default function SemesterForm({ editSemester, onClose }: SemesterFormProp
           <div>
             <input
               type="text"
-              placeholder="Institution (optional)"
+              placeholder={t("institutionFormPlaceholder")}
               value={institution}
               onChange={(e) => setInstitution(e.target.value)}
               className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-input)] px-3.5 py-2.5 text-sm text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] outline-none focus:border-[var(--color-text-secondary)]/40"
@@ -102,7 +106,7 @@ export default function SemesterForm({ editSemester, onClose }: SemesterFormProp
           <div className="flex gap-3">
             <div className="flex-1">
               <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
-                Start Date
+                {t("startDate")}
               </label>
               <input
                 type="date"
@@ -113,7 +117,7 @@ export default function SemesterForm({ editSemester, onClose }: SemesterFormProp
             </div>
             <div className="flex-1">
               <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
-                End Date
+                {t("endDate")}
               </label>
               <input
                 type="date"
@@ -126,7 +130,7 @@ export default function SemesterForm({ editSemester, onClose }: SemesterFormProp
 
           <div>
             <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
-              Status
+              {t("status")}
             </label>
             <select
               value={status}
@@ -135,7 +139,7 @@ export default function SemesterForm({ editSemester, onClose }: SemesterFormProp
             >
               {SEMESTER_STATUSES.map((s) => (
                 <option key={s.value} value={s.value}>
-                  {s.label}
+                  {tc(`semesterStatuses.${s.value}`)}
                 </option>
               ))}
             </select>
@@ -145,16 +149,16 @@ export default function SemesterForm({ editSemester, onClose }: SemesterFormProp
             <button
               type="button"
               onClick={onClose}
-              className="rounded-xl px-3 py-1.5 text-xs text-[var(--color-text-secondary)] hover:bg-white/5 hover:text-[var(--color-text-primary)]"
+              className="rounded-xl px-3 py-1.5 text-xs text-[var(--color-text-secondary)] hover:bg-[var(--color-hover-overlay)] hover:text-[var(--color-text-primary)]"
             >
-              Cancel
+              {tco("cancel")}
             </button>
             <button
               type="submit"
               disabled={!name.trim() || !startDate || !endDate || createSemester.isPending || updateSemester.isPending}
               className="rounded-xl bg-[var(--color-button-primary)] px-4 py-1.5 text-xs font-medium text-[var(--color-button-primary-text)] transition-colors hover:bg-[var(--color-button-primary-hover)] disabled:opacity-50"
             >
-              {editSemester ? "Update" : "Create"}
+              {editSemester ? tco("update") : tco("create")}
             </button>
           </div>
         </form>

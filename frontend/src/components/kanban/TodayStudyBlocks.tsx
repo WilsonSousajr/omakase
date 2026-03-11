@@ -3,12 +3,14 @@
 import { useMemo } from "react";
 import { format } from "date-fns";
 import { BookOpen } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useStudyBlocks, useUpdateStudyBlock } from "@/hooks/useStudyBlocks";
 import { useDisciplines } from "@/hooks/useDisciplines";
 import { PRIORITIES, STUDY_BLOCK_TYPES } from "@/lib/constants";
 import type { Discipline } from "@/types/discipline";
 
 export default function TodayStudyBlocks() {
+  const t = useTranslations("study");
   const today = format(new Date(), "yyyy-MM-dd");
   const { data: studyBlocks = [] } = useStudyBlocks({ scheduled_date: today });
   const { data: disciplines = [] } = useDisciplines();
@@ -27,7 +29,7 @@ export default function TodayStudyBlocks() {
       <div className="mb-3 flex items-center gap-2">
         <BookOpen className="h-3.5 w-3.5 text-[var(--color-text-muted)]" />
         <h3 className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
-          Today&apos;s Study Blocks
+          {t("todayStudyBlocks")}
         </h3>
         <span className="rounded-lg bg-[var(--color-surface)] px-2 py-0.5 text-[10px] text-[var(--color-text-muted)]">
           {studyBlocks.length}

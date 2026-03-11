@@ -10,15 +10,23 @@ import {
   closestCorners,
 } from "@dnd-kit/core";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { KANBAN_STATUSES, DRAG_ACTIVATION_DISTANCE, type KanbanStatus } from "@/lib/constants";
 import { useTodayTasks, useReorderTasks } from "@/hooks/useTasks";
 import { useToday } from "@/hooks/useToday";
 import type { Task } from "@/types/task";
 import KanbanColumn from "./KanbanColumn";
 
+const COLUMN_KEYS: Record<string, "todo" | "inProgress" | "done"> = {
+  todo: "todo",
+  in_progress: "inProgress",
+  done: "done",
+};
+
 const EMPTY_TASKS: Task[] = [];
 
 export default function KanbanBoard() {
+  const t = useTranslations("kanban");
   const today = useToday();
   const { data: serverTasks = EMPTY_TASKS, isLoading } = useTodayTasks(today);
   const reorderTasks = useReorderTasks();
@@ -111,11 +119,11 @@ export default function KanbanBoard() {
       onDragEnd={handleDragEnd}
     >
       <div className="flex h-full gap-5 p-5">
-        {KANBAN_STATUSES.map(({ value, label }) => (
+        {KANBAN_STATUSES.map(({ value }) => (
           <KanbanColumn
             key={value}
             status={value}
-            label={label}
+            label={t(COLUMN_KEYS[value])}
             tasks={getTasksByStatus(value)}
           />
         ))}

@@ -1,12 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { format } from "date-fns";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useTranslations, useFormatter } from "next-intl";
 import { useCalendarStore } from "@/stores/calendarStore";
 import { cn } from "@/lib/utils";
 
 export default function CalendarHeader() {
+  const t = useTranslations("calendar");
+  const fmt = useFormatter();
   const selectedDate = useCalendarStore((s) => s.selectedDate);
   const viewMode = useCalendarStore((s) => s.viewMode);
   const setViewMode = useCalendarStore((s) => s.setViewMode);
@@ -17,8 +19,8 @@ export default function CalendarHeader() {
   const [dateLabel, setDateLabel] = useState("");
 
   useEffect(() => {
-    setDateLabel(format(selectedDate, "MMMM d, yyyy"));
-  }, [selectedDate]);
+    setDateLabel(fmt.dateTime(selectedDate, { month: "long", day: "numeric", year: "numeric" }));
+  }, [selectedDate, fmt]);
 
   return (
     <div className="flex items-center justify-between border-b border-[var(--color-border)] px-5 py-3">
@@ -26,19 +28,19 @@ export default function CalendarHeader() {
         <div className="flex items-center gap-1">
           <button
             onClick={goBack}
-            className="rounded-lg p-1 text-[var(--color-text-muted)] hover:bg-white/5 hover:text-[var(--color-text-secondary)]"
+            className="rounded-lg p-1 text-[var(--color-text-muted)] hover:bg-[var(--color-hover-overlay)] hover:text-[var(--color-text-secondary)]"
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
           <button
             onClick={goToToday}
-            className="rounded-xl border border-[var(--color-border)] px-3 py-1 text-xs text-[var(--color-text-muted)] transition-colors hover:bg-white/5 hover:text-[var(--color-text-secondary)]"
+            className="rounded-xl border border-[var(--color-border)] px-3 py-1 text-xs text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-hover-overlay)] hover:text-[var(--color-text-secondary)]"
           >
-            Today
+            {t("today")}
           </button>
           <button
             onClick={goForward}
-            className="rounded-lg p-1 text-[var(--color-text-muted)] hover:bg-white/5 hover:text-[var(--color-text-secondary)]"
+            className="rounded-lg p-1 text-[var(--color-text-muted)] hover:bg-[var(--color-hover-overlay)] hover:text-[var(--color-text-secondary)]"
           >
             <ChevronRight className="h-4 w-4" />
           </button>
@@ -60,7 +62,7 @@ export default function CalendarHeader() {
                 : "text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
             )}
           >
-            {mode}
+            {t(mode)}
           </button>
         ))}
       </div>

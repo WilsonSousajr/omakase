@@ -113,13 +113,15 @@ frontend/
 
 ## Design System
 
-- **Monochrome palette** — wstech.tech-inspired, dark-only. See `docs/design-system.md` for full spec.
+- **Monochrome palette** — wstech.tech-inspired, light + dark themes. See `docs/design-system.md` for full spec.
+- **Theme:** `next-themes` with `attribute="class"`, `defaultTheme="system"`, `storageKey="omakase-theme"`. ThemeToggle in sidebar footer cycles system → light → dark.
+- **CSS variables:** Light values in `:root`, dark values in `.dark` class. Never use hardcoded `bg-white/*` or `text-white` — use overlay variables (`--color-hover-overlay`, `--color-overlay-medium`, `--color-ring-overlay`).
 - **Font:** Outfit (geometric sans-serif) via Next.js Google Fonts
 - **Signature:** Section labels use `text-[10px] font-semibold uppercase tracking-[0.15em]` (kanban headers, form labels, time labels)
-- **Colors:** CSS custom properties in `globals.css` `:root` — use `var(--color-*)` not hardcoded zinc/indigo
+- **Colors:** CSS custom properties in `globals.css` — use `var(--color-*)` not hardcoded zinc/indigo
 - **Accents:** Functional only — priority colors (gray/amber/orange/red) for badges and time blocks. Everything else is grayscale.
 - **Border radius:** `rounded-2xl` cards, `rounded-xl` inputs/buttons, `rounded-lg` badges
-- **Active states:** White/gray (no indigo) — `var(--color-surface-active)` for nav, `white/20` ring for cards
+- **Active states:** Gray (no indigo) — `var(--color-surface-active)` for nav, `var(--color-ring-overlay)` ring for cards
 
 ## Security & Configuration
 
@@ -235,6 +237,21 @@ frontend/
 - Frontend: PomodoroTimer fetches user profile and syncs durations into pomodoroStore via useEffect + setDurations
 - Frontend: pomodoroStore has `durations` and `pomodorosBeforeLongBreak` as mutable state (not module-level constants)
 - Frontend: `setDurations` only updates `timeRemaining` when timer is not running (prevents resetting mid-session)
+
+## i18n (Internationalization)
+
+- **Library:** `next-intl` in client-only mode (no middleware, no URL routing)
+- **Locales:** English (`en`) + Portuguese BR (`pt-BR`), default `en`
+- **Messages:** `frontend/messages/en.json` and `frontend/messages/pt-BR.json` — organized by domain namespace
+- **Locale store:** `localeStore` (Zustand + localStorage, key `omakase-locale`) — same pattern as authStore
+- **Provider:** `NextIntlClientProvider` in `Providers.tsx`, reads locale from `localeStore` with `hasMounted` gate
+- **Config:** `frontend/src/i18n/config.ts` (locales, defaultLocale), `frontend/src/i18n/getMessages.ts` (message loader)
+- **LocaleSwitcher:** Sidebar footer toggle (EN / PT-BR), compact icon buttons
+- **Constants strategy:** `constants.ts` unchanged — at render sites use `tc(\`priorities.${value}\`)` not `priority.label`
+- **Common translations:** `const tco = useTranslations("common")` for shared buttons (cancel, save, loading...)
+- **Date formatting:** Use `useFormatter().dateTime(date, options)` for locale-aware display dates. Keep `date-fns` `format()` for API date strings (`yyyy-MM-dd`).
+- **Test mock:** `setup.ts` mocks `next-intl` with real English messages for assertions against actual text
+- **Adding new strings:** Add key to both `en.json` and `pt-BR.json`, use `t("key")` in component
 
 ## Drag & Drop (Plan Mode)
 

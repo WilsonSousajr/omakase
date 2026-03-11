@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useTranslations } from "next-intl";
 import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { DISCIPLINE_STATUSES } from "@/lib/constants";
@@ -15,6 +16,9 @@ import type { Semester } from "@/types/semester";
 import type { Discipline } from "@/types/discipline";
 
 export default function StudyPage() {
+  const t = useTranslations("study");
+  const tc = useTranslations("constants");
+  const tco = useTranslations("common");
   const router = useRouter();
   const activeSemesterId = useUIStore((s) => s.activeSemesterId);
   const setActiveSemesterId = useUIStore((s) => s.setActiveSemesterId);
@@ -93,18 +97,18 @@ export default function StudyPage() {
       <div className="mb-8">
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
-            Semesters
+            {t("semesters")}
           </h2>
           <button
             onClick={handleNewSemester}
             className="flex items-center gap-1 rounded-lg px-2 py-1 text-[10px] text-[var(--color-text-muted)] hover:bg-[var(--color-surface)] hover:text-[var(--color-text-secondary)]"
           >
             <Plus className="h-3 w-3" />
-            Add
+            {tco("add")}
           </button>
         </div>
         {semesters.length === 0 && !semestersLoading ? (
-          <p className="text-xs text-[var(--color-text-faint)]">No semesters yet. Create one to get started.</p>
+          <p className="text-xs text-[var(--color-text-faint)]">{t("noSemesters")}</p>
         ) : (
           <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {semesters.map((semester) => (
@@ -112,7 +116,7 @@ export default function StudyPage() {
                 key={semester.id}
                 className={`cursor-pointer rounded-2xl ring-2 transition-all ${
                   activeSemesterId === semester.id
-                    ? "ring-white/20"
+                    ? "ring-[var(--color-ring-overlay)]"
                     : "ring-transparent"
                 }`}
                 onClick={() => setActiveSemesterId(
@@ -133,27 +137,27 @@ export default function StudyPage() {
       {/* Disciplines section */}
       <div>
         <div className="mb-4 flex items-center justify-between">
-          <h1 className="text-lg font-semibold text-[var(--color-text-primary)]">Disciplines</h1>
+          <h1 className="text-lg font-semibold text-[var(--color-text-primary)]">{t("disciplines")}</h1>
           <button
             onClick={handleNewDiscipline}
             className="flex items-center gap-1.5 rounded-xl bg-[var(--color-button-primary)] px-3 py-1.5 text-xs font-medium text-[var(--color-button-primary-text)] transition-colors hover:bg-[var(--color-button-primary-hover)]"
           >
             <Plus className="h-3.5 w-3.5" />
-            New Discipline
+            {t("newDiscipline")}
           </button>
         </div>
 
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
-            <span className="text-sm text-[var(--color-text-muted)]">Loading...</span>
+            <span className="text-sm text-[var(--color-text-muted)]">{tco("loading")}</span>
           </div>
         ) : disciplines.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12">
-            <p className="text-sm text-[var(--color-text-muted)]">No disciplines yet</p>
+            <p className="text-sm text-[var(--color-text-muted)]">{t("noDisciplines")}</p>
             <p className="mt-1 text-xs text-[var(--color-text-faint)]">
               {activeSemesterId
-                ? "Create a discipline to organize your study blocks"
-                : "Select a semester or create a discipline"}
+                ? t("noDisciplinesHintFiltered")
+                : t("noDisciplinesHintAll")}
             </p>
           </div>
         ) : (
@@ -164,7 +168,7 @@ export default function StudyPage() {
               return (
                 <section key={statusDef.value}>
                   <h2 className="mb-3 text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
-                    {statusDef.label}
+                    {tc(`disciplineStatuses.${statusDef.value}`)}
                     <span className="ml-2 text-[var(--color-text-faint)]">{items.length}</span>
                   </h2>
                   <div className="grid gap-2">

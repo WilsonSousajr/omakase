@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { useTasks, useDeleteTask, useToggleTaskComplete } from "@/hooks/useTasks";
 import { useUIStore } from "@/stores/uiStore";
 import DraggableTaskCard from "./DraggableTaskCard";
@@ -8,6 +9,7 @@ import TaskFilters from "./TaskFilters";
 import type { Task } from "@/types/task";
 
 export default function TaskList() {
+  const t = useTranslations("tasks");
   const [search, setSearch] = useState("");
   const [priority, setPriority] = useState("");
   const openModal = useUIStore((s) => s.openModal);
@@ -56,8 +58,8 @@ export default function TaskList() {
           </div>
         ) : tasks.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-[var(--color-text-muted)]">
-            <p className="text-sm">No tasks yet</p>
-            <p className="text-xs">Click &quot;New Task&quot; to get started</p>
+            <p className="text-sm">{t("noTasks")}</p>
+            <p className="text-xs">{t("noTasksHint")}</p>
           </div>
         ) : (
           tasks.map((task) => (

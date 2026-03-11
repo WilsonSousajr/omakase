@@ -2,6 +2,7 @@
 
 import { useMemo, useRef } from "react";
 import { format } from "date-fns";
+import { useFormatter } from "next-intl";
 import { useCalendarStore } from "@/stores/calendarStore";
 import { useTimeBlocks, useDeleteTimeBlock, useUpdateTimeBlock } from "@/hooks/useTimeBlocks";
 import { useTasks, useToggleTaskComplete } from "@/hooks/useTasks";
@@ -23,6 +24,7 @@ interface CalendarDayViewProps {
 }
 
 export default function CalendarDayView({ isDragging = false, onCreateRange }: CalendarDayViewProps) {
+  const fmt = useFormatter();
   const { selectedDate } = useCalendarStore();
   const dateStr = format(selectedDate, "yyyy-MM-dd");
   const isToday = dateStr === format(new Date(), "yyyy-MM-dd");
@@ -71,7 +73,7 @@ export default function CalendarDayView({ isDragging = false, onCreateRange }: C
               style={{ height: `${SLOT_HEIGHT_DAY}px` }}
             >
               <span className="relative -top-[5px]">
-                {format(new Date(2000, 0, 1, hour), "h a")}
+                {fmt.dateTime(new Date(2000, 0, 1, hour), { hour: "numeric", hour12: true })}
               </span>
             </div>
           ))}
