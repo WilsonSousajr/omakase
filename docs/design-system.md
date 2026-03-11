@@ -339,6 +339,7 @@ Sidebar: BookOpen icon nav item + semester selector dropdown
 ```
 Sidebar nav order: Plan → Focus → Review → Projects → Study
 Sidebar bottom: User avatar section → SidebarStats (both inside mt-auto)
+Settings link: user avatar section links to /settings, Settings gear icon from lucide-react
 Review icon: CheckSquare from lucide-react
 Settings icon: Settings (gear) from lucide-react
 ```
@@ -434,15 +435,18 @@ Container: hover:bg-[var(--color-surface)] transition-colors
 
 ### Settings Page
 
-Full page at `/settings` with `max-w-lg mx-auto`. Three card sections:
+Full page at `/settings` with `max-w-2xl mx-auto`. Six card sections stacked vertically:
 
 ```
 Profile card: UserAvatar(lg) preview + ColorSwatchPicker + readonly username + editable name/email fields + Save button
+Pomodoro card: 2x2 grid of number inputs (work, short break, long break, sessions before long break) + Save button with Save icon
+Daily Goals card: 2-column grid (work hours, study hours) with 0.5 step increments
+General card: 2-column grid (week starts on select, timezone text input)
 Password card: old/new/confirm password inputs + Change Password button
 Logout card: red text ghost button ("Log out") with hover:bg-red-400/10
 ```
 
-All sections use `rounded-2xl border bg-surface p-5`. Inputs follow standard input pattern. Labels use signature `text-[10px]` uppercase style.
+All sections use `rounded-2xl border bg-surface p-5`. Inputs follow standard input pattern. Labels use signature `text-[10px]` uppercase style. Preferences save button disabled when no changes. Success feedback via `emitToast`.
 
 ### Error Boundary
 

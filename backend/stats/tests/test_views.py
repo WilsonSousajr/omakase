@@ -141,24 +141,23 @@ class TestDailyStatsView:
         assert resp.data["current_streak"] == 0
 
     def test_weekly_work_hours(self, authenticated_client, user):
-        today = timezone.localdate()
-        week_start = today - datetime.timedelta(days=today.weekday())
-        # Use Tuesday as reference date so both blocks are <= reference_date
-        # (fixes flaky failure when CI runs on Monday — date__lte=today
-        # excludes Tuesday's block when today is Monday)
+        # Use a fixed Friday via ?date= so Mon-Fri are all in range regardless of actual day
+        target_date = datetime.date(2026, 3, 6)  # Friday
+        week_start = target_date - datetime.timedelta(days=target_date.weekday())  # Monday March 2
         tuesday = week_start + datetime.timedelta(days=1)
         task = TaskFactory(user=user, area="work")
-        # 2-hour block on week_start
+        # 2-hour block on Monday
         TimeBlockFactory(task=task, date=week_start, start_time=datetime.time(9, 0), end_time=datetime.time(11, 0))
-        # 1.5-hour block on Tuesday (must be <= API reference date)
+        # 1.5-hour block on Tuesday
         TimeBlockFactory(task=task, date=tuesday, start_time=datetime.time(14, 0), end_time=datetime.time(15, 30))
 
-        resp = authenticated_client.get(self.URL, {"date": str(tuesday)})
+        resp = authenticated_client.get(self.URL, {"date": target_date.isoformat()})
         assert resp.data["weekly_work_hours"] == 3.5
 
     def test_weekly_study_hours_separate(self, authenticated_client, user):
-        today = timezone.localdate()
-        week_start = today - datetime.timedelta(days=today.weekday())
+        # Use a fixed Friday via ?date= to avoid day-of-week sensitivity
+        target_date = datetime.date(2026, 3, 6)  # Friday
+        week_start = target_date - datetime.timedelta(days=target_date.weekday())  # Monday March 2
         work_task = TaskFactory(user=user, area="work")
         study_task = TaskFactory(user=user, area="study")
         TimeBlockFactory(task=work_task, date=week_start, start_time=datetime.time(9, 0), end_time=datetime.time(11, 0))
@@ -166,7 +165,7 @@ class TestDailyStatsView:
             task=study_task, date=week_start, start_time=datetime.time(13, 0), end_time=datetime.time(15, 0)
         )
 
-        resp = authenticated_client.get(self.URL)
+        resp = authenticated_client.get(self.URL, {"date": target_date.isoformat()})
         assert resp.data["weekly_work_hours"] == 2.0
         assert resp.data["weekly_study_hours"] == 2.0
 

@@ -69,7 +69,8 @@ describe("SettingsPage", () => {
 
   it("renders save button", () => {
     renderWithProviders(<SettingsPage />);
-    expect(screen.getByText("Save")).toBeInTheDocument();
+    const saveButtons = screen.getAllByText("Save");
+    expect(saveButtons.length).toBeGreaterThanOrEqual(1);
   });
 
   it("renders change password button", () => {
