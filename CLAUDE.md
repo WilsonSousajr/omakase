@@ -71,7 +71,7 @@ docker compose exec frontend pnpm lint       # Run linter
 
 ```
 backend/
-  accounts/        # Auth: register, JWT token, me endpoint, Profile model, change-password
+  accounts/        # Auth: register, JWT token, me endpoint, Profile model, change-password, user preferences
   omakase/         # Django project settings, urls, wsgi
   tasks/           # Task, Tag, TimeBlock, Workspace, Project models + API
   pomodoro/        # PomodoroSession model + API
@@ -82,10 +82,10 @@ frontend/
     app/(auth)/    # Login + Register pages (no sidebar)
     app/(main)/    # Plan + Focus + Review + Projects + Study + Settings pages (with sidebar)
     components/    # React components (tasks/, calendar/, kanban/, focus/, projects/, study/, review/)
-    hooks/         # TanStack Query hooks (useTasks, useTags, useTimeBlocks, usePomodoro, useAuth [useMe, useLogin, useRegister, useUpdateProfile, useChangePassword, useLogout], useWorkspaces, useProjects, useStats, useSemesters, useDisciplines, useStudyBlocks, useClassSchedules, useClassOccurrences, useDailyReviews)
+    hooks/         # TanStack Query hooks (useTasks, useTags, useTimeBlocks, usePomodoro, useAuth [useMe, useLogin, useRegister, useUpdateProfile, useChangePassword, useLogout], useWorkspaces, useProjects, useStats, useSemesters, useDisciplines, useStudyBlocks, useClassSchedules, useClassOccurrences, useDailyReviews, useUserProfile)
     stores/        # Zustand stores (uiStore, pomodoroStore, calendarStore, authStore)
     lib/           # Utilities (api with JWT interceptors, constants, utils)
-    types/         # TypeScript types (task, tag, timeblock, pomodoro, auth, stats, semester, discipline, studyblock, classschedule, dailyreview)
+    types/         # TypeScript types (task, tag, timeblock, pomodoro, auth, stats, semester, discipline, studyblock, classschedule, dailyreview, userprofile)
 ```
 
 ## API Endpoints (all under /api/v1/)
@@ -94,6 +94,7 @@ frontend/
 - `auth/token/` — POST JWT obtain (AllowAny)
 - `auth/token/refresh/` — POST JWT refresh (AllowAny)
 - `auth/me/` — GET/PATCH current user + profile (IsAuthenticated)
+- `auth/profile/` — GET+PATCH user preferences (IsAuthenticated, get_or_create for existing users)
 - `auth/change-password/` — POST change password (IsAuthenticated)
 - `tasks/` — CRUD + `today/` + `reorder-bulk/` (user-scoped)
 - `tags/` — CRUD, filterable by area (user-scoped)
@@ -226,9 +227,14 @@ frontend/
 - UpdateProfileSerializer: plain Serializer (not ModelSerializer) because it writes to two models (User + Profile), wrapped in transaction.atomic()
 - ChangePasswordView: POST `/auth/change-password/`, validates old password + confirms new passwords match, enforces AUTH_PASSWORD_VALIDATORS, blacklists outstanding refresh tokens, rate-limited (5/hour via ScopedRateThrottle)
 - Frontend: UserAvatar component with `getInitials()` helper — falls back: first+last → first[0:2] → username[0:2]
-- Frontend: Settings page at `/settings` — profile editing (name, email, avatar color), password change, logout
 - Frontend: Sidebar user section (above SidebarStats) — UserAvatar + username + Settings gear icon, links to `/settings`
 - Frontend: `useUpdateProfile()` PATCH `/auth/me/` → updates authStore + query cache. `useChangePassword()` POST `/auth/change-password/`
+- UserProfile: OneToOne with User (related_name="user_profile"), auto-created via post_save signal. View uses get_or_create for existing users
+- UserProfile stores pomodoro durations, daily goals (work/study hours), timezone, week_starts_on
+- Frontend: Settings page at `/settings` combines profile editing (name, email, avatar color), preferences (pomodoro, daily goals, general), password change, and logout
+- Frontend: PomodoroTimer fetches user profile and syncs durations into pomodoroStore via useEffect + setDurations
+- Frontend: pomodoroStore has `durations` and `pomodorosBeforeLongBreak` as mutable state (not module-level constants)
+- Frontend: `setDurations` only updates `timeRemaining` when timer is not running (prevents resetting mid-session)
 
 ## Drag & Drop (Plan Mode)
 

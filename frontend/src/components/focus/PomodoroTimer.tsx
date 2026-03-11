@@ -3,10 +3,10 @@
 import { useEffect, useRef, useCallback } from "react";
 import { Pause, Play, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { POMODORO_DURATIONS } from "@/lib/constants";
 import { usePomodoroStore } from "@/stores/pomodoroStore";
 import { useCreatePomodoroSession, useCompletePomodoroSession } from "@/hooks/usePomodoro";
 import { useUIStore } from "@/stores/uiStore";
+import { useUserProfile } from "@/hooks/useUserProfile";
 
 const SESSION_LABELS = {
   focus: "Focus",
@@ -26,18 +26,34 @@ const RING_COLORS = {
   long_break: "stroke-[#a3a3a3]",
 } as const;
 
-const DURATIONS = POMODORO_DURATIONS;
-
 export default function PomodoroTimer() {
   const sessionType = usePomodoroStore((s) => s.sessionType);
   const timeRemaining = usePomodoroStore((s) => s.timeRemaining);
   const isRunning = usePomodoroStore((s) => s.isRunning);
   const completedPomodoros = usePomodoroStore((s) => s.completedPomodoros);
+  const durations = usePomodoroStore((s) => s.durations);
   const start = usePomodoroStore((s) => s.start);
   const pause = usePomodoroStore((s) => s.pause);
   const reset = usePomodoroStore((s) => s.reset);
   const switchSession = usePomodoroStore((s) => s.switchSession);
   const setOnComplete = usePomodoroStore((s) => s.setOnComplete);
+  const setDurations = usePomodoroStore((s) => s.setDurations);
+
+  const { data: profile } = useUserProfile();
+
+  // Sync profile durations into the store
+  useEffect(() => {
+    if (profile) {
+      setDurations(
+        {
+          focus: profile.pomodoro_work_minutes * 60,
+          short_break: profile.pomodoro_short_break_minutes * 60,
+          long_break: profile.pomodoro_long_break_minutes * 60,
+        },
+        profile.pomodoros_before_long_break
+      );
+    }
+  }, [profile, setDurations]);
 
   const activeTaskId = useUIStore((s) => s.activeTaskId);
   const createSession = useCreatePomodoroSession();
@@ -99,7 +115,7 @@ export default function PomodoroTimer() {
       const session = await createSession.mutateAsync({
         task: activeTaskId || undefined,
         session_type: sessionType,
-        duration_minutes: DURATIONS[sessionType] / 60,
+        duration_minutes: durations[sessionType] / 60,
       });
       currentSessionId.current = session.id;
     }
@@ -108,7 +124,7 @@ export default function PomodoroTimer() {
 
   const minutes = Math.floor(timeRemaining / 60);
   const seconds = timeRemaining % 60;
-  const totalDuration = DURATIONS[sessionType];
+  const totalDuration = durations[sessionType];
   const progress = (totalDuration - timeRemaining) / totalDuration;
 
   const radius = 80;

@@ -3,10 +3,12 @@ from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
 
+from accounts.models import UserProfile
 from accounts.serializers import (
     ChangePasswordSerializer,
     RegisterSerializer,
     UpdateProfileSerializer,
+    UserProfileSerializer,
     UserSerializer,
 )
 
@@ -40,6 +42,14 @@ class MeView(generics.RetrieveUpdateAPIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(UserSerializer(request.user).data)
+
+
+class UserProfileView(generics.RetrieveUpdateAPIView):
+    serializer_class = UserProfileSerializer
+
+    def get_object(self):
+        profile, _ = UserProfile.objects.get_or_create(user=self.request.user)
+        return profile
 
 
 class ChangePasswordView(generics.GenericAPIView):

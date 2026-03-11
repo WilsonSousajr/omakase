@@ -6,6 +6,8 @@ from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import IntegrityError, transaction
 from rest_framework import serializers
 
+from accounts.models import UserProfile
+
 
 class RegisterSerializer(serializers.Serializer):
     username = serializers.CharField(max_length=150)
@@ -124,3 +126,21 @@ class ChangePasswordSerializer(serializers.Serializer):
         user.set_password(self.validated_data["new_password"])
         user.save()
         return user
+
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserProfile
+        fields = [
+            "timezone",
+            "week_starts_on",
+            "pomodoro_work_minutes",
+            "pomodoro_short_break_minutes",
+            "pomodoro_long_break_minutes",
+            "pomodoros_before_long_break",
+            "daily_work_goal_hours",
+            "daily_study_goal_hours",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["created_at", "updated_at"]
