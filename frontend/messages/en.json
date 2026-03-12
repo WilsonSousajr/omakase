@@ -183,7 +183,11 @@
     "today": "Today",
     "day": "Day",
     "week": "Week",
-    "untitledTask": "Task"
+    "untitledTask": "Task",
+    "overlapWarning": "Time Block Overlap",
+    "overlapsWith": "This block overlaps with:",
+    "placeAnyway": "Place Anyway",
+    "cancelPlacement": "Cancel"
   },
   "projects": {
     "title": "Projects",

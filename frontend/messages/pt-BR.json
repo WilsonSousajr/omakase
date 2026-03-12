@@ -183,7 +183,11 @@
     "today": "Hoje",
     "day": "Dia",
     "week": "Semana",
-    "untitledTask": "Tarefa"
+    "untitledTask": "Tarefa",
+    "overlapWarning": "Sobreposição de Bloco",
+    "overlapsWith": "Este bloco se sobrepõe com:",
+    "placeAnyway": "Colocar Mesmo Assim",
+    "cancelPlacement": "Cancelar"
   },
   "projects": {
     "title": "Projetos",
