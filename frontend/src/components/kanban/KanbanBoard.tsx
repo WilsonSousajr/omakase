@@ -91,16 +91,24 @@ export default function KanbanBoard() {
 
     // Check if task was moved to "done"
     const draggedTask = tasks.find((t) => t.id === active.id);
+    const preDropTask = preDropSnapshotRef.current.find((t) => t.id === active.id);
     const wasMovedToDone =
       draggedTask &&
-      preDropSnapshotRef.current.find((t) => t.id === active.id)?.kanban_status !== "done" &&
+      preDropTask?.kanban_status !== "done" &&
       draggedTask.kanban_status === "done";
 
-    const reorderItems = tasks.map((t, i) => ({
-      id: t.id,
-      kanban_order: i,
-      kanban_status: t.kanban_status,
-    }));
+    // Only send tasks from affected columns (source + destination)
+    const affectedStatuses = new Set<KanbanStatus>();
+    if (preDropTask) affectedStatuses.add(preDropTask.kanban_status);
+    if (draggedTask) affectedStatuses.add(draggedTask.kanban_status);
+
+    const reorderItems = tasks
+      .filter((t) => affectedStatuses.has(t.kanban_status))
+      .map((t, i) => ({
+        id: t.id,
+        kanban_order: i,
+        kanban_status: t.kanban_status,
+      }));
 
     const rollback = preDropSnapshotRef.current;
     reorderTasks.mutate(reorderItems, {
