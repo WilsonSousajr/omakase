@@ -67,7 +67,10 @@ class TaskViewSet(viewsets.ModelViewSet):
             try:
                 target_date = date.fromisoformat(client_date)
             except ValueError:
-                target_date = date.today()
+                return Response(
+                    {"detail": "Invalid date format."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
         else:
             target_date = date.today()
         tasks = self.get_queryset().filter(scheduled_date=target_date)

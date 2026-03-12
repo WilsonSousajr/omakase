@@ -23,7 +23,10 @@ class DailyStatsView(APIView):
             try:
                 today = datetime.date.fromisoformat(date_str)
             except ValueError:
-                today = timezone.localdate()
+                return Response(
+                    {"detail": "Invalid date format."},
+                    status=400,
+                )
         else:
             today = timezone.localdate()
         week_start = today - datetime.timedelta(days=today.weekday())
