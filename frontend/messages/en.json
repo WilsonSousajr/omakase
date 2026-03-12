@@ -405,7 +405,24 @@
     "deleteAriaLabel": "Delete subtask"
   },
   "plan": {
-    "shutdownNudge": "You've shut down for the day. Rest well!"
+    "shutdownNudge": "You've shut down for the day. Rest well!",
+    "planMyDay": "Plan My Day",
+    "carriedOver": "Carried Over",
+    "carriedOverCount": "{count} items from previous days",
+    "todaysSchedule": "Today's Schedule",
+    "workloadSummary": "Workload Summary",
+    "today": "Today",
+    "pickDate": "Pick Date",
+    "backlog": "Backlog",
+    "skipStudyBlock": "Skip",
+    "apply": "Apply",
+    "totalPlannedHours": "Total: {hours}h planned",
+    "workloadWarning": "You've planned {planned}h today. Your daily goal is {goal}h.",
+    "noCarriedOver": "No carried-over items. You're all caught up!",
+    "noScheduledItems": "No items scheduled for today.",
+    "tasks": "Tasks",
+    "work": "Work",
+    "studyLabel": "Study"
   },
   "accessibility": {
     "toggleTheme": "Toggle theme",

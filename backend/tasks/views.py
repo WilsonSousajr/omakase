@@ -40,7 +40,7 @@ class TaskViewSet(viewsets.ModelViewSet):
         return Task.objects.filter(user=self.request.user).prefetch_related("tags", "time_blocks")
 
     def get_serializer_class(self):
-        if self.action == "list" or self.action == "today":
+        if self.action in ("list", "today", "carried_over"):
             return TaskListSerializer
         return TaskSerializer
 
@@ -75,6 +75,28 @@ class TaskViewSet(viewsets.ModelViewSet):
         if page is not None:
             serializer = self.get_serializer(page, many=True)
             return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(tasks, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=["get"], url_path="carried-over")
+    def carried_over(self, request):
+        date_str = request.query_params.get("date")
+        if not date_str:
+            return Response(
+                {"detail": "date param required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        try:
+            target_date = date.fromisoformat(date_str)
+        except ValueError:
+            return Response(
+                {"detail": "Invalid date format."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        tasks = self.get_queryset().filter(
+            scheduled_date__lt=target_date,
+            is_completed=False,
+        )
         serializer = self.get_serializer(tasks, many=True)
         return Response(serializer.data)
 

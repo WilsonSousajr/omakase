@@ -240,6 +240,39 @@ class TestTaskViewSet:
         resp = authenticated_client.get("/api/v1/tasks/")
         assert resp.data["results"][0]["actual_minutes"] == 0
 
+    def test_carried_over_returns_past_incomplete_tasks(self, authenticated_client, user):
+        TaskFactory(user=user, scheduled_date=datetime.date(2026, 3, 10), is_completed=False)
+        TaskFactory(user=user, scheduled_date=datetime.date(2026, 3, 11), is_completed=False)
+        TaskFactory(user=user, scheduled_date=datetime.date(2026, 3, 9), is_completed=True)
+        resp = authenticated_client.get("/api/v1/tasks/carried-over/?date=2026-03-11")
+        assert resp.status_code == status.HTTP_200_OK
+        assert len(resp.data) == 1
+        assert resp.data[0]["scheduled_date"] == "2026-03-10"
+
+    def test_carried_over_excludes_completed(self, authenticated_client, user):
+        TaskFactory(user=user, scheduled_date=datetime.date(2026, 3, 9), is_completed=True)
+        resp = authenticated_client.get("/api/v1/tasks/carried-over/?date=2026-03-11")
+        assert resp.status_code == status.HTTP_200_OK
+        assert len(resp.data) == 0
+
+    def test_carried_over_excludes_today_and_future(self, authenticated_client, user):
+        TaskFactory(user=user, scheduled_date=datetime.date(2026, 3, 11), is_completed=False)
+        TaskFactory(user=user, scheduled_date=datetime.date(2026, 3, 12), is_completed=False)
+        resp = authenticated_client.get("/api/v1/tasks/carried-over/?date=2026-03-11")
+        assert resp.status_code == status.HTTP_200_OK
+        assert len(resp.data) == 0
+
+    def test_carried_over_requires_date_param(self, authenticated_client, user):
+        resp = authenticated_client.get("/api/v1/tasks/carried-over/")
+        assert resp.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_carried_over_user_scoped(self, authenticated_client, user):
+        other_user = UserFactory()
+        TaskFactory(user=other_user, scheduled_date=datetime.date(2026, 3, 9))
+        resp = authenticated_client.get("/api/v1/tasks/carried-over/?date=2026-03-11")
+        assert resp.status_code == status.HTTP_200_OK
+        assert len(resp.data) == 0
+
     def test_unauthenticated_returns_401(self, api_client):
         resp = api_client.get("/api/v1/tasks/")
         assert resp.status_code == status.HTTP_401_UNAUTHORIZED

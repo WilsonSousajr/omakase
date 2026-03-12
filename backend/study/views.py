@@ -3,6 +3,7 @@ import datetime
 from django.db.models import Count
 from django_filters import rest_framework as filters
 from rest_framework import viewsets
+from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -89,6 +90,29 @@ class StudyBlockViewSet(viewsets.ModelViewSet):
         if discipline and discipline.semester.user != self.request.user:
             raise PermissionDenied("You do not own this discipline.")
         serializer.save()
+
+    @action(detail=False, methods=["get"], url_path="carried-over")
+    def carried_over(self, request):
+        date_str = request.query_params.get("date")
+        if not date_str:
+            return Response(
+                {"detail": "date param required."},
+                status=400,
+            )
+        try:
+            target_date = datetime.date.fromisoformat(date_str)
+        except ValueError:
+            return Response(
+                {"detail": "Invalid date format."},
+                status=400,
+            )
+        blocks = (
+            self.get_queryset()
+            .filter(scheduled_date__lt=target_date)
+            .exclude(status__in=["completed", "skipped"])
+        )
+        serializer = self.get_serializer(blocks, many=True)
+        return Response(serializer.data)
 
 
 class ClassScheduleFilter(filters.FilterSet):
