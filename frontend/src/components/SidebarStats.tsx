@@ -2,12 +2,14 @@
 
 import { Flame, Clock, BarChart3 } from "lucide-react";
 import { useDailyStats } from "@/hooks/useStats";
+import { useToday } from "@/hooks/useToday";
 import { useTranslations } from "next-intl";
 
 export default function SidebarStats() {
   const t = useTranslations("stats");
   const tAreas = useTranslations("constants.areas");
-  const { data: stats } = useDailyStats();
+  const today = useToday();
+  const { data: stats } = useDailyStats(today);
 
   if (!stats) return null;
 
