@@ -362,6 +362,53 @@ class TestTimeBlockViewSet:
         assert resp.status_code == status.HTTP_204_NO_CONTENT
         assert Task.objects.filter(pk=task_pk).exists()
 
+    def test_create_timeblock_with_notes(self, authenticated_client, user):
+        task = TaskFactory(user=user)
+        resp = authenticated_client.post(
+            "/api/v1/timeblocks/",
+            {
+                "task": str(task.pk),
+                "date": "2025-01-15",
+                "start_time": "09:00:00",
+                "end_time": "10:00:00",
+                "notes": "Great focus session",
+            },
+            format="json",
+        )
+        assert resp.status_code == status.HTTP_201_CREATED
+        assert resp.data["notes"] == "Great focus session"
+
+    def test_update_timeblock_notes(self, authenticated_client, user):
+        tb = TimeBlockFactory(task__user=user)
+        resp = authenticated_client.patch(
+            f"/api/v1/timeblocks/{tb.pk}/",
+            {"notes": "Updated session notes"},
+            format="json",
+        )
+        assert resp.status_code == status.HTTP_200_OK
+        assert resp.data["notes"] == "Updated session notes"
+
+    def test_notes_returned_in_get(self, authenticated_client, user):
+        tb = TimeBlockFactory(task__user=user, notes="My session notes")
+        resp = authenticated_client.get(f"/api/v1/timeblocks/{tb.pk}/")
+        assert resp.status_code == status.HTTP_200_OK
+        assert resp.data["notes"] == "My session notes"
+
+    def test_notes_defaults_to_empty_string(self, authenticated_client, user):
+        task = TaskFactory(user=user)
+        resp = authenticated_client.post(
+            "/api/v1/timeblocks/",
+            {
+                "task": str(task.pk),
+                "date": "2025-01-15",
+                "start_time": "09:00:00",
+                "end_time": "10:00:00",
+            },
+            format="json",
+        )
+        assert resp.status_code == status.HTTP_201_CREATED
+        assert resp.data["notes"] == ""
+
     def test_unauthenticated_returns_401(self, api_client):
         resp = api_client.get("/api/v1/timeblocks/")
         assert resp.status_code == status.HTTP_401_UNAUTHORIZED

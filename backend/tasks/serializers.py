@@ -42,7 +42,7 @@ class TagSerializer(serializers.ModelSerializer):
 class TimeBlockSerializer(serializers.ModelSerializer):
     class Meta:
         model = TimeBlock
-        fields = ["id", "task", "study_block", "date", "start_time", "end_time", "created_at", "updated_at"]
+        fields = ["id", "task", "study_block", "date", "start_time", "end_time", "notes", "created_at", "updated_at"]
         read_only_fields = ["id", "created_at", "updated_at"]
 
     def validate(self, data):
