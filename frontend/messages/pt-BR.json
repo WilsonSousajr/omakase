@@ -405,7 +405,24 @@
     "deleteAriaLabel": "Excluir subtarefa"
   },
   "plan": {
-    "shutdownNudge": "Você encerrou o dia. Descanse bem!"
+    "shutdownNudge": "Você encerrou o dia. Descanse bem!",
+    "planMyDay": "Planejar Meu Dia",
+    "carriedOver": "Pendentes",
+    "carriedOverCount": "{count} itens de dias anteriores",
+    "todaysSchedule": "Agenda de Hoje",
+    "workloadSummary": "Resumo de Carga",
+    "today": "Hoje",
+    "pickDate": "Escolher Data",
+    "backlog": "Backlog",
+    "skipStudyBlock": "Pular",
+    "apply": "Aplicar",
+    "totalPlannedHours": "Total: {hours}h planejadas",
+    "workloadWarning": "Você planejou {planned}h hoje. Sua meta diária é {goal}h.",
+    "noCarriedOver": "Nenhum item pendente. Tudo em dia!",
+    "noScheduledItems": "Nenhum item agendado para hoje.",
+    "tasks": "Tarefas",
+    "work": "Trabalho",
+    "studyLabel": "Estudo"
   },
   "accessibility": {
     "toggleTheme": "Alternar tema",

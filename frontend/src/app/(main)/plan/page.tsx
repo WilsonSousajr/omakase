@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { DndContext, DragOverlay, type DragEndEvent, type DragStartEvent, PointerSensor, useSensor, useSensors, closestCenter } from "@dnd-kit/core";
 import TaskList from "@/components/tasks/TaskList";
 import Calendar from "@/components/calendar/Calendar";
+import MorningPlanWizard from "@/components/plan/MorningPlanWizard";
 import { useTranslations } from "next-intl";
 import { emitToast } from "@/components/Toast";
 import { useCreateTimeBlock, useUpdateTimeBlock } from "@/hooks/useTimeBlocks";
@@ -32,6 +33,7 @@ export default function PlanPage() {
   const updateTimeBlock = useUpdateTimeBlock();
   const updateTask = useUpdateTask();
   const updateStudyBlock = useUpdateStudyBlock();
+  const [showWizard, setShowWizard] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [activeDrag, setActiveDrag] = useState<
     | { type: "task"; task: Task }
@@ -151,12 +153,25 @@ export default function PlanPage() {
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div className="flex h-full">
         <div className="w-[400px] shrink-0 border-r border-[var(--color-border)]">
+          <div className="flex items-center justify-between border-b border-[var(--color-border)] px-4 py-3">
+            <h2 className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-secondary)]">
+              {t("tasks")}
+            </h2>
+            <button
+              onClick={() => setShowWizard(true)}
+              className="rounded-xl px-3 py-1.5 text-xs font-medium text-[var(--color-text-secondary)] hover:bg-[var(--color-hover-overlay)]"
+            >
+              {t("planMyDay")}
+            </button>
+          </div>
           <TaskList />
         </div>
         <div className="flex-1">
           <Calendar isDragging={isDragging} onCreateRange={handleCreateRange} />
         </div>
       </div>
+
+      {showWizard && <MorningPlanWizard onClose={() => setShowWizard(false)} />}
 
       <DragOverlay dropAnimation={null}>
         {activeDrag?.type === "task" && (() => {

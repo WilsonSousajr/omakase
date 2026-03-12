@@ -344,6 +344,9 @@ export const handlers = [
   http.get(`${API_URL}/tasks/today/`, () =>
     HttpResponse.json(paginated(mockTasks))
   ),
+  http.get(`${API_URL}/tasks/carried-over/`, () =>
+    HttpResponse.json([])
+  ),
   http.get(`${API_URL}/tasks/:id/`, ({ params }) => {
     const task = mockTasks.find((t) => t.id === params.id);
     return task ? HttpResponse.json(task) : new HttpResponse(null, { status: 404 });
@@ -534,6 +537,9 @@ export const handlers = [
   ),
 
   // Study Blocks
+  http.get(`${API_URL}/study/studyblocks/carried-over/`, () =>
+    HttpResponse.json([])
+  ),
   http.get(`${API_URL}/study/studyblocks/`, () =>
     HttpResponse.json(paginated([createMockStudyBlock({ title: "Chapter 5" }), createMockStudyBlock({ title: "Problem Set 3" })]))
   ),
