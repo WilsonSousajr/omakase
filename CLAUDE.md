@@ -96,7 +96,7 @@ frontend/
 - `auth/me/` — GET/PATCH current user + profile (IsAuthenticated)
 - `auth/profile/` — GET+PATCH user preferences (IsAuthenticated, get_or_create for existing users)
 - `auth/change-password/` — POST change password (IsAuthenticated)
-- `tasks/` — CRUD + `today/` + `reorder-bulk/` (user-scoped)
+- `tasks/` — CRUD + `today/` + `carried-over/` + `reorder-bulk/` (user-scoped)
 - `tags/` — CRUD, filterable by area (user-scoped)
 - `timeblocks/` — CRUD, filterable by date range (user-scoped via task.user OR study_block.discipline.semester.user)
 - `workspaces/` — CRUD (user-scoped, annotated with project_count)
@@ -107,7 +107,7 @@ frontend/
 - `stats/reviews/` — CRUD DailyReview (user-scoped, unique per user+date)
 - `study/semesters/` — CRUD (user-scoped, annotated with discipline_count)
 - `study/disciplines/` — CRUD, filterable by semester/status (user-scoped via semester.user, annotated with study_block_count)
-- `study/studyblocks/` — CRUD, filterable by discipline/type/status (user-scoped via discipline.semester.user)
+- `study/studyblocks/` — CRUD + `carried-over/`, filterable by discipline/type/status (user-scoped via discipline.semester.user)
 - `study/classschedules/` — CRUD, filterable by discipline/class_type/is_active (user-scoped via discipline.semester.user)
 - `study/class-occurrences/` — GET computed virtual class occurrences for a date range (date_from, date_to params required, max 90 days)
 
@@ -287,6 +287,17 @@ frontend/
 - `/tasks/today/` accepts optional `?date=` query param — frontend sends client-local date to avoid server UTC mismatch
 - `useTodayTasks(date)` requires a date string (from `useToday()` hook) — no longer uses server `date.today()` as default
 - `useToday()` hook in `frontend/src/hooks/useToday.ts` returns local date as YYYY-MM-DD string
+- TimeBlock model has `notes` (TextField, blank, default "") and `session_rating` (PositiveSmallIntegerField, null, 1-5 validated)
+- `actual_minutes` computed via SerializerMethodField + `prefetch_related("time_blocks")` — avoids N+1, sums (end_time - start_time) in Python
+- `/tasks/carried-over/?date=` returns incomplete tasks scheduled before the given date (used by Morning Plan wizard)
+- `/study/studyblocks/carried-over/?date=` same pattern, excludes completed/skipped study blocks
+- Frontend: `useCarriedOverTasks(date)` and `useCarriedOverStudyBlocks(date)` hooks for Morning Plan wizard
+- Frontend: MorningPlanWizard is a 3-step modal wizard (Carried Over → Today's Schedule → Workload Summary), mounted in plan page
+- Frontend: SessionCompletionModal triggered on drag-to-done (KanbanBoard) and pomodoro completion (PomodoroTimer) — rates time block 1-5 + optional notes
+- Frontend: `sessionCompletionBlock` in uiStore for cross-component session completion coordination, `ratedBlockIds` ref in focus page prevents re-triggering
+- Frontend: `findOverlaps()` in `timeblock-utils.ts` — pure function detecting time block + class occurrence overlaps, used in plan page handleDragEnd and handleCreateRange
+- Frontend: OverlapWarning dialog with pendingAction pattern — stores mutation as state, executes on confirm, clears on cancel
+- Frontend: ActiveTaskPanel shows session notes textarea for the current time block (debounced save, `useUpdateTimeBlock`)
 
 ## Keyboard Shortcuts
 
