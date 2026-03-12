@@ -158,7 +158,10 @@
   },
   "focus": {
     "sessionNotes": "Notas da Sessão",
-    "sessionNotesPlaceholder": "Notas para esta sessão..."
+    "sessionNotesPlaceholder": "Notas para esta sessão...",
+    "sessionComplete": "Sessão Concluída",
+    "howDidItGo": "Como foi?",
+    "sessionRating": "Avaliação"
   },
   "pomodoro": {
     "focus": "Foco",

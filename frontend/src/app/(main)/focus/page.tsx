@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import KanbanBoard from "@/components/kanban/KanbanBoard";
 import TodayStudyBlocks from "@/components/kanban/TodayStudyBlocks";
 import ActiveTaskPanel from "@/components/focus/ActiveTaskPanel";
+import SessionCompletionModal from "@/components/focus/SessionCompletionModal";
 import { emitToast } from "@/components/Toast";
 import { useDailyReview } from "@/hooks/useDailyReviews";
 import { useToday } from "@/hooks/useToday";
@@ -14,6 +15,9 @@ export default function FocusPage() {
   const { data: todayReview } = useDailyReview(today);
   const hasShownShutdownNudge = useUIStore((s) => s.hasShownShutdownNudge);
   const setHasShownShutdownNudge = useUIStore((s) => s.setHasShownShutdownNudge);
+  const sessionCompletionBlock = useUIStore((s) => s.sessionCompletionBlock);
+  const setSessionCompletionBlock = useUIStore((s) => s.setSessionCompletionBlock);
+  const ratedBlockIds = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     if (todayReview?.is_shutdown && !hasShownShutdownNudge) {
@@ -21,6 +25,13 @@ export default function FocusPage() {
       setHasShownShutdownNudge(true);
     }
   }, [todayReview, hasShownShutdownNudge, setHasShownShutdownNudge]);
+
+  const handleSessionClose = () => {
+    if (sessionCompletionBlock) {
+      ratedBlockIds.current.add(sessionCompletionBlock.id);
+    }
+    setSessionCompletionBlock(null);
+  };
 
   return (
     <div className="flex h-full">
@@ -33,6 +44,13 @@ export default function FocusPage() {
       <div className="w-96 shrink-0">
         <ActiveTaskPanel />
       </div>
+
+      {sessionCompletionBlock && (
+        <SessionCompletionModal
+          block={sessionCompletionBlock}
+          onClose={handleSessionClose}
+        />
+      )}
     </div>
   );
 }
