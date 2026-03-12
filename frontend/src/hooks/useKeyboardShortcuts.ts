@@ -3,8 +3,15 @@ import { useUIStore } from "@/stores/uiStore";
 import { usePomodoroStore } from "@/stores/pomodoroStore";
 
 export function useKeyboardShortcuts() {
-  const { modalOpen, openModal, closeModal } = useUIStore();
-  const { isRunning, start, pause, timeRemaining, sessionType, durations } = usePomodoroStore();
+  const modalOpen = useUIStore((s) => s.modalOpen);
+  const openModal = useUIStore((s) => s.openModal);
+  const closeModal = useUIStore((s) => s.closeModal);
+  const isRunning = usePomodoroStore((s) => s.isRunning);
+  const start = usePomodoroStore((s) => s.start);
+  const pause = usePomodoroStore((s) => s.pause);
+  const timeRemaining = usePomodoroStore((s) => s.timeRemaining);
+  const sessionType = usePomodoroStore((s) => s.sessionType);
+  const durations = usePomodoroStore((s) => s.durations);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {

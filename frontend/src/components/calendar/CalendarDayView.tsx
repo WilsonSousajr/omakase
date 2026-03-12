@@ -25,7 +25,7 @@ interface CalendarDayViewProps {
 
 export default function CalendarDayView({ isDragging = false, onCreateRange }: CalendarDayViewProps) {
   const fmt = useFormatter();
-  const { selectedDate } = useCalendarStore();
+  const selectedDate = useCalendarStore((s) => s.selectedDate);
   const dateStr = format(selectedDate, "yyyy-MM-dd");
   const isToday = dateStr === format(new Date(), "yyyy-MM-dd");
   const gridRef = useRef<HTMLDivElement>(null);
