@@ -80,7 +80,8 @@
     "noTasks": "No tasks yet",
     "noTasksHint": "Click \"New Task\" to get started",
     "searchPlaceholder": "Search tasks...",
-    "allPriorities": "All priorities"
+    "allPriorities": "All priorities",
+    "estimated": "est."
   },
   "constants": {
     "priorities": {

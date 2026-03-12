@@ -16,6 +16,7 @@ export interface Task {
   scheduled_date: string | null;
   due_date: string | null;
   estimated_minutes: number | null;
+  actual_minutes?: number;
   kanban_order: number;
   is_completed: boolean;
   completed_at: string | null;

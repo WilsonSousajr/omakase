@@ -7,6 +7,7 @@ export interface StudyBlock {
   status: "planned" | "in_progress" | "completed" | "skipped";
   notes: string;
   estimated_minutes: number | null;
+  actual_minutes?: number;
   scheduled_date: string | null;
   due_date: string | null;
   is_completed: boolean;
