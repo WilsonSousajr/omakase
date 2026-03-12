@@ -106,11 +106,7 @@ class StudyBlockViewSet(viewsets.ModelViewSet):
                 {"detail": "Invalid date format."},
                 status=400,
             )
-        blocks = (
-            self.get_queryset()
-            .filter(scheduled_date__lt=target_date)
-            .exclude(status__in=["completed", "skipped"])
-        )
+        blocks = self.get_queryset().filter(scheduled_date__lt=target_date).exclude(status__in=["completed", "skipped"])
         serializer = self.get_serializer(blocks, many=True)
         return Response(serializer.data)
 

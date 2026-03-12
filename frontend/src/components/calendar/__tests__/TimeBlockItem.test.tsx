@@ -146,7 +146,7 @@ describe("TimeBlockItem", () => {
     );
     const wrapper = container.firstChild as HTMLElement;
     expect(wrapper.className).toContain("rounded-xl");
-    expect(wrapper.className).toContain("transition-all");
+    expect(wrapper.className).toContain("transition-[opacity,box-shadow]");
   });
 
   it("applies line-through when completed", () => {
