@@ -235,6 +235,42 @@ class TestStudyBlockViewSet:
         resp = authenticated_client.get(self.URL)
         assert resp.data["results"][0]["actual_minutes"] == 0
 
+    def test_carried_over_returns_past_incomplete_blocks(self, authenticated_client, user):
+        sb = StudyBlockFactory(
+            discipline__semester__user=user,
+            scheduled_date=datetime.date(2026, 3, 9),
+            status="planned",
+        )
+        # Completed — excluded
+        StudyBlockFactory(
+            discipline__semester__user=user,
+            scheduled_date=datetime.date(2026, 3, 9),
+            status="completed",
+        )
+        # Skipped — excluded
+        StudyBlockFactory(
+            discipline__semester__user=user,
+            scheduled_date=datetime.date(2026, 3, 9),
+            status="skipped",
+        )
+        resp = authenticated_client.get(f"{self.URL}carried-over/?date=2026-03-11")
+        assert resp.status_code == status.HTTP_200_OK
+        assert len(resp.data) == 1
+        assert str(resp.data[0]["id"]) == str(sb.pk)
+
+    def test_carried_over_requires_date(self, authenticated_client, user):
+        resp = authenticated_client.get(f"{self.URL}carried-over/")
+        assert resp.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_carried_over_user_scoped(self, authenticated_client, user):
+        StudyBlockFactory(
+            scheduled_date=datetime.date(2026, 3, 9),
+            status="planned",
+        )  # different user
+        resp = authenticated_client.get(f"{self.URL}carried-over/?date=2026-03-11")
+        assert resp.status_code == status.HTTP_200_OK
+        assert len(resp.data) == 0
+
 
 @pytest.mark.django_db
 class TestTimeBlockPolymorphicFK:
