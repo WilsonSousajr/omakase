@@ -409,6 +409,48 @@ class TestTimeBlockViewSet:
         assert resp.status_code == status.HTTP_201_CREATED
         assert resp.data["notes"] == ""
 
+    def test_patch_timeblock_session_rating(self, authenticated_client, user):
+        task = TaskFactory(user=user)
+        tb = TimeBlockFactory(task=task)
+        resp = authenticated_client.patch(
+            f"/api/v1/timeblocks/{tb.pk}/",
+            {"session_rating": 4},
+            format="json",
+        )
+        assert resp.status_code == 200
+        assert resp.data["session_rating"] == 4
+
+    def test_session_rating_zero_rejected(self, authenticated_client, user):
+        task = TaskFactory(user=user)
+        tb = TimeBlockFactory(task=task)
+        resp = authenticated_client.patch(
+            f"/api/v1/timeblocks/{tb.pk}/",
+            {"session_rating": 0},
+            format="json",
+        )
+        assert resp.status_code == 400
+
+    def test_session_rating_six_rejected(self, authenticated_client, user):
+        task = TaskFactory(user=user)
+        tb = TimeBlockFactory(task=task)
+        resp = authenticated_client.patch(
+            f"/api/v1/timeblocks/{tb.pk}/",
+            {"session_rating": 6},
+            format="json",
+        )
+        assert resp.status_code == 400
+
+    def test_session_rating_null_allowed(self, authenticated_client, user):
+        task = TaskFactory(user=user)
+        tb = TimeBlockFactory(task=task)
+        resp = authenticated_client.patch(
+            f"/api/v1/timeblocks/{tb.pk}/",
+            {"session_rating": None},
+            format="json",
+        )
+        assert resp.status_code == 200
+        assert resp.data["session_rating"] is None
+
     def test_unauthenticated_returns_401(self, api_client):
         resp = api_client.get("/api/v1/timeblocks/")
         assert resp.status_code == status.HTTP_401_UNAUTHORIZED
