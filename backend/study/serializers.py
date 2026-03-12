@@ -52,6 +52,16 @@ class DisciplineSerializer(serializers.ModelSerializer):
 
 
 class StudyBlockSerializer(serializers.ModelSerializer):
+    actual_minutes = serializers.SerializerMethodField()
+
+    def get_actual_minutes(self, obj):
+        total = 0
+        for tb in obj.time_blocks.all():
+            start = tb.start_time.hour * 60 + tb.start_time.minute
+            end = tb.end_time.hour * 60 + tb.end_time.minute
+            total += max(0, end - start)
+        return total
+
     class Meta:
         model = StudyBlock
         fields = [
@@ -63,6 +73,7 @@ class StudyBlockSerializer(serializers.ModelSerializer):
             "status",
             "notes",
             "estimated_minutes",
+            "actual_minutes",
             "scheduled_date",
             "due_date",
             "is_completed",

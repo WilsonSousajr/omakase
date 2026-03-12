@@ -19,6 +19,7 @@ interface TaskCardProps {
 
 function TaskCard({ task, onEdit, onDelete, onToggleComplete, projects }: TaskCardProps) {
   const tc = useTranslations("constants");
+  const tTasks = useTranslations("tasks");
   const fmt = useFormatter();
   const priority = PRIORITIES.find((p) => p.value === task.priority);
   const project = task.project && projects ? projects.get(task.project) : null;
@@ -102,6 +103,13 @@ function TaskCard({ task, onEdit, onDelete, onToggleComplete, projects }: TaskCa
             <span className="flex items-center gap-1 text-[10px] text-[var(--color-text-muted)]">
               <Calendar className="h-3 w-3" />
               {fmt.dateTime(new Date(task.scheduled_date + "T00:00:00"), { month: "short", day: "numeric" })}
+            </span>
+          )}
+          {(task.estimated_minutes || (task.actual_minutes && task.actual_minutes > 0)) && (
+            <span className="text-[10px] text-[var(--color-text-muted)]">
+              {task.actual_minutes && task.actual_minutes > 0
+                ? `${task.actual_minutes}m${task.estimated_minutes ? ` / ${task.estimated_minutes}m ${tTasks("estimated")}` : ""}`
+                : `${task.estimated_minutes}m ${tTasks("estimated")}`}
             </span>
           )}
         </div>

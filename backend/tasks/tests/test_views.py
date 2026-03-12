@@ -225,6 +225,21 @@ class TestTaskViewSet:
         resp = authenticated_client.get(f"/api/v1/tasks/{uuid.uuid4()}/")
         assert resp.status_code == status.HTTP_404_NOT_FOUND
 
+    def test_task_actual_minutes_with_time_blocks(self, authenticated_client, user):
+        """Task with 2 time blocks (30min each) returns 60 actual_minutes."""
+        task = TaskFactory(user=user)
+        TimeBlockFactory(task=task, start_time=datetime.time(9, 0), end_time=datetime.time(9, 30))
+        TimeBlockFactory(task=task, start_time=datetime.time(14, 0), end_time=datetime.time(14, 30))
+        resp = authenticated_client.get("/api/v1/tasks/")
+        task_data = next(t for t in resp.data["results"] if str(t["id"]) == str(task.pk))
+        assert task_data["actual_minutes"] == 60
+
+    def test_task_actual_minutes_zero_without_time_blocks(self, authenticated_client, user):
+        """Task with no time blocks returns 0 actual_minutes."""
+        TaskFactory(user=user)
+        resp = authenticated_client.get("/api/v1/tasks/")
+        assert resp.data["results"][0]["actual_minutes"] == 0
+
     def test_unauthenticated_returns_401(self, api_client):
         resp = api_client.get("/api/v1/tasks/")
         assert resp.status_code == status.HTTP_401_UNAUTHORIZED
