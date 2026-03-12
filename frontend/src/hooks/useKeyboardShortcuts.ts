@@ -4,7 +4,7 @@ import { usePomodoroStore } from "@/stores/pomodoroStore";
 
 export function useKeyboardShortcuts() {
   const { modalOpen, openModal, closeModal } = useUIStore();
-  const { isRunning, start, pause } = usePomodoroStore();
+  const { isRunning, start, pause, timeRemaining, sessionType, durations } = usePomodoroStore();
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -31,7 +31,9 @@ export function useKeyboardShortcuts() {
         e.preventDefault();
         if (isRunning) {
           pause();
-        } else {
+        } else if (timeRemaining < durations[sessionType]) {
+          // Only resume a paused session — starting a new session requires
+          // the PomodoroTimer's handleStart which creates a backend session
           start();
         }
       }
@@ -39,5 +41,5 @@ export function useKeyboardShortcuts() {
 
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [modalOpen, openModal, closeModal, isRunning, start, pause]);
+  }, [modalOpen, openModal, closeModal, isRunning, start, pause, timeRemaining, sessionType, durations]);
 }
