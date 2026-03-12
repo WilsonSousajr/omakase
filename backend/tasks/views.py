@@ -119,12 +119,16 @@ class TaskViewSet(viewsets.ModelViewSet):
             tasks_by_id = {
                 t.id: t for t in Task.objects.filter(id__in=task_ids, user=self.request.user).select_for_update()
             }
+            missing_ids = [str(tid) for tid in task_ids if tid not in tasks_by_id]
+            if missing_ids:
+                return Response(
+                    {"detail": f"Task IDs not found: {', '.join(missing_ids)}"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
             tasks_to_update = []
             now = tz.now()
             for item in serializer.validated_data:
-                task = tasks_by_id.get(item["id"])
-                if not task:
-                    continue
+                task = tasks_by_id[item["id"]]
                 old_status = task.kanban_status
                 task.kanban_order = item["kanban_order"]
                 task.kanban_status = item["kanban_status"]
