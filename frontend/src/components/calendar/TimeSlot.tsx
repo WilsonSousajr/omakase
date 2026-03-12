@@ -25,7 +25,7 @@ export default function TimeSlot({ hour, half, date, height, onMouseDown }: Time
         half === 0
           ? "border-t border-[var(--color-border)]/60"
           : "border-b border-[var(--color-border)]/20"
-      } ${isOver ? "bg-white/5" : ""}`}
+      } ${isOver ? "bg-[var(--color-hover-overlay)]" : ""}`}
       style={{ height: `${height}px` }}
     />
   );
