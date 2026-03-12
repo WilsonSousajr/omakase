@@ -105,6 +105,8 @@ class TaskViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=["patch"], url_path="reorder-bulk")
     def reorder_bulk(self, request):
+        from django.utils import timezone as tz
+
         if not isinstance(request.data, list) or len(request.data) > REORDER_BULK_MAX_ITEMS:
             return Response(
                 {"detail": "Request must be a list of 100 items or fewer."},
@@ -117,12 +119,31 @@ class TaskViewSet(viewsets.ModelViewSet):
             tasks_by_id = {
                 t.id: t for t in Task.objects.filter(id__in=task_ids, user=self.request.user).select_for_update()
             }
+            tasks_to_update = []
+            now = tz.now()
             for item in serializer.validated_data:
                 task = tasks_by_id.get(item["id"])
-                if task:
-                    task.kanban_order = item["kanban_order"]
-                    task.kanban_status = item["kanban_status"]
-                    task.save()
+                if not task:
+                    continue
+                old_status = task.kanban_status
+                task.kanban_order = item["kanban_order"]
+                task.kanban_status = item["kanban_status"]
+                # Sync is_completed/completed_at when kanban_status changes
+                # (replicates Task.save() logic that bulk_update bypasses)
+                if old_status != task.kanban_status:
+                    if task.kanban_status == "done":
+                        task.is_completed = True
+                        if not task.completed_at:
+                            task.completed_at = now
+                    elif old_status == "done":
+                        task.is_completed = False
+                        task.completed_at = None
+                tasks_to_update.append(task)
+            if tasks_to_update:
+                Task.objects.bulk_update(
+                    tasks_to_update,
+                    ["kanban_order", "kanban_status", "is_completed", "completed_at"],
+                )
         return Response({"status": "ok"})
 
 
