@@ -1,19 +1,23 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { DndContext, DragOverlay, type DragEndEvent, type DragStartEvent, PointerSensor, useSensor, useSensors, closestCenter } from "@dnd-kit/core";
+import { format, startOfWeek, addDays } from "date-fns";
 import TaskList from "@/components/tasks/TaskList";
 import Calendar from "@/components/calendar/Calendar";
 import MorningPlanWizard from "@/components/plan/MorningPlanWizard";
+import OverlapWarning from "@/components/calendar/OverlapWarning";
 import { useTranslations } from "next-intl";
 import { emitToast } from "@/components/Toast";
-import { useCreateTimeBlock, useUpdateTimeBlock } from "@/hooks/useTimeBlocks";
+import { useCreateTimeBlock, useUpdateTimeBlock, useTimeBlocks } from "@/hooks/useTimeBlocks";
+import { useClassOccurrences } from "@/hooks/useClassOccurrences";
 import { useUpdateTask } from "@/hooks/useTasks";
 import { useUpdateStudyBlock } from "@/hooks/useStudyBlocks";
 import { useDailyReview } from "@/hooks/useDailyReviews";
 import { useToday } from "@/hooks/useToday";
 import { useUIStore } from "@/stores/uiStore";
 import { useCalendarStore } from "@/stores/calendarStore";
+import { findOverlaps } from "@/lib/timeblock-utils";
 import type { Task } from "@/types/task";
 import type { StudyBlock } from "@/types/studyblock";
 import type { TimeBlock } from "@/types/timeblock";
@@ -42,12 +46,34 @@ export default function PlanPage() {
     | null
   >(null);
 
+  // Overlap detection state
+  const [pendingAction, setPendingAction] = useState<(() => Promise<void>) | null>(null);
+  const [overlaps, setOverlaps] = useState<Array<{ title: string; start_time: string; end_time: string }>>([]);
+
   const today = useToday();
   const { data: todayReview } = useDailyReview(today);
   const hasShownShutdownNudge = useUIStore((s) => s.hasShownShutdownNudge);
   const setHasShownShutdownNudge = useUIStore((s) => s.setHasShownShutdownNudge);
   const openModal = useUIStore((s) => s.openModal);
   const setCreationDraft = useCalendarStore((s) => s.setCreationDraft);
+  const selectedDate = useCalendarStore((s) => s.selectedDate);
+  const viewMode = useCalendarStore((s) => s.viewMode);
+
+  // Compute date range matching the calendar view for overlap checking
+  const { dateFrom, dateTo } = useMemo(() => {
+    if (viewMode === "week") {
+      const weekStart = startOfWeek(selectedDate, { weekStartsOn: 1 });
+      return {
+        dateFrom: format(weekStart, "yyyy-MM-dd"),
+        dateTo: format(addDays(weekStart, 6), "yyyy-MM-dd"),
+      };
+    }
+    const d = format(selectedDate, "yyyy-MM-dd");
+    return { dateFrom: d, dateTo: d };
+  }, [selectedDate, viewMode]);
+
+  const { data: existingBlocks = [] } = useTimeBlocks(dateFrom, dateTo);
+  const { data: classOccs = [] } = useClassOccurrences(dateFrom, dateTo);
 
   useEffect(() => {
     if (todayReview?.is_shutdown && !hasShownShutdownNudge) {
@@ -83,71 +109,133 @@ export default function PlanPage() {
 
     const { date, time } = overData;
 
-    // Fire all mutations in parallel so React 18 batches the cache
-    // invalidations into a single re-render (prevents intermediate glitch state)
-    try {
-      if (activeData.type === "task") {
-        const duration = activeData.task.estimated_minutes || DEFAULT_TIMEBLOCK_MINUTES;
-        const promises: Promise<unknown>[] = [
-          createTimeBlock.mutateAsync({
-            task: activeData.task.id,
-            date,
-            start_time: time + ":00",
-            end_time: addMinutesToTime(time, duration),
-          }),
-        ];
-        if (activeData.task.scheduled_date !== date) {
-          promises.push(updateTask.mutateAsync({ id: activeData.task.id, scheduled_date: date }));
-        }
-        await Promise.all(promises);
-      } else if (activeData.type === "studyblock") {
-        const sb = activeData.studyBlock;
-        const duration = sb.estimated_minutes || DEFAULT_TIMEBLOCK_MINUTES;
-        const promises: Promise<unknown>[] = [
-          createTimeBlock.mutateAsync({
-            study_block: sb.id,
-            date,
-            start_time: time + ":00",
-            end_time: addMinutesToTime(time, duration),
-          }),
-        ];
-        if (sb.scheduled_date !== date) {
-          promises.push(updateStudyBlock.mutateAsync({ id: sb.id, scheduled_date: date }));
-        }
-        await Promise.all(promises);
-      } else if (activeData.type === "timeblock") {
-        const block = activeData.block;
-        const [startH, startM] = block.start_time.split(":").map(Number);
-        const [endH, endM] = block.end_time.split(":").map(Number);
-        const durationMin = (endH * 60 + endM) - (startH * 60 + startM);
+    // Compute proposed time range for overlap detection
+    let proposedEnd: string;
+    let excludeId: string | undefined;
 
-        const promises: Promise<unknown>[] = [
-          updateTimeBlock.mutateAsync({
-            id: block.id,
-            date,
-            start_time: time + ":00",
-            end_time: addMinutesToTime(time, durationMin),
-          }),
-        ];
-        if (block.task && block.date !== date) {
-          promises.push(updateTask.mutateAsync({ id: block.task, scheduled_date: date }));
-        } else if (block.study_block && block.date !== date) {
-          promises.push(updateStudyBlock.mutateAsync({ id: block.study_block, scheduled_date: date }));
+    if (activeData.type === "task") {
+      const duration = activeData.task.estimated_minutes || DEFAULT_TIMEBLOCK_MINUTES;
+      proposedEnd = addMinutesToTime(time, duration);
+    } else if (activeData.type === "studyblock") {
+      const duration = activeData.studyBlock.estimated_minutes || DEFAULT_TIMEBLOCK_MINUTES;
+      proposedEnd = addMinutesToTime(time, duration);
+    } else {
+      const block = activeData.block;
+      const [startH, startM] = block.start_time.split(":").map(Number);
+      const [endH, endM] = block.end_time.split(":").map(Number);
+      const durationMin = (endH * 60 + endM) - (startH * 60 + startM);
+      proposedEnd = addMinutesToTime(time, durationMin);
+      excludeId = block.id;
+    }
+
+    const detectedOverlaps = findOverlaps(
+      { date, start_time: time + ":00", end_time: proposedEnd },
+      existingBlocks,
+      classOccs,
+      excludeId,
+    );
+
+    const executeMutation = async () => {
+      // Fire all mutations in parallel so React 18 batches the cache
+      // invalidations into a single re-render (prevents intermediate glitch state)
+      try {
+        if (activeData.type === "task") {
+          const duration = activeData.task.estimated_minutes || DEFAULT_TIMEBLOCK_MINUTES;
+          const promises: Promise<unknown>[] = [
+            createTimeBlock.mutateAsync({
+              task: activeData.task.id,
+              date,
+              start_time: time + ":00",
+              end_time: addMinutesToTime(time, duration),
+            }),
+          ];
+          if (activeData.task.scheduled_date !== date) {
+            promises.push(updateTask.mutateAsync({ id: activeData.task.id, scheduled_date: date }));
+          }
+          await Promise.all(promises);
+        } else if (activeData.type === "studyblock") {
+          const sb = activeData.studyBlock;
+          const duration = sb.estimated_minutes || DEFAULT_TIMEBLOCK_MINUTES;
+          const promises: Promise<unknown>[] = [
+            createTimeBlock.mutateAsync({
+              study_block: sb.id,
+              date,
+              start_time: time + ":00",
+              end_time: addMinutesToTime(time, duration),
+            }),
+          ];
+          if (sb.scheduled_date !== date) {
+            promises.push(updateStudyBlock.mutateAsync({ id: sb.id, scheduled_date: date }));
+          }
+          await Promise.all(promises);
+        } else if (activeData.type === "timeblock") {
+          const block = activeData.block;
+          const [startH, startM] = block.start_time.split(":").map(Number);
+          const [endH, endM] = block.end_time.split(":").map(Number);
+          const durationMin = (endH * 60 + endM) - (startH * 60 + startM);
+
+          const promises: Promise<unknown>[] = [
+            updateTimeBlock.mutateAsync({
+              id: block.id,
+              date,
+              start_time: time + ":00",
+              end_time: addMinutesToTime(time, durationMin),
+            }),
+          ];
+          if (block.task && block.date !== date) {
+            promises.push(updateTask.mutateAsync({ id: block.task, scheduled_date: date }));
+          } else if (block.study_block && block.date !== date) {
+            promises.push(updateStudyBlock.mutateAsync({ id: block.study_block, scheduled_date: date }));
+          }
+          await Promise.all(promises);
         }
-        await Promise.all(promises);
+      } catch {
+        // Errors handled by global toast interceptor
       }
-    } catch {
-      // Errors handled by global toast interceptor
+    };
+
+    if (detectedOverlaps.length > 0) {
+      setOverlaps(detectedOverlaps);
+      setPendingAction(() => executeMutation);
+    } else {
+      await executeMutation();
     }
   };
 
   const handleCreateRange = useCallback(
     (date: string, startTime: string, endTime: string) => {
-      setCreationDraft({ date, startTime, endTime });
-      openModal("task-form");
+      const detectedOverlaps = findOverlaps(
+        { date, start_time: startTime + ":00", end_time: endTime + ":00" },
+        existingBlocks,
+        classOccs,
+      );
+
+      if (detectedOverlaps.length > 0) {
+        setOverlaps(detectedOverlaps);
+        setPendingAction(() => async () => {
+          setCreationDraft({ date, startTime, endTime });
+          openModal("task-form");
+        });
+      } else {
+        setCreationDraft({ date, startTime, endTime });
+        openModal("task-form");
+      }
     },
-    [setCreationDraft, openModal],
+    [setCreationDraft, openModal, existingBlocks, classOccs],
   );
+
+  const handleOverlapConfirm = async () => {
+    if (pendingAction) {
+      await pendingAction();
+    }
+    setOverlaps([]);
+    setPendingAction(null);
+  };
+
+  const handleOverlapCancel = () => {
+    setOverlaps([]);
+    setPendingAction(null);
+  };
 
   return (
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
@@ -219,6 +307,14 @@ export default function PlanPage() {
           </div>
         )}
       </DragOverlay>
+
+      {overlaps.length > 0 && (
+        <OverlapWarning
+          overlaps={overlaps}
+          onConfirm={handleOverlapConfirm}
+          onCancel={handleOverlapCancel}
+        />
+      )}
     </DndContext>
   );
 }
