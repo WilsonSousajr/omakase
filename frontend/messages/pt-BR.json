@@ -156,6 +156,10 @@
       "6": "Dom"
     }
   },
+  "focus": {
+    "sessionNotes": "Notas da Sessão",
+    "sessionNotesPlaceholder": "Notas para esta sessão..."
+  },
   "pomodoro": {
     "focus": "Foco",
     "shortBreak": "Pausa Curta",

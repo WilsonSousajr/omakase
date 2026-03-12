@@ -58,6 +58,7 @@ export function createMockTimeBlock(overrides = {}) {
     date: "2025-01-15",
     start_time: "09:00:00",
     end_time: "10:00:00",
+    notes: "",
     created_at: "2025-01-01T00:00:00Z",
     updated_at: "2025-01-01T00:00:00Z",
     ...overrides,

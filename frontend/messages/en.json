@@ -156,6 +156,10 @@
       "6": "Sun"
     }
   },
+  "focus": {
+    "sessionNotes": "Session Notes",
+    "sessionNotesPlaceholder": "Notes for this session..."
+  },
   "pomodoro": {
     "focus": "Focus",
     "shortBreak": "Short Break",

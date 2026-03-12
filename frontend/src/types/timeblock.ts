@@ -5,6 +5,7 @@ export interface TimeBlock {
   date: string;
   start_time: string;
   end_time: string;
+  notes: string;
   created_at: string;
   updated_at: string;
 }
@@ -15,4 +16,5 @@ export interface TimeBlockCreate {
   date: string;
   start_time: string;
   end_time: string;
+  notes?: string;
 }
