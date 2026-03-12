@@ -20,6 +20,7 @@ export default function ActiveTaskPanel() {
   const today = useToday();
   const { data: timeBlocks } = useTimeBlocks(today, today);
   const updateTimeBlock = useUpdateTimeBlock();
+  const updateTimeBlockRef = useRef(updateTimeBlock);
   const sessionNotesRef = useRef<string>("");
   const debounceRef = useRef<NodeJS.Timeout>(undefined);
 
@@ -31,6 +32,10 @@ export default function ActiveTaskPanel() {
     // Return the most recent one (last by start_time)
     return taskBlocks.sort((a, b) => a.start_time.localeCompare(b.start_time)).at(-1) || null;
   }, [timeBlocks, activeTaskId]);
+
+  useEffect(() => {
+    updateTimeBlockRef.current = updateTimeBlock;
+  }, [updateTimeBlock]);
 
   // Sync ref when time block changes
   useEffect(() => {
@@ -45,11 +50,11 @@ export default function ActiveTaskPanel() {
       if (debounceRef.current) clearTimeout(debounceRef.current);
       debounceRef.current = setTimeout(() => {
         if (currentTimeBlock) {
-          updateTimeBlock.mutate({ id: currentTimeBlock.id, notes: value });
+          updateTimeBlockRef.current.mutate({ id: currentTimeBlock.id, notes: value });
         }
       }, NOTES_DEBOUNCE_MS);
     },
-    [currentTimeBlock, updateTimeBlock],
+    [currentTimeBlock],
   );
 
   // Cleanup debounce

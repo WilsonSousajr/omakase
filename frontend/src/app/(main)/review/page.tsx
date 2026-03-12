@@ -28,9 +28,7 @@ export default function ReviewPage() {
 
   const [tab, setTab] = useState<"today" | "history">("today");
   const [step, setStep] = useState(0);
-  const [reviewId, setReviewId] = useState<string | null>(
-    summary?.daily_review?.id ?? null
-  );
+  const [reviewId, setReviewId] = useState<string | null>(null);
   const [rating, setRating] = useState<number | null>(null);
   const [win, setWin] = useState("");
 
