@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import type { Task } from "@/types/task";
+import type { TimeBlock } from "@/types/timeblock";
 
 interface UIState {
   sidebarOpen: boolean;
@@ -17,6 +18,8 @@ interface UIState {
   setActiveSemesterId: (id: string | null) => void;
   hasShownShutdownNudge: boolean;
   setHasShownShutdownNudge: (value: boolean) => void;
+  sessionCompletionBlock: TimeBlock | null;
+  setSessionCompletionBlock: (block: TimeBlock | null) => void;
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -35,4 +38,6 @@ export const useUIStore = create<UIState>((set) => ({
   setActiveSemesterId: (id) => set({ activeSemesterId: id }),
   hasShownShutdownNudge: false,
   setHasShownShutdownNudge: (value) => set({ hasShownShutdownNudge: value }),
+  sessionCompletionBlock: null,
+  setSessionCompletionBlock: (block) => set({ sessionCompletionBlock: block }),
 }));

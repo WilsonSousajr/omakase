@@ -6,6 +6,7 @@ export interface TimeBlock {
   start_time: string;
   end_time: string;
   notes: string;
+  session_rating: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -17,4 +18,5 @@ export interface TimeBlockCreate {
   start_time: string;
   end_time: string;
   notes?: string;
+  session_rating?: number | null;
 }
