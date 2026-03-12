@@ -1,7 +1,7 @@
 import uuid
 
 from django.conf import settings
-from django.core.validators import RegexValidator
+from django.core.validators import MaxValueValidator, MinValueValidator, RegexValidator
 from django.db import models
 
 from .constants import DEFAULT_TAG_COLOR, DEFAULT_WORKSPACE_COLOR
@@ -209,6 +209,9 @@ class TimeBlock(models.Model):
     start_time = models.TimeField()
     end_time = models.TimeField()
     notes = models.TextField(blank=True, default="")
+    session_rating = models.PositiveSmallIntegerField(
+        null=True, blank=True, validators=[MinValueValidator(1), MaxValueValidator(5)]
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
