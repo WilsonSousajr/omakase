@@ -72,7 +72,11 @@ class StudyBlockViewSet(viewsets.ModelViewSet):
     filterset_class = StudyBlockFilter
 
     def get_queryset(self):
-        return StudyBlock.objects.filter(discipline__semester__user=self.request.user).select_related("discipline")
+        return (
+            StudyBlock.objects.filter(discipline__semester__user=self.request.user)
+            .select_related("discipline")
+            .prefetch_related("time_blocks")
+        )
 
     def perform_create(self, serializer):
         discipline = serializer.validated_data.get("discipline")

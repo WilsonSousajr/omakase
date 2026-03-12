@@ -72,12 +72,21 @@ class TaskListSerializer(serializers.ModelSerializer):
     tag_ids = serializers.PrimaryKeyRelatedField(
         many=True, queryset=Tag.objects.all(), write_only=True, source="tags", required=False
     )
+    actual_minutes = serializers.SerializerMethodField()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         request = self.context.get("request")
         if request and hasattr(request, "user"):
             self.fields["tag_ids"].child_relation.queryset = Tag.objects.filter(user=request.user)
+
+    def get_actual_minutes(self, obj):
+        total = 0
+        for tb in obj.time_blocks.all():
+            start = tb.start_time.hour * 60 + tb.start_time.minute
+            end = tb.end_time.hour * 60 + tb.end_time.minute
+            total += max(0, end - start)
+        return total
 
     class Meta:
         model = Task
@@ -95,6 +104,7 @@ class TaskListSerializer(serializers.ModelSerializer):
             "scheduled_date",
             "due_date",
             "estimated_minutes",
+            "actual_minutes",
             "kanban_order",
             "is_completed",
             "completed_at",
