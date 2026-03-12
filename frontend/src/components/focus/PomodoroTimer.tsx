@@ -6,6 +6,8 @@ import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { usePomodoroStore } from "@/stores/pomodoroStore";
 import { useCreatePomodoroSession, useCompletePomodoroSession } from "@/hooks/usePomodoro";
+import { useTimeBlocks } from "@/hooks/useTimeBlocks";
+import { useToday } from "@/hooks/useToday";
 import { useUIStore } from "@/stores/uiStore";
 import { useUserProfile } from "@/hooks/useUserProfile";
 
@@ -57,6 +59,9 @@ export default function PomodoroTimer() {
     }
   }, [profile, setDurations]);
 
+  const today = useToday();
+  const { data: timeBlocks } = useTimeBlocks(today, today);
+  const setSessionCompletionBlock = useUIStore((s) => s.setSessionCompletionBlock);
   const activeTaskId = useUIStore((s) => s.activeTaskId);
   const createSession = useCreatePomodoroSession();
   const completeSession = useCompletePomodoroSession();
@@ -108,9 +113,18 @@ export default function PomodoroTimer() {
         });
         currentSessionId.current = null;
       }
+      // Trigger session completion modal for focus sessions
+      if (sessionType === "focus" && activeTaskId && timeBlocks) {
+        const unratedBlock = timeBlocks.find(
+          (b) => b.task === activeTaskId && b.session_rating == null
+        );
+        if (unratedBlock) {
+          setSessionCompletionBlock(unratedBlock);
+        }
+      }
     });
     return () => setOnComplete(null);
-  }, [setOnComplete, playNotification]);
+  }, [setOnComplete, playNotification, sessionType, activeTaskId, timeBlocks, setSessionCompletionBlock]);
 
   const handleStart = async () => {
     if (!isRunning) {

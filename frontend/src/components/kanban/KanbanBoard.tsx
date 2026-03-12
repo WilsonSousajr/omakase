@@ -13,7 +13,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { KANBAN_STATUSES, DRAG_ACTIVATION_DISTANCE, type KanbanStatus } from "@/lib/constants";
 import { useTodayTasks, useReorderTasks } from "@/hooks/useTasks";
+import { useTimeBlocks } from "@/hooks/useTimeBlocks";
 import { useToday } from "@/hooks/useToday";
+import { useUIStore } from "@/stores/uiStore";
 import type { Task } from "@/types/task";
 import KanbanColumn from "./KanbanColumn";
 
@@ -30,6 +32,8 @@ export default function KanbanBoard() {
   const today = useToday();
   const { data: serverTasks = EMPTY_TASKS, isLoading } = useTodayTasks(today);
   const reorderTasks = useReorderTasks();
+  const { data: timeBlocks } = useTimeBlocks(today, today);
+  const setSessionCompletionBlock = useUIStore((s) => s.setSessionCompletionBlock);
   const [tasks, setTasks] = useState<Task[]>([]);
   const isDraggingRef = useRef(false);
   const preDropSnapshotRef = useRef<Task[]>([]);
@@ -82,8 +86,15 @@ export default function KanbanBoard() {
 
   const handleDragEnd = (event: DragEndEvent) => {
     isDraggingRef.current = false;
-    const { over } = event;
+    const { active, over } = event;
     if (!over) return;
+
+    // Check if task was moved to "done"
+    const draggedTask = tasks.find((t) => t.id === active.id);
+    const wasMovedToDone =
+      draggedTask &&
+      preDropSnapshotRef.current.find((t) => t.id === active.id)?.kanban_status !== "done" &&
+      draggedTask.kanban_status === "done";
 
     const reorderItems = tasks.map((t, i) => ({
       id: t.id,
@@ -95,6 +106,16 @@ export default function KanbanBoard() {
     reorderTasks.mutate(reorderItems, {
       onError: () => setTasks(rollback),
     });
+
+    // Trigger session completion if moved to done
+    if (wasMovedToDone && timeBlocks) {
+      const unratedBlock = timeBlocks.find(
+        (b) => b.task === active.id && b.session_rating == null
+      );
+      if (unratedBlock) {
+        setSessionCompletionBlock(unratedBlock);
+      }
+    }
   };
 
   if (isLoading) {
