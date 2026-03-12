@@ -80,7 +80,7 @@ export default function PlanPage() {
       emitToast(t("shutdownNudge"));
       setHasShownShutdownNudge(true);
     }
-  }, [todayReview, hasShownShutdownNudge, setHasShownShutdownNudge]);
+  }, [todayReview, hasShownShutdownNudge, setHasShownShutdownNudge, t]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: DRAG_ACTIVATION_DISTANCE } })
