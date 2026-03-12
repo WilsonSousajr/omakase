@@ -221,6 +221,20 @@ class TestStudyBlockViewSet:
         resp = authenticated_client.delete(f"{self.URL}{study_block.pk}/")
         assert resp.status_code == status.HTTP_204_NO_CONTENT
 
+    def test_study_block_actual_minutes(self, authenticated_client, user):
+        """StudyBlock with time block returns correct actual_minutes."""
+        sb = StudyBlockFactory(discipline__semester__user=user)
+        TimeBlockFactory(task=None, study_block=sb, start_time=datetime.time(10, 0), end_time=datetime.time(11, 0))
+        resp = authenticated_client.get(self.URL)
+        sb_data = next(s for s in resp.data["results"] if str(s["id"]) == str(sb.pk))
+        assert sb_data["actual_minutes"] == 60
+
+    def test_study_block_actual_minutes_zero(self, authenticated_client, user):
+        """StudyBlock with no time blocks returns 0."""
+        StudyBlockFactory(discipline__semester__user=user)
+        resp = authenticated_client.get(self.URL)
+        assert resp.data["results"][0]["actual_minutes"] == 0
+
 
 @pytest.mark.django_db
 class TestTimeBlockPolymorphicFK:
