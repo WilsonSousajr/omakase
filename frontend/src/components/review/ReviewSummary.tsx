@@ -1,6 +1,6 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useTranslations, useFormatter } from "next-intl";
 import { Check, Circle } from "lucide-react";
 import type { ReviewSummary as ReviewSummaryType } from "@/types/dailyreview";
 
@@ -12,6 +12,7 @@ interface Props {
 export default function ReviewSummary({ summary, onNext }: Props) {
   const t = useTranslations("review");
   const tc = useTranslations("common");
+  const fmt = useFormatter();
 
   const completionPct =
     summary.blocks_total > 0
@@ -24,7 +25,9 @@ export default function ReviewSummary({ summary, onNext }: Props) {
         <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">
           {t("summary.title")}
         </h2>
-        <p className="text-sm text-[var(--color-text-muted)]">{summary.date}</p>
+        <p className="text-sm text-[var(--color-text-muted)]">
+          {fmt.dateTime(new Date(summary.date + "T00:00:00"), { year: "numeric", month: "long", day: "numeric" })}
+        </p>
       </div>
 
       {/* Stats row */}
