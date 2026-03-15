@@ -17,7 +17,8 @@
     "apply": "Apply",
     "skip": "Skip",
     "reset": "Reset",
-    "done": "Done"
+    "done": "Done",
+    "color": "Color"
   },
   "auth": {
     "signIn": "Sign in",
@@ -158,6 +159,7 @@
     }
   },
   "focus": {
+    "shutdownNudge": "You've shut down for the day. Rest well!",
     "sessionNotes": "Session Notes",
     "sessionNotesPlaceholder": "Notes for this session...",
     "sessionComplete": "Session Complete",

@@ -17,7 +17,8 @@
     "apply": "Aplicar",
     "skip": "Pular",
     "reset": "Redefinir",
-    "done": "Concluído"
+    "done": "Concluído",
+    "color": "Cor"
   },
   "auth": {
     "signIn": "Entrar",
@@ -158,6 +159,7 @@
     }
   },
   "focus": {
+    "shutdownNudge": "Você encerrou o dia. Descanse bem!",
     "sessionNotes": "Notas da Sessão",
     "sessionNotesPlaceholder": "Notas para esta sessão...",
     "sessionComplete": "Sessão Concluída",

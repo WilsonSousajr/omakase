@@ -6,11 +6,13 @@ import TodayStudyBlocks from "@/components/kanban/TodayStudyBlocks";
 import ActiveTaskPanel from "@/components/focus/ActiveTaskPanel";
 import SessionCompletionModal from "@/components/focus/SessionCompletionModal";
 import { emitToast } from "@/components/Toast";
+import { useTranslations } from "next-intl";
 import { useDailyReview } from "@/hooks/useDailyReviews";
 import { useToday } from "@/hooks/useToday";
 import { useUIStore } from "@/stores/uiStore";
 
 export default function FocusPage() {
+  const t = useTranslations("focus");
   const today = useToday();
   const { data: todayReview } = useDailyReview(today);
   const hasShownShutdownNudge = useUIStore((s) => s.hasShownShutdownNudge);
@@ -21,7 +23,7 @@ export default function FocusPage() {
 
   useEffect(() => {
     if (todayReview?.is_shutdown && !hasShownShutdownNudge) {
-      emitToast("You've shut down for the day. Rest well!");
+      emitToast(t("shutdownNudge"));
       setHasShownShutdownNudge(true);
     }
   }, [todayReview, hasShownShutdownNudge, setHasShownShutdownNudge]);
