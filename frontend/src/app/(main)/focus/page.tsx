@@ -26,7 +26,7 @@ export default function FocusPage() {
       emitToast(t("shutdownNudge"));
       setHasShownShutdownNudge(true);
     }
-  }, [todayReview, hasShownShutdownNudge, setHasShownShutdownNudge]);
+  }, [todayReview, hasShownShutdownNudge, setHasShownShutdownNudge, t]);
 
   const handleSessionClose = () => {
     if (sessionCompletionBlock) {
