@@ -6,6 +6,7 @@ import { PRIORITIES } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import type { Task } from "@/types/task";
 import { GripVertical } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useUIStore } from "@/stores/uiStore";
 
 interface KanbanCardProps {
@@ -13,6 +14,7 @@ interface KanbanCardProps {
 }
 
 export default function KanbanCard({ task }: KanbanCardProps) {
+  const tc = useTranslations("constants");
   const activeTaskId = useUIStore((s) => s.activeTaskId);
   const setActiveTaskId = useUIStore((s) => s.setActiveTaskId);
   const priority = PRIORITIES.find((p) => p.value === task.priority);
@@ -74,7 +76,7 @@ export default function KanbanCard({ task }: KanbanCardProps) {
                   color: priority.color,
                 }}
               >
-                {priority.label}
+                {tc(`priorities.${priority.value}`)}
               </span>
             )}
             {task.tags.map((tag) => (

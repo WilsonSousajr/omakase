@@ -33,6 +33,7 @@ function addMinutesToTime(time: string, minutes: number): string {
 
 export default function PlanPage() {
   const t = useTranslations("plan");
+  const tc = useTranslations("constants");
   const createTimeBlock = useCreateTimeBlock();
   const updateTimeBlock = useUpdateTimeBlock();
   const updateTask = useUpdateTask();
@@ -275,7 +276,7 @@ export default function PlanPage() {
                     className="shrink-0 rounded-lg px-1.5 py-0.5 text-[10px] font-medium"
                     style={{ backgroundColor: priority.color + "20", color: priority.color }}
                   >
-                    {priority.label}
+                    {tc(`priorities.${priority.value}`)}
                   </span>
                 )}
               </div>

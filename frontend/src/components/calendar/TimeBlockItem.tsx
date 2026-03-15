@@ -35,6 +35,7 @@ export default function TimeBlockItem({
   slotHeight,
 }: TimeBlockItemProps) {
   const t = useTranslations("calendar");
+  const tc = useTranslations("constants");
   const startMin = timeToMinutes(block.start_time);
   const endMin = timeToMinutes(block.end_time);
   const durationSlots = (endMin - startMin) / 30;
@@ -183,7 +184,7 @@ export default function TimeBlockItem({
                   color,
                 }}
               >
-                {priority.label}
+                {tc(`priorities.${priority.value}`)}
               </span>
             )}
             {studyPriority && isStudyBlock && (
@@ -194,7 +195,7 @@ export default function TimeBlockItem({
                   color: studyPriority.color,
                 }}
               >
-                {studyPriority.label}
+                {tc(`priorities.${studyPriority.value}`)}
               </span>
             )}
           </div>
