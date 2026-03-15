@@ -5,8 +5,6 @@ import { X, AlertCircle } from "lucide-react";
 import api from "@/lib/api";
 import { TOAST_DURATION_MS } from "@/lib/constants";
 import { useLocaleStore } from "@/stores/localeStore";
-import enMessages from "../../../messages/en.json";
-import ptBrMessages from "../../../messages/pt-BR.json";
 import type { AxiosError } from "axios";
 
 interface ToastMessage {
@@ -29,10 +27,13 @@ if (interceptorId !== null) {
   api.interceptors.response.eject(interceptorId);
 }
 // Locale-aware fallback for the interceptor (cannot use hooks at module level)
-const localizedMessages = { en: enMessages, "pt-BR": ptBrMessages } as const;
+const FALLBACK_MESSAGES: Record<string, string> = {
+  en: "Something went wrong",
+  "pt-BR": "Algo deu errado",
+};
 function getFallbackMessage(): string {
   const locale = useLocaleStore.getState().locale;
-  return localizedMessages[locale].errors.generic;
+  return FALLBACK_MESSAGES[locale] ?? FALLBACK_MESSAGES.en;
 }
 
 interceptorId = api.interceptors.response.use(
