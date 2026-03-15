@@ -23,7 +23,7 @@ const API_URL = "http://localhost:8000/api/v1";
 
 describe("useDailyStats", () => {
   it("fetches daily stats", async () => {
-    const { result } = renderHook(() => useDailyStats(), { wrapper });
+    const { result } = renderHook(() => useDailyStats("2026-03-15"), { wrapper });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.data?.hours_focused_today).toBe(2.5);
     expect(result.current.data?.blocks_completed_today).toBe(3);
@@ -42,7 +42,7 @@ describe("useDailyStats", () => {
         }))
       )
     );
-    const { result } = renderHook(() => useDailyStats(), { wrapper });
+    const { result } = renderHook(() => useDailyStats("2026-03-15"), { wrapper });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.data?.hours_focused_today).toBe(5.0);
     expect(result.current.data?.current_streak).toBe(30);
@@ -54,7 +54,7 @@ describe("useDailyStats", () => {
         new HttpResponse(null, { status: 500 })
       )
     );
-    const { result } = renderHook(() => useDailyStats(), { wrapper });
+    const { result } = renderHook(() => useDailyStats("2026-03-15"), { wrapper });
     await waitFor(() => expect(result.current.isError).toBe(true));
   });
 });
