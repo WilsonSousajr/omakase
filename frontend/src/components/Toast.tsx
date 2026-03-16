@@ -21,10 +21,11 @@ export function emitToast(message: string) {
 }
 
 // Set up axios interceptor to catch errors globally
-// Module-level guard prevents duplicate interceptors on HMR
-let interceptorId: number | null = null;
-if (interceptorId !== null) {
-  api.interceptors.response.eject(interceptorId);
+// Store interceptor ID on the api instance so it survives HMR module re-execution
+const INTERCEPTOR_KEY = "__toastInterceptorId" as const;
+const existingId = (api as unknown as Record<string, unknown>)[INTERCEPTOR_KEY] as number | undefined;
+if (existingId !== undefined) {
+  api.interceptors.response.eject(existingId);
 }
 // Locale-aware fallback for the interceptor (cannot use hooks at module level)
 const FALLBACK_MESSAGES: Record<string, string> = {
@@ -36,7 +37,7 @@ function getFallbackMessage(): string {
   return FALLBACK_MESSAGES[locale] ?? FALLBACK_MESSAGES.en;
 }
 
-interceptorId = api.interceptors.response.use(
+(api as unknown as Record<string, unknown>)[INTERCEPTOR_KEY] = api.interceptors.response.use(
   (res) => res,
   (error: AxiosError) => {
     const message =
