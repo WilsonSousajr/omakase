@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { PRIORITIES } from "@/lib/constants";
@@ -13,7 +14,7 @@ interface KanbanCardProps {
   task: Task;
 }
 
-export default function KanbanCard({ task }: KanbanCardProps) {
+function KanbanCard({ task }: KanbanCardProps) {
   const tc = useTranslations("constants");
   const activeTaskId = useUIStore((s) => s.activeTaskId);
   const setActiveTaskId = useUIStore((s) => s.setActiveTaskId);
@@ -97,3 +98,5 @@ export default function KanbanCard({ task }: KanbanCardProps) {
     </div>
   );
 }
+
+export default memo(KanbanCard);
