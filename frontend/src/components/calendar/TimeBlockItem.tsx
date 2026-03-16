@@ -161,7 +161,7 @@ export default function TimeBlockItem({
           >
             {isCompleted && (
               <svg className="h-full w-full text-white" viewBox="0 0 16 16">
-                <path fill="currentColor" d="M13 4L6 11L3 8" strokeWidth="2.5" stroke="currentColor" />
+                <path fill="none" d="M13 4L6 11L3 8" strokeWidth="2.5" stroke="currentColor" />
               </svg>
             )}
           </div>
