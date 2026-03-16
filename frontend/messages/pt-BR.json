@@ -316,7 +316,8 @@
       "backlog": "Backlog",
       "skip": "Pular",
       "applying": "Aplicando...",
-      "applyAndContinue": "Aplicar e Continuar"
+      "applyAndContinue": "Aplicar e Continuar",
+      "partialFailure": "Apenas {applied} de {total} itens foram reagendados antes de ocorrer um erro."
     },
     "score": {
       "title": "Quão produtivo você se sentiu hoje?",
