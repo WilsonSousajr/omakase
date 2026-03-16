@@ -28,7 +28,10 @@ class DailyStatsView(APIView):
                     status=400,
                 )
         else:
-            today = timezone.localdate()
+            return Response(
+                {"detail": "date query parameter is required."},
+                status=400,
+            )
         week_start = today - datetime.timedelta(days=today.weekday())
 
         hours_focused_today = self._hours_focused_today(user, today)
