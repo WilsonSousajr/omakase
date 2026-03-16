@@ -102,13 +102,15 @@ export default function KanbanBoard() {
     if (preDropTask) affectedStatuses.add(preDropTask.kanban_status);
     if (draggedTask) affectedStatuses.add(draggedTask.kanban_status);
 
-    const reorderItems = tasks
-      .filter((t) => affectedStatuses.has(t.kanban_status))
-      .map((t, i) => ({
-        id: t.id,
-        kanban_order: i,
-        kanban_status: t.kanban_status,
-      }));
+    const reorderItems = [...affectedStatuses].flatMap((status) =>
+      tasks
+        .filter((t) => t.kanban_status === status)
+        .map((t, i) => ({
+          id: t.id,
+          kanban_order: i,
+          kanban_status: t.kanban_status,
+        }))
+    );
 
     const rollback = preDropSnapshotRef.current;
     reorderTasks.mutate(reorderItems, {
