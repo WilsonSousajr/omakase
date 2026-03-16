@@ -2,6 +2,7 @@ import logging
 
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.core.exceptions import ImproperlyConfigured
 from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token
 from rest_framework import generics, permissions, status
@@ -24,6 +25,9 @@ class GoogleLoginView(generics.GenericAPIView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request, *args, **kwargs):
+        if not settings.GOOGLE_CLIENT_ID:
+            raise ImproperlyConfigured("GOOGLE_CLIENT_ID environment variable is required")
+
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 

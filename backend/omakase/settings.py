@@ -65,9 +65,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "omakase.wsgi.application"
 
-GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID")
-if not GOOGLE_CLIENT_ID:
-    raise ImproperlyConfigured("GOOGLE_CLIENT_ID environment variable is required")
+GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "")
 
 DATABASE_URL = os.environ.get("DATABASE_URL")
 if not DATABASE_URL:
