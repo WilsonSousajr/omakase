@@ -7,7 +7,7 @@ import { useTranslations } from "next-intl";
 import ColorSwatchPicker from "@/components/ColorSwatchPicker";
 import UserAvatar from "@/components/UserAvatar";
 import { emitToast } from "@/components/Toast";
-import { useChangePassword, useLogout, useUpdateProfile } from "@/hooks/useAuth";
+import { useLogout, useUpdateProfile } from "@/hooks/useAuth";
 import { useUserProfile, useUpdateUserProfile } from "@/hooks/useUserProfile";
 import { useAuthStore } from "@/stores/authStore";
 import type { UserProfileUpdate } from "@/types/userprofile";
@@ -17,7 +17,6 @@ export default function SettingsPage() {
   const tco = useTranslations("common");
   const user = useAuthStore((s) => s.user);
   const updateProfile = useUpdateProfile();
-  const changePassword = useChangePassword();
   const logout = useLogout();
   const { data: userProfile, isLoading: profileLoading } = useUserProfile();
   const updateUserProfile = useUpdateUserProfile();
@@ -25,14 +24,7 @@ export default function SettingsPage() {
   // Profile form state (PR #8)
   const [firstName, setFirstName] = useState(user?.first_name ?? "");
   const [lastName, setLastName] = useState(user?.last_name ?? "");
-  const [email, setEmail] = useState(user?.email ?? "");
   const [avatarColor, setAvatarColor] = useState(user?.avatar_color ?? "#a3a3a3");
-
-  // Password form state (PR #8)
-  const [oldPassword, setOldPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [newPasswordConfirm, setNewPasswordConfirm] = useState("");
-  const [passwordError, setPasswordError] = useState("");
 
   // Preferences form state (PR #10)
   const [prefsForm, setPrefsForm] = useState<UserProfileUpdate>({});
@@ -76,36 +68,8 @@ export default function SettingsPage() {
   function handleProfileSubmit(e: React.FormEvent) {
     e.preventDefault();
     updateProfile.mutate(
-      { first_name: firstName, last_name: lastName, email, avatar_color: avatarColor },
+      { first_name: firstName, last_name: lastName, avatar_color: avatarColor },
       { onSuccess: () => emitToast(t("profileUpdated")) }
-    );
-  }
-
-  function handlePasswordSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setPasswordError("");
-    if (newPassword !== newPasswordConfirm) {
-      setPasswordError(t("passwordsDoNotMatch"));
-      return;
-    }
-    changePassword.mutate(
-      { old_password: oldPassword, new_password: newPassword, new_password_confirm: newPasswordConfirm },
-      {
-        onSuccess: () => {
-          emitToast(t("passwordChanged"));
-          logout();
-        },
-        onError: (err) => {
-          const data = (err as { response?: { data?: Record<string, string[]> } }).response?.data;
-          const message =
-            data?.old_password?.[0] ??
-            data?.new_password?.[0] ??
-            data?.new_password_confirm?.[0] ??
-            data?.non_field_errors?.[0] ??
-            t("failedToChangePassword");
-          setPasswordError(message);
-        },
-      }
     );
   }
 
@@ -158,13 +122,8 @@ export default function SettingsPage() {
 
         <div className="mb-4">
           <label className={labelClass}>{t("email")}</label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className={inputClass}
-            placeholder={t("emailPlaceholder")}
-          />
+          <p className="text-sm text-[var(--color-text-secondary)]">{user.email}</p>
+          <p className="mt-0.5 text-[10px] text-[var(--color-text-muted)]">{t("emailReadOnly")}</p>
         </div>
 
         <button
@@ -281,56 +240,6 @@ export default function SettingsPage() {
           </div>
         </div>
       </section>
-
-      {/* Password Section */}
-      <form onSubmit={handlePasswordSubmit} className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
-        <h2 className="mb-4 text-sm font-semibold text-[var(--color-text-primary)]">{t("changePassword")}</h2>
-
-        {passwordError && (
-          <p className="mb-3 text-xs text-red-400">{passwordError}</p>
-        )}
-
-        <div className="mb-3">
-          <label className={labelClass}>{t("currentPassword")}</label>
-          <input
-            type="password"
-            value={oldPassword}
-            onChange={(e) => setOldPassword(e.target.value)}
-            className={inputClass}
-            placeholder={t("currentPasswordPlaceholder")}
-          />
-        </div>
-
-        <div className="mb-3">
-          <label className={labelClass}>{t("newPassword")}</label>
-          <input
-            type="password"
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            className={inputClass}
-            placeholder={t("newPasswordPlaceholder")}
-          />
-        </div>
-
-        <div className="mb-4">
-          <label className={labelClass}>{t("confirmNewPassword")}</label>
-          <input
-            type="password"
-            value={newPasswordConfirm}
-            onChange={(e) => setNewPasswordConfirm(e.target.value)}
-            className={inputClass}
-            placeholder={t("confirmNewPasswordPlaceholder")}
-          />
-        </div>
-
-        <button
-          type="submit"
-          disabled={changePassword.isPending || !oldPassword || !newPassword || !newPasswordConfirm}
-          className="rounded-xl bg-[var(--color-button-primary)] px-4 py-1.5 text-xs font-medium text-[var(--color-button-primary-text)] transition-colors hover:bg-[var(--color-button-primary-hover)] disabled:opacity-50"
-        >
-          {changePassword.isPending ? t("changing") : t("changePassword")}
-        </button>
-      </form>
 
       {/* Logout Section */}
       <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
