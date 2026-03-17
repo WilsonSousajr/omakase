@@ -4,10 +4,7 @@ import { useRouter } from "next/navigation";
 import api from "@/lib/api";
 import { useAuthStore } from "@/stores/authStore";
 import type {
-  AuthTokens,
-  ChangePasswordPayload,
-  LoginCredentials,
-  RegisterCredentials,
+  GoogleAuthResponse,
   UpdateProfilePayload,
   User,
 } from "@/types/auth";
@@ -29,56 +26,21 @@ export function useMe() {
   });
 }
 
-export function useLogin() {
+export function useGoogleAuth() {
   const setAuth = useAuthStore((s) => s.setAuth);
   const router = useRouter();
 
   return useMutation({
-    mutationFn: async (credentials: LoginCredentials) => {
-      const { data: tokens } = await api.post<AuthTokens>(
-        "/auth/token/",
-        credentials
+    mutationFn: async (credential: string) => {
+      const { data } = await api.post<GoogleAuthResponse>(
+        "/auth/google/",
+        { credential }
       );
-      const { data: user } = await api.get<User>("/auth/me/", {
-        headers: { Authorization: `Bearer ${tokens.access}` },
-      });
-      return { user, tokens };
+      return data;
     },
-    onSuccess: ({ user, tokens }) => {
-      setAuth(user, tokens);
+    onSuccess: (data) => {
+      setAuth(data.user, { access: data.access, refresh: data.refresh });
       router.push("/plan");
-    },
-  });
-}
-
-export function useRegister() {
-  const setAuth = useAuthStore((s) => s.setAuth);
-  const router = useRouter();
-
-  return useMutation({
-    mutationFn: async (credentials: RegisterCredentials) => {
-      await api.post<User>("/auth/register/", credentials);
-      try {
-        const { data: tokens } = await api.post<AuthTokens>("/auth/token/", {
-          username: credentials.username,
-          password: credentials.password,
-        });
-        const { data: user } = await api.get<User>("/auth/me/", {
-          headers: { Authorization: `Bearer ${tokens.access}` },
-        });
-        return { user, tokens, loginFailed: false as const };
-      } catch {
-        // Account created but auto-login failed — redirect to login
-        return { user: null, tokens: null, loginFailed: true as const };
-      }
-    },
-    onSuccess: (result) => {
-      if (result.loginFailed) {
-        router.push("/login");
-      } else {
-        setAuth(result.user!, result.tokens!);
-        router.push("/plan");
-      }
     },
   });
 }
@@ -95,18 +57,6 @@ export function useUpdateProfile() {
     onSuccess: (user) => {
       setUser(user);
       queryClient.setQueryData(["auth", "me"], user);
-    },
-  });
-}
-
-export function useChangePassword() {
-  return useMutation({
-    mutationFn: async (payload: ChangePasswordPayload) => {
-      const { data } = await api.post<{ detail: string }>(
-        "/auth/change-password/",
-        payload
-      );
-      return data;
     },
   });
 }
