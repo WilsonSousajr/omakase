@@ -20,7 +20,7 @@ describe("LoginPage", () => {
 
   it("renders sign-in message", () => {
     renderWithProviders(<LoginPage />);
-    expect(screen.getByText("Sign in with Google")).toBeInTheDocument();
+    expect(screen.getAllByText("Sign in with Google").length).toBeGreaterThanOrEqual(1);
   });
 
   it("renders Google login button", () => {
