@@ -8,21 +8,15 @@ export interface User {
   date_joined: string;
 }
 
-export interface LoginCredentials {
-  username: string;
-  password: string;
-}
-
-export interface RegisterCredentials {
-  username: string;
-  email: string;
-  password: string;
-  password_confirm: string;
-}
-
 export interface AuthTokens {
   access: string;
   refresh: string;
+}
+
+export interface GoogleAuthResponse {
+  access: string;
+  refresh: string;
+  user: User;
 }
 
 export interface UpdateProfilePayload {
@@ -30,10 +24,4 @@ export interface UpdateProfilePayload {
   last_name?: string;
   email?: string;
   avatar_color?: string;
-}
-
-export interface ChangePasswordPayload {
-  old_password: string;
-  new_password: string;
-  new_password_confirm: string;
 }

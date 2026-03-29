@@ -1,9 +1,10 @@
 name: CI
 on:
   push:
-    branches: [main]
+    branches: [main, develop]
   pull_request:
-    branches: [main]
+    branches: [main, develop]
+  workflow_call:
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -65,6 +66,7 @@ jobs:
       DATABASE_URL: postgres://omakase:testpassword@localhost:5432/omakase_test
       DJANGO_SECRET_KEY: test-secret-key-for-ci-only
       DJANGO_DEBUG: "True"
+      GOOGLE_CLIENT_ID: test-google-client-id-for-ci
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5

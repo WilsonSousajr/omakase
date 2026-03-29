@@ -7,7 +7,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from
 import { createTestQueryClient } from "@/test/utils";
 import { useAuthStore } from "@/stores/authStore";
 import { handlers } from "@/test/handlers";
-import { useChangePassword, useMe, useUpdateProfile } from "../useAuth";
+import { useGoogleAuth, useMe, useUpdateProfile } from "../useAuth";
 
 const server = setupServer(...handlers);
 
@@ -50,6 +50,26 @@ describe("useMe", () => {
   });
 });
 
+describe("useGoogleAuth", () => {
+  afterEach(() => {
+    useAuthStore.setState({
+      user: null,
+      tokens: null,
+      isAuthenticated: false,
+    });
+  });
+
+  it("sends credential and stores auth tokens", async () => {
+    const { result } = renderHook(() => useGoogleAuth(), { wrapper });
+    result.current.mutate("mock-google-credential");
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    const state = useAuthStore.getState();
+    expect(state.isAuthenticated).toBe(true);
+    expect(state.tokens?.access).toBe("mock-access-token");
+    expect(state.user?.username).toBe("testuser");
+  });
+});
+
 describe("useUpdateProfile", () => {
   beforeEach(() => {
     useAuthStore.setState({
@@ -74,34 +94,5 @@ describe("useUpdateProfile", () => {
     const user = useAuthStore.getState().user;
     expect(user).not.toBeNull();
     expect(user?.first_name).toBe("John");
-  });
-});
-
-describe("useChangePassword", () => {
-  beforeEach(() => {
-    useAuthStore.setState({
-      user: null,
-      tokens: { access: "mock-access", refresh: "mock-refresh" },
-      isAuthenticated: true,
-    });
-  });
-
-  afterEach(() => {
-    useAuthStore.setState({
-      user: null,
-      tokens: null,
-      isAuthenticated: false,
-    });
-  });
-
-  it("sends POST and returns success", async () => {
-    const { result } = renderHook(() => useChangePassword(), { wrapper });
-    result.current.mutate({
-      old_password: "testpass123",
-      new_password: "newpass12345",
-      new_password_confirm: "newpass12345",
-    });
-    await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(result.current.data?.detail).toBe("Password changed successfully.");
   });
 });

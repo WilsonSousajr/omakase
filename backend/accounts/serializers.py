@@ -1,46 +1,14 @@
 import re
 
-from django.contrib.auth import password_validation
 from django.contrib.auth.models import User
-from django.core.exceptions import ValidationError as DjangoValidationError
-from django.db import IntegrityError, transaction
+from django.db import transaction
 from rest_framework import serializers
 
 from accounts.models import UserProfile
 
 
-class RegisterSerializer(serializers.Serializer):
-    username = serializers.CharField(max_length=150)
-    email = serializers.EmailField()
-    password = serializers.CharField(write_only=True, min_length=8)
-    password_confirm = serializers.CharField(write_only=True, min_length=8)
-
-    def validate_username(self, value):
-        if User.objects.filter(username=value).exists():
-            raise serializers.ValidationError("Unable to register with the provided credentials.")
-        return value
-
-    def validate_email(self, value):
-        if User.objects.filter(email=value).exists():
-            raise serializers.ValidationError("Unable to register with the provided credentials.")
-        return value
-
-    def validate(self, data):
-        if data["password"] != data["password_confirm"]:
-            raise serializers.ValidationError({"password_confirm": "Passwords do not match."})
-        temp_user = User(username=data.get("username", ""), email=data.get("email", ""))
-        try:
-            password_validation.validate_password(data["password"], temp_user)
-        except DjangoValidationError as e:
-            raise serializers.ValidationError({"password": e.messages})
-        return data
-
-    def create(self, validated_data):
-        validated_data.pop("password_confirm")
-        try:
-            return User.objects.create_user(**validated_data)
-        except IntegrityError:
-            raise serializers.ValidationError("Unable to register with the provided credentials.")
+class GoogleLoginSerializer(serializers.Serializer):
+    credential = serializers.CharField()
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -94,37 +62,6 @@ class UpdateProfileSerializer(serializers.Serializer):
                 user.profile.avatar_color = self.validated_data["avatar_color"]
                 user.profile.save()
 
-        return user
-
-
-class ChangePasswordSerializer(serializers.Serializer):
-    old_password = serializers.CharField(write_only=True)
-    new_password = serializers.CharField(write_only=True, min_length=8)
-    new_password_confirm = serializers.CharField(write_only=True, min_length=8)
-
-    def validate_old_password(self, value):
-        user = self.context["request"].user
-        if not user.check_password(value):
-            raise serializers.ValidationError("Current password is incorrect.")
-        return value
-
-    def validate_new_password(self, value):
-        user = self.context["request"].user
-        try:
-            password_validation.validate_password(value, user)
-        except DjangoValidationError as e:
-            raise serializers.ValidationError(e.messages)
-        return value
-
-    def validate(self, data):
-        if data["new_password"] != data["new_password_confirm"]:
-            raise serializers.ValidationError({"new_password_confirm": "New passwords do not match."})
-        return data
-
-    def save(self, **kwargs):
-        user = self.context["request"].user
-        user.set_password(self.validated_data["new_password"])
-        user.save()
         return user
 
 

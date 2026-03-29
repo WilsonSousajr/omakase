@@ -284,25 +284,19 @@ const mockTasks = [
 
 export const handlers = [
   // Auth
-  http.post(`${API_URL}/auth/register/`, async ({ request }) => {
+  http.post(`${API_URL}/auth/google/`, async ({ request }) => {
     const body = (await request.json()) as Record<string, unknown>;
-    if (body.username === "taken") {
+    if (body.credential === "invalid-token") {
       return HttpResponse.json(
-        { username: ["A user with this username already exists."] },
-        { status: 400 }
-      );
-    }
-    return HttpResponse.json(createMockUser(body), { status: 201 });
-  }),
-  http.post(`${API_URL}/auth/token/`, async ({ request }) => {
-    const body = (await request.json()) as Record<string, unknown>;
-    if (body.password === "wrongpassword") {
-      return HttpResponse.json(
-        { detail: "No active account found with the given credentials" },
+        { detail: "Invalid Google token." },
         { status: 401 }
       );
     }
-    return HttpResponse.json(createMockTokens());
+    return HttpResponse.json({
+      access: "mock-access-token",
+      refresh: "mock-refresh-token",
+      user: createMockUser(),
+    });
   }),
   http.post(`${API_URL}/auth/token/refresh/`, () =>
     HttpResponse.json({ access: "new-access-token" })
@@ -313,22 +307,6 @@ export const handlers = [
   http.patch(`${API_URL}/auth/me/`, async ({ request }) => {
     const body = (await request.json()) as Record<string, unknown>;
     return HttpResponse.json(createMockUser(body));
-  }),
-  http.post(`${API_URL}/auth/change-password/`, async ({ request }) => {
-    const body = (await request.json()) as Record<string, unknown>;
-    if (body.old_password === "wrongpassword") {
-      return HttpResponse.json(
-        { old_password: ["Current password is incorrect."] },
-        { status: 400 }
-      );
-    }
-    if (body.new_password === "password1234") {
-      return HttpResponse.json(
-        { new_password: ["This password is too common."] },
-        { status: 400 }
-      );
-    }
-    return HttpResponse.json({ detail: "Password changed successfully." });
   }),
   http.get(`${API_URL}/auth/profile/`, () =>
     HttpResponse.json(createMockUserProfile())

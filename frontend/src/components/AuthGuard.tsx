@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import { useMe } from "@/hooks/useAuth";
 import { useAuthStore } from "@/stores/authStore";
 
-const PUBLIC_PATHS = ["/login", "/register"];
+const PUBLIC_PATHS = ["/login"];
 
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const [hasMounted, setHasMounted] = useState(false);

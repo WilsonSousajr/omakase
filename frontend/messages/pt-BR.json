@@ -20,19 +20,10 @@
     "done": "Concluído"
   },
   "auth": {
-    "signIn": "Entrar",
-    "signUp": "Cadastrar",
-    "username": "Usuário",
-    "password": "Senha",
-    "confirmPassword": "Confirmar senha",
-    "noAccount": "Não tem uma conta?",
-    "hasAccount": "Já tem uma conta?",
-    "register": "Cadastrar",
+    "signIn": "Entrar com Google",
     "signingIn": "Entrando...",
-    "registering": "Cadastrando...",
-    "email": "Email",
-    "invalidCredentials": "Usuário ou senha inválidos.",
-    "registrationFailed": "Falha no cadastro. Tente novamente."
+    "googleSignInFailed": "Falha ao entrar com Google. Tente novamente.",
+    "tagline": "Planeje. Foque. Entregue."
   },
   "sidebar": {
     "plan": "Plano",
@@ -374,7 +365,7 @@
     "firstNamePlaceholder": "Nome",
     "lastNamePlaceholder": "Sobrenome",
     "email": "Email",
-    "emailPlaceholder": "Email",
+    "emailReadOnly": "Gerenciado pelo Google",
     "saving": "Salvando...",
     "pomodoro": "Pomodoro",
     "workMinutes": "Trabalho (minutos)",
@@ -390,19 +381,8 @@
     "sunday": "Domingo",
     "timezone": "Fuso horário",
     "timezonePlaceholder": "ex. America/Sao_Paulo",
-    "changePassword": "Alterar Senha",
-    "currentPassword": "Senha Atual",
-    "currentPasswordPlaceholder": "Senha atual",
-    "newPassword": "Nova Senha",
-    "newPasswordPlaceholder": "Nova senha",
-    "confirmNewPassword": "Confirmar Nova Senha",
-    "confirmNewPasswordPlaceholder": "Confirmar nova senha",
-    "passwordsDoNotMatch": "As senhas não coincidem.",
-    "changing": "Alterando...",
-    "failedToChangePassword": "Falha ao alterar a senha.",
     "settingsSaved": "Configurações salvas com sucesso",
     "profileUpdated": "Perfil atualizado",
-    "passwordChanged": "Senha alterada. Faça login novamente.",
     "logOut": "Sair"
   },
   "subtasks": {
