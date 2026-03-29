@@ -12,17 +12,26 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
 
   return (
-    <div className="space-y-6">
-      <div className="text-center">
-        <h1 className="text-2xl font-semibold text-[var(--color-text-primary)]">
+    <div className="flex flex-col items-center">
+      {/* Brand */}
+      <div
+        className="mb-12 flex flex-col items-center"
+        style={{ animation: "fade-in-up 0.6s ease-out both" }}
+      >
+        <h1 className="text-2xl font-light uppercase tracking-[0.3em] text-[var(--color-text-primary)]">
           Omakase
         </h1>
-        <p className="mt-1 text-sm text-[var(--color-text-muted)]">
-          {t("signIn")}
+        <div className="mt-4 h-px w-8 bg-[var(--color-border)]" />
+        <p className="mt-4 text-xs text-[var(--color-text-faint)]">
+          {t("tagline")}
         </p>
       </div>
 
-      <div className="flex justify-center">
+      {/* Sign-in */}
+      <div
+        className="flex flex-col items-center space-y-4"
+        style={{ animation: "fade-in-up 0.6s ease-out 0.15s both" }}
+      >
         <GoogleLogin
           onSuccess={(response) => {
             setError(null);
@@ -35,19 +44,19 @@ export default function LoginPage() {
           size="large"
           width="320"
         />
+
+        {(error || googleAuth.error) && (
+          <p className="text-center text-sm text-red-400">
+            {error || t("googleSignInFailed")}
+          </p>
+        )}
+
+        {googleAuth.isPending && (
+          <p className="text-center text-sm text-[var(--color-text-muted)]">
+            {t("signingIn")}
+          </p>
+        )}
       </div>
-
-      {(error || googleAuth.error) && (
-        <p className="text-center text-sm text-red-400">
-          {error || t("googleSignInFailed")}
-        </p>
-      )}
-
-      {googleAuth.isPending && (
-        <p className="text-center text-sm text-[var(--color-text-muted)]">
-          {t("signingIn")}
-        </p>
-      )}
     </div>
   );
 }

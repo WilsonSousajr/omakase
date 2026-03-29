@@ -22,7 +22,8 @@
   "auth": {
     "signIn": "Sign in with Google",
     "signingIn": "Signing in...",
-    "googleSignInFailed": "Google sign-in failed. Please try again."
+    "googleSignInFailed": "Google sign-in failed. Please try again.",
+    "tagline": "Plan. Focus. Ship."
   },
   "sidebar": {
     "plan": "Plan",

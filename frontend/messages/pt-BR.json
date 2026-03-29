@@ -22,7 +22,8 @@
   "auth": {
     "signIn": "Entrar com Google",
     "signingIn": "Entrando...",
-    "googleSignInFailed": "Falha ao entrar com Google. Tente novamente."
+    "googleSignInFailed": "Falha ao entrar com Google. Tente novamente.",
+    "tagline": "Planeje. Foque. Entregue."
   },
   "sidebar": {
     "plan": "Plano",
