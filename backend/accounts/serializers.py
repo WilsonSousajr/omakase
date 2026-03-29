@@ -65,7 +65,6 @@ class UpdateProfileSerializer(serializers.Serializer):
         return user
 
 
-
 class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserProfile
