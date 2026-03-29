@@ -344,6 +344,21 @@ Review icon: CheckSquare from lucide-react
 Settings icon: Settings (gear) from lucide-react
 ```
 
+### Login Page
+
+Centered, editorial-minimal layout. Two animation-staggered groups: brand (immediate) + sign-in (150ms delay).
+
+```
+Brand wordmark: text-2xl font-light uppercase tracking-[0.3em] text-[var(--color-text-primary)]
+Decorative divider: h-px w-8 bg-[var(--color-border)] (centered, mt-4)
+Tagline: text-xs text-[var(--color-text-faint)] ("Plan. Focus. Ship.")
+Spacing: mb-12 between brand and sign-in
+Animation: fade-in-up 0.6s ease-out (CSS keyframe in globals.css)
+Google button: theme="outline" size="large" width="320"
+```
+
+Auth layout wrapper: `flex min-h-screen w-full items-center justify-center bg-[var(--color-bg)]` → `max-w-sm px-4` inner container.
+
 ### Theme Toggle
 
 Located in sidebar footer. Cycles through system → light → dark themes. Uses `next-themes` for localStorage persistence and system preference detection.
