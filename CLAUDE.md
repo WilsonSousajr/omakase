@@ -71,7 +71,7 @@ docker compose exec frontend pnpm lint       # Run linter
 
 ```
 backend/
-  accounts/        # Auth: register, JWT token, me endpoint, Profile model, change-password, user preferences
+  accounts/        # Auth: Google OAuth login, me endpoint, Profile model, user preferences
   omakase/         # Django project settings, urls, wsgi
   tasks/           # Task, Tag, TimeBlock, Workspace, Project models + API
   pomodoro/        # PomodoroSession model + API
@@ -79,23 +79,21 @@ backend/
   stats/           # Daily stats aggregation + DailyReview model + ReviewSummaryView
 frontend/
   src/
-    app/(auth)/    # Login + Register pages (no sidebar)
+    app/(auth)/    # Login page with Google Sign-In (no sidebar)
     app/(main)/    # Plan + Focus + Review + Projects + Study + Settings pages (with sidebar)
     components/    # React components (tasks/, calendar/, kanban/, focus/, projects/, study/, review/)
-    hooks/         # TanStack Query hooks (useTasks, useTags, useTimeBlocks, usePomodoro, useAuth [useMe, useLogin, useRegister, useUpdateProfile, useChangePassword, useLogout], useWorkspaces, useProjects, useStats, useSemesters, useDisciplines, useStudyBlocks, useClassSchedules, useClassOccurrences, useDailyReviews, useUserProfile)
+    hooks/         # TanStack Query hooks (useTasks, useTags, useTimeBlocks, usePomodoro, useAuth [useMe, useGoogleAuth, useUpdateProfile, useLogout], useWorkspaces, useProjects, useStats, useSemesters, useDisciplines, useStudyBlocks, useClassSchedules, useClassOccurrences, useDailyReviews, useUserProfile)
     stores/        # Zustand stores (uiStore, pomodoroStore, calendarStore, authStore)
     lib/           # Utilities (api with JWT interceptors, constants, utils)
-    types/         # TypeScript types (task, tag, timeblock, pomodoro, auth, stats, semester, discipline, studyblock, classschedule, dailyreview, userprofile)
+    types/         # TypeScript types (task, tag, timeblock, pomodoro, auth [User, AuthTokens, GoogleAuthResponse, UpdateProfilePayload], stats, semester, discipline, studyblock, classschedule, dailyreview, userprofile)
 ```
 
 ## API Endpoints (all under /api/v1/)
 
-- `auth/register/` — POST (AllowAny)
-- `auth/token/` — POST JWT obtain (AllowAny)
+- `auth/google/` — POST Google OAuth login (AllowAny, verifies Google ID token, returns JWT + user)
 - `auth/token/refresh/` — POST JWT refresh (AllowAny)
 - `auth/me/` — GET/PATCH current user + profile (IsAuthenticated)
 - `auth/profile/` — GET+PATCH user preferences (IsAuthenticated, get_or_create for existing users)
-- `auth/change-password/` — POST change password (IsAuthenticated)
 - `tasks/` — CRUD + `today/` + `carried-over/` + `reorder-bulk/` (user-scoped)
 - `tags/` — CRUD, filterable by area (user-scoped)
 - `timeblocks/` — CRUD, filterable by date range (user-scoped via task.user OR study_block.discipline.semester.user)
@@ -130,20 +128,21 @@ frontend/
 - `DEBUG` defaults to `False` (must explicitly set `DJANGO_DEBUG=True` in `.env` for development)
 - DRF uses `IsAuthenticated` permission by default; `JWTAuthentication` + `SessionAuthentication` configured
 - JWT: 60-min access tokens, 7-day refresh tokens (djangorestframework-simplejwt)
-- Auth endpoints (register, token) use explicit `AllowAny` override
+- Google OAuth: Frontend `@react-oauth/google` sends ID token → Backend verifies via `google-auth` → Issues JWT pair
+- `GOOGLE_CLIENT_ID` env var required for Google login (validated at runtime in GoogleLoginView)
+- `NEXT_PUBLIC_GOOGLE_CLIENT_ID` env var for frontend GoogleOAuthProvider
+- Auth endpoint (google/) uses explicit `AllowAny` override
 - Frontend: JWT tokens stored in localStorage via authStore, auto-attached by axios interceptor
 - Token refresh: 401 → auto-refresh with concurrent request queue (prevents multiple refresh calls)
-- Route groups: `(auth)` for login/register (no sidebar), `(main)` for plan/focus (with sidebar)
+- Route groups: `(auth)` for login (no sidebar), `(main)` for plan/focus (with sidebar)
 - AuthGuard wraps root layout — redirects unauthenticated users to /login
 - CORS only allows explicit origins (no `CORS_ALLOW_ALL_ORIGINS`)
 - PostgreSQL port bound to `127.0.0.1` only (not exposed to network)
 - `reorder-bulk` endpoint capped at 100 items per request; uses `transaction.atomic()` + `select_for_update()` for race condition safety
 - Next.js security headers: `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`
 - Pre-commit hooks configured (`.pre-commit-config.yaml`): ruff lint/format, detect-secrets, trailing-whitespace, no-commit-to-branch, frontend ESLint via lint-staged
-- `rest_framework_simplejwt.token_blacklist` in INSTALLED_APPS — enables refresh token blacklisting (used after password change)
-- Password change blacklists all outstanding refresh tokens and is rate-limited (5/hour via ScopedRateThrottle)
-- `AUTH_PASSWORD_VALIDATORS` enforced in both RegisterSerializer and ChangePasswordSerializer (not just model-level)
-- Frontend forces re-auth (logout + redirect) after successful password change
+- `rest_framework_simplejwt.token_blacklist` in INSTALLED_APPS — enables refresh token blacklisting
+- No password auth — all authentication via Google OAuth (no register, login, or change-password endpoints)
 
 ## Key Patterns
 
@@ -227,10 +226,13 @@ frontend/
 - Profile: `avatar_color` (hex, default `#a3a3a3`), `created_at`, `updated_at`
 - MeView: `RetrieveUpdateAPIView` — GET returns `UserSerializer`, PATCH uses `UpdateProfileSerializer` (writes to both User and Profile)
 - UpdateProfileSerializer: plain Serializer (not ModelSerializer) because it writes to two models (User + Profile), wrapped in transaction.atomic()
-- ChangePasswordView: POST `/auth/change-password/`, validates old password + confirms new passwords match, enforces AUTH_PASSWORD_VALIDATORS, blacklists outstanding refresh tokens, rate-limited (5/hour via ScopedRateThrottle)
+- GoogleLoginView: POST `/auth/google/`, verifies Google ID token via `google-auth`, gets-or-creates user by email, backfills name from Google profile, issues JWT pair. Username auto-generated from email prefix (handles collisions)
+- Frontend: Login page uses `GoogleLogin` component from `@react-oauth/google`, no register page
+- Frontend: Settings page email field is read-only (managed by Google), no password change section
 - Frontend: UserAvatar component with `getInitials()` helper — falls back: first+last → first[0:2] → username[0:2]
 - Frontend: Sidebar user section (above SidebarStats) — UserAvatar + username + Settings gear icon, links to `/settings`
-- Frontend: `useUpdateProfile()` PATCH `/auth/me/` → updates authStore + query cache. `useChangePassword()` POST `/auth/change-password/`
+- Frontend: `useUpdateProfile()` PATCH `/auth/me/` → updates authStore + query cache
+- Frontend: `useGoogleAuth()` POST `/auth/google/` → receives JWT + user in single response, stores via authStore.setAuth()
 - UserProfile: OneToOne with User (related_name="user_profile"), auto-created via post_save signal. View uses get_or_create for existing users
 - UserProfile stores pomodoro durations, daily goals (work/study hours), timezone, week_starts_on
 - Frontend: Settings page at `/settings` combines profile editing (name, email, avatar color), preferences (pomodoro, daily goals, general), password change, and logout

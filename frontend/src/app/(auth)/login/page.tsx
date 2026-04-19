@@ -1,85 +1,62 @@
 "use client";
 
-import Link from "next/link";
+import { GoogleLogin } from "@react-oauth/google";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
-import { useLogin } from "@/hooks/useAuth";
+import { useGoogleAuth } from "@/hooks/useAuth";
 
 export default function LoginPage() {
   const t = useTranslations("auth");
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const login = useLogin();
-
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    login.mutate({ username, password });
-  }
+  const googleAuth = useGoogleAuth();
+  const [error, setError] = useState<string | null>(null);
 
   return (
-    <div className="space-y-6">
-      <div className="text-center">
-        <h1 className="text-2xl font-semibold text-[var(--color-text-primary)]">
+    <div className="flex flex-col items-center">
+      {/* Brand */}
+      <div
+        className="mb-12 flex flex-col items-center"
+        style={{ animation: "fade-in-up 0.6s ease-out both" }}
+      >
+        <h1 className="text-2xl font-light uppercase tracking-[0.3em] text-[var(--color-text-primary)]">
           Omakase
         </h1>
-        <p className="mt-1 text-sm text-[var(--color-text-muted)]">
-          {t("signIn")}
+        <div className="mt-4 h-px w-8 bg-[var(--color-border)]" />
+        <p className="mt-4 text-xs text-[var(--color-text-faint)]">
+          {t("tagline")}
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
-            {t("username")}
-          </label>
-          <input
-            type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            required
-            autoFocus
-            className="mt-1 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-input)] px-3 py-2 text-sm text-[var(--color-text-primary)] placeholder-[var(--color-text-faint)] outline-none focus:border-[var(--color-border-hover)]"
-          />
-        </div>
+      {/* Sign-in */}
+      <div
+        className="flex flex-col items-center space-y-4"
+        style={{ animation: "fade-in-up 0.6s ease-out 0.15s both" }}
+      >
+        <GoogleLogin
+          onSuccess={(response) => {
+            setError(null);
+            if (response.credential) {
+              googleAuth.mutate(response.credential);
+            }
+          }}
+          onError={() => setError(t("googleSignInFailed"))}
+          theme="outline"
+          size="large"
+          width="320"
+        />
 
-        <div>
-          <label className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--color-text-muted)]">
-            {t("password")}
-          </label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            className="mt-1 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-input)] px-3 py-2 text-sm text-[var(--color-text-primary)] placeholder-[var(--color-text-faint)] outline-none focus:border-[var(--color-border-hover)]"
-          />
-        </div>
-
-        {login.error && (
-          <p className="text-sm text-red-400">
-            {t("invalidCredentials")}
+        {(error || googleAuth.error) && (
+          <p className="text-center text-sm text-red-400">
+            {error || t("googleSignInFailed")}
           </p>
         )}
 
-        <button
-          type="submit"
-          disabled={login.isPending}
-          className="w-full rounded-xl bg-[var(--color-button-primary)] py-2 text-sm font-medium text-[var(--color-button-primary-text)] hover:bg-[var(--color-button-primary-hover)] disabled:opacity-50"
-        >
-          {login.isPending ? t("signingIn") : t("signIn")}
-        </button>
-      </form>
-
-      <p className="text-center text-sm text-[var(--color-text-muted)]">
-        {t("noAccount")}{" "}
-        <Link
-          href="/register"
-          className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
-        >
-          {t("signUp")}
-        </Link>
-      </p>
+        {googleAuth.isPending && (
+          <p className="text-center text-sm text-[var(--color-text-muted)]">
+            {t("signingIn")}
+          </p>
+        )}
+      </div>
     </div>
   );
 }

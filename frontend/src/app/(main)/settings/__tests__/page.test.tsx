@@ -1,5 +1,4 @@
-import { screen, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { screen } from "@testing-library/react";
 import { setupServer } from "msw/node";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
@@ -47,7 +46,12 @@ describe("SettingsPage", () => {
     renderWithProviders(<SettingsPage />);
     expect(screen.getByDisplayValue("John")).toBeInTheDocument();
     expect(screen.getByDisplayValue("Doe")).toBeInTheDocument();
-    expect(screen.getByDisplayValue("john@example.com")).toBeInTheDocument();
+  });
+
+  it("renders email as read-only text", () => {
+    renderWithProviders(<SettingsPage />);
+    expect(screen.getByText("john@example.com")).toBeInTheDocument();
+    expect(screen.getByText("Managed by Google")).toBeInTheDocument();
   });
 
   it("renders username as read-only text", () => {
@@ -60,22 +64,15 @@ describe("SettingsPage", () => {
     expect(screen.getByText("JD")).toBeInTheDocument();
   });
 
-  it("renders password form", () => {
-    renderWithProviders(<SettingsPage />);
-    expect(screen.getByPlaceholderText("Current password")).toBeInTheDocument();
-    expect(screen.getByPlaceholderText("New password")).toBeInTheDocument();
-    expect(screen.getByPlaceholderText("Confirm new password")).toBeInTheDocument();
-  });
-
   it("renders save button", () => {
     renderWithProviders(<SettingsPage />);
     const saveButtons = screen.getAllByText("Save");
     expect(saveButtons.length).toBeGreaterThanOrEqual(1);
   });
 
-  it("renders change password button", () => {
+  it("does not render password form", () => {
     renderWithProviders(<SettingsPage />);
-    expect(screen.getByRole("button", { name: "Change Password" })).toBeInTheDocument();
+    expect(screen.queryByText("Change Password")).not.toBeInTheDocument();
   });
 
   it("renders logout button", () => {
@@ -87,34 +84,5 @@ describe("SettingsPage", () => {
     useAuthStore.setState({ user: null });
     const { container } = renderWithProviders(<SettingsPage />);
     expect(container.innerHTML).toBe("");
-  });
-
-  it("logs out after successful password change", async () => {
-    const user = userEvent.setup();
-    renderWithProviders(<SettingsPage />);
-
-    await user.type(screen.getByPlaceholderText("Current password"), "testpass123");
-    await user.type(screen.getByPlaceholderText("New password"), "newStrongPass!1");
-    await user.type(screen.getByPlaceholderText("Confirm new password"), "newStrongPass!1");
-    await user.click(screen.getByRole("button", { name: "Change Password" }));
-
-    await waitFor(() => {
-      expect(useAuthStore.getState().isAuthenticated).toBe(false);
-      expect(useAuthStore.getState().tokens).toBeNull();
-    });
-  });
-
-  it("shows new_password validation errors", async () => {
-    const user = userEvent.setup();
-    renderWithProviders(<SettingsPage />);
-
-    await user.type(screen.getByPlaceholderText("Current password"), "testpass123");
-    await user.type(screen.getByPlaceholderText("New password"), "password1234");
-    await user.type(screen.getByPlaceholderText("Confirm new password"), "password1234");
-    await user.click(screen.getByRole("button", { name: "Change Password" }));
-
-    await waitFor(() => {
-      expect(screen.getByText("This password is too common.")).toBeInTheDocument();
-    });
   });
 });

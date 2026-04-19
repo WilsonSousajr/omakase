@@ -21,19 +21,10 @@
     "color": "Color"
   },
   "auth": {
-    "signIn": "Sign in",
-    "signUp": "Sign up",
-    "username": "Username",
-    "password": "Password",
-    "confirmPassword": "Confirm password",
-    "noAccount": "Don't have an account?",
-    "hasAccount": "Already have an account?",
-    "register": "Register",
+    "signIn": "Sign in with Google",
     "signingIn": "Signing in...",
-    "registering": "Registering...",
-    "email": "Email",
-    "invalidCredentials": "Invalid username or password.",
-    "registrationFailed": "Registration failed. Please try again."
+    "googleSignInFailed": "Google sign-in failed. Please try again.",
+    "tagline": "Plan. Focus. Ship."
   },
   "sidebar": {
     "plan": "Plan",
@@ -377,7 +368,7 @@
     "firstNamePlaceholder": "First name",
     "lastNamePlaceholder": "Last name",
     "email": "Email",
-    "emailPlaceholder": "Email",
+    "emailReadOnly": "Managed by Google",
     "saving": "Saving...",
     "pomodoro": "Pomodoro",
     "workMinutes": "Work (minutes)",
@@ -393,19 +384,8 @@
     "sunday": "Sunday",
     "timezone": "Timezone",
     "timezonePlaceholder": "e.g. America/Sao_Paulo",
-    "changePassword": "Change Password",
-    "currentPassword": "Current Password",
-    "currentPasswordPlaceholder": "Current password",
-    "newPassword": "New Password",
-    "newPasswordPlaceholder": "New password",
-    "confirmNewPassword": "Confirm New Password",
-    "confirmNewPasswordPlaceholder": "Confirm new password",
-    "passwordsDoNotMatch": "New passwords do not match.",
-    "changing": "Changing...",
-    "failedToChangePassword": "Failed to change password.",
     "settingsSaved": "Settings saved successfully",
     "profileUpdated": "Profile updated",
-    "passwordChanged": "Password changed. Please log in again.",
     "logOut": "Log out"
   },
   "subtasks": {
