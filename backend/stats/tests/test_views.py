@@ -22,7 +22,8 @@ class TestDailyStatsView:
         assert resp.status_code == status.HTTP_401_UNAUTHORIZED
 
     def test_empty_stats(self, authenticated_client):
-        resp = authenticated_client.get(self.URL)
+        today = timezone.localdate()
+        resp = authenticated_client.get(self.URL, {"date": today.isoformat()})
         assert resp.status_code == status.HTTP_200_OK
         assert resp.data["hours_focused_today"] == 0
         assert resp.data["blocks_completed_today"] == 0
@@ -30,6 +31,14 @@ class TestDailyStatsView:
         assert resp.data["current_streak"] == 0
         assert resp.data["weekly_work_hours"] == 0
         assert resp.data["weekly_study_hours"] == 0
+
+    def test_missing_date_returns_400(self, authenticated_client):
+        resp = authenticated_client.get(self.URL)
+        assert resp.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_invalid_date_returns_400(self, authenticated_client):
+        resp = authenticated_client.get(self.URL, {"date": "not-a-date"})
+        assert resp.status_code == status.HTTP_400_BAD_REQUEST
 
     def test_hours_focused_today(self, authenticated_client, user):
         PomodoroSessionFactory(
@@ -66,7 +75,8 @@ class TestDailyStatsView:
             duration_minutes=5,
             started_at=timezone.now(),
         )
-        resp = authenticated_client.get(self.URL)
+        today = timezone.localdate()
+        resp = authenticated_client.get(self.URL, {"date": today.isoformat()})
         assert resp.data["hours_focused_today"] == 1.5  # (60+30)/60
 
     def test_hours_focused_excludes_other_users(self, authenticated_client, user):
@@ -76,7 +86,8 @@ class TestDailyStatsView:
             duration_minutes=120,
             started_at=timezone.now(),
         )  # different user
-        resp = authenticated_client.get(self.URL)
+        today = timezone.localdate()
+        resp = authenticated_client.get(self.URL, {"date": today.isoformat()})
         assert resp.data["hours_focused_today"] == 0
 
     def test_blocks_today(self, authenticated_client, user):
@@ -91,7 +102,7 @@ class TestDailyStatsView:
             task=completed_task, date=today, start_time=datetime.time(14, 0), end_time=datetime.time(15, 0)
         )
 
-        resp = authenticated_client.get(self.URL)
+        resp = authenticated_client.get(self.URL, {"date": today.isoformat()})
         assert resp.data["blocks_total_today"] == 3
         assert resp.data["blocks_completed_today"] == 2
 
@@ -101,7 +112,7 @@ class TestDailyStatsView:
         task = TaskFactory(user=user, is_completed=True)
         TimeBlockFactory(task=task, date=yesterday, start_time=datetime.time(9, 0), end_time=datetime.time(10, 0))
 
-        resp = authenticated_client.get(self.URL)
+        resp = authenticated_client.get(self.URL, {"date": today.isoformat()})
         assert resp.data["blocks_total_today"] == 0
 
     def test_current_streak(self, authenticated_client, user):
@@ -111,7 +122,7 @@ class TestDailyStatsView:
             task = TaskFactory(user=user, is_completed=True)
             TimeBlockFactory(task=task, date=day, start_time=datetime.time(9, 0), end_time=datetime.time(10, 0))
 
-        resp = authenticated_client.get(self.URL)
+        resp = authenticated_client.get(self.URL, {"date": today.isoformat()})
         assert resp.data["current_streak"] == 5
 
     def test_streak_breaks_on_gap(self, authenticated_client, user):
@@ -126,7 +137,7 @@ class TestDailyStatsView:
         task = TaskFactory(user=user, is_completed=True)
         TimeBlockFactory(task=task, date=day3, start_time=datetime.time(9, 0), end_time=datetime.time(10, 0))
 
-        resp = authenticated_client.get(self.URL)
+        resp = authenticated_client.get(self.URL, {"date": today.isoformat()})
         assert resp.data["current_streak"] == 2
 
     def test_streak_requires_completed_task(self, authenticated_client, user):
@@ -137,7 +148,7 @@ class TestDailyStatsView:
             task=incomplete_task, date=today, start_time=datetime.time(9, 0), end_time=datetime.time(10, 0)
         )
 
-        resp = authenticated_client.get(self.URL)
+        resp = authenticated_client.get(self.URL, {"date": today.isoformat()})
         assert resp.data["current_streak"] == 0
 
     def test_weekly_work_hours(self, authenticated_client, user):
@@ -170,7 +181,8 @@ class TestDailyStatsView:
         assert resp.data["weekly_study_hours"] == 2.0
 
     def test_response_shape(self, authenticated_client):
-        resp = authenticated_client.get(self.URL)
+        today = timezone.localdate()
+        resp = authenticated_client.get(self.URL, {"date": today.isoformat()})
         expected_keys = {
             "hours_focused_today",
             "blocks_completed_today",
