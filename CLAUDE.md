@@ -414,6 +414,8 @@ Types: feat, fix, test, chore, docs, refactor, ci, style
 - **Frontend localStorage in authStore**: Wrap in try-catch — `loadTokens()` runs at module init time when localStorage may not be available
 - **Frontend SSR hydration + localStorage**: Components that read localStorage-backed Zustand state (e.g. `isAuthenticated`) must use a `hasMounted` gate (`useState(false)` + `useEffect` → `true`) to avoid hydration mismatch — server sees `null`, client sees stored value
 - **Timezone mismatch (Docker UTC)**: Backend runs in Docker (UTC). Never rely on server-side `date.today()` for user-facing "today" logic — always send the client's local date as a query param. The `/tasks/today/?date=` endpoint was added to fix tasks not showing in focus mode near midnight
+- **Vitest parallel JSON-import race**: Running the full frontend suite (~70+ files) can intermittently fail with `SyntaxError: messages/en.json: Unexpected end of JSON input` when multiple workers `require()` the shared `messages/en.json` simultaneously from `setup.ts`. The same files pass when run individually. Rerun with `npx vitest run --pool=forks` to serialize the import and get a clean signal — don't assume the JSON is corrupted
+- **Behavior-change commits MUST update their tests in the same commit**: When tightening an API contract (e.g. making a query param required, returning 400 instead of a silent fallback), update the corresponding tests in the same commit. Stale tests that assert the old behavior will sit on a long-lived branch undetected and only break CI after a rebase/merge — and the fix becomes a separate "test catch-up" commit that loses the connection to the behavior change. This is the same hygiene as bug-fix tests, applied to behavior changes
 
 ## Local Environment Notes
 
