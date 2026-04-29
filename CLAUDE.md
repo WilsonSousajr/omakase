@@ -421,6 +421,53 @@ Types: feat, fix, test, chore, docs, refactor, ci, style
 - `pnpm` is not on PATH — use `npx pnpm` for local frontend commands
 - Backend dev deps installed at runtime (volume mount), not baked into image — run `docker-compose exec backend pip install -r requirements-dev.txt` after container rebuild
 
+## Code Style
+
+### Functions & files
+
+- Functions: 4-20 lines. Split if longer.
+- Files: under 500 lines. Split by responsibility.
+- One thing per function, one responsibility per module (SRP).
+- Names: specific and unique. Avoid `data`, `handler`, `Manager`. Prefer names that return <5 grep hits in the codebase.
+- Types: explicit. No `any`, no `Dict`, no untyped functions.
+- No code duplication. Extract shared logic into a function/module.
+- Early returns over nested ifs. Max 2 levels of indentation.
+- Exception messages must include the offending value and expected shape.
+
+### Comments
+
+- Keep your own comments. Don't strip them on refactor — they carry intent and provenance.
+- Write WHY, not WHAT. Skip `// increment counter` above `i++`.
+- Docstrings on public functions: intent + one usage example.
+- Reference issue numbers / commit SHAs when a line exists because of a specific bug or upstream constraint.
+
+### Tests
+
+- Tests run with a single command: `docker-compose exec backend pytest` (backend) or `npx pnpm test` from `frontend/` (frontend).
+- Every new function gets a test. Bug fixes get a regression test.
+- Mock external I/O (API, DB, filesystem) with named fake classes, not inline stubs.
+- Tests must be F.I.R.S.T: fast, independent, repeatable, self-validating, timely.
+
+### Dependencies
+
+- Inject dependencies through constructor/parameter, not global/import.
+- Wrap third-party libs behind a thin interface owned by this project.
+
+### Structure
+
+- Follow the framework's convention (Django apps, Next.js App Router, etc.).
+- Prefer small focused modules over god files.
+- Predictable paths: `views/serializers/models` (Django), `app/components/hooks/stores/lib/types` (Next.js).
+
+### Formatting
+
+- Use the language default formatter (`ruff format` for Python, `prettier`/Next ESLint for TS/TSX). Don't discuss style beyond that.
+
+### Logging
+
+- Structured JSON when logging for debugging / observability.
+- Plain text only for user-facing CLI output.
+
 ## Workflow Rules
 
 - **Always update CLAUDE.md** after completing an implementation or discovering new patterns, gotchas, or learnings
