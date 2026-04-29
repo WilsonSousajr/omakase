@@ -386,6 +386,14 @@ GitHub Actions (`.github/workflows/ci.yml`) runs on push to main and PRs:
 - Always branch from `develop`, always PR back to `develop`
 - Branch names should be descriptive: `feat/pomodoro-timer`, not `feat/stuff`
 
+### Worktrees
+
+- Use `.worktrees/<branch-name>` for isolated feature work — already gitignored at `.gitignore:48`. The Claude Code harness uses a separate `.claude/worktrees/` for its own session worktrees; don't conflate the two
+- Each worktree needs its own `.env` (gitignored, not shared via the worktree mechanism) and its own `frontend/node_modules` (volume-mounted per Compose project) — copy `.env` from the main repo and let the frontend container `pnpm install` on first up
+- **`gh pr merge --merge`, not `--squash`** when a branch has a coherent atomic-commit history — squash collapses the granular commits into one opaque blob, breaking `git blame` and per-commit revertability. `--squash` is only appropriate for noisy WIP branches
+- **Worktree corruption recovery**: If `git worktree add` is killed mid-checkout (interrupt, TaskStop, etc.), the worktree's index ends up out of sync — every file shows as both `D` (deleted from index) and `??` (untracked). Don't try to repair in place; `git worktree remove --force <path>` and recreate
+- **Dry-run merge for stale branches**: `git merge-tree --write-tree <base> <branch>` runs a true three-way merge to a tree object without touching the working tree or any branch. If output contains only `Auto-merging` lines (no `CONFLICT`), the merge is clean. Useful for triaging whether to rebase or merge an old branch before committing to either
+
 ### Commit Message Convention
 
 ```
