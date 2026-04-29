@@ -17,7 +17,8 @@
     "apply": "Apply",
     "skip": "Skip",
     "reset": "Reset",
-    "done": "Done"
+    "done": "Done",
+    "color": "Color"
   },
   "auth": {
     "signIn": "Sign in with Google",
@@ -149,6 +150,7 @@
     }
   },
   "focus": {
+    "shutdownNudge": "You've shut down for the day. Rest well!",
     "sessionNotes": "Session Notes",
     "sessionNotesPlaceholder": "Notes for this session...",
     "sessionComplete": "Session Complete",
@@ -305,7 +307,8 @@
       "backlog": "Backlog",
       "skip": "Skip",
       "applying": "Applying...",
-      "applyAndContinue": "Apply & Continue"
+      "applyAndContinue": "Apply & Continue",
+      "partialFailure": "Only {applied} of {total} items were rescheduled before an error occurred."
     },
     "score": {
       "title": "How productive did you feel today?",

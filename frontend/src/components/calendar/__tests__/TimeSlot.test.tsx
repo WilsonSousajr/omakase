@@ -63,7 +63,7 @@ describe("TimeSlot", () => {
       <TimeSlot hour={9} half={0} date="2026-03-08" height={24} />
     );
     const slot = container.firstChild as HTMLElement;
-    expect(slot.className).toContain("bg-white/5");
+    expect(slot.className).toContain("bg-[var(--color-hover-overlay)]");
   });
 
   it("has transition-colors for smooth drop hover", () => {

@@ -14,6 +14,7 @@ interface Props {
 
 export default function ReviewPreview({ onNext }: Props) {
   const t = useTranslations("review");
+  const tc = useTranslations("constants");
   const fmt = useFormatter();
   const tomorrow = useTomorrow();
   const { data: timeBlocks = [] } = useTimeBlocks(tomorrow, tomorrow);
@@ -64,7 +65,7 @@ export default function ReviewPreview({ onNext }: Props) {
                 style={{ backgroundColor: occ.discipline_color }}
               />
               <span className="flex-1 text-sm text-[var(--color-text-primary)]">
-                {occ.discipline_name} — {occ.class_type}
+                {occ.discipline_name} — {tc(`classTypes.${occ.class_type}`)}
               </span>
               <span className="text-xs text-[var(--color-text-faint)]">
                 {occ.start_time.slice(0, 5)} – {occ.end_time.slice(0, 5)}

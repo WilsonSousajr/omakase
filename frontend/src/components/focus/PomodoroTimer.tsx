@@ -18,15 +18,15 @@ const SESSION_LABEL_KEYS = {
 } as const;
 
 const SESSION_COLORS = {
-  focus: "text-[#e5e5e5]",
-  short_break: "text-[#737373]",
-  long_break: "text-[#a3a3a3]",
+  focus: "text-[var(--color-text-primary)]",
+  short_break: "text-[var(--color-text-muted)]",
+  long_break: "text-[var(--color-text-secondary)]",
 } as const;
 
 const RING_COLORS = {
-  focus: "stroke-[#e5e5e5]",
-  short_break: "stroke-[#737373]",
-  long_break: "stroke-[#a3a3a3]",
+  focus: "stroke-[var(--color-text-primary)]",
+  short_break: "stroke-[var(--color-text-muted)]",
+  long_break: "stroke-[var(--color-text-secondary)]",
 } as const;
 
 export default function PomodoroTimer() {

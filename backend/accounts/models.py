@@ -1,7 +1,7 @@
 import uuid
 
 from django.conf import settings
-from django.core.validators import RegexValidator
+from django.core.validators import MaxValueValidator, RegexValidator
 from django.db import models
 
 hex_color_validator = RegexValidator(
@@ -44,12 +44,16 @@ class UserProfile(models.Model):
         choices=[("monday", "Monday"), ("sunday", "Sunday")],
         default="monday",
     )
-    pomodoro_work_minutes = models.PositiveIntegerField(default=25)
-    pomodoro_short_break_minutes = models.PositiveIntegerField(default=5)
-    pomodoro_long_break_minutes = models.PositiveIntegerField(default=15)
-    pomodoros_before_long_break = models.PositiveIntegerField(default=4)
-    daily_work_goal_hours = models.DecimalField(max_digits=4, decimal_places=1, default=8.0)
-    daily_study_goal_hours = models.DecimalField(max_digits=4, decimal_places=1, default=4.0)
+    pomodoro_work_minutes = models.PositiveIntegerField(default=25, validators=[MaxValueValidator(480)])
+    pomodoro_short_break_minutes = models.PositiveIntegerField(default=5, validators=[MaxValueValidator(480)])
+    pomodoro_long_break_minutes = models.PositiveIntegerField(default=15, validators=[MaxValueValidator(480)])
+    pomodoros_before_long_break = models.PositiveIntegerField(default=4, validators=[MaxValueValidator(10)])
+    daily_work_goal_hours = models.DecimalField(
+        max_digits=4, decimal_places=1, default=8.0, validators=[MaxValueValidator(24)]
+    )
+    daily_study_goal_hours = models.DecimalField(
+        max_digits=4, decimal_places=1, default=4.0, validators=[MaxValueValidator(24)]
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

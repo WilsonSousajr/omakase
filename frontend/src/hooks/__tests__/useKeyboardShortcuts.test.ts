@@ -48,7 +48,21 @@ describe("useKeyboardShortcuts", () => {
     expect(useUIStore.getState().modalOpen).toBeNull();
   });
 
-  it("Space starts pomodoro when not running", () => {
+  it("Space does not start pomodoro when not running (requires UI start)", () => {
+    renderHook(() => useKeyboardShortcuts());
+
+    act(() => {
+      window.dispatchEvent(new KeyboardEvent("keydown", { key: " " }));
+    });
+
+    // Space no longer starts a new session — user must click Start to create a backend session
+    expect(usePomodoroStore.getState().isRunning).toBe(false);
+  });
+
+  it("Space resumes pomodoro when paused mid-session", () => {
+    // Simulate a paused mid-session state (timeRemaining < full duration)
+    const { durations } = usePomodoroStore.getState();
+    usePomodoroStore.setState({ isRunning: false, timeRemaining: durations.focus - 60 });
     renderHook(() => useKeyboardShortcuts());
 
     act(() => {

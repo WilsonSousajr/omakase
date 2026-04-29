@@ -17,7 +17,8 @@
     "apply": "Aplicar",
     "skip": "Pular",
     "reset": "Redefinir",
-    "done": "Concluído"
+    "done": "Concluído",
+    "color": "Cor"
   },
   "auth": {
     "signIn": "Entrar com Google",
@@ -149,6 +150,7 @@
     }
   },
   "focus": {
+    "shutdownNudge": "Você encerrou o dia. Descanse bem!",
     "sessionNotes": "Notas da Sessão",
     "sessionNotesPlaceholder": "Notas para esta sessão...",
     "sessionComplete": "Sessão Concluída",
@@ -305,7 +307,8 @@
       "backlog": "Backlog",
       "skip": "Pular",
       "applying": "Aplicando...",
-      "applyAndContinue": "Aplicar e Continuar"
+      "applyAndContinue": "Aplicar e Continuar",
+      "partialFailure": "Apenas {applied} de {total} itens foram reagendados antes de ocorrer um erro."
     },
     "score": {
       "title": "Quão produtivo você se sentiu hoje?",

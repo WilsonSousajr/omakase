@@ -44,14 +44,22 @@ export function useUpdateTimeBlock() {
       const { data } = await api.patch<TimeBlock>(`/timeblocks/${id}/`, updates);
       return data;
     },
-    onMutate: ({ id, ...updates }) => {
-      // Optimistically apply the update to all cached timeblock queries
-      // so the UI reflects the change before the API responds (prevents flash)
-      queryClient.cancelQueries({ queryKey: ["timeblocks"] });
+    onMutate: async ({ id, ...updates }) => {
+      // Cancel in-flight queries so they don't overwrite our optimistic update
+      await queryClient.cancelQueries({ queryKey: ["timeblocks"] });
+      // Snapshot previous cache for rollback
+      const previousData = queryClient.getQueriesData<TimeBlock[]>({ queryKey: ["timeblocks"] });
       queryClient.setQueriesData<TimeBlock[]>(
         { queryKey: ["timeblocks"] },
         (old) => old?.map((b) => (b.id === id ? { ...b, ...updates } : b)),
       );
+      return { previousData };
+    },
+    onError: (_err, _vars, context) => {
+      // Restore previous cache on failure
+      context?.previousData?.forEach(([key, data]) => {
+        queryClient.setQueryData(key, data);
+      });
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["timeblocks"] });

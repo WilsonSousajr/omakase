@@ -28,9 +28,7 @@ export default function ReviewPage() {
 
   const [tab, setTab] = useState<"today" | "history">("today");
   const [step, setStep] = useState(0);
-  const [reviewId, setReviewId] = useState<string | null>(
-    summary?.daily_review?.id ?? null
-  );
+  const [reviewId, setReviewId] = useState<string | null>(null);
   const [rating, setRating] = useState<number | null>(null);
   const [win, setWin] = useState("");
 
@@ -50,22 +48,34 @@ export default function ReviewPage() {
   const handleNext = () => setStep((s) => Math.min(s + 1, STEPS.length - 1));
 
   const handleSaveRating = async () => {
-    const id = await ensureReview();
-    await updateReview.mutateAsync({ id, productivity_rating: rating });
-    handleNext();
+    try {
+      const id = await ensureReview();
+      await updateReview.mutateAsync({ id, productivity_rating: rating });
+      handleNext();
+    } catch {
+      // Error displayed by Toast interceptor
+    }
   };
 
   const handleSaveWin = async () => {
-    const id = await ensureReview();
-    if (win.trim()) {
-      await updateReview.mutateAsync({ id, win_of_the_day: win.trim() });
+    try {
+      const id = await ensureReview();
+      if (win.trim()) {
+        await updateReview.mutateAsync({ id, win_of_the_day: win.trim() });
+      }
+      handleNext();
+    } catch {
+      // Error displayed by Toast interceptor
     }
-    handleNext();
   };
 
   const handleShutdown = async () => {
-    const id = await ensureReview();
-    await updateReview.mutateAsync({ id, is_shutdown: true });
+    try {
+      const id = await ensureReview();
+      await updateReview.mutateAsync({ id, is_shutdown: true });
+    } catch {
+      // Error displayed by Toast interceptor
+    }
   };
 
   if (isLoading) {

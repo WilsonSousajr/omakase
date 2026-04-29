@@ -41,8 +41,8 @@ function TaskCard({ task, onEdit, onDelete, onToggleComplete, projects }: TaskCa
         <div className={cn(
           "h-4 w-4 rounded border transition-all",
           task.is_completed
-            ? "bg-blue-500 border-blue-500"
-            : "border-zinc-600 hover:border-zinc-500"
+            ? "bg-[var(--color-text-primary)] border-[var(--color-text-primary)]"
+            : "border-[var(--color-border)] hover:border-[var(--color-border-hover)]"
         )}>
           {task.is_completed && (
             <svg className="h-full w-full text-white" viewBox="0 0 16 16">

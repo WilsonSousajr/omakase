@@ -1,3 +1,6 @@
+"use client";
+
+import { useFormatter } from "next-intl";
 import { timeToOffset } from "./calendarUtils";
 import { CALENDAR_START_HOUR } from "@/lib/constants";
 
@@ -8,22 +11,23 @@ interface CreationOverlayProps {
   startHour?: number;
 }
 
-function formatTimeLabel(time: string): string {
-  const [h, m] = time.split(":").map(Number);
-  const period = h >= 12 ? "PM" : "AM";
-  const displayH = h === 0 ? 12 : h > 12 ? h - 12 : h;
-  return m === 0 ? `${displayH}:00 ${period}` : `${displayH}:${m.toString().padStart(2, "0")} ${period}`;
-}
-
 export default function CreationOverlay({
   startTime,
   endTime,
   slotHeight,
   startHour = CALENDAR_START_HOUR,
 }: CreationOverlayProps) {
+  const fmt = useFormatter();
   const top = timeToOffset(startTime, slotHeight, startHour);
   const bottom = timeToOffset(endTime, slotHeight, startHour);
   const height = bottom - top;
+
+  const formatTimeLabel = (time: string): string => {
+    const [h, m] = time.split(":").map(Number);
+    const date = new Date();
+    date.setHours(h, m, 0, 0);
+    return fmt.dateTime(date, { hour: "numeric", minute: "2-digit" });
+  };
 
   return (
     <div

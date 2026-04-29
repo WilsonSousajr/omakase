@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { X, AlertCircle } from "lucide-react";
 import api from "@/lib/api";
 import { TOAST_DURATION_MS } from "@/lib/constants";
+import { useLocaleStore } from "@/stores/localeStore";
 import type { AxiosError } from "axios";
 
 interface ToastMessage {
@@ -20,18 +21,29 @@ export function emitToast(message: string) {
 }
 
 // Set up axios interceptor to catch errors globally
-// Module-level guard prevents duplicate interceptors on HMR
-let interceptorId: number | null = null;
-if (interceptorId !== null) {
-  api.interceptors.response.eject(interceptorId);
+// Store interceptor ID on the api instance so it survives HMR module re-execution
+const INTERCEPTOR_KEY = "__toastInterceptorId" as const;
+const existingId = (api as unknown as Record<string, unknown>)[INTERCEPTOR_KEY] as number | undefined;
+if (existingId !== undefined) {
+  api.interceptors.response.eject(existingId);
 }
-interceptorId = api.interceptors.response.use(
+// Locale-aware fallback for the interceptor (cannot use hooks at module level)
+const FALLBACK_MESSAGES: Record<string, string> = {
+  en: "Something went wrong",
+  "pt-BR": "Algo deu errado",
+};
+function getFallbackMessage(): string {
+  const locale = useLocaleStore.getState().locale;
+  return FALLBACK_MESSAGES[locale] ?? FALLBACK_MESSAGES.en;
+}
+
+(api as unknown as Record<string, unknown>)[INTERCEPTOR_KEY] = api.interceptors.response.use(
   (res) => res,
   (error: AxiosError) => {
     const message =
       (error.response?.data as { detail?: string })?.detail ||
       error.message ||
-      "Something went wrong";
+      getFallbackMessage();
     emitToast(message);
     return Promise.reject(error);
   }

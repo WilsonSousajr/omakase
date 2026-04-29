@@ -1,18 +1,21 @@
 "use client";
 
+import { memo } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { PRIORITIES } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import type { Task } from "@/types/task";
 import { GripVertical } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useUIStore } from "@/stores/uiStore";
 
 interface KanbanCardProps {
   task: Task;
 }
 
-export default function KanbanCard({ task }: KanbanCardProps) {
+function KanbanCard({ task }: KanbanCardProps) {
+  const tc = useTranslations("constants");
   const activeTaskId = useUIStore((s) => s.activeTaskId);
   const setActiveTaskId = useUIStore((s) => s.setActiveTaskId);
   const priority = PRIORITIES.find((p) => p.value === task.priority);
@@ -74,7 +77,7 @@ export default function KanbanCard({ task }: KanbanCardProps) {
                   color: priority.color,
                 }}
               >
-                {priority.label}
+                {tc(`priorities.${priority.value}`)}
               </span>
             )}
             {task.tags.map((tag) => (
@@ -95,3 +98,5 @@ export default function KanbanCard({ task }: KanbanCardProps) {
     </div>
   );
 }
+
+export default memo(KanbanCard);

@@ -6,6 +6,7 @@ import { format, addDays } from "date-fns";
 import { CalendarArrowUp, CalendarDays, Inbox, XCircle } from "lucide-react";
 import { useUpdateTask } from "@/hooks/useTasks";
 import { useUpdateStudyBlock } from "@/hooks/useStudyBlocks";
+import { emitToast } from "@/components/Toast";
 import type { ReviewSummary } from "@/types/dailyreview";
 
 type RolloverAction = "tomorrow" | "pick" | "backlog" | "skip";
@@ -68,6 +69,8 @@ export default function ReviewRollover({ summary, onNext }: Props) {
 
   const handleApply = async () => {
     setIsApplying(true);
+    let applied = 0;
+    const total = allItems.filter((item) => decisions[item.id]).length;
     try {
       for (const item of allItems) {
         const decision = decisions[item.id];
@@ -113,10 +116,13 @@ export default function ReviewRollover({ summary, onNext }: Props) {
             });
           }
         }
+        applied++;
       }
       onNext();
     } catch {
-      // Error already handled by Toast interceptor
+      if (applied > 0) {
+        emitToast(t("rollover.partialFailure", { applied, total }));
+      }
     } finally {
       setIsApplying(false);
     }

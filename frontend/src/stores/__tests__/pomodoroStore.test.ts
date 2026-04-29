@@ -67,7 +67,7 @@ describe("pomodoroStore", () => {
   });
 
   it("tick completes focus to short break", () => {
-    usePomodoroStore.setState({ timeRemaining: 1 });
+    usePomodoroStore.setState({ timeRemaining: 0 });
     usePomodoroStore.getState().tick();
     const state = usePomodoroStore.getState();
     expect(state.sessionType).toBe("short_break");
@@ -77,7 +77,7 @@ describe("pomodoroStore", () => {
 
   it("tick completes 4th focus to long break", () => {
     usePomodoroStore.setState({
-      timeRemaining: 1,
+      timeRemaining: 0,
       completedPomodoros: POMODOROS_BEFORE_LONG_BREAK - 1,
     });
     usePomodoroStore.getState().tick();
@@ -87,7 +87,7 @@ describe("pomodoroStore", () => {
   it("tick completes break to focus", () => {
     usePomodoroStore.setState({
       sessionType: "short_break",
-      timeRemaining: 1,
+      timeRemaining: 0,
     });
     usePomodoroStore.getState().tick();
     expect(usePomodoroStore.getState().sessionType).toBe("focus");
@@ -105,7 +105,7 @@ describe("pomodoroStore", () => {
   it("onComplete callback fires when timer hits 0", () => {
     const callback = vi.fn();
     usePomodoroStore.getState().setOnComplete(callback);
-    usePomodoroStore.setState({ timeRemaining: 1 });
+    usePomodoroStore.setState({ timeRemaining: 0 });
     usePomodoroStore.getState().tick();
     expect(callback).toHaveBeenCalledOnce();
   });

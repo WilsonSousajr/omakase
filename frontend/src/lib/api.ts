@@ -45,8 +45,9 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    // Don't try to refresh for auth endpoints themselves
-    if (originalRequest.url?.includes("/auth/")) {
+    // Don't try to refresh for unauthenticated auth endpoints
+    const skipRefreshUrls = ["/auth/token/", "/auth/token/refresh/", "/auth/register/"];
+    if (skipRefreshUrls.some((url) => originalRequest.url?.includes(url))) {
       return Promise.reject(error);
     }
 

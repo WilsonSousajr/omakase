@@ -82,7 +82,7 @@ export const usePomodoroStore = create<PomodoroState>((set, get) => ({
       durations,
       pomodorosBeforeLongBreak,
     } = get();
-    if (timeRemaining <= 1) {
+    if (timeRemaining <= 0) {
       const { intervalId } = get();
       if (intervalId) clearInterval(intervalId);
 

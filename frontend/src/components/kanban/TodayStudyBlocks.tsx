@@ -1,17 +1,17 @@
 "use client";
 
 import { useMemo } from "react";
-import { format } from "date-fns";
 import { BookOpen } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useStudyBlocks, useUpdateStudyBlock } from "@/hooks/useStudyBlocks";
 import { useDisciplines } from "@/hooks/useDisciplines";
+import { useToday } from "@/hooks/useToday";
 import { PRIORITIES, STUDY_BLOCK_TYPES } from "@/lib/constants";
 import type { Discipline } from "@/types/discipline";
 
 export default function TodayStudyBlocks() {
   const t = useTranslations("study");
-  const today = format(new Date(), "yyyy-MM-dd");
+  const today = useToday();
   const { data: studyBlocks = [] } = useStudyBlocks({ scheduled_date: today });
   const { data: disciplines = [] } = useDisciplines();
   const updateStudyBlock = useUpdateStudyBlock();

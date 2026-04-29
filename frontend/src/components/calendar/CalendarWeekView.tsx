@@ -95,7 +95,7 @@ export default function CalendarWeekView({ isDragging, onCreateRange }: Calendar
           const dayOccurrences = occurrencesByDate[dayStr] || [];
 
           return (
-            <div key={dayStr} className={`relative flex-1 border-l border-[var(--color-border)]/30 ${isToday ? "bg-white/[0.02]" : ""}`}>
+            <div key={dayStr} className={`relative flex-1 border-l border-[var(--color-border)]/30 ${isToday ? "bg-[var(--color-hover-overlay)]" : ""}`}>
               {/* Day header */}
               <div className="sticky top-0 z-10 flex h-12 flex-col items-center justify-center border-b border-[var(--color-border)] bg-[var(--color-bg)]">
                 <span className={`text-[10px] font-medium uppercase ${
@@ -105,7 +105,7 @@ export default function CalendarWeekView({ isDragging, onCreateRange }: Calendar
                 </span>
                 <span className={`mt-0.5 flex h-6 w-6 items-center justify-center text-xs font-semibold ${
                   isToday
-                    ? "rounded-full bg-white text-black"
+                    ? "rounded-full bg-[var(--color-text-primary)] text-[var(--color-bg)]"
                     : "text-[var(--color-text-muted)]"
                 }`}>
                   {format(day, "d")}

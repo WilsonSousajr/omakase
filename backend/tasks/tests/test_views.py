@@ -181,13 +181,17 @@ class TestTaskViewSet:
         resp = authenticated_client.get("/api/v1/tasks/today/?date=2026-03-08")
         assert resp.data["count"] == 0
 
-    def test_today_with_invalid_date_falls_back(self, authenticated_client, user):
+    def test_today_with_invalid_date_returns_400(self, authenticated_client, user):
+        """Invalid date param must 400 — never silently fall back to server UTC.
+
+        Falling back caused the bug where tasks vanished near midnight when
+        client and server timezones disagreed (see fix 25c7db9).
+        """
         from datetime import date
 
         TaskFactory(scheduled_date=date.today(), user=user)
         resp = authenticated_client.get("/api/v1/tasks/today/?date=not-a-date")
-        assert resp.status_code == status.HTTP_200_OK
-        assert resp.data["count"] == 1
+        assert resp.status_code == status.HTTP_400_BAD_REQUEST
 
     def test_reorder_bulk_success(self, authenticated_client, user):
         t1 = TaskFactory(user=user)
@@ -530,12 +534,18 @@ class TestTaskViewEdgeCases:
         resp = authenticated_client.patch("/api/v1/tasks/reorder-bulk/", payload, format="json")
         assert resp.status_code == status.HTTP_200_OK
 
-    def test_reorder_bulk_nonexistent_ids_ignored(self, authenticated_client):
+    def test_reorder_bulk_nonexistent_ids_returns_400(self, authenticated_client):
+        """Nonexistent task IDs must 400 — never silently no-op.
+
+        Silent no-op masked client/server desync bugs (see fix c870d97).
+        """
+        missing_id = str(uuid.uuid4())
         payload = [
-            {"id": str(uuid.uuid4()), "kanban_order": 0, "kanban_status": "todo"},
+            {"id": missing_id, "kanban_order": 0, "kanban_status": "todo"},
         ]
         resp = authenticated_client.patch("/api/v1/tasks/reorder-bulk/", payload, format="json")
-        assert resp.status_code == status.HTTP_200_OK
+        assert resp.status_code == status.HTTP_400_BAD_REQUEST
+        assert missing_id in resp.data["detail"]
 
 
 @pytest.mark.django_db
