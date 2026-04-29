@@ -420,6 +420,8 @@ Types: feat, fix, test, chore, docs, refactor, ci, style
 - Use `docker-compose` (hyphenated), not `docker compose` (space-separated)
 - `pnpm` is not on PATH — use `npx pnpm` for local frontend commands
 - Backend dev deps installed at runtime (volume mount), not baked into image — run `docker-compose exec backend pip install -r requirements-dev.txt` after container rebuild
+- **Running an isolated worktree's stack alongside other Compose projects**: postgres :5432, frontend :3000, and backend :8000 may already be bound on the host. Create a gitignored `docker-compose.override.yml` in the worktree to remap host ports, and pass `-p <unique-name>` to `docker-compose` so volumes/networks don't collide with the main repo's stack
+- **Compose list-merge semantics — `!override` vs `!reset`**: Compose's default merge strategy *unions* list values, so a base `ports: ["5432:5432"]` plus an override `ports: ["5433:5432"]` gives you BOTH bindings (and one fails). Use `ports: !override` to replace the list, or `ports: !reset` to clear without replacing — they are not the same and silently doing the wrong one wastes time
 
 ## Code Style
 
