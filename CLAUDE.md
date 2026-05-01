@@ -398,6 +398,56 @@ Types: feat, fix, test, chore, docs, refactor, ci, style
 - Use imperative mood ("add", "fix", "update" — not "added", "fixes", "updated")
 - Body is optional but encouraged for non-trivial changes
 
+## GitHub Issues & Project Management
+
+**Roadmap source of truth**: `docs/IDEA.md` is the master vision and feature spec. GitHub Issues represent the implementation plan — one issue per concrete deliverable, organized by phase (see IDEA.md §20).
+
+**Project board**: All issues auto-flow into [project Omakase #11](https://github.com/users/WilsonSousajr/projects/11). Two built-in workflows do the routing:
+- *Auto-add to project* (#7) — adds every new repo issue
+- *Item added to project* (#6) — sets Status field to **Backlog** on add
+
+These built-in workflows are **read-only via the GraphQL API** (`updateProjectV2Workflow` mutation does not exist). Configure them in the project's web UI only. Project IDs for scripted item edits:
+- Project: `PVT_kwHOBTZlyM4BWF0D`
+- Status field: `PVTSSF_lAHOBTZlyM4BWF0DzhRc0uI`
+- Backlog option: `a28a01a9`
+
+**Required label suite** — every new issue MUST be tagged across these categories:
+
+| Category | Cardinality | Labels |
+|---|---|---|
+| **Phase** | 1 (when applicable) | `phase-1` … `phase-6` |
+| **Domain** | 1+ | `backend`, `frontend`, `infra`, `database`, `mobile`, `desktop`, `design`, `integration` |
+| **Type** | 1+ | `enhancement` (default), `bug`, `documentation`, `refactor`, `tech-debt`, `testing`, `performance`, `security`, `accessibility`, `i18n` |
+| **Priority** | exactly 1 | `priority-critical`, `priority-high`, `priority-medium`, `priority-low` |
+| **Effort** | exactly 1 | `effort-xs` (<2h), `effort-s` (½ day), `effort-m` (1-2d), `effort-l` (~1 week), `effort-xl` (multi-week) |
+| **Status** | optional | `blocked`, `needs-design`, `needs-spec` |
+
+**Issue body structure** — every new issue must include each of the following sections. When a section truly doesn't apply, write `N/A — [reason]` rather than omitting silently:
+
+- **Background / Context** — why this exists, link to IDEA.md section
+- **User stories** — "As a [role], I want [X] so that [Y]"
+- **Scope (in)** — bullet list of inclusions
+- **Out of scope** — explicit exclusions
+- **Technical approach** — architecture, file paths, models, components
+- **Data model** — exact field types, constraints, indexes, migration notes
+- **API design** — endpoints, methods, request/response shapes with example JSON
+- **UI/UX notes** — layouts, interactions, edge cases, empty/error states
+- **Edge cases** — boundary conditions, concurrency, timezone gotchas
+- **Acceptance criteria** — testable checklist
+- **Testing strategy** — backend (pytest, factories) + frontend (vitest, MSW)
+- **Dependencies** — blocked-by / blocks references to other issues
+- **References** — IDEA.md sections, design-system.md, similar code
+- **Risks / Migration notes** — data migrations, breaking changes, rollback plan
+- **Open questions** — anything still to decide
+
+**Bulk issue creation**: confirm structure (per-feature vs. mega-issue vs. epic-with-children) before running `gh issue create` in a loop — bulk issue creation affects shared repo state and is hard to undo. After creating many issues, verify with `gh issue list --label <phase>`.
+
+**Useful gh patterns**:
+- Create issue with body via heredoc: `gh issue create --title "..." --label "..." --body "$(cat <<'EOF' ... EOF)"` — single-quoted heredoc prevents shell expansion of backticks and `$` inside markdown bodies
+- Bulk add labels: `gh issue edit <num> --add-label "label1,label2,label3"`
+- Bulk set project status: `gh project item-edit --id <item> --project-id <pid> --field-id <fid> --single-select-option-id <opt>`
+- Inspect project workflows: GraphQL `projectV2.workflows(first: 20) { nodes { id name enabled number } }` (read-only)
+
 ## Testing Gotchas
 
 - **Backend UUID comparison**: DRF responses return UUID objects, not strings — use `str()` when comparing: `str(resp.data["task"]) == str(task.pk)`
@@ -459,6 +509,13 @@ Types: feat, fix, test, chore, docs, refactor, ci, style
 - Prefer small focused modules over god files.
 - Predictable paths: `views/serializers/models` (Django), `app/components/hooks/stores/lib/types` (Next.js).
 
+### Layered architecture
+
+- Views must have almost 0 business logic — all business logic lives inside services.
+- Models must handle only data-related things, entities, etc. (fields, simple `clean()` / `save()` overrides, query helpers — not multi-step orchestration).
+- Backend (Django): keep `views.py` thin (parse → call service → return). Business logic goes in `<app>/services.py` modules; serializers stay focused on shape/validation, not workflow.
+- Frontend (Next.js): components render only. Data fetching and mutations live in `hooks/`; complex domain logic in `lib/` utility modules — never inline in JSX.
+
 ### Formatting
 
 - Use the language default formatter (`ruff format` for Python, `prettier`/Next ESLint for TS/TSX). Don't discuss style beyond that.
@@ -475,5 +532,6 @@ Types: feat, fix, test, chore, docs, refactor, ci, style
 - **Delete plan files after completing a plan** — once a plan is fully implemented, remove the plan file from `docs/plans/`
 - **Always update `docs/design-system.md`** when making any frontend UI/UX changes — keep it current with colors, spacing, typography, component patterns, and design decisions
 - **Always clean up worktrees** — after finishing work on a branch (merged, abandoned, or PR created), immediately remove the worktree with `git worktree remove` or `rm -rf` + `git worktree prune`. Never leave stale worktrees around.
+- **Always apply the full label suite to new GitHub issues** — phase + domain + priority + effort + type, plus the detailed body structure (Background, Scope, Technical approach, Data model, API design, UI/UX, Edge cases, Acceptance criteria, Testing strategy, Dependencies, References, Risks, Open questions). See "GitHub Issues & Project Management" section above.
 
 When I report a bug, don't start by trying to fix it. Instead, start by writing a test that reproduces the bug. Then, have subagents try to fix the bug and prove it with a passing test.
