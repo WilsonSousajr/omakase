@@ -386,6 +386,14 @@ GitHub Actions (`.github/workflows/ci.yml`) runs on push to main and PRs:
 - Always branch from `develop`, always PR back to `develop`
 - Branch names should be descriptive: `feat/pomodoro-timer`, not `feat/stuff`
 
+### Worktrees
+
+- Use `.worktrees/<branch-name>` for isolated feature work — already gitignored at `.gitignore:48`. The Claude Code harness uses a separate `.claude/worktrees/` for its own session worktrees; don't conflate the two
+- Each worktree needs its own `.env` (gitignored, not shared via the worktree mechanism) and its own `frontend/node_modules` (volume-mounted per Compose project) — copy `.env` from the main repo and let the frontend container `pnpm install` on first up
+- **`gh pr merge --merge`, not `--squash`** when a branch has a coherent atomic-commit history — squash collapses the granular commits into one opaque blob, breaking `git blame` and per-commit revertability. `--squash` is only appropriate for noisy WIP branches
+- **Worktree corruption recovery**: If `git worktree add` is killed mid-checkout (interrupt, TaskStop, etc.), the worktree's index ends up out of sync — every file shows as both `D` (deleted from index) and `??` (untracked). Don't try to repair in place; `git worktree remove --force <path>` and recreate
+- **Dry-run merge for stale branches**: `git merge-tree --write-tree <base> <branch>` runs a true three-way merge to a tree object without touching the working tree or any branch. If output contains only `Auto-merging` lines (no `CONFLICT`), the merge is clean. Useful for triaging whether to rebase or merge an old branch before committing to either
+
 ### Commit Message Convention
 
 ```
@@ -414,12 +422,16 @@ Types: feat, fix, test, chore, docs, refactor, ci, style
 - **Frontend localStorage in authStore**: Wrap in try-catch — `loadTokens()` runs at module init time when localStorage may not be available
 - **Frontend SSR hydration + localStorage**: Components that read localStorage-backed Zustand state (e.g. `isAuthenticated`) must use a `hasMounted` gate (`useState(false)` + `useEffect` → `true`) to avoid hydration mismatch — server sees `null`, client sees stored value
 - **Timezone mismatch (Docker UTC)**: Backend runs in Docker (UTC). Never rely on server-side `date.today()` for user-facing "today" logic — always send the client's local date as a query param. The `/tasks/today/?date=` endpoint was added to fix tasks not showing in focus mode near midnight
+- **Vitest parallel JSON-import race**: Running the full frontend suite (~70+ files) can intermittently fail with `SyntaxError: messages/en.json: Unexpected end of JSON input` when multiple workers `require()` the shared `messages/en.json` simultaneously from `setup.ts`. The same files pass when run individually. Rerun with `npx vitest run --pool=forks` to serialize the import and get a clean signal — don't assume the JSON is corrupted
+- **Behavior-change commits MUST update their tests in the same commit**: When tightening an API contract (e.g. making a query param required, returning 400 instead of a silent fallback), update the corresponding tests in the same commit. Stale tests that assert the old behavior will sit on a long-lived branch undetected and only break CI after a rebase/merge — and the fix becomes a separate "test catch-up" commit that loses the connection to the behavior change. This is the same hygiene as bug-fix tests, applied to behavior changes
 
 ## Local Environment Notes
 
 - Use `docker-compose` (hyphenated), not `docker compose` (space-separated)
 - `pnpm` is not on PATH — use `npx pnpm` for local frontend commands
 - Backend dev deps installed at runtime (volume mount), not baked into image — run `docker-compose exec backend pip install -r requirements-dev.txt` after container rebuild
+- **Running an isolated worktree's stack alongside other Compose projects**: postgres :5432, frontend :3000, and backend :8000 may already be bound on the host. Create a gitignored `docker-compose.override.yml` in the worktree to remap host ports, and pass `-p <unique-name>` to `docker-compose` so volumes/networks don't collide with the main repo's stack
+- **Compose list-merge semantics — `!override` vs `!reset`**: Compose's default merge strategy *unions* list values, so a base `ports: ["5432:5432"]` plus an override `ports: ["5433:5432"]` gives you BOTH bindings (and one fails). Use `ports: !override` to replace the list, or `ports: !reset` to clear without replacing — they are not the same and silently doing the wrong one wastes time
 
 ## Code Style
 
