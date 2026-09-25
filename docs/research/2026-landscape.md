@@ -408,10 +408,197 @@ first feature and stopped below its loop.
   on "small and mid-sized businesses"
   ([blog, 2025-09-08](https://www.usemotion.com/blog/motion-raises-60m-to-build-the-agentic-work-suite-for-businesses)).
 
-## 4-6. Developments, recommendations, sources
+## 4. Developments worth knowing
 
-Follow in #110, after the deep dives (#107) and the tracker mining (#108)
-they depend on.
+### 4.1 Planning by conversation arrived through the platforms, not the planners
+
+In the eight weeks before this capture, all three first parties shipped an
+assistant that can act on a calendar. The Gemini agent files to-dos into
+Google Tasks and finds meeting times, in English and on paid plans
+([Workspace updates, 2026-09](https://workspaceupdates.googleblog.com/2026/09/create-content-schedule-events-and-coordinate-tasks-across-Workspace-regardless-of-what-app-you-are-in.html)).
+Notion Agent got calendar tools on 2026-07-16
+([release](https://www.notion.com/releases/2026-07-16)). Siri AI can
+create a reminder, in beta, in English, not yet in the EU (§3.1). None of
+them plans a day. What they do is capture: turn a sentence into a task or
+an event. That is IDEA §17's quick-capture inbox, arriving free on the
+user's phone.
+
+### 4.2 Auto-scheduling for one person is receding
+
+Reclaim 2.0 replaced per-task auto-placement with "recommend 3-5 tasks"
+and a Preview Mode ([tasks overview](https://help.reclaim.ai/en/articles/16558552-reclaim-2-0-tasks-overview)).
+Motion's funding post turns it toward "small and mid-sized businesses" and
+an "agentic work suite"
+([blog, 2025-09-08](https://www.usemotion.com/blog/motion-raises-60m-to-build-the-agentic-work-suite-for-businesses)),
+and its iPhone app has not been updated since 2025-11-27. Amie became a
+note taker. The camp that bet on the software placing a single person's
+blocks is, on the vendors' own pages, either retreating to suggestions or
+leaving for teams. Motion's users' top complaints are billing, price, and
+schedule churn ([`issues-motion.md`](issues-motion.md)).
+
+### 4.3 Electron is being walked away from, by the people who chose it
+
+Lunatask's FAQ announces that Lunatask 3 "will decouple the app and its
+codebase from technologies such as Electron"
+([FAQ](https://lunatask.app/docs/common-questions)). OmniFocus 4 was
+rebuilt in SwiftUI ([manual](https://support.omnigroup.com/documentation/omnifocus/universal/4.3.3/en/welcome-to-omnifocus/)),
+and Things rebuilt its sync server in Swift
+([blog](https://culturedcode.com/things/blog/2025/05/a-swift-cloud/)). Sunsama,
+Motion, Notion and Super Productivity still ship Electron, and Super
+Productivity's largest mobile bug cluster is WebView storage and
+performance ([`issues-super-productivity.md`](issues-super-productivity.md)).
+Omakase's native client is on the side the field is moving to.
+
+### 4.4 Planners are exposing themselves to agents
+
+Sunsama ships an MCP server in place of the public API its users have
+asked for since 2019 ([MCP](https://help.sunsama.com/docs/integrations/mcp),
+[`issues-sunsama.md`](issues-sunsama.md)). Ellie's 2026-08-23 release
+names MCP ([changelog](https://feedback.ellieplanner.com/changelog)).
+Reclaim 2.0 is reachable from ChatGPT, Claude and Cursor
+([overview](https://help.reclaim.ai/en/articles/14846468-reclaim-ai-2-0-overview)),
+and the small open-source `ShadowWalker2014/open-sunsama` leads with "a
+daily planner ... that Claude and ChatGPT can use". Omakase is an API
+before it is anything else; this is recorded, not recommended.
+
+### 4.5 The platform moved a version
+
+iOS 27 and macOS 27 shipped on 2026-09-14 (§3.1). Omakase's Mac client
+targets macOS 26 in `apps/apple/project.yml` and its packages'
+`Package.swift`.
+
+## 5. What this means for Omakase - analysis and recommendations
+
+Inputs to `docs/ROADMAP.md`, which accepts or refuses each in the open
+(#105). Each names its evidence. Sizes are rough: small is a slice, medium
+is a few slices, large is a milestone.
+
+**R1 - Ship the loop before widening it (no new scope; an ordering
+argument).** The only square no competitor holds is work and study on one
+timeline, worked and closed out (§2). Omakase holds it in the API and in
+no client: its row in the feature table reads "API only" in every column
+that matters. Every feature below is worth less than M3 and M4 shipping,
+because until they do there is nothing for a user to switch to.
+
+**R2 - Recurring tasks, computed on the server (medium).** The one need
+asked for in all five venues that Omakase lacks entirely
+([`issues-synthesis.md`](issues-synthesis.md) §1). In Super Productivity
+the bugs come from how repeats are materialised: each client creates
+instances and they duplicate, and a missed day-change trigger skips them
+([#6230](https://github.com/super-productivity/super-productivity/issues/6230)). Omakase already has the
+pattern that avoids both: class occurrences are computed per request from
+a rule and never stored (`study/class-occurrences/`). Promised in IDEA §2.
+
+**R3 - A class timetable that survives a real term (small, then medium).**
+The student planners' users report classes that move after a clock change
+(MyStudyLife reviews; Power Planner #73, #90, #127) and holidays that do
+not suppress classes ([`issues-mystudylife.md`](issues-mystudylife.md)).
+Omakase's `ClassSchedule` has a weekday and times only. The small part is a
+test that pins class occurrences across a daylight-saving change, which no
+test does today. The medium part is what every student planner has and
+Omakase does not: holidays and cancelled occurrences (promised IDEA §3)
+and Week A/B rotation (MyStudyLife, Power Planner).
+
+**R4 - A workload check in the morning plan, as a warning (medium).**
+Three products compute the same number three ways: Sunsama's workload
+threshold with a projected finish time
+([daily planning](https://help.sunsama.com/docs/usage-guides/daily-planning/)),
+Motion's capacity (work hours minus events minus remaining task time,
+[capacity planning](https://www.usemotion.com/help/project-management/capacity-planning.md)),
+and Shovel's Time Cushion (study time available minus time needed,
+[`mystudylife.md`](mystudylife.md) §Shovel). Omakase has the inputs in the
+API (`estimated_minutes` on tasks and study blocks, the profile's daily
+work and study goal hours, class occurrences). Shown as a warning on a
+plan the user placed, it borrows the useful half of auto-scheduling
+without the churn users complain about (§4.2). IDEA §6 promises a
+workload check; this gives it a formula.
+
+**R5 - A reminder model in the API before notifications ship (medium).**
+Reminders are asked for in four venues
+([`issues-synthesis.md`](issues-synthesis.md) §4). M3 plans notifications
+on the Mac; iOS is later. A reminder defined per client has to be defined
+again, differently, on every client that follows, which is the platform
+drift users report in five venues (§2 there). Decided once in the API,
+each client only schedules what the server says.
+
+**R6 - Lead with the square, not with timeboxing (small).** Timeboxing is
+free in Google Calendar (§3.1) and in twelve of fourteen planners (§2);
+the student price is the norm. Any public description of Omakase that
+leads with "time blocks on a calendar" describes the floor. The claim
+that survives this file is narrower: a class timetable, study blocks and
+work tasks on one day, worked in the same timer and closed in the same
+review.
+
+**R7 - Decide the macOS target on purpose (small).** macOS 27 is current
+(§4.5). Whether 26 remains the floor is a decision with a cost either way
+(the author's own machine, Liquid Glass APIs, users on 26), and today it is
+an inherited default, not a decision.
+
+**R8 - Make the three signals users already asked for visible in M3
+(small).** They are in the API and cost little to show:
+- carried-over tasks marked as such (Sunsama's post, 609 votes, complete,
+  [`issues-sunsama.md`](issues-sunsama.md));
+- the plan date apart from the deadline (`scheduled_date`, `due_date`;
+  asked for in TickTick's and Super Productivity's venues);
+- focus sessions drawn on the calendar beside the planned block
+  (TickTick's "Show Focus Records",
+  [calendar settings](https://help.ticktick.com/articles/7055782085826445312)),
+  which is the plan-against-actual view Sunsama's users ask for with 402
+  votes.
+
+**R9 - Re-examine "iOS later" against the evidence (large; evaluate
+first).** A phone app at parity is asked for in all five venues, and
+Shovel and Motion both lose users over a weak one. The Mac-first order in
+`docs/ROADMAP.md` was set for the author's daily use; the field says the
+phone is where reminders fire and capture happens (§4.1). This is not a
+case for changing the order now, only for making the order argue with
+this evidence.
+
+**R10 - Borrow the finish-day evaluation (small).** Super Productivity's
+finish-day records impact of work (1-4), an energy check-in (1-3) and a
+reflection (`src/app/features/metric/evaluation-sheet/` at `a76c1bc`).
+Omakase's daily review has a 1-5 productivity rating and a win of the day
+(`stats/reviews/`), and IDEA §13 promises energy mapping with no source of
+energy data. One field on the review is that source.
+
+**Deliberately not recommended:**
+
+- **Auto-scheduling.** The camp is retreating from it for individuals
+  (§4.2), its users' complaints are churn and control, and Omakase's
+  morning plan already suggests and lets the user place.
+- **An AI chat planner.** Every platform shipped one this quarter (§4.1).
+  Competing with the calendar owners on capture by sentence is a fight
+  Omakase cannot win and does not need.
+- **Grades and GPA now.** Loud in exactly one venue (MyStudyLife and Power
+  Planner users), promised in IDEA §3, and not part of the square.
+  Recorded for the study milestone, not for M3.
+- **Habits and streak gamification.** One venue (Sunsama, 654 voters) and
+  a camp of its own (Lunatask, TickTick). Not the job.
+- **Pricing work.** Omakase has no distribution (no App Store, no
+  TestFlight, by the Mac spec). A price is a question for after M6.
+
+## 6. Sources
+
+This file's rows cite their primary pages inline. The evidence behind §4
+and §5 is in the per-product documents, each with its own sources list:
+
+- Deep dives (#107): [`ticktick.md`](ticktick.md), [`sunsama.md`](sunsama.md),
+  [`super-productivity.md`](super-productivity.md) (code at `a76c1bc`),
+  [`mystudylife.md`](mystudylife.md) (with Power Planner and Shovel),
+  [`motion.md`](motion.md) (with Reclaim).
+- Mining (#108): [`issues-ticktick.md`](issues-ticktick.md),
+  [`issues-sunsama.md`](issues-sunsama.md),
+  [`issues-super-productivity.md`](issues-super-productivity.md),
+  [`issues-mystudylife.md`](issues-mystudylife.md),
+  [`issues-motion.md`](issues-motion.md), and the cross-venue
+  [`issues-synthesis.md`](issues-synthesis.md).
+- First party: Apple's newsroom post of 2026-09-14, the Calendar and
+  Reminders guides, Google's Workspace updates of 2025-11-17 and 2026-09,
+  Notion's releases of 2025-08-19 and 2026-07-16, all linked in §3.1.
+- Omakase: `develop` at `51abb80` - `backend/*/urls.py`,
+  `backend/omakase/client_dates.py`,
+  `apps/apple/Packages/OmakaseFeatures/Sources/OmakaseFeatures/`,
+  `apps/apple/project.yml`, `docs/IDEA.md`, `docs/ROADMAP.md`.
 
 ## Reproducing the table
 
