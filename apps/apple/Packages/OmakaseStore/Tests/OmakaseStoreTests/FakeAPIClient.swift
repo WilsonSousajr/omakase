@@ -20,6 +20,7 @@ actor FakeAPIClient: APIClient {
     func signIn(googleIDToken: String) async throws -> UserDTO { throw APIError.signedOut }
     func me() async throws -> UserDTO { throw APIError.signedOut }
     func signOut() async {}
+    func hasStoredSession() async -> Bool { true }
 
     func tasks(on day: APIDay) async throws -> [TaskDTO] { tasksByDay[day.string] ?? [] }
 
