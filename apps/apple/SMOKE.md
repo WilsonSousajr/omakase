@@ -22,6 +22,9 @@ the milestone's closing PR.
 2. `docker-compose stop backend`. Today still shows them.
 3. Check one task complete. It shows completed. Quit and relaunch the app:
    it's still completed.
+3b. Quit the app, and relaunch it with the backend still stopped. Today
+    shows the cached tasks, not the sign-in screen. Stored tokens decide
+    whether you're signed in; only the server saying otherwise signs you out.
 4. `docker-compose start backend`. Within seconds (reachability) or 5
    minutes (the timer), the server has it:
    `curl -H "Authorization: Bearer <token>" "localhost:8000/api/v1/tasks/today/?date=<today>"`
