@@ -179,8 +179,9 @@ before the PR says it works.
    runs in UTC. `date.today()` on the server is a different date for part of
    every day in every other timezone, and native clients are in the user's
    timezone by definition (#65). ruff's `DTZ` rules reject a naive
-   `date.today()` or `datetime.now()` in production code; #69 gives the
-   parsing of `?date=` one owner.
+   `date.today()` or `datetime.now()` in production code.
+   `omakase/client_dates.parse_client_date` is the only parser; it accepts
+   `YYYY-MM-DD` and nothing else.
 3. **Anything that can be a 400 is rejected in the serializer**, before a
    database constraint turns it into a 500. The constraint stays as the
    safety net (TimeBlock: `end_time > start_time`; exactly one of `task` and
