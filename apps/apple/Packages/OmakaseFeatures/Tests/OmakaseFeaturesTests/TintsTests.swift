@@ -7,7 +7,7 @@ struct TintsTests {
     @Test func eachTimerPhaseHasItsOwnTint() {
         #expect(TimerPhase.focus.tint == Palette.shu)
         #expect(TimerPhase.shortBreak.tint == Palette.matcha)
-        #expect(TimerPhase.longBreak.tint == Palette.ai)
+        #expect(TimerPhase.longBreak.tint == Palette.indigo)
     }
 
     @Test func knownPrioritiesMapToTheirMarks() {
@@ -23,7 +23,7 @@ struct TintsTests {
     }
 
     @Test func scalesAreOnTheFourPointGrid() {
-        let steps = [Spacing.xs, Spacing.s, Spacing.m, Spacing.l, Spacing.xl, Spacing.xxl]
+        let steps = [Spacing.tiny, Spacing.small, Spacing.medium, Spacing.large, Spacing.xLarge, Spacing.xxLarge]
         #expect(steps == [4, 8, 12, 16, 24, 32])
         #expect([Radius.small, Radius.medium, Radius.large] == [8, 12, 16])
         #expect(WindowSize.minimum == CGSize(width: 520, height: 420))
@@ -34,5 +34,11 @@ struct TintsTests {
         #expect(Set(fonts).count == fonts.count)
         #expect(TypeScale.sectionLabel != TypeScale.caption)
         #expect(TypeScale.displayTracking > TypeScale.sectionLabelTracking)
+    }
+
+    @Test @MainActor func sectionLabelIsUppercasedAndMuted() {
+        let label = String(describing: Text("Today").sectionLabel())
+        #expect(label.contains("uppercase"))
+        #expect(label.contains("customDynamic"))
     }
 }
