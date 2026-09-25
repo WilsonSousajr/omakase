@@ -8,6 +8,8 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from omakase.client_dates import parse_client_date
+
 from .models import ClassSchedule, Discipline, Semester, StudyBlock
 from .serializers import (
     ClassOccurrenceSerializer,
@@ -93,19 +95,7 @@ class StudyBlockViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=["get"], url_path="carried-over")
     def carried_over(self, request):
-        date_str = request.query_params.get("date")
-        if not date_str:
-            return Response(
-                {"detail": "date param required."},
-                status=400,
-            )
-        try:
-            target_date = datetime.date.fromisoformat(date_str)
-        except ValueError:
-            return Response(
-                {"detail": "Invalid date format."},
-                status=400,
-            )
+        target_date = parse_client_date(request.query_params.get("date"))
         blocks = self.get_queryset().filter(scheduled_date__lt=target_date).exclude(status__in=["completed", "skipped"])
         serializer = self.get_serializer(blocks, many=True)
         return Response(serializer.data)
@@ -141,23 +131,8 @@ class ClassOccurrenceView(APIView):
     """Compute virtual class occurrences for a date range."""
 
     def get(self, request):
-        date_from = request.query_params.get("date_from")
-        date_to = request.query_params.get("date_to")
-
-        if not date_from or not date_to:
-            return Response(
-                {"detail": "date_from and date_to query parameters are required."},
-                status=400,
-            )
-
-        try:
-            start = datetime.date.fromisoformat(date_from)
-            end = datetime.date.fromisoformat(date_to)
-        except ValueError:
-            return Response(
-                {"detail": "Invalid date format. Use YYYY-MM-DD."},
-                status=400,
-            )
+        start = parse_client_date(request.query_params.get("date_from"), name="date_from")
+        end = parse_client_date(request.query_params.get("date_to"), name="date_to")
 
         if end < start:
             return Response(

@@ -7,6 +7,7 @@ from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from omakase.client_dates import parse_client_date
 from pomodoro.models import PomodoroSession
 from study.models import StudyBlock
 from tasks.models import Task, TimeBlock
@@ -18,20 +19,7 @@ from .serializers import DailyReviewSerializer
 class DailyStatsView(APIView):
     def get(self, request):
         user = request.user
-        date_str = request.query_params.get("date")
-        if date_str:
-            try:
-                today = datetime.date.fromisoformat(date_str)
-            except ValueError:
-                return Response(
-                    {"detail": "Invalid date format."},
-                    status=400,
-                )
-        else:
-            return Response(
-                {"detail": "date query parameter is required."},
-                status=400,
-            )
+        today = parse_client_date(request.query_params.get("date"))
         week_start = today - datetime.timedelta(days=today.weekday())
 
         hours_focused_today = self._hours_focused_today(user, today)
@@ -116,20 +104,7 @@ class ReviewSummaryView(APIView):
     """Aggregate review data for a given date."""
 
     def get(self, request):
-        date_str = request.query_params.get("date")
-        if not date_str:
-            return Response(
-                {"detail": "date query parameter is required."},
-                status=400,
-            )
-
-        try:
-            review_date = datetime.date.fromisoformat(date_str)
-        except ValueError:
-            return Response(
-                {"detail": "Invalid date format. Use YYYY-MM-DD."},
-                status=400,
-            )
+        review_date = parse_client_date(request.query_params.get("date"))
 
         user = request.user
 
