@@ -197,6 +197,12 @@ class TestTaskViewSet:
         assert resp.status_code == status.HTTP_400_BAD_REQUEST
         assert "date" in resp.data["detail"]
 
+    def test_today_rejects_basic_iso_form_issue69(self, authenticated_client, user):
+        """fromisoformat accepted 20260307; the contract is YYYY-MM-DD (#69)."""
+        TaskFactory(scheduled_date=datetime.date(2026, 3, 7), user=user)
+        resp = authenticated_client.get("/api/v1/tasks/today/?date=20260307")
+        assert resp.status_code == status.HTTP_400_BAD_REQUEST
+
     def test_reorder_bulk_success(self, authenticated_client, user):
         t1 = TaskFactory(user=user)
         t2 = TaskFactory(user=user)
