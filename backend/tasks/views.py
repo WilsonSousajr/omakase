@@ -171,7 +171,9 @@ class SubtaskViewSet(viewsets.ModelViewSet):
                 user=self.request.user,
             )
         except Task.DoesNotExist:
-            raise PermissionDenied("You do not own this task.")
+            # from None: the lookup failure is the whole story, and chaining it
+            # would say whether the task exists for another user.
+            raise PermissionDenied("You do not own this task.") from None
         serializer.save(task=task)
 
 

@@ -123,6 +123,12 @@ class StudyBlock(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return self.title
+
     def save(self, *args, **kwargs):
         from django.utils import timezone
 
@@ -169,12 +175,6 @@ class StudyBlock(models.Model):
             self.completed_at = None
 
         super().save(*args, **kwargs)
-
-    class Meta:
-        ordering = ["-created_at"]
-
-    def __str__(self):
-        return self.title
 
 
 class ClassSchedule(models.Model):
