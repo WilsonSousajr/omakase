@@ -16,6 +16,14 @@ for each milestone.
   Django REST Framework 3.16.0 → 3.17.2, simplejwt 5.4.0 → 5.5.1 - the first
   fixed release of each, found by `pip-audit`. (#64)
 
+### Fixed
+
+- **`/tasks/today/` requires `?date=`.** Without it the endpoint answered for
+  the server's UTC day, which for a client west of UTC is tomorrow from
+  evening on. It now returns 400 `date param required.`, like
+  `/tasks/carried-over/`. **Breaking** for any client that omitted the date.
+  (#65)
+
 ### Removed
 
 - **The Next.js web client.** The repository is the API alone until the
