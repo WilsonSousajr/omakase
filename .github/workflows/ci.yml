@@ -56,7 +56,7 @@ jobs:
       - run: ruff check .
       - run: ruff format --check .
       - run: python manage.py migrate --noinput
-      - run: pytest --cov --cov-report=term-missing --cov-fail-under=60
+      - run: pytest --cov --cov-report=term-missing --cov-fail-under=90
 
   docker-build:
     runs-on: ubuntu-latest

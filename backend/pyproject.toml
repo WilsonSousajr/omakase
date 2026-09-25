@@ -6,8 +6,18 @@ python_functions = ["test_*"]
 addopts = "--tb=short -q"
 
 [tool.coverage.run]
-source = ["accounts", "tasks", "pomodoro"]
-omit = ["*/migrations/*", "*/admin.py"]
+# Every app, not a subset: listing three of six made the gate report 99%
+# while study and stats went unmeasured (#66). Tests, migrations and
+# framework boilerplate are not production code, so they stay out of it.
+source = ["accounts", "tasks", "pomodoro", "study", "stats", "omakase"]
+omit = [
+    "*/migrations/*",
+    "*/tests/*",
+    "*/admin.py",
+    "*/apps.py",
+    "omakase/wsgi.py",
+    "omakase/asgi.py",
+]
 
 [tool.ruff]
 target-version = "py312"
