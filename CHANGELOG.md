@@ -1,0 +1,24 @@
+# Changelog
+
+Notable changes to Omakase. The format follows
+[Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow
+[semantic versioning](https://semver.org/spec/v2.0.0.html). Below 1.0 the API
+is not frozen, and a breaking API change is a minor bump.
+
+Each entry names the issues behind it. `docs/ROADMAP.md` carries the reasoning
+for each milestone.
+
+## [Unreleased]
+
+### Removed
+
+- **The Next.js web client.** The repository is the API alone until the
+  native macOS client. The compose service, CI jobs, pre-commit hook and env
+  vars went with it. (#62)
+
+### Changed
+
+- **One agent instruction file.** `AGENTS.md` is canonical and `CLAUDE.md`
+  imports it. Descriptions moved to `docs/ARCHITECTURE.md`, and commits,
+  issues and PRs follow the `type(#N): message` convention. From a prompt
+  audit recorded in `docs/audits/2026-09-24-prompt-audit.md`. (#63)
