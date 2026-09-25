@@ -23,8 +23,20 @@ public enum OmakaseJSON {
         let encoder = JSONEncoder()
         encoder.keyEncodingStrategy = .convertToSnakeCase
         encoder.outputFormatting = .sortedKeys
+        // ISO-8601 in UTC with milliseconds, the shape the decoder and DRF
+        // accept. Without it Foundation writes seconds since 2001 (#90).
+        encoder.dateEncodingStrategy = .custom { date, encoder in
+            var container = encoder.singleValueContainer()
+            try container.encode(formatDatetime(date))
+        }
         return encoder
     }()
+
+    static func formatDatetime(_ date: Date) -> String {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return formatter.string(from: date)
+    }
 
     /// Truncates the fraction to milliseconds, then parses: ISO8601DateFormatter
     /// does not accept six fractional digits on every OS version.

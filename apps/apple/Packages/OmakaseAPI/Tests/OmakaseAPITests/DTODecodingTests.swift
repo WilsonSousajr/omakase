@@ -58,4 +58,14 @@ struct DTODecodingTests {
         let data = try OmakaseJSON.encoder.encode(Body(isCompleted: true, codeVerifier: "v"))
         #expect(String(bytes: data, encoding: .utf8) == #"{"code_verifier":"v","is_completed":true}"#)
     }
+
+    @Test func datesEncodeAsISO8601AndRoundTripIssue90() throws {
+        // The encoder had no date strategy, so Foundation wrote seconds since
+        // 2001 (-978307200) - which the decoder, and DRF, reject (#90).
+        let instant = Date(timeIntervalSince1970: 1_772_884_800.123)
+        let data = try OmakaseJSON.encoder.encode(["started_at": instant])
+        #expect(String(bytes: data, encoding: .utf8) == #"{"started_at":"2026-03-07T12:00:00.123Z"}"#)
+        let back = try OmakaseJSON.decoder.decode([String: Date].self, from: data)
+        #expect(abs((back["started_at"] ?? .distantPast).timeIntervalSince(instant)) < 0.001)
+    }
 }
