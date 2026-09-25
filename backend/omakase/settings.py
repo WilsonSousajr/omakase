@@ -1,4 +1,5 @@
 import os
+from collections.abc import Mapping
 from datetime import timedelta
 from pathlib import Path
 
@@ -65,7 +66,19 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "omakase.wsgi.application"
 
-GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "")
+
+def google_client_ids(environ: Mapping[str, str]) -> list[str]:
+    """Every OAuth client whose Google ID tokens this API accepts (#76).
+
+    GOOGLE_CLIENT_IDS is comma-separated: web, macOS, later iOS. The single
+    GOOGLE_CLIENT_ID is still read for one release, so an unchanged .env on
+    the VPS keeps working. Usage: ``google_client_ids(os.environ)``.
+    """
+    raw = environ.get("GOOGLE_CLIENT_IDS") or environ.get("GOOGLE_CLIENT_ID", "")
+    return [client.strip() for client in raw.split(",") if client.strip()]
+
+
+GOOGLE_CLIENT_IDS = google_client_ids(os.environ)
 
 DATABASE_URL = os.environ.get("DATABASE_URL")
 if not DATABASE_URL:
