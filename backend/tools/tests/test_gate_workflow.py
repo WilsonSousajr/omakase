@@ -106,3 +106,38 @@ class TestPins:
         hook_rev = next(repo["rev"] for repo in hooks if "ruff" in repo["repo"]).lstrip("v")
         pinned = re.search(r"^ruff==(\S+)", (BACKEND / "requirements-dev.txt").read_text(), re.M).group(1)
         assert hook_rev == pinned, f"pre-commit runs ruff {hook_rev}, the gate runs {pinned}"
+
+
+APPLE_GATE_SCRIPT = REPO / "apps" / "apple" / "gate.sh"
+APPLE_SETUP = ("sudo xcode-select", "./install-tools.sh")
+
+
+def _apple_ci_steps() -> list[str]:
+    steps = yaml.safe_load(WORKFLOW.read_text())["jobs"]["apple-gate"]["steps"]
+    runs = [step["run"].strip() for step in steps if "run" in step]
+    return [run for run in runs if not run.startswith(APPLE_SETUP)]
+
+
+def _apple_script_steps() -> list[str]:
+    lines = [line.strip() for line in APPLE_GATE_SCRIPT.read_text().splitlines()]
+    return [line for line in lines if line and not line.startswith(("#", "set ", "cd "))]
+
+
+class TestTheAppleGateIsTheCIAppleGate:
+    def test_gate_sh_runs_exactly_the_ci_steps_in_the_same_order(self):
+        assert _apple_script_steps() == _apple_ci_steps()
+
+    def test_cheap_checks_run_before_the_tests(self):
+        steps = _apple_ci_steps()
+        tests = _index_of(steps, "./test-packages.sh")
+        for cheap in ("swift format lint", "swiftlint lint", "./check-layers.sh"):
+            assert _index_of(steps, cheap) < tests
+
+    def test_tools_are_pinned_exactly(self):
+        pins = dict(
+            line.split("=", 1)
+            for line in (REPO / "apps/apple/tools.env").read_text().splitlines()
+            if line and not line.startswith("#")
+        )
+        for tool in ("XCODE_VERSION", "SWIFTLINT_VERSION", "XCODEGEN_VERSION"):
+            assert re.fullmatch(r"\d+(\.\d+)+", pins[tool]), f"{tool}={pins.get(tool)!r} is not an exact version"

@@ -92,3 +92,21 @@ jobs:
         run: docker build --target prod -t omakase-backend:prod ./backend
         env:
           DJANGO_SECRET_KEY: build-only-not-runtime
+
+  # The Apple gate (apps/apple/gate.sh), same steps in the same order. Tools
+  # are pinned in apps/apple/tools.env; the runner's Xcode is selected exactly.
+  apple-gate:
+    runs-on: macos-26
+    defaults:
+      run:
+        working-directory: apps/apple
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo xcode-select -s "/Applications/Xcode_$(grep XCODE_VERSION tools.env | cut -d= -f2).app"
+      - run: ./install-tools.sh && echo "$PWD/.tools/bin" >> "$GITHUB_PATH"
+      - run: swift format lint --strict --recursive Packages OmakaseMac
+      - run: swiftlint lint --strict --quiet
+      - run: ./check-layers.sh
+      - run: ./test-packages.sh
+      - run: xcodegen generate --quiet
+      - run: xcodebuild -project Omakase.xcodeproj -scheme OmakaseMac -destination platform=macOS CODE_SIGNING_ALLOWED=NO -quiet build

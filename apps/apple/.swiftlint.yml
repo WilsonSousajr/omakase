@@ -1,0 +1,14 @@
+# Limits are the targets from the start: this code is born under the gate
+# (spec, Testing and the Apple gate). --strict makes every warning fail.
+included: [Packages, OmakaseMac]
+excluded: [Packages/OmakaseAPI/.build, Packages/OmakaseStore/.build, Packages/OmakaseFeatures/.build, .tools]
+disabled_rules: [trailing_comma]  # swift-format owns commas
+function_body_length: {warning: 20, error: 40}
+cyclomatic_complexity: {warning: 10, error: 20}
+nesting: {type_level: 2, function_level: 2}
+file_length: {warning: 500, error: 800}
+custom_rules:
+  no_print:
+    regex: '\bprint\('
+    message: "Logging only (AGENTS.md Logging): use Logger, never print"
+    severity: warning
