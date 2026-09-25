@@ -61,6 +61,7 @@ jobs:
       - run: pip install -r requirements.txt -r requirements-dev.txt
       - run: ruff check .
       - run: ruff format --check .
+      - run: lint-imports
       - run: python manage.py migrate --noinput
       - run: pytest --cov --cov-report=term-missing --cov-fail-under=90
 

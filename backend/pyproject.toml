@@ -53,3 +53,32 @@ max-complexity = 14   # target 10
 [tool.ruff.lint.pylint]
 max-branches = 16     # target 12
 max-statements = 41   # target 15
+
+# Architecture that was prose, as contracts (#66). The Python counterpart of
+# omatty's depguard: each one fails the gate if the code stops matching it.
+[tool.importlinter]
+root_packages = ["accounts", "tasks", "pomodoro", "study", "stats", "omakase"]
+include_external_packages = true
+
+[[tool.importlinter.contracts]]
+name = "Each app layers urls > views > serializers > models"
+type = "layers"
+layers = ["urls", "views", "serializers", "models"]
+containers = ["accounts", "tasks", "pomodoro", "study", "stats"]
+
+[[tool.importlinter.contracts]]
+name = "google-auth is reached only from accounts"
+type = "forbidden"
+source_modules = ["tasks", "pomodoro", "study", "stats", "omakase"]
+forbidden_modules = ["google"]
+
+[[tool.importlinter.contracts]]
+name = "Only stats reads other apps; the rest are independent"
+type = "independence"
+modules = ["accounts", "tasks", "pomodoro", "study"]
+
+[[tool.importlinter.contracts]]
+name = "Nothing reads stats"
+type = "forbidden"
+source_modules = ["accounts", "tasks", "pomodoro", "study"]
+forbidden_modules = ["stats"]
