@@ -296,6 +296,18 @@ commit message and explain why the behaviour it asserted was never correct.
 - **Merge with `gh pr merge --merge`**, never `--squash`, for an atomic
   history. Squashing collapses the commits and breaks per-commit `git blame`
   and revert.
+- **Stacked PRs merge parent first, in this order:**
+  1. `gh pr merge <parent> --merge`, **without** `--delete-branch`.
+  2. `gh pr edit <child> --base develop`.
+  3. `git push origin --delete <parent-branch>`.
+  4. `gh pr close <child> && gh pr reopen <child>`, then wait for green.
+
+  GitHub retargets a child PR only when its own auto-delete setting removes
+  the base branch. When a person or `gh --delete-branch` deletes it, the
+  child is **closed**, and it can't be reopened until the branch is pushed
+  back (#74). Step 4 is needed because a retarget is an `edited` event, which
+  doesn't trigger CI, so the checks shown are from the old base until the PR
+  is reopened.
 - **Bulk issue creation, relabelling or board edits affect shared state and
   are hard to undo.** Confirm the structure before looping `gh`.
 
