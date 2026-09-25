@@ -8,3 +8,4 @@ import-linter==2.15
 pip-audit==2.10.1
 radon==6.0.1
 complexipy==8.0.1
+PyYAML==6.0.3

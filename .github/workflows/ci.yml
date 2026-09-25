@@ -25,7 +25,9 @@ jobs:
         with:
           dockerfile: backend/Dockerfile
 
-  backend:
+  # Named as in omatty. Required status checks on protected branches refer to
+  # it by this name, so renaming it is a branch-protection change too.
+  gate:
     runs-on: ubuntu-latest
     services:
       postgres:
