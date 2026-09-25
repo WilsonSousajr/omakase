@@ -69,4 +69,13 @@ struct APIClientTests {
         let (api, _) = client(transport)
         await #expect(throws: APIError.self) { try await api.me() }
     }
+
+    @Test func aStoredSessionIsKnownWithoutTheNetwork() async {
+        // Review finding C1: deciding "signed in" with me() showed the
+        // sign-in screen whenever the backend was unreachable.
+        let offline = FakeHTTPTransport([])
+        #expect(await client(offline).0.hasStoredSession())
+        #expect(await client(offline, tokens: nil).0.hasStoredSession() == false)
+        #expect(await offline.sent.isEmpty)
+    }
 }

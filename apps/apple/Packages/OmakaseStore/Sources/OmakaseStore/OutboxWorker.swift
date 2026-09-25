@@ -17,6 +17,10 @@ public final class OutboxWorker {
     private let api: any APIClient
     private let clock: () -> Date
     private let onAccepted: (OutboxEntry, Data) -> Void
+    /// The drain in progress, if any. A second caller awaits it rather than
+    /// starting another: drain() suspends at send() with the entry still
+    /// pending, so two drains would send it twice (review finding C2).
+    private var running: Task<DrainResult, Never>?
 
     public init(
         context: ModelContext, api: any APIClient, clock: @escaping () -> Date = { .now },
@@ -26,7 +30,16 @@ public final class OutboxWorker {
     }
 
     /// Sends pending entries until the queue is empty, one must wait, or the user is signed out.
+    /// Single-flight: concurrent callers share one drain.
     public func drain() async -> DrainResult {
+        if let running { return await running.value }
+        let task = Task { await drainOnce() }
+        running = task
+        defer { running = nil }
+        return await task.value
+    }
+
+    private func drainOnce() async -> DrainResult {
         while let entry = pendingEntries().first {
             if let due = entry.nextAttemptAt, due > clock() { return .waiting(until: due) }
             if let stop = await attempt(entry) { return stop }

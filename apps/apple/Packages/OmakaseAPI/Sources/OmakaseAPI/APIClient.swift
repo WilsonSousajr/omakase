@@ -25,6 +25,8 @@ public protocol APIClient: Sendable {
     /// Any HTTP status is a response; only a missing answer throws.
     func send(_ request: OutboxRequest) async throws -> OutboxResponse
     func signOut() async
+    /// Whether tokens are stored - answerable offline, unlike `me()`.
+    func hasStoredSession() async -> Bool
 }
 
 /// The REST client. Owns tokens and refresh-on-401: refresh once, retry once,
@@ -68,6 +70,8 @@ public actor OmakaseAPIClient: APIClient {
     }
 
     public func signOut() async { await tokens.clear() }
+
+    public func hasStoredSession() async -> Bool { await tokens.load() != nil }
 
     private struct Reply {
         let data: Data

@@ -106,4 +106,19 @@ struct OutboxWorkerTests {
         _ = await worker.drain()
         #expect(received == [#"/a/ {"ok":true}"#])
     }
+
+    @Test func concurrentDrainsSendEachEntryOnce() async throws {
+        // Review finding C2: reachability, the 5-minute loop and sign-in can
+        // all drain at once. drain() suspends at send() with the entry still
+        // pending, so a second drain used to send the same entry again.
+        enqueue(1, "/a/")
+        enqueue(2, "/b/")
+        await api.script([.reply(200, "{}"), .reply(200, "{}"), .reply(200, "{}"), .reply(200, "{}")])
+        let shared = worker()
+        async let first = shared.drain()
+        async let second = shared.drain()
+        _ = await (first, second)
+        #expect(await api.sentRequests.map(\.path) == ["/a/", "/b/"])
+        #expect(try remaining().isEmpty)
+    }
 }
