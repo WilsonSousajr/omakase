@@ -25,8 +25,8 @@ class GoogleLoginView(generics.GenericAPIView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request, *args, **kwargs):
-        if not settings.GOOGLE_CLIENT_ID:
-            raise ImproperlyConfigured("GOOGLE_CLIENT_ID environment variable is required")
+        if not settings.GOOGLE_CLIENT_IDS:
+            raise ImproperlyConfigured("GOOGLE_CLIENT_IDS (or GOOGLE_CLIENT_ID) environment variable is required")
 
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -37,7 +37,7 @@ class GoogleLoginView(generics.GenericAPIView):
             idinfo = id_token.verify_oauth2_token(
                 credential,
                 google_requests.Request(),
-                settings.GOOGLE_CLIENT_ID,
+                audience=settings.GOOGLE_CLIENT_IDS,
             )
         except ValueError:
             return Response(

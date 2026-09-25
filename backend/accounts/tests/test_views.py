@@ -2,9 +2,13 @@ from unittest.mock import patch
 
 import pytest
 from django.contrib.auth.models import User
+from django.core.exceptions import ImproperlyConfigured
+from django.test import override_settings
 from rest_framework import status
 from rest_framework.test import APIClient
 from rest_framework_simplejwt.tokens import RefreshToken
+
+from accounts.tests.fakes import FakeGoogleVerifier
 
 
 @pytest.fixture
@@ -286,3 +290,21 @@ class TestUserProfile:
         assert resp.status_code == status.HTTP_200_OK
         # created_at should NOT be the value we tried to set
         assert resp.data["created_at"] != "2020-01-01T00:00:00Z"
+
+
+@pytest.mark.django_db
+class TestGoogleAudiences:
+    URL = "/api/v1/auth/google/"
+
+    @override_settings(GOOGLE_CLIENT_IDS=["web.apps", "mac.apps"])
+    def test_verifies_against_every_configured_client(self, api_client):
+        verifier = FakeGoogleVerifier(_google_idinfo())
+        with patch(GOOGLE_VERIFY_PATH, new=verifier):
+            resp = api_client.post(self.URL, {"credential": "tok"}, format="json")
+        assert resp.status_code == 200
+        assert verifier.audiences_seen == [["web.apps", "mac.apps"]]
+
+    @override_settings(GOOGLE_CLIENT_IDS=[])
+    def test_no_client_configured_is_a_configuration_error(self, api_client):
+        with pytest.raises(ImproperlyConfigured, match="GOOGLE_CLIENT_IDS"):
+            api_client.post(self.URL, {"credential": "tok"}, format="json")

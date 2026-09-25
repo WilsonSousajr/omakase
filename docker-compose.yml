@@ -25,7 +25,7 @@ services:
       DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?DJANGO_SECRET_KEY is required in .env}
       DJANGO_DEBUG: ${DJANGO_DEBUG:-False}
       DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,backend}
-      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_IDS: ${GOOGLE_CLIENT_IDS:-${GOOGLE_CLIENT_ID:-}}
       # tools/tests/test_gate_workflow.py reads the CI workflow and pre-commit
       # config, which live outside backend/ (#66).
       REPO_ROOT: /repo
