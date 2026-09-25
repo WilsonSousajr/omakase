@@ -12,6 +12,8 @@ packages:
     path: Packages/OmakaseAPI
   OmakaseStore:
     path: Packages/OmakaseStore
+  OmakaseFeatures:
+    path: Packages/OmakaseFeatures
 targets:
   OmakaseMac:
     type: application
@@ -32,6 +34,7 @@ targets:
     dependencies:
       - package: OmakaseAPI
       - package: OmakaseStore
+      - package: OmakaseFeatures
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: dev.omakase.mac
