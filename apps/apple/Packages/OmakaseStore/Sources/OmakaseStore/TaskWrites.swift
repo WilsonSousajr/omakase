@@ -34,7 +34,19 @@ public final class TaskWrites {
             return
         }
         record.id = serverID
+        // A later write for this task is still queued: the user's newer local
+        // state stands until it is sent, as in TodaySync (review finding I5).
+        guard !hasLaterPendingWrite(than: entry, for: [localID, serverID]) else { return }
         record.apply(dto)
+    }
+
+    private func hasLaterPendingWrite(than entry: OutboxEntry, for ids: [String]) -> Bool {
+        let sequence = entry.sequence
+        let pending = OutboxEntry.State.pending.rawValue
+        let later = FetchDescriptor<OutboxEntry>(
+            predicate: #Predicate { $0.sequence > sequence && $0.stateRaw == pending })
+        let subjects = ((try? context.fetch(later)) ?? []).compactMap(\.subjectID)
+        return subjects.contains { ids.contains($0) }
     }
 
     private func nextSequence() throws -> Int {

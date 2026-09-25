@@ -87,4 +87,21 @@ struct TaskWritesTests {
         #expect(record.id == "local-3" && record.priority == "high" && record.scheduledDay == nil)
         #expect(record.completedAt == nil && !record.isCompleted)
     }
+
+    @Test func acceptingAnEarlierWriteKeepsALaterQueuedChange() async throws {
+        // Review finding I5: complete then undo while offline; the first
+        // PATCH is accepted, the connection drops before the second. The
+        // server's copy (completed) must not overwrite the queued undo.
+        let record = try seeded()
+        let writes = TaskWrites(context: context)
+        try writes.toggleCompletion(record)
+        try writes.toggleCompletion(record)
+        let serverCopy = try TaskDTO.make(id: UUID(uuidString: record.id)!, completed: true)
+        let api = FakeAPIClient()
+        let body = String(bytes: try OmakaseJSON.encoder.encode(serverCopy), encoding: .utf8) ?? ""
+        await api.script([.reply(200, body), .offline])
+        _ = await OutboxWorker(context: context, api: api, onAccepted: writes.applyServerCopy).drain()
+        #expect(record.isCompleted == false)
+        #expect(try outbox().count == 1)
+    }
 }
