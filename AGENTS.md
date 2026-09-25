@@ -23,7 +23,7 @@ before changing a model or an endpoint.
 ## Technology stack
 
 - **Python 3.12** in `python:3.12-slim`, **Django 5.2**, **Django REST
-  Framework 3.16**, **PostgreSQL 16**.
+  Framework 3.17**, **PostgreSQL 16**.
 - **Auth:** Google ID token verified with `google-auth`, then
   `djangorestframework-simplejwt` (60-minute access, 7-day refresh,
   blacklisting on).

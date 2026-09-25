@@ -10,6 +10,12 @@ for each milestone.
 
 ## [Unreleased]
 
+### Security
+
+- **Dependencies past eight known vulnerabilities.** Django 5.2 → 5.2.17,
+  Django REST Framework 3.16.0 → 3.17.2, simplejwt 5.4.0 → 5.5.1 - the first
+  fixed release of each, found by `pip-audit`. (#64)
+
 ### Removed
 
 - **The Next.js web client.** The repository is the API alone until the
