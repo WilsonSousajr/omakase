@@ -301,6 +301,12 @@ commit message and explain why the behaviour it asserted was never correct.
   states what changed, why, and how it was verified: which tests were written
   first, which negative controls were run, and what was exercised against the
   running stack.
+- **Close the issue by hand when its PR merges to `develop`**, with
+  `gh issue close <n> --comment "Done in #<pr>, merged to develop."`. GitHub
+  acts on `Closes #N` only for merges into the default branch, `main`, so
+  without this the board shows finished work as open until the next promotion
+  (#83). Keep `Closes #N` in the PR body anyway: it links the two, and closes
+  the issue on promotion if the manual close was missed.
 - **PR evaluation:** report pros, cons and a recommended fix, then ask for
   approval before merging or pushing changes to someone's PR.
 - **Merge with `gh pr merge --merge`**, never `--squash`, for an atomic
