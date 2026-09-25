@@ -1,5 +1,6 @@
 import OmakaseAPI
 import OmakaseFeatures
+import OmakaseStore
 import SwiftUI
 
 @main
@@ -26,7 +27,7 @@ struct OmakaseMacApp: App {
             SignInView(model: signIn).onChange(of: signIn.state) { _, state in
                 guard case .signedIn = state else { return }
                 signedIn = true
-                Task { await services.catchUp() }
+                Task { handle(await services.coordinator.catchUp()) }
             }
         }
     }
@@ -36,8 +37,15 @@ struct OmakaseMacApp: App {
         signIn = SignInModel(
             authenticator: WebAuthenticator(clientID: services.googleClientID),
             signIn: { try await api.signIn(googleIDToken: $0).email })
-        signedIn = (try? await api.me()) != nil
-        services.startBackgroundCatchUp()
+        // Stored tokens decide, not a network call: offline, the cached Today
+        // still shows (final review C1). The server says otherwise via handle().
+        signedIn = await api.hasStoredSession()
+        services.startBackgroundCatchUp { handle($0) }
+    }
+
+    /// Only a definite sign-out leaves Today; an offline failure keeps the cache (review I3).
+    private func handle(_ outcome: SyncCoordinator.Outcome) {
+        if outcome == .signedOut { signedIn = false }
     }
 
     /// The store and API are the app's foundation; without them there is no app to show.

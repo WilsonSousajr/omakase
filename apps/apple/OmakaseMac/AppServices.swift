@@ -4,13 +4,14 @@ import OmakaseStore
 import SwiftData
 
 /// Wires the packages together (spec, Structure: the app target stays thin).
+/// Coordination - one catch-up at a time, signed-out surfaced, background work
+/// started once - lives in OmakaseStore.SyncCoordinator, under the gate.
 @MainActor
 final class AppServices {
     let container: ModelContainer
     let api: OmakaseAPIClient
     let writes: TaskWrites
-    private let sync: TodaySync
-    private let worker: OutboxWorker
+    let coordinator: SyncCoordinator
     private let reachability = Reachability()
 
     init() throws {
@@ -18,23 +19,21 @@ final class AppServices {
         api = OmakaseAPIClient(baseURL: Self.baseURL, transport: URLSessionTransport(), tokens: KeychainTokenStore())
         let writes = TaskWrites(context: container.mainContext)
         self.writes = writes
-        sync = TodaySync(context: container.mainContext, api: api)
-        worker = OutboxWorker(context: container.mainContext, api: api) { writes.applyServerCopy($0, body: $1) }
+        let sync = TodaySync(context: container.mainContext, api: api)
+        let worker = OutboxWorker(context: container.mainContext, api: api, onAccepted: writes.applyServerCopy)
+        coordinator = SyncCoordinator(drain: { await worker.drain() }, refresh: { try await sync.refresh() })
     }
 
     var googleClientID: String { Bundle.main.object(forInfoDictionaryKey: "OmakaseGoogleClientID") as? String ?? "" }
 
-    /// Drain queued writes, then refresh today - on launch, on reconnect, every 5 minutes.
-    func catchUp() async {
-        _ = await worker.drain()
-        try? await sync.refresh()
-    }
-
-    func startBackgroundCatchUp() {
-        reachability.start { Task { @MainActor in await self.catchUp() } }
+    /// On launch, on reconnect and every 5 minutes; `onOutcome` sees every result.
+    func startBackgroundCatchUp(onOutcome: @escaping @MainActor (SyncCoordinator.Outcome) -> Void) {
+        guard coordinator.claimBackgroundStart() else { return }
+        let coordinator = self.coordinator
+        reachability.start { Task { @MainActor in onOutcome(await coordinator.catchUp()) } }
         Task { @MainActor in
             while !Task.isCancelled {
-                await catchUp()
+                onOutcome(await coordinator.catchUp())
                 try? await Task.sleep(for: .seconds(300))
             }
         }
