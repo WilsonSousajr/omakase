@@ -193,6 +193,18 @@ class TestTaskViewSet:
         resp = authenticated_client.get("/api/v1/tasks/today/?date=not-a-date")
         assert resp.status_code == status.HTTP_400_BAD_REQUEST
 
+    def test_today_without_date_is_rejected_issue65(self, authenticated_client, user):
+        """A missing ?date= must 400, like a malformed one - never the server's day.
+
+        25c7db9 stopped the fallback for a malformed date and kept it for a
+        missing one, so the server's UTC day still answered whenever a client
+        forgot the param (#65). /tasks/carried-over/ already refuses it.
+        """
+        TaskFactory(scheduled_date=datetime.date(2026, 3, 7), user=user)
+        resp = authenticated_client.get("/api/v1/tasks/today/")
+        assert resp.status_code == status.HTTP_400_BAD_REQUEST
+        assert "date" in resp.data["detail"]
+
     def test_reorder_bulk_success(self, authenticated_client, user):
         t1 = TaskFactory(user=user)
         t2 = TaskFactory(user=user)
