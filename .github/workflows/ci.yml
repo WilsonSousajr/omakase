@@ -71,7 +71,11 @@ jobs:
       # different days.
       - run: pip-audit -r requirements.txt
       - run: python manage.py migrate --noinput
-      - run: pytest --cov --cov-report=term-missing --cov-fail-under=90
+      - run: pytest --cov --cov-report=term-missing --cov-report=json:coverage.json --cov-fail-under=90
+      # Straight after the coverage step, so it reuses the coverage.json that
+      # step just wrote; crapcheck refuses a report older than the source.
+      # 18 is a ratchet at today's worst (Task.save, 17.6); target 12.
+      - run: python -m tools.crapcheck --threshold 18 --report coverage.json
 
   docker-build:
     runs-on: ubuntu-latest

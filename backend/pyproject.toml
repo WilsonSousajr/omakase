@@ -42,6 +42,8 @@ select = [
 # Fixtures and tests build dates relative to the test run, not a user's day.
 "**/tests/*" = ["DTZ"]
 "conftest.py" = ["DTZ"]
+# Gate tools are CLIs: stdout is their interface (AGENTS.md "Logging").
+"tools/*.py" = ["T20"]
 
 # Ratchets, set at the measured worst on 2026-09-24 so the gate is green the
 # day it lands (#66). They only move down: split the function, never raise the
