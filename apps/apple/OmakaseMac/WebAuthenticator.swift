@@ -9,6 +9,8 @@ import OmakaseFeatures
 @MainActor
 final class WebAuthenticator: NSObject, GoogleAuthenticating, ASWebAuthenticationPresentationContextProviding {
     private let oauth: GoogleOAuth
+    /// Held so the session lives until it calls back; a local could be released first.
+    private var session: ASWebAuthenticationSession?
 
     init(clientID: String) { oauth = GoogleOAuth(clientID: clientID) }
 
@@ -31,7 +33,14 @@ final class WebAuthenticator: NSObject, GoogleAuthenticating, ASWebAuthenticatio
             let callback = ASWebAuthenticationSession.Callback.customScheme(oauth.callbackScheme)
             let session = ASWebAuthenticationSession(url: url, callback: callback, completionHandler: complete)
             session.presentationContextProvider = self
-            session.start()
+            self.session = session
+            // start() returns false without ever calling back (an empty client
+            // ID, no window to anchor to); without this the button hangs (review I6).
+            guard session.start() else {
+                let reason = "the sign-in window could not open; is OMAKASE_GOOGLE_CLIENT_ID set?"
+                complete(nil, GoogleOAuthError.denied(reason))
+                return
+            }
         }
     }
 
