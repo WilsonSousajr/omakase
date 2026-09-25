@@ -21,7 +21,7 @@ sessions, closed out in a daily review. That is only a product if nobody
 else already does it, and the repository's entire record of the field was
 "Sunsama-style" and "Notion-style" in `docs/design-system.md`.
 
-M3 to M5 are about to be built from IDEA.md's nineteen sections. This file
+M3 to M5 are about to be built from IDEA.md's nineteen feature sections. This file
 names the field those milestones ship into, so that #105's later artifacts
 can say which of those sections are table stakes, which are open ground,
 and which are not worth building.
@@ -45,9 +45,9 @@ page, not a landing page; a claim that rests on a landing page says so.
 
 ### Coverage
 
-Twenty-five products and the three first-party platforms were checked
-against the columns below; seven more were noted as candidates without a
-full check. Five are read in depth in their own files (#107). Some doors were shut: MyStudyLife's help centre failed a TLS
+Twenty-four products and the three first-party platforms were checked
+against the columns below; eight more were noted as candidates without a
+full check, one of them (Helium) with repository figures only. Five are read in depth in their own files (#107). Some doors were shut: MyStudyLife's help centre failed a TLS
 handshake from every client tried, Shovel's and Forest's help centres have
 certificate errors, Vaia's pricing page is a 404, and Reddit refused
 scripted access, so no Reddit user voice appears anywhere in this pass.
@@ -103,7 +103,7 @@ platform shipping the category's core matters more than any competitor.
 | Structured | A | App Store, universal | not documented | region-priced IAP | no (need-based scholarship) | App Store 2026-09-25 | 4.79 (166,477) |
 | Morgen | B | framework unstated | not documented | $30 / $15 | 25%, permanently | 2026-04-17 | 4.44 (212) |
 | Amie | B | framework unstated | not documented | not rendered | contact sales | 2026-09-03; iOS 2025-08-06 | 3.39 (128) |
-| Motion | B | Electron | not documented | $19 per seat | none | no changelog; iOS 2025-11-27 | 4.10 (1,854) |
+| Motion | B | Electron | not documented | $19 per seat | none | no changelog; desktop 0.117.0 2025-12-15; iOS 2025-11-27 | 4.10 (1,854) |
 | Reclaim.ai | B | PWA | not documented | $10-12 per seat | 50% for 12 months | 2026-06-04 | no app |
 | TickTick | C | own Mac App Store app | not documented | - / $4.17 | 25%, one year | 2026-09-15 | 4.86 (46,001) |
 | Todoist | C | own Mac App Store app | yes | $7 / $5 | none | 2026-09-17 | 4.80 (129,207) |
@@ -215,16 +215,19 @@ old path redirects. Its desktop is Electron (`"electron": "43.5.0"` in
 | Akiflow | Y | Y (desktop only) | Y | Y | - | - | Y |
 | Ellie | Y | Y | Y (desktop only) | Y | - | - | Y |
 | Structured | Y | Y | - | - | - | - | Y |
+| Morgen | Y | N | Y (AI) | N | - | - | Y |
+| Amie | Y | - | - | - | - | - | Y |
 | Motion | Y (auto) | - | P | - | - | - | Y |
 | Reclaim.ai | Y (auto) | P (separate tool) | N | - | - | - | Y |
 | TickTick | Y | Y | P | P | P (China edition only) | - | Y |
 | Todoist | Y (Pro) | N | P | - | - | - | Y |
+| Lunatask | Y | P | - | P (journal) | - | - | Y |
 | Things 3 | N | - | P | - | - | - | Y |
 | OmniFocus 4 | N | N | P | P (project review) | - | - | Y |
 | Super Productivity | Y | Y | P | Y | - | - | Y |
 | MyStudyLife | - | P | - | - | Y | Y | P (paid "Activities") |
 | Power Planner | - | - | - | - | Y | Y | - |
-| Shovel | Y | - | - | - | Y | P | - |
+| Shovel | Y (App Store subtitle) | - | - | - | P | P | - |
 | **Omakase, shipped** | **API only** | **API only** | **N** | **API only** | **API only** | **N** | **API only** |
 
 The feature cells for competitors come from the help pages cited in their
@@ -249,8 +252,8 @@ timebox, run a pomodoro, or close a day in Omakase today.
 ### What the table says that a list of names does not
 
 - **Nobody spans both halves.** Every product in camps A to C has work
-  tasks and no timetable; every product in camp D has a timetable and no
-  work. The one exception is behind a border: TickTick's timetable ships
+  tasks and no timetable; every student planner with a timetable
+  (MyStudyLife, Power Planner, Shovel, Helium) has no work. The one exception is behind a border: TickTick's timetable ships
   only in Dida365. MyStudyLife sells work as a paid add-on called
   Activities, and Shovel treats it as busy time to plan around
   ([`mystudylife.md`](mystudylife.md)). This is the square IDEA.md's first
@@ -259,11 +262,13 @@ timebox, run a pomodoro, or close a day in Omakase today.
   fourteen planners and task managers above timebox, and so does Google
   Calendar, for free, on personal accounts, since November 2025 (§3.1).
   Omakase cannot win on timeboxing; it can only be absent from it.
-- **The ritual camp runs on Electron or the web.** Sunsama and Lunatask
-  are Electron by their own words, Motion by its release archive, Reclaim
-  is a PWA, and Sunsama has had an unanswered offline request since 2020.
-  The apps that are native and work offline, Things and OmniFocus, are
-  list managers with no timeboxing and no timer. A native, offline-first
+- **Where the framework is documented, the planners run on Electron or
+  the web.** Sunsama and Lunatask are Electron by their own words, Motion
+  by its release archive, Reclaim is a PWA, and Sunsama has had an
+  unanswered offline request since 2020. Akiflow, Ellie and Morgen do not
+  say. The two apps that are documented native - Things (a full local
+  database, offline) and OmniFocus (SwiftUI; offline not documented) -
+  are list managers with no timeboxing and no timer. A native, offline-first
   Mac planner with the whole ritual is not in this table.
 - **Student planners plan due dates, not time.** MyStudyLife and Power
   Planner hold the timetable and the deadlines and leave the hours to the
@@ -278,16 +283,21 @@ timebox, run a pomodoro, or close a day in Omakase today.
   [FAQ](https://help.reclaim.ai/en/articles/15280604-reclaim-2-0-faq)).
   That is close to IDEA §6's morning plan, which suggests up to five blocks
   to accept, modify or dismiss.
-- **A student price is the norm, not a differentiator.** Eight of the
-  thirteen products in the first table publish one, from 25% (Morgen,
-  TickTick) to 50% (Ellie, Lunatask, Reclaim). Todoist, Motion, Things and
-  Structured (a need-based scholarship instead) are the ones that do not.
-- **Liveness is uneven.** Motion has no public changelog and its iPhone app
-  was last updated 2025-11-27. Amie's iPhone app has not been updated since
+- **A student price is the norm, not a differentiator.** Nine of the
+  thirteen products in the first table offer a student or education
+  discount. Six state an amount: 25% (Morgen, TickTick), 40% (Akiflow),
+  50% (Ellie, Lunatask, Reclaim). Sunsama and OmniFocus give none, and
+  Amie says "contact sales". Todoist, Motion, Things and Structured (a
+  need-based scholarship instead) do not offer one.
+- **Liveness is uneven.** Motion has no public changelog; its iPhone app
+  was last updated 2025-11-27 and its desktop app on 2025-12-15. Amie's iPhone app has not been updated since
   2025-08-06 and rates 3.39. Session's changelog stops at 2025-03-24 while
   "Session 3" waits. Focusmate's product blog stops in 2023.
 
 ### Sizing the field, and what that number is worth
+
+Captured 2026-09-25 with the command in "Reproducing the table", and
+re-run the same day by the audit of this file with the same results.
 
 | Query (GitHub repository search) | Count |
 |---|---|
@@ -365,7 +375,8 @@ first feature and stopped below its loop.
 
 - **TickTick** is the broadest single overlap: tasks, calendar
   timeboxing, a strong focus timer with notes and statistics, and habits
-  ([`ticktick.md`](ticktick.md)). It has no plan or shutdown ritual and, in
+  ([`ticktick.md`](ticktick.md)). It has no guided plan or shutdown ritual - only
+  Suggested Tasks and a generated Summary - and, in
   its international edition, no timetable. The calendar views and timed
   tasks are Premium.
 - **Sunsama** owns the ritual - the guided plan with a workload threshold,
@@ -392,8 +403,10 @@ first feature and stopped below its loop.
   third-party blog post (positioning evidence only). Treated as dead.
 - **Super Productivity** moved to `super-productivity/super-productivity`;
   not a death, a rename.
-- **Amie** now titles its site "AI Note Taker"; **Motion** calls itself an
-  AI work suite. Both were calendar planners two years ago.
+- **Amie** now titles its site "AI Note Taker". **Motion**'s funding post
+  says it is "building the first end-to-end agentic work suite", focused
+  on "small and mid-sized businesses"
+  ([blog, 2025-09-08](https://www.usemotion.com/blog/motion-raises-60m-to-build-the-agentic-work-suite-for-businesses)).
 
 ## 4-6. Developments, recommendations, sources
 
