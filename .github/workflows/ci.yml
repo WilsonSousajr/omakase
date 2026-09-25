@@ -2,8 +2,9 @@ name: CI
 on:
   push:
     branches: [main, develop]
+  # Every PR, whatever its base, as in omatty: a stacked PR targets another
+  # feature branch, and filtering on main/develop left the stack unchecked.
   pull_request:
-    branches: [main, develop]
   workflow_call:
 
 concurrency:
