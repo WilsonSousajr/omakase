@@ -59,10 +59,13 @@ backend/
   pomodoro/   PomodoroSession.
   study/      Semester → Discipline → StudyBlock, ClassSchedule, class occurrences.
   stats/      read-only aggregation over the others, and DailyReview.
+  idempotency/ Idempotency-Key: one stored response per (user, key), 7 days.
 ```
 
 `stats` reads `tasks`, `study` and `pomodoro`, and nothing reads `stats`. The
 other apps do not import each other. #66 enforces this with import-linter.
+`idempotency` imports no app; the apps whose creates the Mac outbox replays
+import its mixin.
 
 ### accounts
 
@@ -128,6 +131,33 @@ other apps do not import each other. #66 enforces this with import-linter.
   true.
 - Rolling work over to another day is a PATCH of `scheduled_date` (tomorrow,
   a chosen date, or `null` for the backlog). No dedicated endpoint exists.
+
+### idempotency
+
+- **What it stores, and why.** `IdempotencyRecord`, unique per `(user, key)`:
+  the method, the path, the status code and the response body of the first
+  request that carried an `Idempotency-Key` header. The Mac client's outbox
+  cannot tell "the server never got it" from "the server did it and the reply
+  was lost", so it retries with the same key, and the second request replays
+  the first answer (`Idempotent-Replayed: true`) instead of creating twice.
+  (#77)
+- **The contract.** A key is 1-64 characters of `A-Za-z0-9-`, otherwise 400.
+  The same key on a different method or path is 422. A 4xx is stored and
+  replayed, because a retry of a rejected create is still rejected. A 5xx is
+  not stored, so the retry acts again. A request without the header is
+  unchanged.
+- **One transaction.** Claiming the key, running the create and storing the
+  response happen inside one `transaction.atomic()`. A concurrent request
+  with the same key blocks on the unique index until the first commits, then
+  replays it, so nothing half-done is ever visible and the row is created
+  once.
+- **Expiry.** Records live 7 days (`RECORD_TTL`). An expired record is
+  deleted when its key is used again, and
+  `manage.py purge_idempotency_records` deletes all of them; run it daily.
+- **Who opts in.** `POST tasks/`, `pomodoro/sessions/` and `stats/reviews/`,
+  by putting `IdempotentCreateMixin` first in their bases (invariant 9). A
+  PATCH may carry the header; it is ignored, because a PATCH is naturally
+  idempotent.
 
 ## API surface
 

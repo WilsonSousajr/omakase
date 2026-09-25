@@ -10,6 +10,14 @@ for each milestone.
 
 ## [Unreleased]
 
+### Added
+
+- **`Idempotency-Key` on the creates the Mac client replays.** `POST tasks/`,
+  `pomodoro/sessions/` and `stats/reviews/` run once per key and replay the
+  first response for 7 days (`Idempotent-Replayed: true`); the same key on a
+  different endpoint is 422. `manage.py purge_idempotency_records` clears
+  expired records. (#77)
+
 ### Security
 
 - **Dependencies past eight known vulnerabilities.** Django 5.2 → 5.2.17,

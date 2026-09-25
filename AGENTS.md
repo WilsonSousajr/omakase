@@ -41,6 +41,7 @@ backend/
   pomodoro/     PomodoroSession.
   study/        Semester → Discipline → StudyBlock, ClassSchedule, occurrences.
   stats/        read-only aggregation over the others, and DailyReview.
+  idempotency/  Idempotency-Key: one stored response per (user, key), 7 days.
   conftest.py   factories and client fixtures shared by every app's tests.
   tools/        gate tools (crapcheck) and the tests that guard the gate.
                 Linted with everything else, and outside the coverage source.
@@ -70,12 +71,12 @@ apart. Cheapest first:
 |---|---|---|
 | `ruff check` | lint, plus the size ratchets below, naive dates (invariant 2), `print()` | see `pyproject.toml` |
 | `ruff format --check` | formatting | - |
-| `lint-imports` | app layers, the `google-auth` seam, app independence | 4 contracts |
+| `lint-imports` | app layers, the `google-auth` seam, app independence, `idempotency` imports no app | 5 contracts |
 | `complexipy` | cognitive complexity per function | ≤ 28, target 15 |
 | `manage.py check` | Django system checks, warnings included | - |
 | `makemigrations --check` | every model change has its migration | - |
 | `pip-audit` | no dependency with a known advisory | - |
-| `pytest --cov` | the suite, and coverage of all six apps | ≥ 90% |
+| `pytest --cov` | the suite, and coverage of all seven apps | ≥ 90% |
 | `tools.crapcheck` | C.R.A.P. = CC² × (1 − cov)³ + CC per function | < 18, target 12 |
 
 **The numeric limits are ratchets. They only move down.** Each was set at the
@@ -202,11 +203,15 @@ before the PR says it works.
    change in the same commit, and `CHANGELOG.md` names it, because a stale
    test asserting the old behaviour can sit on a long-lived branch until a
    rebase breaks CI far from its cause.
+9. **A create the Mac outbox replays is idempotent.** `POST tasks/`,
+   `pomodoro/sessions/` and `stats/reviews/` put `IdempotentCreateMixin`
+   first in their bases. A new endpoint the outbox writes to does the same,
+   or a retried request after a timeout creates the row twice.
 
 ## Testing instructions
 
 - **TDD.** Write the failing test first. Every new function gets a test.
-- **The coverage gate is 90%** over all six apps' production code, and it
+- **The coverage gate is 90%** over all seven apps' production code, and it
   does not move down.
 - Tests are **F.I.R.S.T.**: fast, independent, repeatable, self-validating,
   timely.

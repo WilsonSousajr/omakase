@@ -7,6 +7,7 @@ from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from idempotency.mixins import IdempotentCreateMixin
 from omakase.client_dates import parse_client_date
 from pomodoro.models import PomodoroSession
 from study.models import StudyBlock
@@ -177,7 +178,7 @@ class ReviewSummaryView(APIView):
         return round(total / 60, 1)
 
 
-class DailyReviewViewSet(viewsets.ModelViewSet):
+class DailyReviewViewSet(IdempotentCreateMixin, viewsets.ModelViewSet):
     serializer_class = DailyReviewSerializer
     filterset_fields = ["date"]
 

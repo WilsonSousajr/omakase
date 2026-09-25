@@ -6,6 +6,7 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 
+from idempotency.mixins import IdempotentCreateMixin
 from omakase.client_dates import parse_client_date
 
 from .constants import REORDER_BULK_MAX_ITEMS
@@ -31,7 +32,7 @@ class TaskFilter(filters.FilterSet):
         fields = ["priority", "area", "kanban_status", "scheduled_date", "is_completed"]
 
 
-class TaskViewSet(viewsets.ModelViewSet):
+class TaskViewSet(IdempotentCreateMixin, viewsets.ModelViewSet):
     filterset_class = TaskFilter
     search_fields = ["title", "description"]
     ordering_fields = ["kanban_order", "created_at", "priority", "due_date"]

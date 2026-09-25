@@ -1,11 +1,14 @@
 from rest_framework import mixins, viewsets
 from rest_framework.exceptions import PermissionDenied
 
+from idempotency.mixins import IdempotentCreateMixin
+
 from .models import PomodoroSession
 from .serializers import PomodoroSessionSerializer
 
 
 class PomodoroSessionViewSet(
+    IdempotentCreateMixin,
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
     mixins.UpdateModelMixin,

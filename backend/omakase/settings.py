@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     "pomodoro",
     "stats",
     "study",
+    "idempotency",
 ]
 
 MIDDLEWARE = [
