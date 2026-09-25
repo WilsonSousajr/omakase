@@ -10,6 +10,8 @@ settings:
 packages:
   OmakaseAPI:
     path: Packages/OmakaseAPI
+  OmakaseStore:
+    path: Packages/OmakaseStore
 targets:
   OmakaseMac:
     type: application
@@ -29,6 +31,7 @@ targets:
           NSAllowsLocalNetworking: true
     dependencies:
       - package: OmakaseAPI
+      - package: OmakaseStore
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: dev.omakase.mac
