@@ -16,6 +16,12 @@ for each milestone.
   Django REST Framework 3.16.0 → 3.17.2, simplejwt 5.4.0 → 5.5.1 - the first
   fixed release of each, found by `pip-audit`. (#64)
 
+### Changed
+
+- **Every `?date=` is parsed one way.** `YYYY-MM-DD` only - `20260307` and
+  week dates are now 400 - with one message shape naming the param and the
+  value. (#69)
+
 ### Fixed
 
 - **`/tasks/today/` requires `?date=`.** Without it the endpoint answered for

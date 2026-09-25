@@ -1,5 +1,3 @@
-from datetime import date
-
 from django.db import transaction
 from django.db.models import Count
 from django_filters import rest_framework as filters
@@ -7,6 +5,8 @@ from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
+
+from omakase.client_dates import parse_client_date
 
 from .constants import REORDER_BULK_MAX_ITEMS
 from .models import Project, Subtask, Tag, Task, TimeBlock, Workspace
@@ -63,19 +63,7 @@ class TaskViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=["get"])
     def today(self, request):
         # The client's day, never the server's: the backend runs in UTC (#65).
-        client_date = request.query_params.get("date")
-        if not client_date:
-            return Response(
-                {"detail": "date param required."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        try:
-            target_date = date.fromisoformat(client_date)
-        except ValueError:
-            return Response(
-                {"detail": "Invalid date format."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        target_date = parse_client_date(request.query_params.get("date"))
         tasks = self.get_queryset().filter(scheduled_date=target_date)
         page = self.paginate_queryset(tasks)
         if page is not None:
@@ -86,19 +74,7 @@ class TaskViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=["get"], url_path="carried-over")
     def carried_over(self, request):
-        date_str = request.query_params.get("date")
-        if not date_str:
-            return Response(
-                {"detail": "date param required."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        try:
-            target_date = date.fromisoformat(date_str)
-        except ValueError:
-            return Response(
-                {"detail": "Invalid date format."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        target_date = parse_client_date(request.query_params.get("date"))
         tasks = self.get_queryset().filter(
             scheduled_date__lt=target_date,
             is_completed=False,
