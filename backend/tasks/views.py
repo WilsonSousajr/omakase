@@ -62,17 +62,20 @@ class TaskViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=["get"])
     def today(self, request):
+        # The client's day, never the server's: the backend runs in UTC (#65).
         client_date = request.query_params.get("date")
-        if client_date:
-            try:
-                target_date = date.fromisoformat(client_date)
-            except ValueError:
-                return Response(
-                    {"detail": "Invalid date format."},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-        else:
-            target_date = date.today()
+        if not client_date:
+            return Response(
+                {"detail": "date param required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        try:
+            target_date = date.fromisoformat(client_date)
+        except ValueError:
+            return Response(
+                {"detail": "Invalid date format."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         tasks = self.get_queryset().filter(scheduled_date=target_date)
         page = self.paginate_queryset(tasks)
         if page is not None:

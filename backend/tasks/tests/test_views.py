@@ -155,18 +155,10 @@ class TestTaskViewSet:
         dates = [r["created_at"] for r in resp.data["results"]]
         assert dates == sorted(dates, reverse=True)
 
-    def test_today_endpoint_no_date_param(self, authenticated_client, user):
-        from datetime import date
-
-        TaskFactory(scheduled_date=date.today(), user=user)
-        TaskFactory(scheduled_date=date.today() - datetime.timedelta(days=1), user=user)
-        resp = authenticated_client.get("/api/v1/tasks/today/")
-        assert resp.status_code == status.HTTP_200_OK
-        assert resp.data["count"] == 1
-
     def test_today_empty(self, authenticated_client, user):
         TaskFactory(scheduled_date=datetime.date(2020, 1, 1), user=user)
-        resp = authenticated_client.get("/api/v1/tasks/today/")
+        resp = authenticated_client.get("/api/v1/tasks/today/?date=2026-03-07")
+        assert resp.status_code == status.HTTP_200_OK
         assert resp.data["count"] == 0
 
     def test_today_with_date_param(self, authenticated_client, user):
@@ -192,6 +184,18 @@ class TestTaskViewSet:
         TaskFactory(scheduled_date=date.today(), user=user)
         resp = authenticated_client.get("/api/v1/tasks/today/?date=not-a-date")
         assert resp.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_today_without_date_is_rejected_issue65(self, authenticated_client, user):
+        """A missing ?date= must 400, like a malformed one - never the server's day.
+
+        25c7db9 stopped the fallback for a malformed date and kept it for a
+        missing one, so the server's UTC day still answered whenever a client
+        forgot the param (#65). /tasks/carried-over/ already refuses it.
+        """
+        TaskFactory(scheduled_date=datetime.date(2026, 3, 7), user=user)
+        resp = authenticated_client.get("/api/v1/tasks/today/")
+        assert resp.status_code == status.HTTP_400_BAD_REQUEST
+        assert "date" in resp.data["detail"]
 
     def test_reorder_bulk_success(self, authenticated_client, user):
         t1 = TaskFactory(user=user)
