@@ -18,6 +18,8 @@ for each milestone.
 
 ### Changed
 
+- **Google sign-in accepts several OAuth clients.** `GOOGLE_CLIENT_IDS`
+  lists them; `GOOGLE_CLIENT_ID` is still read for one release. (#76)
 - **Every `?date=` is parsed one way.** `YYYY-MM-DD` only - `20260307` and
   week dates are now 400 - with one message shape naming the param and the
   value. (#69)

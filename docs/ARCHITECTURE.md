@@ -27,11 +27,11 @@ client ── ?date=YYYY-MM-DD (its own local day) ──▶ day-shaped endpoint
 
 - **Authentication is Google-only.** There is no password, register or
   change-password endpoint. The client obtains a Google ID token, the backend
-  verifies it with `google-auth` against `GOOGLE_CLIENT_ID`, gets or creates
-  the user by email (the username comes from the email prefix, with
-  collisions handled), backfills the name, and returns a simplejwt pair: a
-  60-minute access token and a 7-day refresh token. Refresh tokens can be
-  blacklisted (`token_blacklist` is installed).
+  verifies it with `google-auth` against every client in `GOOGLE_CLIENT_IDS`,
+  gets or creates the user by email (the username comes from the email
+  prefix, with collisions handled), backfills the name, and returns a
+  simplejwt pair: a 60-minute access token and a 7-day refresh token.
+  Refresh tokens can be blacklisted (`token_blacklist` is installed).
 - **Every read is user-scoped in `get_queryset()`**, and every write sets the
   owner in `perform_create()`. Ownership is reached through the hierarchy, not
   stored on every row:
