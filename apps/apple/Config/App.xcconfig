@@ -1,0 +1,5 @@
+// Local, uncommitted overrides (the Google client ID, a non-local API) live
+// in Local.xcconfig next to this file; it is gitignored.
+OMAKASE_API_BASE_URL = http:/$()/localhost:8000
+OMAKASE_GOOGLE_CLIENT_ID =
+#include? "Local.xcconfig"
