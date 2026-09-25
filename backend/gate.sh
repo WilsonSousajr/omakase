@@ -8,7 +8,7 @@ cd "$(dirname "$0")"
 ruff check .
 ruff format --check .
 lint-imports
-complexipy accounts tasks pomodoro study stats omakase -e "**/tests/**" -e "**/migrations/**" -q --max-complexity-allowed 28
+complexipy accounts tasks pomodoro study stats omakase idempotency -e "**/tests/**" -e "**/migrations/**" -q --max-complexity-allowed 28
 python manage.py check --fail-level WARNING
 python manage.py makemigrations --check --dry-run
 pip-audit -r requirements.txt

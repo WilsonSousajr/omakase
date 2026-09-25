@@ -9,7 +9,7 @@ addopts = "--tb=short -q"
 # Every app, not a subset: listing three of six made the gate report 99%
 # while study and stats went unmeasured (#66). Tests, migrations and
 # framework boilerplate are not production code, so they stay out of it.
-source = ["accounts", "tasks", "pomodoro", "study", "stats", "omakase"]
+source = ["accounts", "tasks", "pomodoro", "study", "stats", "omakase", "idempotency"]
 omit = [
     "*/migrations/*",
     "*/tests/*",
@@ -59,7 +59,7 @@ max-statements = 41   # target 15
 # Architecture that was prose, as contracts (#66). The Python counterpart of
 # omatty's depguard: each one fails the gate if the code stops matching it.
 [tool.importlinter]
-root_packages = ["accounts", "tasks", "pomodoro", "study", "stats", "omakase"]
+root_packages = ["accounts", "tasks", "pomodoro", "study", "stats", "omakase", "idempotency"]
 include_external_packages = true
 
 [[tool.importlinter.contracts]]
@@ -71,7 +71,7 @@ containers = ["accounts", "tasks", "pomodoro", "study", "stats"]
 [[tool.importlinter.contracts]]
 name = "google-auth is reached only from accounts"
 type = "forbidden"
-source_modules = ["tasks", "pomodoro", "study", "stats", "omakase"]
+source_modules = ["tasks", "pomodoro", "study", "stats", "omakase", "idempotency"]
 forbidden_modules = ["google"]
 
 [[tool.importlinter.contracts]]
@@ -84,3 +84,11 @@ name = "Nothing reads stats"
 type = "forbidden"
 source_modules = ["accounts", "tasks", "pomodoro", "study"]
 forbidden_modules = ["stats"]
+
+[[tool.importlinter.contracts]]
+name = "idempotency depends on no app"
+type = "forbidden"
+source_modules = ["idempotency"]
+forbidden_modules = ["accounts", "tasks", "pomodoro", "study", "stats"]
+# Its tests drive the real create endpoints (#77); only production code is held to this.
+ignore_imports = ["idempotency.tests.** -> tasks.**"]

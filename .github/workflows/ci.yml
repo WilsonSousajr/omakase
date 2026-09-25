@@ -68,7 +68,7 @@ jobs:
       # Cognitive complexity - what nesting costs a reader - is omatty's gocognit,
       # and the check behind AGENTS.md's "at most 2 levels of indentation".
       # 28 is a ratchet at today's worst (Task.save, StudyBlock.save); target 15.
-      - run: complexipy accounts tasks pomodoro study stats omakase -e "**/tests/**" -e "**/migrations/**" -q --max-complexity-allowed 28
+      - run: complexipy accounts tasks pomodoro study stats omakase idempotency -e "**/tests/**" -e "**/migrations/**" -q --max-complexity-allowed 28
       - run: python manage.py check --fail-level WARNING
       # The schema is tidy: every model change has its migration. The Django
       # counterpart of omatty's `go mod tidy -diff`.
