@@ -10,6 +10,12 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  # Exact, not "3.12", and the same as backend/Dockerfile's base image: a
+  # floating minor resolves to the newest patch, so CI and the container would
+  # drift apart silently. tools/tests/test_gate_workflow.py asserts they match.
+  PYTHON_VERSION: "3.12.14"
+
 jobs:
   docker-lint:
     runs-on: ubuntu-latest
@@ -47,7 +53,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: ${{ env.PYTHON_VERSION }}
           cache: pip
           cache-dependency-path: |
             backend/requirements.txt
