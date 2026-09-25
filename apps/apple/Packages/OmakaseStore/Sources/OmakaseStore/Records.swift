@@ -19,6 +19,14 @@ public final class TaskRecord {
         (isCompleted, completedAt, updatedAt) = (dto.isCompleted, dto.completedAt, dto.updatedAt)
     }
 
+    /// A record with no server copy yet: a local capture, a preview, a test.
+    public init(
+        id: String, title: String, priority: String = "medium", scheduledDay: String? = nil, isCompleted: Bool = false
+    ) {
+        (self.id, self.title, self.priority, self.scheduledDay) = (id, title, priority, scheduledDay)
+        (self.isCompleted, completedAt, updatedAt) = (isCompleted, nil, .now)
+    }
+
     public func apply(_ dto: TaskDTO) {
         (title, priority, scheduledDay) = (dto.title, dto.priority, dto.scheduledDate?.string)
         (isCompleted, completedAt, updatedAt) = (dto.isCompleted, dto.completedAt, dto.updatedAt)

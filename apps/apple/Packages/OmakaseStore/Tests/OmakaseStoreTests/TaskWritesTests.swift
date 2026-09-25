@@ -81,4 +81,10 @@ struct TaskWritesTests {
         let count = try context.fetch(FetchDescriptor<TaskRecord>()).count
         #expect(record.title == "Task" && count == 1)
     }
+
+    @Test func aRecordCanBeBuiltWithoutAServerCopy() {
+        let record = TaskRecord(id: "local-3", title: "Captured", priority: "high", isCompleted: false)
+        #expect(record.id == "local-3" && record.priority == "high" && record.scheduledDay == nil)
+        #expect(record.completedAt == nil && !record.isCompleted)
+    }
 }
