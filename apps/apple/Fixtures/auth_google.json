@@ -1,0 +1,13 @@
+{
+  "access": "redacted.jwt.token",
+  "refresh": "redacted.jwt.token",
+  "user": {
+    "avatar_color": "#a3a3a3",
+    "date_joined": "2026-09-25T14:35:41.408058Z",
+    "email": "ada@example.com",
+    "first_name": "Ada",
+    "id": 1,
+    "last_name": "L",
+    "username": "ada"
+  }
+}

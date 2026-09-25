@@ -35,6 +35,8 @@ services:
       - ./backend:/app
       - ./.github:/repo/.github:ro
       - ./.pre-commit-config.yaml:/repo/.pre-commit-config.yaml:ro
+      # Read-write: tools/tests/test_contract_fixtures.py writes them (#78).
+      - ./apps/apple/Fixtures:/repo/apps/apple/Fixtures
     depends_on:
       db:
         condition: service_healthy
