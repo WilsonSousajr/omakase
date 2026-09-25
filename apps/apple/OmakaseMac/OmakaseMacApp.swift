@@ -21,7 +21,13 @@ struct OmakaseMacApp: App {
     @ViewBuilder private var content: some View {
         if signedIn {
             NavigationStack {
-                TodayView(day: APIDay.today().string) { try? services.writes.toggleCompletion($0) }
+                TodayView(day: APIDay.today().string) { record in
+                    Task {
+                        handle(
+                            (try? await services.coordinator.write { try services.writes.toggleCompletion(record) })
+                                ?? .synced)
+                    }
+                }
             }
         } else if let signIn {
             SignInView(model: signIn).onChange(of: signIn.state) { _, state in

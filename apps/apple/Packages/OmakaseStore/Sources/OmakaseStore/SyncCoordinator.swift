@@ -32,6 +32,17 @@ public final class SyncCoordinator {
         return await task.value
     }
 
+    /// Performs a local write, then catches up at once, so an online change
+    /// reaches the server now rather than at the next 5-minute tick (#91).
+    /// A write that throws is not followed by a catch-up.
+    ///
+    ///     try await coordinator.write { try writes.toggleCompletion(record) }
+    @discardableResult
+    public func write(_ perform: () throws -> Void) async throws -> Outcome {
+        try perform()
+        return await catchUp()
+    }
+
     /// True the first time only: background work (reachability, the timer) starts once per process.
     public func claimBackgroundStart() -> Bool {
         defer { backgroundStarted = true }

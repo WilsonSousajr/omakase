@@ -69,4 +69,18 @@ struct SyncCoordinatorTests {
         #expect(coordinator.claimBackgroundStart())
         #expect(coordinator.claimBackgroundStart() == false)
     }
+
+    @Test func aLocalWriteIsFollowedByACatchUpIssue91() async throws {
+        // Smoke run: an online toggle sat in the outbox for up to 5 minutes,
+        // because only launch, reconnect and the timer drained it.
+        var wrote = false
+        let outcome = try await steps.coordinator().write { wrote = true }
+        #expect(wrote && outcome == .synced && steps.drains == 1)
+    }
+
+    @Test func aFailedLocalWriteDoesNotCatchUp() async {
+        struct DiskFull: Error {}
+        await #expect(throws: DiskFull.self) { try await steps.coordinator().write { throw DiskFull() } }
+        #expect(steps.drains == 0)
+    }
 }
