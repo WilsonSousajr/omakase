@@ -50,3 +50,11 @@ coverage/
 
 # Plugins
 .superpowers/
+
+# Apple client (generated or local)
+apps/apple/.tools/
+apps/apple/Omakase.xcodeproj/
+apps/apple/OmakaseMac/Info.plist
+apps/apple/Config/Local.xcconfig
+apps/apple/Packages/*/.build/
+apps/apple/Packages/*/.swiftpm/

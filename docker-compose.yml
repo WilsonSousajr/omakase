@@ -36,6 +36,9 @@ services:
       - ./.github:/repo/.github:ro
       - ./.pre-commit-config.yaml:/repo/.pre-commit-config.yaml:ro
       # Read-write: tools/tests/test_contract_fixtures.py writes them (#78).
+      # Read-only for the Apple gate's workflow and coverage-gate tests (#85);
+      # the Fixtures mount below stays read-write on top of it.
+      - ./apps/apple:/repo/apps/apple:ro
       - ./apps/apple/Fixtures:/repo/apps/apple/Fixtures
     depends_on:
       db:
