@@ -2,13 +2,20 @@ name: CI
 on:
   push:
     branches: [main, develop]
+  # Every PR, whatever its base, as in omatty: a stacked PR targets another
+  # feature branch, and filtering on main/develop left the stack unchecked.
   pull_request:
-    branches: [main, develop]
   workflow_call:
 
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
+
+env:
+  # Exact, not "3.12", and the same as backend/Dockerfile's base image: a
+  # floating minor resolves to the newest patch, so CI and the container would
+  # drift apart silently. tools/tests/test_gate_workflow.py asserts they match.
+  PYTHON_VERSION: "3.12.14"
 
 jobs:
   docker-lint:
@@ -19,7 +26,9 @@ jobs:
         with:
           dockerfile: backend/Dockerfile
 
-  backend:
+  # Named as in omatty. Required status checks on protected branches refer to
+  # it by this name, so renaming it is a branch-protection change too.
+  gate:
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -47,7 +56,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: ${{ env.PYTHON_VERSION }}
           cache: pip
           cache-dependency-path: |
             backend/requirements.txt
@@ -55,8 +64,25 @@ jobs:
       - run: pip install -r requirements.txt -r requirements-dev.txt
       - run: ruff check .
       - run: ruff format --check .
+      - run: lint-imports
+      # Cognitive complexity - what nesting costs a reader - is omatty's gocognit,
+      # and the check behind AGENTS.md's "at most 2 levels of indentation".
+      # 28 is a ratchet at today's worst (Task.save, StudyBlock.save); target 15.
+      - run: complexipy accounts tasks pomodoro study stats omakase -e "**/tests/**" -e "**/migrations/**" -q --max-complexity-allowed 28
+      - run: python manage.py check --fail-level WARNING
+      # The schema is tidy: every model change has its migration. The Django
+      # counterpart of omatty's `go mod tidy -diff`.
+      - run: python manage.py makemigrations --check --dry-run
+      # Needs the network, like omatty's govulncheck; pinned for the same
+      # reason - a scanner that changes under you reports different things on
+      # different days.
+      - run: pip-audit -r requirements.txt
       - run: python manage.py migrate --noinput
-      - run: pytest --cov --cov-report=term-missing --cov-fail-under=60
+      - run: pytest --cov --cov-report=term-missing --cov-report=json:coverage.json --cov-fail-under=90
+      # Straight after the coverage step, so it reuses the coverage.json that
+      # step just wrote; crapcheck refuses a report older than the source.
+      # 18 is a ratchet at today's worst (Task.save, 17.6); target 12.
+      - run: python -m tools.crapcheck --threshold 18 --report coverage.json
 
   docker-build:
     runs-on: ubuntu-latest

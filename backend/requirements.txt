@@ -6,5 +6,5 @@ psycopg2-binary==2.9.10
 dj-database-url==2.3.0
 gunicorn==23.0.0
 djangorestframework-simplejwt==5.5.1
-google-auth>=2.38.0
-requests>=2.32.0
+google-auth==2.58.1
+requests==2.34.2

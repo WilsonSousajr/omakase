@@ -1,4 +1,6 @@
-FROM python:3.12-slim AS base
+# Exact, not 3.12: a floating tag drifts to a new patch without a diff, and
+# CI pins the same version so both run one toolchain (#66, omatty #261).
+FROM python:3.12.14-slim AS base
 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1

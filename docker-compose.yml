@@ -26,10 +26,15 @@ services:
       DJANGO_DEBUG: ${DJANGO_DEBUG:-False}
       DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,backend}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      # tools/tests/test_gate_workflow.py reads the CI workflow and pre-commit
+      # config, which live outside backend/ (#66).
+      REPO_ROOT: /repo
     ports:
       - "8000:8000"
     volumes:
       - ./backend:/app
+      - ./.github:/repo/.github:ro
+      - ./.pre-commit-config.yaml:/repo/.pre-commit-config.yaml:ro
     depends_on:
       db:
         condition: service_healthy

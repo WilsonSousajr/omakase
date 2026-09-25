@@ -6,8 +6,18 @@ python_functions = ["test_*"]
 addopts = "--tb=short -q"
 
 [tool.coverage.run]
-source = ["accounts", "tasks", "pomodoro"]
-omit = ["*/migrations/*", "*/admin.py"]
+# Every app, not a subset: listing three of six made the gate report 99%
+# while study and stats went unmeasured (#66). Tests, migrations and
+# framework boilerplate are not production code, so they stay out of it.
+source = ["accounts", "tasks", "pomodoro", "study", "stats", "omakase"]
+omit = [
+    "*/migrations/*",
+    "*/tests/*",
+    "*/admin.py",
+    "*/apps.py",
+    "omakase/wsgi.py",
+    "omakase/asgi.py",
+]
 
 [tool.ruff]
 target-version = "py312"
@@ -15,4 +25,62 @@ line-length = 120
 exclude = ["*/migrations/*"]
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "W"]
+select = [
+    "E", "F", "I", "W",
+    "B",        # bugbear: likely bugs and footguns
+    "UP",       # pyupgrade: syntax for the pinned Python
+    "SIM",      # simplifications
+    "DJ",       # Django conventions
+    "T20",      # no print(): logging only (AGENTS.md "Logging")
+    "DTZ",      # no naive date.today()/now(): "today" is the client's (invariant 2, #65)
+    "C90",      # McCabe complexity
+    "PLR0912",  # branches per function
+    "PLR0915",  # statements per function
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Fixtures and tests build dates relative to the test run, not a user's day.
+"**/tests/*" = ["DTZ"]
+"conftest.py" = ["DTZ"]
+# Gate tools are CLIs: stdout is their interface (AGENTS.md "Logging").
+"tools/*.py" = ["T20"]
+
+# Ratchets, set at the measured worst on 2026-09-24 so the gate is green the
+# day it lands (#66). They only move down: split the function, never raise the
+# number. All three are set by one function written twice, Task.save and
+# StudyBlock.save (the is_completed <-> status sync). Targets are omatty's.
+[tool.ruff.lint.mccabe]
+max-complexity = 14   # target 10
+
+[tool.ruff.lint.pylint]
+max-branches = 16     # target 12
+max-statements = 41   # target 15
+
+# Architecture that was prose, as contracts (#66). The Python counterpart of
+# omatty's depguard: each one fails the gate if the code stops matching it.
+[tool.importlinter]
+root_packages = ["accounts", "tasks", "pomodoro", "study", "stats", "omakase"]
+include_external_packages = true
+
+[[tool.importlinter.contracts]]
+name = "Each app layers urls > views > serializers > models"
+type = "layers"
+layers = ["urls", "views", "serializers", "models"]
+containers = ["accounts", "tasks", "pomodoro", "study", "stats"]
+
+[[tool.importlinter.contracts]]
+name = "google-auth is reached only from accounts"
+type = "forbidden"
+source_modules = ["tasks", "pomodoro", "study", "stats", "omakase"]
+forbidden_modules = ["google"]
+
+[[tool.importlinter.contracts]]
+name = "Only stats reads other apps; the rest are independent"
+type = "independence"
+modules = ["accounts", "tasks", "pomodoro", "study"]
+
+[[tool.importlinter.contracts]]
+name = "Nothing reads stats"
+type = "forbidden"
+source_modules = ["accounts", "tasks", "pomodoro", "study"]
+forbidden_modules = ["stats"]

@@ -42,8 +42,13 @@ backend/
   study/        Semester → Discipline → StudyBlock, ClassSchedule, occurrences.
   stats/        read-only aggregation over the others, and DailyReview.
   conftest.py   factories and client fixtures shared by every app's tests.
+  tools/        gate tools (crapcheck) and the tests that guard the gate.
+                Linted with everything else, and outside the coverage source.
+  gate.sh       the quality gate, step for step what CI runs.
+scripts/gate.sh runs backend/gate.sh inside the dev container.
 docs/           ARCHITECTURE.md, ROADMAP.md, IDEA.md, audits/, superpowers/.
-.github/        the CI workflow.
+.github/        ci.yml (the gate, docker lint and build) and deploy.yml, which
+                deploys main to the production VPS on every push.
 ```
 
 One responsibility per app. `stats` reads `tasks`, `study` and `pomodoro`;
@@ -51,14 +56,37 @@ nothing reads `stats`, and the other apps do not import each other.
 
 ## Build and test commands
 
-Run the gate before claiming a change is ready. CI runs the same steps:
+Run the full gate before claiming a change is ready:
 
 ```bash
-docker-compose exec backend ruff format --check .
-docker-compose exec backend ruff check .
-docker-compose exec backend python manage.py migrate --noinput
-docker-compose exec backend pytest --cov --cov-report=term-missing --cov-fail-under=60
+scripts/gate.sh          # runs backend/gate.sh inside the dev container
 ```
+
+`backend/gate.sh` is the gate. CI's `gate` job runs the same commands in the
+same order, and `tools/tests/test_gate_workflow.py` fails if the two drift
+apart. Cheapest first:
+
+| Step | Checks | Limit |
+|---|---|---|
+| `ruff check` | lint, plus the size ratchets below, naive dates (invariant 2), `print()` | see `pyproject.toml` |
+| `ruff format --check` | formatting | - |
+| `lint-imports` | app layers, the `google-auth` seam, app independence | 4 contracts |
+| `complexipy` | cognitive complexity per function | ≤ 28, target 15 |
+| `manage.py check` | Django system checks, warnings included | - |
+| `makemigrations --check` | every model change has its migration | - |
+| `pip-audit` | no dependency with a known advisory | - |
+| `pytest --cov` | the suite, and coverage of all six apps | ≥ 90% |
+| `tools.crapcheck` | C.R.A.P. = CC² × (1 − cov)³ + CC per function | < 18, target 12 |
+
+**The numeric limits are ratchets. They only move down.** Each was set at the
+measured worst when the gate landed (#66). All of them are set by
+`Task.save` and `StudyBlock.save`, the same `is_completed ↔ status` sync
+written twice. When a function hits a limit, split it or test it; never raise
+the number. Lower a limit in the same PR that makes the lower value pass.
+
+`pip-audit` is the only step that needs the network. Every tool is pinned in
+`requirements-dev.txt`, and Python is pinned exactly (3.12.14) in both the
+image and CI, so the gate gives the same answer in both places.
 
 Dev dependencies are installed at runtime, not baked into the image. After
 rebuilding the container, run
@@ -79,7 +107,9 @@ before the PR says it works.
 ## Code style guidelines
 
 - **Functions 4–20 lines.** A longer function does more than one thing, so
-  split it.
+  split it. The gate bounds what can be counted: McCabe complexity, branches,
+  statements (ruff) and cognitive complexity (complexipy). All four are
+  ratchets toward omatty's limits.
 - **Files under 500 lines.** A longer file means the app boundary is wrong.
 - One thing per function, one responsibility per module.
 - **Names are specific and unique.** A good name returns fewer than 5 grep
@@ -90,6 +120,12 @@ before the PR says it works.
   (request bodies, query params) into typed values at the edge, once.
 - **No duplication.** Extract shared logic.
 - **Early returns; at most 2 levels of indentation inside a function.**
+  Nesting is what cognitive complexity charges for, so this is checked, not
+  just asked for.
+- **C.R.A.P. under the gate's limit.** `tools/crapcheck.py` scores every
+  function by complexity and coverage. Line and branch caps don't notice when
+  the branchiest function is the one no test reaches; this score does. Raise
+  its coverage or split it.
 - **Exception and error messages carry the offending value and the expected
   shape**, for example `f"date {raw!r} is not ISO-8601 (YYYY-MM-DD)"`, never a
   bare `"Invalid input."`.
@@ -119,14 +155,18 @@ before the PR says it works.
 - **Inject through constructor or parameter.** No module-level mutable state
   and no import-time side effects beyond Django's own registration.
 - **Wrap third-party libraries behind a thin interface this project owns.**
-  `google-auth` is reached only from `accounts`.
+  `google-auth` is reached only from `accounts`, and an import-linter
+  contract enforces that. The app layering (`urls > views > serializers >
+  models`), the independence of the apps, and "nothing reads `stats`" are
+  contracts too, in `backend/pyproject.toml`.
 - Before adding a dependency, check that the project does not already have
   the capability. Pin every dependency exactly in `requirements*.txt`.
 
 ## Logging
 
 - **Structured JSON** for diagnostics and observability.
-- **Plain text** only for user-facing management-command output.
+- **Plain text** only for user-facing management-command and gate-tool
+  output. ruff's `T20` rejects `print()` everywhere else.
 
 ## Cross-cutting invariants (do not violate)
 
@@ -138,7 +178,9 @@ before the PR says it works.
 2. **"Today" is the client's day, sent as `?date=YYYY-MM-DD`.** The backend
    runs in UTC. `date.today()` on the server is a different date for part of
    every day in every other timezone, and native clients are in the user's
-   timezone by definition (#65).
+   timezone by definition (#65). ruff's `DTZ` rules reject a naive
+   `date.today()` or `datetime.now()` in production code; #69 gives the
+   parsing of `?date=` one owner.
 3. **Anything that can be a 400 is rejected in the serializer**, before a
    database constraint turns it into a 500. The constraint stays as the
    safety net (TimeBlock: `end_time > start_time`; exactly one of `task` and
@@ -163,6 +205,8 @@ before the PR says it works.
 ## Testing instructions
 
 - **TDD.** Write the failing test first. Every new function gets a test.
+- **The coverage gate is 90%** over all six apps' production code, and it
+  does not move down.
 - Tests are **F.I.R.S.T.**: fast, independent, repeatable, self-validating,
   timely.
 - `@pytest.mark.django_db` on every test that touches the database. Build

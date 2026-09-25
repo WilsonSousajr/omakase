@@ -32,6 +32,13 @@ for each milestone.
 
 ### Changed
 
+- **The quality gate, after omatty's.** `scripts/gate.sh` runs the same steps
+  as CI's `gate` job: ruff with complexity ratchets and naive-date and
+  `print()` rules, import-linter contracts, cognitive complexity,
+  `manage.py check`, `makemigrations --check`, `pip-audit`, the suite at 90%
+  coverage over **all six apps** (previously three), and a C.R.A.P. gate.
+  Python is pinned to 3.12.14 in both the image and CI, and every dependency
+  is pinned exactly. Tests fail if the gate stops checking. (#66)
 - **One agent instruction file.** `AGENTS.md` is canonical and `CLAUDE.md`
   imports it. Descriptions moved to `docs/ARCHITECTURE.md`, and commits,
   issues and PRs follow the `type(#N): message` convention. From a prompt
