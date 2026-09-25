@@ -1,0 +1,35 @@
+{
+  "count": 1,
+  "next": null,
+  "previous": null,
+  "results": [
+    {
+      "actual_minutes": 0,
+      "area": "work",
+      "completed_at": null,
+      "created_at": "2026-09-25T14:35:41.703079Z",
+      "description": "",
+      "discipline": null,
+      "due_date": "2026-03-09",
+      "estimated_minutes": 25,
+      "id": "94e320e4-9ef7-41bd-9eb9-c2325cb85942",
+      "is_completed": false,
+      "kanban_order": 0,
+      "kanban_status": "todo",
+      "priority": "medium",
+      "project": null,
+      "scheduled_date": "2026-03-07",
+      "tags": [
+        {
+          "area": "work",
+          "color": "#6366f1",
+          "created_at": "2026-09-25T14:35:41.704160Z",
+          "id": "4d2692ae-cf2b-4847-acf1-8ad7c500cd67",
+          "name": "Tag 0"
+        }
+      ],
+      "title": "Task 0",
+      "updated_at": "2026-09-25T14:35:41.703719Z"
+    }
+  ]
+}
