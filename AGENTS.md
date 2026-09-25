@@ -219,6 +219,10 @@ before the PR says it works.
   data with the factories in `backend/conftest.py`.
 - Use the `authenticated_client` fixture (a JWT Bearer token) for user-scoped
   endpoints. `api_client` is anonymous and gets 401.
+- **Contract fixtures.** `tools/tests/test_contract_fixtures.py` writes the
+  response of each endpoint the Mac app uses to `apps/apple/Fixtures/` and
+  fails when a response's shape drifts. A deliberate API change regenerates
+  them (`WRITE_CONTRACT_FIXTURES=1`) and updates the Swift DTOs in the same PR.
 - **Mock external I/O with named fake classes, not inline stubs.** A named
   fake reads clearly in a failure message.
 - Known traps:
