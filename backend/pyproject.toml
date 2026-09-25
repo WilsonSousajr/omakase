@@ -25,4 +25,31 @@ line-length = 120
 exclude = ["*/migrations/*"]
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "W"]
+select = [
+    "E", "F", "I", "W",
+    "B",        # bugbear: likely bugs and footguns
+    "UP",       # pyupgrade: syntax for the pinned Python
+    "SIM",      # simplifications
+    "DJ",       # Django conventions
+    "T20",      # no print(): logging only (AGENTS.md "Logging")
+    "DTZ",      # no naive date.today()/now(): "today" is the client's (invariant 2, #65)
+    "C90",      # McCabe complexity
+    "PLR0912",  # branches per function
+    "PLR0915",  # statements per function
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Fixtures and tests build dates relative to the test run, not a user's day.
+"**/tests/*" = ["DTZ"]
+"conftest.py" = ["DTZ"]
+
+# Ratchets, set at the measured worst on 2026-09-24 so the gate is green the
+# day it lands (#66). They only move down: split the function, never raise the
+# number. All three are set by one function written twice, Task.save and
+# StudyBlock.save (the is_completed <-> status sync). Targets are omatty's.
+[tool.ruff.lint.mccabe]
+max-complexity = 14   # target 10
+
+[tool.ruff.lint.pylint]
+max-branches = 16     # target 12
+max-statements = 41   # target 15
