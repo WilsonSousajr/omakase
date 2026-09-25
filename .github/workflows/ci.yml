@@ -62,6 +62,14 @@ jobs:
       - run: ruff check .
       - run: ruff format --check .
       - run: lint-imports
+      - run: python manage.py check --fail-level WARNING
+      # The schema is tidy: every model change has its migration. The Django
+      # counterpart of omatty's `go mod tidy -diff`.
+      - run: python manage.py makemigrations --check --dry-run
+      # Needs the network, like omatty's govulncheck; pinned for the same
+      # reason - a scanner that changes under you reports different things on
+      # different days.
+      - run: pip-audit -r requirements.txt
       - run: python manage.py migrate --noinput
       - run: pytest --cov --cov-report=term-missing --cov-fail-under=90
 
