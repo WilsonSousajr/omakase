@@ -12,13 +12,3 @@ services:
       target: prod
     volumes: []
     command: gunicorn omakase.wsgi:application --bind 0.0.0.0:8000 --workers 3
-
-  frontend:
-    build:
-      context: ./frontend
-      target: prod
-      args:
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000/api/v1}
-        NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${NEXT_PUBLIC_GOOGLE_CLIENT_ID}
-    volumes: []
-    command: node server.js

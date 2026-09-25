@@ -17,31 +17,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: hadolint/hadolint-action@v3.1.0
         with:
-          dockerfile: frontend/Dockerfile
-      - uses: hadolint/hadolint-action@v3.1.0
-        with:
           dockerfile: backend/Dockerfile
-
-  frontend:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: frontend
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 10
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: pnpm
-          cache-dependency-path: frontend/pnpm-lock.yaml
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm lint
-      - run: npx tsc --noEmit
-      - run: pnpm test -- --coverage --coverage.thresholds.lines=50
-      - run: pnpm build
 
   backend:
     runs-on: ubuntu-latest
@@ -86,18 +62,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Build frontend prod image
-        run: docker build --target prod -t omakase-frontend:prod ./frontend
       - name: Build backend prod image
         run: docker build --target prod -t omakase-backend:prod ./backend
         env:
           DJANGO_SECRET_KEY: build-only-not-runtime
-      - name: Verify frontend image size under 500MB
-        run: |
-          SIZE=$(docker image inspect omakase-frontend:prod --format='{{.Size}}')
-          MAX=$((500 * 1024 * 1024))
-          echo "Frontend image size: $((SIZE / 1024 / 1024))MB"
-          if [ "$SIZE" -gt "$MAX" ]; then
-            echo "FAIL: Frontend image exceeds 500MB threshold"
-            exit 1
-          fi
