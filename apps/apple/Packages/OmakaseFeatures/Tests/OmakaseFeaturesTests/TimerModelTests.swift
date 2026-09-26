@@ -100,6 +100,7 @@ struct TimerModelTests {
         #expect(timer.remainingText == "25:00")
         timer.start(taskID: "t1")
         clock.now = clock.now.addingTimeInterval(78)
+        timer.tick()  // the display reads the last tick's now; the app ticks every second
         #expect(timer.remainingText == "23:42")
         #expect(abs(timer.progress - 78.0 / 1500) < 1e-9)
     }
