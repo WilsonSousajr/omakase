@@ -1,3 +1,4 @@
+import SwiftUI
 import Testing
 
 @testable import OmakaseFeatures
@@ -37,5 +38,14 @@ struct TranslucencyTests {
 
     @Test func darkIsTheDefaultAppearance() {
         #expect(Appearance.default == .dark)
+    }
+
+    @Test func appearancesMapToColorSchemes() {
+        #expect(Appearance.dark.colorScheme == .dark)
+        #expect(Appearance.light.colorScheme == .light)
+    }
+
+    @Test @MainActor func windowBackgroundIsAContainerBackground() {
+        #expect(String(describing: Text("Plan").omakaseWindowBackground()).contains("ContainerBackground"))
     }
 }
