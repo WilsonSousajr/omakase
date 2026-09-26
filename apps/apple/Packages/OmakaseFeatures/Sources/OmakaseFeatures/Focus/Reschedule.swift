@@ -28,7 +28,7 @@ public enum RescheduleOption: Equatable, Sendable {
 
 /// `YYYY-MM-DD` to and from dates in one calendar. Features may not import
 /// OmakaseAPI's `APIDay`, so the same shape is kept here.
-enum DayString {
+public enum DayString {
     static func format(_ date: Date, calendar: Calendar) -> String {
         let parts = calendar.dateComponents([.year, .month, .day], from: date)
         return String(format: "%04d-%02d-%02d", parts.year ?? 0, parts.month ?? 0, parts.day ?? 0)
@@ -41,6 +41,12 @@ enum DayString {
             let year = Int(match.1), let month = Int(match.2), let dayOfMonth = Int(match.3)
         else { return nil }
         return calendar.date(from: DateComponents(year: year, month: month, day: dayOfMonth))
+    }
+
+    /// "14:30": the zero-padded 24-hour clock that block times compare against.
+    public static func time(_ date: Date, calendar: Calendar) -> String {
+        let parts = calendar.dateComponents([.hour, .minute], from: date)
+        return String(format: "%02d:%02d", parts.hour ?? 0, parts.minute ?? 0)
     }
 
     /// "Mon 2": the short weekday and the day of the month.
