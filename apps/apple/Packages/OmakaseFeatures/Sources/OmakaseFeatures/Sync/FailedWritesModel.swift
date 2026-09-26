@@ -71,8 +71,15 @@ public final class FailedWritesModel {
     /// Drops the user's change, once they have confirmed it.
     public func confirmDiscard() {
         guard let candidate = discardCandidate else { return }
+        discard(candidate)
+    }
+
+    /// The confirmed discard, for a dialog that hands back the write it
+    /// presented: SwiftUI may clear the dialog's binding, and with it
+    /// `discardCandidate`, before it runs the button's action.
+    public func discard(_ write: ParkedWrite) {
         discardCandidate = nil
-        try? actions.discard(candidate.sequence)
+        try? actions.discard(write.sequence)
         refresh()
     }
 
