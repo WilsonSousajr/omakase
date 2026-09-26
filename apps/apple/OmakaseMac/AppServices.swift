@@ -56,20 +56,32 @@ final class AppServices {
             toggleSubtask: { [self] id in toggleSubtask(id, onOutcome) })
     }
 
-    /// The review's write: the day's draft saved locally and PUT through the
-    /// outbox, then a catch-up, as Focus's writes do (M3.4 spec §2).
+    /// The review's writes: the day's draft saved locally and PUT through the
+    /// outbox, then a catch-up, as Focus's writes do (M3.4 spec §2). Shut down
+    /// is one `coordinator.write`: the closed review, then each rollover.
     func reviewActions(onOutcome: @escaping @MainActor (SyncCoordinator.Outcome) -> Void) -> ReviewModel.Actions {
-        ReviewModel.Actions(save: { [self] day, values in
-            let (coordinator, writes) = (self.coordinator, ReviewWrites(context: container.mainContext))
-            Task {
-                let outcome = try? await coordinator.write {
+        let writes = ReviewWrites(context: container.mainContext)
+        return ReviewModel.Actions(
+            save: { [self] day, values in
+                reviewWrite(onOutcome) {
                     try writes.save(
                         day: day, rating: values.rating, win: values.win, energy: values.energy,
                         shutdown: values.isShutdown)
                 }
-                onOutcome(outcome ?? .synced)
-            }
-        })
+            },
+            shutDown: { [self] day, values, rollovers in
+                reviewWrite(onOutcome) {
+                    try writes.shutDown(
+                        day: day, rating: values.rating, win: values.win, energy: values.energy, rollovers: rollovers)
+                }
+            })
+    }
+
+    private func reviewWrite(
+        _ onOutcome: @escaping @MainActor (SyncCoordinator.Outcome) -> Void, _ write: @escaping () throws -> Void
+    ) {
+        let coordinator = self.coordinator
+        Task { onOutcome((try? await coordinator.write { try write() }) ?? .synced) }
     }
 
     private func toggleSubtask(_ id: String, _ onOutcome: @escaping @MainActor (SyncCoordinator.Outcome) -> Void) {
