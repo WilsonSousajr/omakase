@@ -55,7 +55,8 @@ apps/apple/      the SwiftUI clients (macOS now, iOS later).
                   from project.yml; the .xcodeproj is not committed.
   Fixtures/       API responses the backend's tests write and the Swift tests decode.
   gate.sh         the Apple gate, step for step what CI's apple-gate job runs.
-docs/           ARCHITECTURE.md, ROADMAP.md, IDEA.md, audits/, superpowers/.
+docs/           ARCHITECTURE.md, ROADMAP.md, IDEA.md, comparison.md,
+                audits/, research/, superpowers/.
 .github/        ci.yml (the gate, docker lint and build) and deploy.yml, which
                 deploys main to the production VPS on every push.
 ```
@@ -393,7 +394,14 @@ approval.**
   the API surface. Read it before the code.
 - `docs/ROADMAP.md`: milestones, what is in each and why. Read it before
   proposing a feature.
-- `docs/IDEA.md`: the full product vision and feature specification.
+- `docs/IDEA.md`: the full product vision and feature specification. It is
+  a wishlist, not evidence: M7 found that most of it is table stakes and
+  one idea in it is unique.
+- `docs/research/`: the field Omakase ships into, dated (M7). Read
+  `2026-landscape.md` and `competitive-parity.md` before claiming anything
+  about a competitor or about what makes Omakase different; every claim
+  there names its source, and one that cannot is deleted.
+- `docs/comparison.md`: the public version of that research.
 - `docs/superpowers/specs/` and `docs/superpowers/plans/`: the design and plan
   behind each milestone's work. Kept after completion as the design record.
 - `docs/audits/`: prompt and quality audits, with their findings.
