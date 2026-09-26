@@ -40,13 +40,7 @@ public struct ReviewSummary: Equatable, Sendable {
     /// when nothing is done.
     public var estimateLabel: String? {
         guard doneCount > 0 else { return nil }
-        let sum = "\(Self.duration(doneEstimatedMinutes)) estimated"
+        let sum = "\(MinutesText.format(doneEstimatedMinutes)) estimated"
         return doneUnestimatedCount == 0 ? sum : "\(sum), \(doneUnestimatedCount) without an estimate"
-    }
-
-    private static func duration(_ minutes: Int) -> String {
-        let (hours, rest) = minutes.quotientAndRemainder(dividingBy: 60)
-        guard hours > 0 else { return "\(rest)m" }
-        return rest == 0 ? "\(hours)h" : "\(hours)h \(rest)m"
     }
 }
