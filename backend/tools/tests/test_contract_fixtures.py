@@ -20,6 +20,7 @@ from accounts.tests.fakes import FakeGoogleVerifier
 from conftest import (
     DailyReviewFactory,
     DisciplineFactory,
+    PomodoroSessionFactory,
     SemesterFactory,
     StudyBlockFactory,
     SubtaskFactory,
@@ -183,6 +184,34 @@ class TestContractFixtures:
         resp = authenticated_client.get("/api/v1/timeblocks/?date=2026-03-07")
         assert resp.status_code == 200
         check_fixture("timeblocks_day", _body(resp))
+
+    def test_timeblock_create(self, authenticated_client, user):
+        # Plan's block.create goes through the outbox, so it is sent with a key (#199).
+        task = TaskFactory(user=user, project=None, discipline=None)
+        resp = authenticated_client.post(
+            "/api/v1/timeblocks/",
+            {"task": str(task.pk), "date": "2026-03-07", "start_time": "09:00", "end_time": "10:00"},
+            format="json",
+            HTTP_IDEMPOTENCY_KEY="b0c4e2d6-7f1a-4c3e-9d2b-5a6f8e1c0d37",
+        )
+        assert resp.status_code == 201, resp.content
+        check_fixture("timeblock_create", _body(resp))
+
+    def test_pomodoro_sessions_range(self, authenticated_client, user):
+        block = TimeBlockFactory(task=TaskFactory(user=user, project=None, discipline=None))
+        PomodoroSessionFactory(
+            task=block.task,
+            time_block=block,
+            started_at=datetime.datetime(2026, 3, 7, 9, tzinfo=datetime.UTC),
+            ended_at=datetime.datetime(2026, 3, 7, 9, 25, tzinfo=datetime.UTC),
+            completed=True,
+        )
+        resp = authenticated_client.get(
+            "/api/v1/pomodoro/sessions/",
+            {"started_after": "2026-03-02T00:00:00-03:00", "started_before": "2026-03-09T00:00:00-03:00"},
+        )
+        assert resp.status_code == 200
+        check_fixture("pomodoro_sessions_range", _body(resp))
 
     def test_studyblocks_day(self, authenticated_client, user):
         discipline = DisciplineFactory(semester=SemesterFactory(user=user))
