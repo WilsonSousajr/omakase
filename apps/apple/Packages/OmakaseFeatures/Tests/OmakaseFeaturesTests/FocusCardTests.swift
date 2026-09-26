@@ -35,14 +35,16 @@ struct FocusCardTests {
     }
 
     @Test func aPastDueDayIsOverdue() {
-        #expect(card(scheduled: "2026-03-07", due: "2026-03-05").dueLabel(today: "2026-03-07", calendar: utc) == "Overdue")
+        #expect(
+            card(scheduled: "2026-03-07", due: "2026-03-05").dueLabel(today: "2026-03-07", calendar: utc) == "Overdue")
     }
 
     @Test func theMarksReadCarriedDueThenEstimate() {
         let marked = FocusCard(
             id: "t1", title: "T", priority: "high", minutes: 45, isCompleted: false, kanbanStatus: "todo",
             scheduledDay: "2026-03-02", dueDay: "2026-03-13", isCarriedOver: true)
-        #expect(FocusMarks.labels(for: marked, day: "2026-03-07", calendar: utc) == ["from Mon 2", "Due Fri 13", "45m"])
+        #expect(
+            FocusMarks.labels(for: marked, day: "2026-03-07", calendar: utc) == ["from Mon 2", "Due Fri 13", "45m"])
         #expect(FocusMarks.labels(for: card(), day: "2026-03-07", calendar: utc).isEmpty)
     }
 }
