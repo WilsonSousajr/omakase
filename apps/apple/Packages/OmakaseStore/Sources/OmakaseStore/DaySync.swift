@@ -5,9 +5,9 @@ import SwiftData
 /// Refreshes today's window: the server's copy replaces the cache, except for
 /// items with queued writes, which keep their local state until sent.
 ///
-///     try await TodaySync(context: container.mainContext, api: api).refresh()
+///     try await DaySync(context: container.mainContext, api: api).refresh()
 @MainActor
-public final class TodaySync {
+public final class DaySync {
     private let context: ModelContext
     private let api: any APIClient
     private let clock: @Sendable () -> Date

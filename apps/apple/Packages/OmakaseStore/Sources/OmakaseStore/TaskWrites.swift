@@ -35,7 +35,7 @@ public final class TaskWrites {
         }
         record.id = serverID
         // A later write for this task is still queued: the user's newer local
-        // state stands until it is sent, as in TodaySync (review finding I5).
+        // state stands until it is sent, as in DaySync (review finding I5).
         guard !hasLaterPendingWrite(than: entry, for: [localID, serverID]) else { return }
         record.apply(dto)
     }

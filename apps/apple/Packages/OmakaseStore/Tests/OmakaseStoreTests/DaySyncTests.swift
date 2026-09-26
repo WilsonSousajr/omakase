@@ -12,7 +12,7 @@ final class TestClock: @unchecked Sendable {
 }
 
 @MainActor
-struct TodaySyncTests {
+struct DaySyncTests {
     let container: ModelContainer
     let api = FakeAPIClient()
     let utc: Calendar = {
@@ -24,9 +24,9 @@ struct TodaySyncTests {
 
     init() throws { container = try StoreSchema.container(inMemory: true) }
 
-    func sync() -> TodaySync {
+    func sync() -> DaySync {
         let clock = self.clock
-        return TodaySync(context: container.mainContext, api: api, clock: { clock.now }, calendar: utc)
+        return DaySync(context: container.mainContext, api: api, clock: { clock.now }, calendar: utc)
     }
 
     func records() throws -> [TaskRecord] { try container.mainContext.fetch(FetchDescriptor<TaskRecord>()) }
@@ -74,7 +74,7 @@ struct TodaySyncTests {
 
     @Test func aRefreshKeepsOtherDaysAndLocalPlaceholders() async throws {
         await api.setTasks([try .make(title: "Other day", day: "2026-03-06")], on: "2026-03-06")
-        let yesterday = TodaySync(
+        let yesterday = DaySync(
             context: container.mainContext, api: api, clock: { Date(timeIntervalSince1970: 1_772_798_400) },
             calendar: utc)
         try await yesterday.refresh()
