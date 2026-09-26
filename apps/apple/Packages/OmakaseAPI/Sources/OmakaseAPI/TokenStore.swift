@@ -47,6 +47,37 @@ public struct KeychainTokenStore: TokenStore {
     }
 }
 
+/// Reads the wrapped store (the Keychain) once per launch and keeps the
+/// tokens in memory; saves and clears write through. Every API request loads
+/// the tokens, and each Keychain read by a newly built, ad-hoc-signed app
+/// raises a permission prompt, so reading per request prompted endlessly (#168).
+///
+///     let tokens = CachingTokenStore(wrapping: KeychainTokenStore())
+public actor CachingTokenStore: TokenStore {
+    private let wrapped: any TokenStore
+    /// nil until the first load; then what the wrapped store holds, even if that is nothing.
+    private var cached: StoredTokens??
+
+    public init(wrapping wrapped: any TokenStore) { self.wrapped = wrapped }
+
+    public func load() async -> StoredTokens? {
+        if let cached { return cached }
+        let tokens = await wrapped.load()
+        cached = .some(tokens)
+        return tokens
+    }
+
+    public func save(_ tokens: StoredTokens) async throws {
+        try await wrapped.save(tokens)
+        cached = .some(tokens)
+    }
+
+    public func clear() async {
+        await wrapped.clear()
+        cached = .some(nil)
+    }
+}
+
 public actor InMemoryTokenStore: TokenStore {
     private var tokens: StoredTokens?
     public init(_ tokens: StoredTokens? = nil) { self.tokens = tokens }
