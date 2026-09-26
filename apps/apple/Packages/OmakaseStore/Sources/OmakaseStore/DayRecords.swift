@@ -104,6 +104,10 @@ public final class ProfileRecord {
     public var beforeLongBreak: Int
     public var workGoalHours: Double
     public var studyGoalHours: Double
+    // Defaulted to the server's defaults so older stores migrate (#127).
+    public var blockReminderMinutes: Int? = 5
+    /// "HH:MM:SS" in the user's day, nil for no shutdown reminder.
+    public var shutdownReminderTime: String?
 
     public init(dto: ProfileDTO) {
         (workMinutes, shortBreakMinutes, longBreakMinutes, beforeLongBreak) = (0, 0, 0, 0)
@@ -115,6 +119,7 @@ public final class ProfileRecord {
         (workMinutes, shortBreakMinutes) = (dto.pomodoroWorkMinutes, dto.pomodoroShortBreakMinutes)
         (longBreakMinutes, beforeLongBreak) = (dto.pomodoroLongBreakMinutes, dto.pomodorosBeforeLongBreak)
         (workGoalHours, studyGoalHours) = (dto.workGoalHours, dto.studyGoalHours)
+        (blockReminderMinutes, shutdownReminderTime) = (dto.blockReminderMinutes, dto.shutdownReminderTime)
     }
 }
 

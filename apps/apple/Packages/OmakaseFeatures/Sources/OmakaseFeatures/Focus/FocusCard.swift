@@ -15,22 +15,26 @@ public struct FocusCard: Identifiable, Equatable, Sendable {
     public let scheduledDay: String?
     public let dueDay: String?
     public let isCarriedOver: Bool
+    public let remindAt: Date?
 
     public init(
         id: String, title: String, priority: String, minutes: Int?, isCompleted: Bool, kanbanStatus: String,
-        scheduledDay: String?, dueDay: String?, isCarriedOver: Bool
+        scheduledDay: String?, dueDay: String?, isCarriedOver: Bool, remindAt: Date? = nil
     ) {
         (self.id, self.title, self.priority, self.minutes) = (id, title, priority, minutes)
-        (self.isCompleted, self.kanbanStatus) = (isCompleted, kanbanStatus)
+        (self.isCompleted, self.kanbanStatus, self.remindAt) = (isCompleted, kanbanStatus, remindAt)
         (self.scheduledDay, self.dueDay, self.isCarriedOver) = (scheduledDay, dueDay, isCarriedOver)
     }
+
+    /// A reminder is set: the card and row show a bell (#187).
+    public var hasReminder: Bool { remindAt != nil }
 
     @MainActor
     public init(record: TaskRecord) {
         self.init(
             id: record.id, title: record.title, priority: record.priority, minutes: record.estimatedMinutes,
             isCompleted: record.isCompleted, kanbanStatus: record.kanbanStatus, scheduledDay: record.scheduledDay,
-            dueDay: record.dueDay, isCarriedOver: record.isCarriedOver)
+            dueDay: record.dueDay, isCarriedOver: record.isCarriedOver, remindAt: record.remindAt)
     }
 
     /// "from Mon 2" for a carried-over card (#129); nil otherwise.

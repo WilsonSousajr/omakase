@@ -19,13 +19,16 @@ public final class FocusModel {
         let move: (String, String) -> Void
         let reschedule: (String, String?) -> Void
         let toggleSubtask: (String) -> Void
+        /// The instant to remind at, or nil to clear the reminder (#187).
+        let remind: (String, Date?) -> Void
 
         public init(
             toggle: @escaping (String) -> Void, move: @escaping (String, String) -> Void,
-            reschedule: @escaping (String, String?) -> Void, toggleSubtask: @escaping (String) -> Void
+            reschedule: @escaping (String, String?) -> Void, toggleSubtask: @escaping (String) -> Void,
+            remind: @escaping (String, Date?) -> Void
         ) {
             (self.toggle, self.move) = (toggle, move)
-            (self.reschedule, self.toggleSubtask) = (reschedule, toggleSubtask)
+            (self.reschedule, self.toggleSubtask, self.remind) = (reschedule, toggleSubtask, remind)
         }
     }
 
@@ -56,6 +59,11 @@ public final class FocusModel {
     }
 
     public func toggleSubtask(_ id: String) { actions.toggleSubtask(id) }
+
+    /// Sets the task's reminder to `choice`, counted from `now`; `.clear` removes it.
+    public func remind(_ id: String, _ choice: ReminderChoice, now: Date = .now) {
+        actions.remind(id, choice.date(from: now, calendar: calendar))
+    }
 
     public func selectedCard(in board: FocusBoard) -> FocusCard? {
         board.cards.first { $0.id == selectedID }

@@ -65,6 +65,10 @@ public struct ProfileDTO: Sendable, Codable, Equatable {
     public let pomodorosBeforeLongBreak: Int
     public let dailyWorkGoalHours: String
     public let dailyStudyGoalHours: String
+    /// Minutes of heads-up before a time block starts, nil for none (#127).
+    public let blockReminderMinutes: Int?
+    /// The server's "HH:MM:SS" wall-clock time, nil for no shutdown reminder.
+    public let shutdownReminderTime: String?
 
     public var workGoalHours: Double { Double(dailyWorkGoalHours) ?? 0 }
     public var studyGoalHours: Double { Double(dailyStudyGoalHours) ?? 0 }

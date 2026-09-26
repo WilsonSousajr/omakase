@@ -92,13 +92,14 @@ extension TaskDTO {
     /// A task as the server would send it, for tests. `subtasks` nil leaves the key out, as the plain list does.
     static func make(
         id: UUID = UUID(), title: String = "Task", day: String? = "2026-03-07", completed: Bool = false,
-        subtasks: [(String, Bool)]? = nil
+        subtasks: [(String, Bool)]? = nil, remindAt: String? = nil
     ) throws -> TaskDTO {
         let json = """
             {"id":"\(id)","title":"\(title)","description":"","priority":"medium","area":"work",
              "kanban_status":"todo","project":null,"discipline":null,"tags":[],
              "scheduled_date":\(day.map { "\"\($0)\"" } ?? "null"),"due_date":null,"estimated_minutes":null,
              "actual_minutes":0,"kanban_order":0,"is_completed":\(completed),"completed_at":null,
+             "remind_at":\(remindAt.map { "\"\($0)\"" } ?? "null"),
              "created_at":"2026-03-07T12:00:00Z","updated_at":"2026-03-07T12:00:00Z"\(subtasksJSON(subtasks))}
             """
         return try OmakaseJSON.decoder.decode(TaskDTO.self, from: Data(json.utf8))
@@ -143,10 +144,12 @@ extension DailyReviewDTO {
 }
 
 extension ProfileDTO {
-    static func make() throws -> ProfileDTO {
+    static func make(blockReminderMinutes: Int? = 5, shutdownReminderTime: String? = nil) throws -> ProfileDTO {
         let json = """
             {"pomodoro_work_minutes":25,"pomodoro_short_break_minutes":5,"pomodoro_long_break_minutes":15,
-             "pomodoros_before_long_break":4,"daily_work_goal_hours":"8.0","daily_study_goal_hours":"4.0"}
+             "pomodoros_before_long_break":4,"daily_work_goal_hours":"8.0","daily_study_goal_hours":"4.0",
+             "block_reminder_minutes":\(blockReminderMinutes.map(String.init) ?? "null"),
+             "shutdown_reminder_time":\(shutdownReminderTime.map { "\"\($0)\"" } ?? "null")}
             """
         return try OmakaseJSON.decoder.decode(ProfileDTO.self, from: Data(json.utf8))
     }

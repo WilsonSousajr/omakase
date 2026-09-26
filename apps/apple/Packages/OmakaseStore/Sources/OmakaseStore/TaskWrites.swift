@@ -38,6 +38,13 @@ public final class TaskWrites {
         try patch(record, raw: Data(#"{"scheduled_date":\#(value)}"#.utf8))
     }
 
+    /// `date` nil clears the reminder. A nil Optional in a dictionary encodes
+    /// as an explicit null, which the server needs to clear it (spec §2).
+    public func setReminder(_ record: TaskRecord, at date: Date?) throws {
+        record.remindAt = date
+        try patch(record, body: ["remind_at": date])
+    }
+
     /// A task captured now, offline or not: shown at once under a `local-` id.
     public func capture(title: String, day: String?) throws -> TaskRecord {
         let record = TaskRecord(id: "local-\(UUID().uuidString)", title: title, scheduledDay: day)

@@ -26,6 +26,8 @@ public struct TaskDTO: Sendable, Codable, Equatable, Identifiable {
     public let kanbanOrder: Int
     public let isCompleted: Bool
     public let completedAt: Date?
+    /// When to remind about the task, or nil for no reminder (#127).
+    public let remindAt: Date?
     public let createdAt: Date
     public let updatedAt: Date
     /// Embedded by today and carried-over only; nil elsewhere, and then sync leaves local subtasks alone.

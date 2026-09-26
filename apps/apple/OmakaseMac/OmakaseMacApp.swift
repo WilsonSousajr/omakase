@@ -120,6 +120,7 @@ struct OmakaseMacApp: App {
     /// Only a definite sign-out leaves Today; an offline failure keeps the cache (review I3).
     private func handle(_ outcome: SyncCoordinator.Outcome) {
         if outcome == .signedOut { signedIn = false }
+        services.replanReminders()
     }
 
     /// The store and API are the app's foundation; without them there is no app to show.
