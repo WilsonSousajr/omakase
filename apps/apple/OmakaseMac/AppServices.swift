@@ -22,7 +22,7 @@ final class AppServices {
         let sync = DaySync(context: container.mainContext, api: api)
         let worker = OutboxWorker(
             context: container.mainContext, api: api,
-            handlers: OutboxHandlers([TaskHandler(context: container.mainContext)]))
+            handlers: Self.handlers(container.mainContext))
         coordinator = SyncCoordinator(drain: { await worker.drain() }, refresh: { try await sync.refresh() })
     }
 
@@ -39,6 +39,14 @@ final class AppServices {
                 try? await Task.sleep(for: .seconds(300))
             }
         }
+    }
+
+    /// Every kind of write the app queues, and what applies its reply (M3.1 spec §3).
+    private static func handlers(_ context: ModelContext) -> OutboxHandlers {
+        OutboxHandlers([
+            TaskHandler(context: context), SubtaskHandler(context: context), BlockHandler(context: context),
+            SessionHandler(), ReviewHandler(context: context),
+        ])
     }
 
     private static var baseURL: URL {
