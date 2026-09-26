@@ -38,7 +38,9 @@ public final class TimerModel {
         state: PomodoroState, settings: @escaping () -> PomodoroSettings, blockFor: @escaping (String) -> String?,
         actions: Actions, clock: @escaping () -> Date = { .now }
     ) {
-        (self.state, self.settings, self.blockFor, self.actions, self.clock) = (state, settings, blockFor, actions, clock)
+        (self.state, self.settings, self.blockFor, self.actions, self.clock) = (
+            state, settings, blockFor, actions, clock
+        )
         now = clock()
         // A timer that ran out while the app was quit is finished now, as it ran.
         tick()
@@ -50,7 +52,10 @@ public final class TimerModel {
         let now = clock()
         let task = state.phase == .focus ? taskID : state.taskID
         let block = task.flatMap(blockFor)
-        update(PomodoroEngine.start(state, phase: state.phase, taskID: task, blockID: block, settings: settings(), now: now))
+        update(
+            PomodoroEngine.start(
+                state, phase: state.phase, on: PomodoroTarget(taskID: task, blockID: block), settings: settings(),
+                now: now))
         actions.notify(now.addingTimeInterval(state.plannedSeconds), state.phase)
     }
 

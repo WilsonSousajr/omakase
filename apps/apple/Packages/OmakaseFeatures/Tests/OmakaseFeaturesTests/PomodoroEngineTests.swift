@@ -10,7 +10,8 @@ struct PomodoroEngineTests {
     func running(_ phase: TimerPhase = .focus, focuses: Int = 0) -> PomodoroState {
         var state = PomodoroState.idle
         state.completedFocuses = focuses
-        return PomodoroEngine.start(state, phase: phase, taskID: "t1", blockID: "b1", settings: settings, now: start)
+        return PomodoroEngine.start(
+            state, phase: phase, on: PomodoroTarget(taskID: "t1", blockID: "b1"), settings: settings, now: start)
     }
 
     @Test func aStartedFocusRunsForTheWorkMinutes() {
@@ -37,15 +38,18 @@ struct PomodoroEngineTests {
 
     @Test func aFinishedFocusIsRecordedAndABreakWaits() {
         let (next, done) = PomodoroEngine.finish(running(), now: start.addingTimeInterval(1500), settings: settings)
-        #expect(done == CompletedPhase(
-            phase: .focus, taskID: "t1", blockID: "b1", startedAt: start,
-            endedAt: start.addingTimeInterval(1500), minutes: 25, completed: true))
+        #expect(
+            done
+                == CompletedPhase(
+                    phase: .focus, taskID: "t1", blockID: "b1", startedAt: start,
+                    endedAt: start.addingTimeInterval(1500), minutes: 25, completed: true))
         #expect(next.status == .idle && next.phase == .shortBreak && next.completedFocuses == 1)
         #expect(next.plannedSeconds == 5 * 60 && next.taskID == "t1")
     }
 
     @Test func everyNthFocusEarnsALongBreak() {
-        let (next, _) = PomodoroEngine.finish(running(focuses: 1), now: start.addingTimeInterval(1500), settings: settings)
+        let (next, _) = PomodoroEngine.finish(
+            running(focuses: 1), now: start.addingTimeInterval(1500), settings: settings)
         #expect(next.phase == .longBreak && next.plannedSeconds == 15 * 60)
     }
 
@@ -70,7 +74,8 @@ struct PomodoroEngineTests {
     }
 
     @Test func aSkippedFocusRecordsItsElapsedTimeAsIncomplete() {
-        let (next, done) = PomodoroEngine.skip(running(), now: start.addingTimeInterval(10 * 60 + 30), settings: settings)
+        let (next, done) = PomodoroEngine.skip(
+            running(), now: start.addingTimeInterval(10 * 60 + 30), settings: settings)
         #expect(done?.completed == false && done?.minutes == 10 && done?.endedAt == start.addingTimeInterval(630))
         #expect(next.phase == .focus && next.status == .idle && next.completedFocuses == 0)
     }
@@ -81,7 +86,8 @@ struct PomodoroEngineTests {
     }
 
     @Test func aSkippedBreakRecordsNothingAndFocusWaits() {
-        let (next, done) = PomodoroEngine.skip(running(.shortBreak, focuses: 1), now: start.addingTimeInterval(60), settings: settings)
+        let (next, done) = PomodoroEngine.skip(
+            running(.shortBreak, focuses: 1), now: start.addingTimeInterval(60), settings: settings)
         #expect(done == nil && next.phase == .focus && next.completedFocuses == 1)
     }
 
@@ -92,8 +98,10 @@ struct PomodoroEngineTests {
     }
 
     @Test func settingsDefaultToTheClassicPomodoro() {
-        #expect(PomodoroSettings.standard == PomodoroSettings(
-            workMinutes: 25, shortBreakMinutes: 5, longBreakMinutes: 15, beforeLongBreak: 4))
+        #expect(
+            PomodoroSettings.standard
+                == PomodoroSettings(
+                    workMinutes: 25, shortBreakMinutes: 5, longBreakMinutes: 15, beforeLongBreak: 4))
     }
 
     @Test func eachPhaseHasTheServersSessionType() {

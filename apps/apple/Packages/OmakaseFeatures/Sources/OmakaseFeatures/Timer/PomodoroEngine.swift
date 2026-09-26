@@ -3,16 +3,15 @@ import Foundation
 /// The pomodoro's rules as pure functions of `now`, so the timer is exact
 /// after sleep or a quit and every rule is testable.
 ///
-///     let running = PomodoroEngine.start(.idle, phase: .focus, taskID: id, blockID: nil, settings: s, now: .now)
+///     let running = PomodoroEngine.start(.idle, phase: .focus, on: .init(taskID: id), settings: s, now: .now)
 public enum PomodoroEngine {
     public static func start(
-        _ state: PomodoroState, phase: TimerPhase, taskID: String?, blockID: String?, settings: PomodoroSettings,
-        now: Date
+        _ state: PomodoroState, phase: TimerPhase, on target: PomodoroTarget, settings: PomodoroSettings, now: Date
     ) -> PomodoroState {
         var next = state
         (next.phase, next.status, next.startedAt, next.pausedAt) = (phase, .running, now, nil)
         (next.pausedSeconds, next.plannedSeconds) = (0, settings.seconds(for: phase))
-        (next.taskID, next.blockID) = (taskID, blockID)
+        (next.taskID, next.blockID) = (target.taskID, target.blockID)
         return next
     }
 

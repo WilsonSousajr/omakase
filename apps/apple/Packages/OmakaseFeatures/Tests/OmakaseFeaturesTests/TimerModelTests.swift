@@ -70,7 +70,7 @@ struct TimerModelTests {
 
     @Test func aTimerDueWhileTheAppWasQuitFinishesOnLaunch() {
         var state = PomodoroEngine.start(
-            .idle, phase: .focus, taskID: "t1", blockID: "b1", settings: settings, now: clock.now)
+            .idle, phase: .focus, on: PomodoroTarget(taskID: "t1", blockID: "b1"), settings: settings, now: clock.now)
         state.startedAt = clock.now.addingTimeInterval(-4 * 3600)
         let timer = model(state)
         #expect(effects.recorded.first?.endedAt == clock.now.addingTimeInterval(-4 * 3600 + 1500))

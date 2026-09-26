@@ -61,6 +61,14 @@ public struct PomodoroState: Codable, Equatable, Sendable {
         plannedSeconds: PomodoroSettings.standard.seconds(for: .focus), taskID: nil, blockID: nil, completedFocuses: 0)
 }
 
+/// What a phase runs on: the task, and its block today if it has one (#129).
+public struct PomodoroTarget: Equatable, Sendable {
+    public let taskID: String?
+    public let blockID: String?
+
+    public init(taskID: String?, blockID: String? = nil) { (self.taskID, self.blockID) = (taskID, blockID) }
+}
+
 /// A phase that ended and is recorded as a pomodoro session.
 public struct CompletedPhase: Equatable, Sendable {
     public let phase: TimerPhase
