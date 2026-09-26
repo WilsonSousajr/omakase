@@ -70,6 +70,56 @@ final class AppServices {
         Task { onOutcome((try? await coordinator.write { try write(record) }) ?? .synced) }
     }
 
+    /// The pomodoro, resumed from the store: a phase that ran out while the
+    /// app was quit is recorded as it ran. Its finished phases are posted as
+    /// sessions through the outbox, against the task's block (#129).
+    func makeTimer(onOutcome: @escaping @MainActor (SyncCoordinator.Outcome) -> Void) -> TimerModel {
+        let context = container.mainContext
+        let store = TimerStateStore(context: context)
+        let saved = store.load().flatMap { try? JSONDecoder().decode(PomodoroState.self, from: $0) } ?? .idle
+        return TimerModel(
+            state: saved,
+            settings: { PomodoroSettings(profile: try? context.fetch(FetchDescriptor<ProfileRecord>()).first) },
+            blockFor: { [self] in blockNow(for: $0) },
+            actions: TimerModel.Actions(
+                save: { try? store.save(JSONEncoder().encode($0)) },
+                record: { [self] in record($0, onOutcome) },
+                notify: { _, _ in }))
+    }
+
+    private func blockNow(for taskID: String) -> String? {
+        let day = FocusDay().today
+        let descriptor = FetchDescriptor<TimeBlockRecord>(predicate: #Predicate { $0.day == day })
+        let blocks = (try? container.mainContext.fetch(descriptor)) ?? []
+        let slots = blocks.map { SessionBlock.Slot(id: $0.id, taskID: $0.taskID, start: $0.startTime, end: $0.endTime) }
+        let now = Calendar.current.dateComponents([.hour, .minute], from: .now)
+        return SessionBlock.pick(
+            for: taskID, in: slots, at: String(format: "%02d:%02d", now.hour ?? 0, now.minute ?? 0))
+    }
+
+    private func record(_ phase: CompletedPhase, _ onOutcome: @escaping @MainActor (SyncCoordinator.Outcome) -> Void) {
+        let context = container.mainContext
+        let task = phase.taskID.flatMap { id in
+            try? context.fetch(FetchDescriptor<TaskRecord>(predicate: #Predicate { $0.id == id })).first
+        }
+        let session = FinishedSession(
+            timeBlockID: phase.blockID, type: phase.phase.sessionType, minutes: phase.minutes,
+            startedAt: phase.startedAt, endedAt: phase.endedAt, completed: phase.completed)
+        let (coordinator, writes) = (self.coordinator, SessionWrites(context: context))
+        Task { onOutcome((try? await coordinator.write { try writes.record(session, task: task) }) ?? .synced) }
+    }
+
+    /// Ticks the timer every second while the app runs, so a phase ends on
+    /// time with the window closed (the menu bar and notifications rely on it).
+    func startTicking(_ timer: TimerModel) {
+        Task { @MainActor in
+            while !Task.isCancelled {
+                timer.tick()
+                try? await Task.sleep(for: .seconds(1))
+            }
+        }
+    }
+
     /// Every kind of write the app queues, and what applies its reply (M3.1 spec §3).
     private static func handlers(_ context: ModelContext) -> OutboxHandlers {
         OutboxHandlers([

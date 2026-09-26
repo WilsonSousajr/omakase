@@ -10,6 +10,7 @@ struct OmakaseMacApp: App {
     @State private var signedIn = false
     @State private var section: SidebarItem? = .focus
     @State private var focus: FocusModel?
+    @State private var timer: TimerModel?
     /// Recomputed when the app becomes active: a window left open overnight
     /// moves to the new day (M1's known limitation).
     @State private var day = FocusDay().today
@@ -34,7 +35,7 @@ struct OmakaseMacApp: App {
             NavigationSplitView {
                 List(SidebarItem.allCases, selection: $section) { Label($0.title, systemImage: $0.symbol) }
             } detail: {
-                if let focus { FocusView(day: day, model: focus) }
+                if let focus, let timer { FocusView(day: day, model: focus, timer: timer) }
             }
         } else if let signIn {
             SignInView(model: signIn).onChange(of: signIn.state) { _, state in
@@ -53,6 +54,9 @@ struct OmakaseMacApp: App {
         // Stored tokens decide, not a network call: offline, the cached Today
         // still shows (final review C1). The server says otherwise via handle().
         focus = FocusModel(actions: services.focusActions { handle($0) })
+        let timer = services.makeTimer { handle($0) }
+        self.timer = timer
+        services.startTicking(timer)
         signedIn = await api.hasStoredSession()
         services.startBackgroundCatchUp { handle($0) }
     }
