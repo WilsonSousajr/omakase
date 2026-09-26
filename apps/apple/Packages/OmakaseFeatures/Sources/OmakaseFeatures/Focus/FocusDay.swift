@@ -14,8 +14,5 @@ public struct FocusDay: Sendable {
         (self.clock, self.calendar) = (clock, calendar)
     }
 
-    public var today: String {
-        let parts = calendar.dateComponents([.year, .month, .day], from: clock())
-        return String(format: "%04d-%02d-%02d", parts.year ?? 0, parts.month ?? 0, parts.day ?? 0)
-    }
+    public var today: String { DayString.format(clock(), calendar: calendar) }
 }

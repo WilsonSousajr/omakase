@@ -17,9 +17,15 @@ public final class FocusModel {
     public struct Actions {
         let toggle: (String) -> Void
         let move: (String, String) -> Void
+        let reschedule: (String, String?) -> Void
+        let toggleSubtask: (String) -> Void
 
-        public init(toggle: @escaping (String) -> Void, move: @escaping (String, String) -> Void) {
+        public init(
+            toggle: @escaping (String) -> Void, move: @escaping (String, String) -> Void,
+            reschedule: @escaping (String, String?) -> Void, toggleSubtask: @escaping (String) -> Void
+        ) {
             (self.toggle, self.move) = (toggle, move)
+            (self.reschedule, self.toggleSubtask) = (reschedule, toggleSubtask)
         }
     }
 
@@ -32,9 +38,10 @@ public final class FocusModel {
 
     @ObservationIgnored private let actions: Actions
     @ObservationIgnored private let defaults: UserDefaults
+    @ObservationIgnored public let calendar: Calendar
 
-    public init(actions: Actions, defaults: UserDefaults = .standard) {
-        (self.actions, self.defaults) = (actions, defaults)
+    public init(actions: Actions, defaults: UserDefaults = .standard, calendar: Calendar = .current) {
+        (self.actions, self.defaults, self.calendar) = (actions, defaults, calendar)
         layout = defaults.string(forKey: Self.layoutKey).flatMap(Layout.init) ?? .kanban
     }
 
@@ -42,6 +49,17 @@ public final class FocusModel {
 
     /// A card dropped on a column. Moving to Done completes the task.
     public func move(_ id: String, to status: String) { actions.move(id, status) }
+
+    /// Moves a task to `option`'s day, counted from `today`; the backlog is nil.
+    public func reschedule(_ id: String, _ option: RescheduleOption, today: String) {
+        actions.reschedule(id, option.day(from: today, calendar: calendar))
+    }
+
+    public func toggleSubtask(_ id: String) { actions.toggleSubtask(id) }
+
+    public func selectedCard(in board: FocusBoard) -> FocusCard? {
+        board.cards.first { $0.id == selectedID }
+    }
 
     /// Keeps the panel on a task that is still on the board; otherwise the
     /// first To do (carried-over first), or nothing.
