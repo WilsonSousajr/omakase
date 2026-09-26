@@ -17,7 +17,7 @@ from unittest.mock import patch
 import pytest
 
 from accounts.tests.fakes import FakeGoogleVerifier
-from conftest import SubtaskFactory, TagFactory, TaskFactory, TimeBlockFactory
+from conftest import DailyReviewFactory, SubtaskFactory, TagFactory, TaskFactory, TimeBlockFactory
 
 REPO = Path(os.environ.get("REPO_ROOT", Path(__file__).resolve().parents[3]))
 FIXTURES = REPO / "apps" / "apple" / "Fixtures"
@@ -112,6 +112,12 @@ class TestContractFixtures:
         resp = authenticated_client.patch(f"/api/v1/tasks/{task.pk}/", {"is_completed": True}, format="json")
         assert resp.status_code == 200
         check_fixture("task_patch", _body(resp))
+
+    def test_stats_review_list(self, authenticated_client, user):
+        DailyReviewFactory(user=user, date=datetime.date(2026, 3, 7), productivity_rating=4, energy=2)
+        resp = authenticated_client.get("/api/v1/stats/reviews/?date=2026-03-07")
+        assert resp.status_code == 200
+        check_fixture("stats_review_list", _body(resp))
 
     def test_tasks_carried_over(self, authenticated_client, user):
         task = TaskFactory(
