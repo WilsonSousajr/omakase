@@ -86,5 +86,5 @@ struct TimerPhasesView: View {
     }
 }
 
-#Preview("Timer phases, light") { TimerPhasesView().mockupCanvas(.light) }
 #Preview("Timer phases, dark") { TimerPhasesView().mockupCanvas(.dark) }
+#Preview("Timer phases, light") { TimerPhasesView().mockupCanvas(.light) }

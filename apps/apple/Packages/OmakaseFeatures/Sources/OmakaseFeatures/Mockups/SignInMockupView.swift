@@ -19,9 +19,8 @@ struct SignInMockupView: View {
                 .tint(Palette.shu.color)
         }
         .frame(width: 520, height: 420)
-        .background(Palette.background.color)
     }
 }
 
-#Preview("Sign-in, light") { SignInMockupView().preferredColorScheme(.light) }
-#Preview("Sign-in, dark") { SignInMockupView().preferredColorScheme(.dark) }
+#Preview("Sign-in, dark") { SignInMockupView().mockupWindow(.dark) }
+#Preview("Sign-in, light") { SignInMockupView().mockupWindow(.light) }

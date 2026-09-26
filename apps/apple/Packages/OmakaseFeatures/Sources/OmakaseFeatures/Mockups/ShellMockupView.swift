@@ -17,6 +17,7 @@ struct ShellMockupView: View {
             detail.navigationTitle(selection.rawValue)
         }
         .tint(Palette.shu.color)
+        .omakaseWindowBackground()
     }
 
     @ViewBuilder private var detail: some View {
@@ -63,9 +64,12 @@ struct ShellAccountView: View {
     }
 }
 
-#Preview("Shell, Plan, light") {
-    ShellMockupView(selection: .plan).frame(width: 1300, height: 760).preferredColorScheme(.light)
+#Preview("Shell, Plan, dark") {
+    ShellMockupView(selection: .plan).frame(width: 1300, height: 760).mockupWindow(.dark)
 }
 #Preview("Shell, Focus, dark") {
-    ShellMockupView(selection: .focus).frame(width: 1300, height: 760).preferredColorScheme(.dark)
+    ShellMockupView(selection: .focus).frame(width: 1300, height: 760).mockupWindow(.dark)
+}
+#Preview("Shell, Plan, light") {
+    ShellMockupView(selection: .plan).frame(width: 1300, height: 760).mockupWindow(.light)
 }

@@ -10,7 +10,6 @@ struct PlanMockupView: View {
             Divider().overlay(Palette.hairline.color)
             PlanCalendarView()
         }
-        .background(Palette.background.color)
     }
 }
 
@@ -135,8 +134,9 @@ struct CalendarBlockView: View {
         .padding(Spacing.small)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .background(tint.opacity(block.isClass ? 0.06 : 0.14), in: .rect(cornerRadius: Radius.small))
-        // Opaque under the tint, so the hour lines do not show through a block.
-        .background(Palette.background.color, in: .rect(cornerRadius: Radius.small))
+        // Opaque under the tint, so neither the hour lines nor the desktop
+        // show through a block.
+        .background(Palette.surface.color, in: .rect(cornerRadius: Radius.small))
         .overlay {
             if block.isClass {
                 RoundedRectangle(cornerRadius: Radius.small).strokeBorder(
@@ -146,5 +146,5 @@ struct CalendarBlockView: View {
     }
 }
 
-#Preview("Plan, light") { PlanMockupView().frame(width: 1120, height: 680).preferredColorScheme(.light) }
-#Preview("Plan, dark") { PlanMockupView().frame(width: 1120, height: 680).preferredColorScheme(.dark) }
+#Preview("Plan, dark") { PlanMockupView().frame(width: 1120, height: 680).mockupWindow(.dark) }
+#Preview("Plan, light") { PlanMockupView().frame(width: 1120, height: 680).mockupWindow(.light) }

@@ -21,7 +21,6 @@ struct FocusMockupView: View {
             Divider().overlay(Palette.hairline.color)
             FocusActiveTaskView().frame(width: 360)
         }
-        .background(Palette.background.color)
     }
 }
 
@@ -66,7 +65,7 @@ struct FocusKanbanView: View {
         }
         .padding(Spacing.medium)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .background(Palette.surface.color.opacity(0.6), in: .rect(cornerRadius: Radius.large))
+        .background(Palette.surface.color.opacity(0.35), in: .rect(cornerRadius: Radius.large))
     }
 }
 
@@ -87,7 +86,7 @@ struct FocusCardView: View {
         }
         .padding(Spacing.medium)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Palette.background.color, in: .rect(cornerRadius: Radius.medium))
+        .background(Palette.surface.color, in: .rect(cornerRadius: Radius.medium))
         .overlay(RoundedRectangle(cornerRadius: Radius.medium).strokeBorder(Palette.hairline.color))
     }
 }
@@ -153,15 +152,12 @@ struct FocusActiveTaskView: View {
     }
 }
 
-#Preview("Focus kanban, light") {
-    FocusMockupView(layout: .kanban).frame(width: 1120, height: 720).preferredColorScheme(.light)
-}
 #Preview("Focus kanban, dark") {
-    FocusMockupView(layout: .kanban).frame(width: 1120, height: 720).preferredColorScheme(.dark)
-}
-#Preview("Focus list, light") {
-    FocusMockupView(layout: .list).frame(width: 1120, height: 720).preferredColorScheme(.light)
+    FocusMockupView(layout: .kanban).frame(width: 1120, height: 720).mockupWindow(.dark)
 }
 #Preview("Focus list, dark") {
-    FocusMockupView(layout: .list).frame(width: 1120, height: 720).preferredColorScheme(.dark)
+    FocusMockupView(layout: .list).frame(width: 1120, height: 720).mockupWindow(.dark)
+}
+#Preview("Focus kanban, light") {
+    FocusMockupView(layout: .kanban).frame(width: 1120, height: 720).mockupWindow(.light)
 }

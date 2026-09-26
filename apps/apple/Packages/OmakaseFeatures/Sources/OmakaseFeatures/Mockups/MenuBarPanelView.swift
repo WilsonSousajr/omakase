@@ -23,7 +23,13 @@ struct MenuBarPanelView: View {
         }
         .padding(Spacing.large)
         .frame(width: 320)
-        .background(Palette.background.color, in: .rect(cornerRadius: Radius.large))
+        .background {
+            ZStack {
+                Rectangle().fill(.ultraThinMaterial)
+                Palette.background.color.opacity(Translucency.window)
+            }
+            .clipShape(.rect(cornerRadius: Radius.large))
+        }
     }
 
     private func blockLine(_ time: String, _ title: String, tint: DesignColor) -> some View {
@@ -58,5 +64,5 @@ struct MenuBarTimerRowView: View {
     }
 }
 
-#Preview("Menu bar, light") { MenuBarPanelView().mockupCanvas(.light) }
 #Preview("Menu bar, dark") { MenuBarPanelView().mockupCanvas(.dark) }
+#Preview("Menu bar, light") { MenuBarPanelView().mockupCanvas(.light) }

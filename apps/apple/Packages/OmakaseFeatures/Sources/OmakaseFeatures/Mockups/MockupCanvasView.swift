@@ -51,13 +51,41 @@ enum MockupDay {
     static let now = 14.67
 }
 
+/// A stand-in desktop, busy on purpose, so the mockups show what the
+/// translucent ground and the glass do over a real wallpaper.
+struct MockupDesktopView: View {
+    var body: some View {
+        ZStack {
+            LinearGradient(
+                colors: [Palette.indigo.color, Palette.matcha.color, PriorityMark.medium.color],
+                startPoint: .topLeading, endPoint: .bottomTrailing)
+            Circle().fill(Palette.shu.color).frame(width: 420).offset(x: 260, y: -140).blur(radius: 30)
+            Circle().fill(.white.opacity(0.8)).frame(width: 300).offset(x: -320, y: 180).blur(radius: 20)
+        }
+    }
+}
+
 extension View {
-    /// A mockup on the app's opaque ground in one appearance.
+    /// A floating surface (timer, capture) over the stand-in desktop.
     func mockupCanvas(_ scheme: ColorScheme) -> some View {
         padding(Spacing.xxLarge)
-            .background(Palette.background.color)
+            .background { MockupDesktopView() }
             .preferredColorScheme(scheme)
             .environment(\.colorScheme, scheme)
+    }
+
+    /// A window-sized mockup on the translucent ground over the stand-in
+    /// desktop: what `omakaseWindowBackground()` draws in the app.
+    func mockupWindow(_ scheme: ColorScheme) -> some View {
+        background {
+            ZStack {
+                MockupDesktopView()
+                Rectangle().fill(.ultraThinMaterial)
+                Palette.background.color.opacity(Translucency.window)
+            }
+        }
+        .preferredColorScheme(scheme)
+        .environment(\.colorScheme, scheme)
     }
 }
 

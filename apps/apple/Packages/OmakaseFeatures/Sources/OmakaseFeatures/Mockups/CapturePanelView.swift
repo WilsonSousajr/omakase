@@ -25,18 +25,5 @@ struct CapturePanelView: View {
     }
 }
 
-/// Capture floats over another app, so the gallery shows it over a busy ground.
-struct CaptureOverDesktopView: View {
-    var body: some View {
-        CapturePanelView()
-            .padding(Spacing.xxLarge)
-            .background(
-                LinearGradient(
-                    colors: [Palette.indigo.color, Palette.matcha.color, Palette.shu.color],
-                    startPoint: .topLeading, endPoint: .bottomTrailing)
-            )
-    }
-}
-
-#Preview("Capture, light") { CaptureOverDesktopView().mockupCanvas(.light) }
-#Preview("Capture, dark") { CaptureOverDesktopView().mockupCanvas(.dark) }
+#Preview("Capture, dark") { CapturePanelView().mockupCanvas(.dark) }
+#Preview("Capture, light") { CapturePanelView().mockupCanvas(.light) }
