@@ -71,3 +71,14 @@ public struct CompletedPhase: Equatable, Sendable {
     public let minutes: Int
     public let completed: Bool
 }
+
+extension TimerPhase {
+    /// The server's `session_type` for this phase (backend/pomodoro/models.py).
+    public var sessionType: String {
+        switch self {
+        case .focus: "focus"
+        case .shortBreak: "short_break"
+        case .longBreak: "long_break"
+        }
+    }
+}
