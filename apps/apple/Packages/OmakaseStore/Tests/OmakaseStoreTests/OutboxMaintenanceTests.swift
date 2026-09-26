@@ -87,4 +87,34 @@ struct OutboxMaintenanceTests {
         #expect(throws: OutboxMaintenance.Failure.noEntry(sequence: 7)) { try maintenance.retry(sequence: 7) }
         #expect("\(OutboxMaintenance.Failure.noEntry(sequence: 7))".contains("7"))
     }
+
+    func tasks() throws -> [String] {
+        try context.fetch(FetchDescriptor<TaskRecord>(sortBy: [SortDescriptor(\.id)])).map(\.id)
+    }
+
+    @Test func discardingAParkedCreateRemovesItsTaskAndDependents() async throws {
+        context.insert(TaskRecord(id: "local-1", title: "Captured"))
+        context.insert(TaskRecord(id: "server-1", title: "Kept"))
+        enqueue(1, "/api/v1/tasks/", creates: "local-1")
+        enqueue(2, "/api/v1/tasks/local-1/")
+        enqueue(3, "/api/v1/tasks/server-1/")
+        await api.script([.reply(400, #"{"detail":"bad"}"#)])
+        _ = await worker().drain()
+        enqueue(4, "/api/v1/tasks/local-1/")
+        try maintenance.discard(sequence: 1)
+        #expect(try remaining().map(\.sequence) == [3])
+        #expect(try tasks() == ["server-1"])
+    }
+
+    @Test func discardingAPatchKeepsItsRecordForTheNextRefresh() throws {
+        context.insert(TaskRecord(id: "server-1", title: "Kept"))
+        enqueue(1, "/api/v1/tasks/server-1/")
+        try maintenance.discard(sequence: 1)
+        #expect(try remaining().isEmpty)
+        #expect(try tasks() == ["server-1"])
+    }
+
+    @Test func discardingAnUnknownWriteSaysWhichOne() {
+        #expect(throws: OutboxMaintenance.Failure.noEntry(sequence: 9)) { try maintenance.discard(sequence: 9) }
+    }
 }

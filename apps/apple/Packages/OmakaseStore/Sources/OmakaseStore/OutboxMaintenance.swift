@@ -82,6 +82,20 @@ public struct OutboxMaintenance {
         try context.save()
     }
 
+    /// Gives up on a write and on the writes that depend on it. A discarded
+    /// create takes its `local-` task with it, since no server copy will come;
+    /// a discarded patch leaves its record, and the next refresh restores the
+    /// server's copy once no write protects it (M3.5 spec, Decisions).
+    public func discard(sequence: Int) throws {
+        let entry = try entry(sequence)
+        let queued = queue.entries(in: .pending) + queue.entries(in: .parked)
+        for discarded in [entry] + OutboxRules.dependents(of: entry, among: queued) { context.delete(discarded) }
+        if let localID = entry.createsLocalID {
+            try context.delete(model: TaskRecord.self, where: #Predicate { $0.id == localID })
+        }
+        try context.save()
+    }
+
     private func entry(_ sequence: Int) throws -> OutboxEntry {
         let descriptor = FetchDescriptor<OutboxEntry>(predicate: #Predicate { $0.sequence == sequence })
         guard let entry = try context.fetch(descriptor).first else { throw Failure.noEntry(sequence: sequence) }
