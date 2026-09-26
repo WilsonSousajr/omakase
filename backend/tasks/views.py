@@ -15,6 +15,7 @@ from .serializers import (
     ProjectSerializer,
     SubtaskSerializer,
     TagSerializer,
+    TaskDayListSerializer,
     TaskListSerializer,
     TaskReorderSerializer,
     TaskSerializer,
@@ -37,11 +38,18 @@ class TaskViewSet(IdempotentCreateMixin, viewsets.ModelViewSet):
     search_fields = ["title", "description"]
     ordering_fields = ["kanban_order", "created_at", "priority", "due_date"]
 
+    DAY_ACTIONS = ("today", "carried_over")
+
     def get_queryset(self):
-        return Task.objects.filter(user=self.request.user).prefetch_related("tags", "time_blocks")
+        queryset = Task.objects.filter(user=self.request.user).prefetch_related("tags", "time_blocks")
+        if self.action in self.DAY_ACTIONS:
+            queryset = queryset.prefetch_related("subtasks")
+        return queryset
 
     def get_serializer_class(self):
-        if self.action in ("list", "today", "carried_over"):
+        if self.action in self.DAY_ACTIONS:
+            return TaskDayListSerializer
+        if self.action == "list":
             return TaskListSerializer
         return TaskSerializer
 

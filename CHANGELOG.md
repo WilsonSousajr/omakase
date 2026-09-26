@@ -26,6 +26,10 @@ for each milestone.
 
 ### Changed
 
+- **`tasks/today/` and `tasks/carried-over/` embed each task's `subtasks`**
+  (#145), ordered, prefetched in one query. The plain `tasks/` list is
+  unchanged.
+
 - **Google sign-in accepts several OAuth clients.** `GOOGLE_CLIENT_IDS`
   lists them; `GOOGLE_CLIENT_ID` is still read for one release. (#76)
 - **Every `?date=` is parsed one way.** `YYYY-MM-DD` only - `20260307` and

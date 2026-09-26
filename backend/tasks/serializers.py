@@ -125,6 +125,15 @@ class TaskListSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "completed_at", "created_at", "updated_at"]
 
 
+class TaskDayListSerializer(TaskListSerializer):
+    """A day's tasks with their subtasks, so Focus needs one request (M3.1 spec §1.4)."""
+
+    subtasks = SubtaskSerializer(many=True, read_only=True)
+
+    class Meta(TaskListSerializer.Meta):
+        fields = TaskListSerializer.Meta.fields + ["subtasks"]
+
+
 class TaskSerializer(TaskListSerializer):
     time_blocks = TimeBlockSerializer(many=True, read_only=True)
     subtasks = SubtaskSerializer(many=True, read_only=True)
