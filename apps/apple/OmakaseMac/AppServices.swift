@@ -56,6 +56,22 @@ final class AppServices {
             toggleSubtask: { [self] id in toggleSubtask(id, onOutcome) })
     }
 
+    /// The review's write: the day's draft saved locally and PUT through the
+    /// outbox, then a catch-up, as Focus's writes do (M3.4 spec §2).
+    func reviewActions(onOutcome: @escaping @MainActor (SyncCoordinator.Outcome) -> Void) -> ReviewModel.Actions {
+        ReviewModel.Actions(save: { [self] day, values in
+            let (coordinator, writes) = (self.coordinator, ReviewWrites(context: container.mainContext))
+            Task {
+                let outcome = try? await coordinator.write {
+                    try writes.save(
+                        day: day, rating: values.rating, win: values.win, energy: values.energy,
+                        shutdown: values.isShutdown)
+                }
+                onOutcome(outcome ?? .synced)
+            }
+        })
+    }
+
     private func toggleSubtask(_ id: String, _ onOutcome: @escaping @MainActor (SyncCoordinator.Outcome) -> Void) {
         let descriptor = FetchDescriptor<SubtaskRecord>(predicate: #Predicate { $0.id == id })
         guard let subtask = try? container.mainContext.fetch(descriptor).first else { return }
