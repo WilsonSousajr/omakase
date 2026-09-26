@@ -33,6 +33,25 @@ struct OmakaseMacApp: App {
                     content: { prompt in SessionPromptView(prompt: prompt) { services.apply($0) { handle($0) } } })
         }
         .modelContainer(services.container)
+
+        // The running timer from anywhere (spec, Menu bar): its countdown is
+        // the status item's label while a phase is on.
+        MenuBarExtra {
+            if let timer, let focus {
+                MenuBarTimerPanelView(day: day, timer: timer) { id in
+                    focus.selectedID = id
+                    NSApp.activate()
+                }
+                .modelContainer(services.container)
+            }
+        } label: {
+            if let timer, let text = MenuBar.label(for: timer.state, remaining: timer.remainingText) {
+                Label(text, systemImage: "timer")
+            } else {
+                Image(systemName: "timer")
+            }
+        }
+        .menuBarExtraStyle(.window)
     }
 
     @ViewBuilder private var content: some View {
