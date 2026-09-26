@@ -3,7 +3,7 @@ import OmakaseAPI
 import SwiftData
 
 /// Refreshes the day: today's and carried-over tasks with their subtasks, the
-/// day's blocks and study blocks, its review, and the profile. The server's
+/// day's blocks and study blocks, its review and workload, and the profile. The server's
 /// copy replaces the cache, except for items with queued writes, which keep
 /// their local state until sent (M3.1 spec §2).
 ///
@@ -22,7 +22,7 @@ public final class DaySync {
         (self.context, self.api, self.clock, self.calendar) = (context, api, clock, calendar)
     }
 
-    /// "Today" is computed once per refresh, from the clock, so all six
+    /// "Today" is computed once per refresh, from the clock, so all seven
     /// requests name the same day even across midnight (M3.1 Review Focus 4),
     /// and a window left open overnight moves to the new day (M1 Review Focus 2).
     public func refresh() async throws {
@@ -33,8 +33,9 @@ public final class DaySync {
         async let studies = api.studyBlocks(on: day)
         async let review = api.review(on: day)
         async let profile = api.profile()
+        async let workload = api.workload(on: day)
         let queuedBefore = try pendingSubjects()
-        let fetched = try await (today, carried, blocks, studies, review, profile)
+        let fetched = try await (today, carried, blocks, studies, review, profile, workload)
         // Read after the network too: a write made while the reads were in
         // flight must keep its local state (final review, Important 1). The
         // earlier snapshot covers writes accepted and removed meanwhile.
@@ -44,6 +45,7 @@ public final class DaySync {
         try apply.studies(fetched.3, on: day.string)
         try apply.review(fetched.4, on: day.string)
         try apply.profile(fetched.5)
+        try apply.workload(fetched.6, on: day.string)
         try context.save()
     }
 
