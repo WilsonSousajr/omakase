@@ -13,7 +13,8 @@ final class RecordingFocusActions {
             toggle: { [unowned self] in calls.append("toggle \($0)") },
             move: { [unowned self] in calls.append("move \($0) \($1)") },
             reschedule: { [unowned self] in calls.append("reschedule \($0) \($1 ?? "backlog")") },
-            toggleSubtask: { [unowned self] in calls.append("subtask \($0)") })
+            toggleSubtask: { [unowned self] in calls.append("subtask \($0)") },
+            remind: { [unowned self] in calls.append("remind \($0) \($1.map { "\($0.timeIntervalSince1970)" } ?? "clear")") })
     }
 }
 
@@ -73,6 +74,16 @@ struct FocusModelTests {
         model.reschedule("t1", .tomorrow, today: "2026-03-07")
         model.reschedule("t2", .backlog, today: "2026-03-07")
         #expect(recorder.calls == ["reschedule t1 2026-03-08", "reschedule t2 backlog"])
+    }
+
+    @Test func remindingSendsTheChosenInstantOrAClear() {
+        var utc = Calendar(identifier: .gregorian)
+        utc.timeZone = .gmt
+        let model = FocusModel(actions: recorder.actions, defaults: defaults, calendar: utc)
+        let noon = Date(timeIntervalSince1970: 1_772_884_800)
+        model.remind("t1", .inAnHour, now: noon)
+        model.remind("t2", .clear, now: noon)
+        #expect(recorder.calls == ["remind t1 1772888400.0", "remind t2 clear"])
     }
 
     @Test func checkingASubtaskCallsItsWrite() {

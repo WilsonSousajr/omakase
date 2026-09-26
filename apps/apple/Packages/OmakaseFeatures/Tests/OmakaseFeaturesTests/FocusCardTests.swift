@@ -39,6 +39,13 @@ struct FocusCardTests {
             card(scheduled: "2026-03-07", due: "2026-03-05").dueLabel(today: "2026-03-07", calendar: utc) == "Overdue")
     }
 
+    @Test func aCardWithARemindAtShowsItsBell() {
+        let reminded = FocusCard(
+            id: "t1", title: "T", priority: "high", minutes: nil, isCompleted: false, kanbanStatus: "todo",
+            scheduledDay: "2026-03-07", dueDay: nil, isCarriedOver: false, remindAt: .distantFuture)
+        #expect(reminded.hasReminder && !card().hasReminder)
+    }
+
     @Test func theMarksReadCarriedDueThenEstimate() {
         let marked = FocusCard(
             id: "t1", title: "T", priority: "high", minutes: 45, isCompleted: false, kanbanStatus: "todo",
