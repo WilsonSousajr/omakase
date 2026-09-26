@@ -58,6 +58,7 @@ struct OmakaseMacApp: App {
         if signedIn {
             NavigationSplitView {
                 List(SidebarItem.allCases, selection: $section) { Label($0.title, systemImage: $0.symbol) }
+                    .scrollContentBackground(.hidden)
             } detail: {
                 if let focus, let timer { FocusView(day: day, model: focus, timer: timer) }
             }
