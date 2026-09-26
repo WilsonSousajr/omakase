@@ -22,6 +22,12 @@ public protocol APIClient: Sendable {
     func signIn(googleIDToken: String) async throws -> UserDTO
     func me() async throws -> UserDTO
     func tasks(on day: APIDay) async throws -> [TaskDTO]
+    func carriedOver(on day: APIDay) async throws -> [TaskDTO]
+    func timeBlocks(on day: APIDay) async throws -> [TimeBlockDTO]
+    func studyBlocks(on day: APIDay) async throws -> [StudyBlockDTO]
+    /// The day's one review, or nil before one exists.
+    func review(on day: APIDay) async throws -> DailyReviewDTO?
+    func profile() async throws -> ProfileDTO
     /// Any HTTP status is a response; only a missing answer throws.
     func send(_ request: OutboxRequest) async throws -> OutboxResponse
     func signOut() async
@@ -53,10 +59,37 @@ public actor OmakaseAPIClient: APIClient {
     }
 
     public func tasks(on day: APIDay) async throws -> [TaskDTO] {
-        var results: [TaskDTO] = []
-        var path: String? = "/api/v1/tasks/today/?date=\(day.string)"
+        try await allPages("/api/v1/tasks/today/?date=\(day.string)")
+    }
+
+    public func carriedOver(on day: APIDay) async throws -> [TaskDTO] {
+        // Not paginated: the action returns a plain list (backend/tasks/views.py).
+        try decode(try await authorized("GET", "/api/v1/tasks/carried-over/?date=\(day.string)"))
+    }
+
+    public func timeBlocks(on day: APIDay) async throws -> [TimeBlockDTO] {
+        try await allPages("/api/v1/timeblocks/?date=\(day.string)")
+    }
+
+    public func studyBlocks(on day: APIDay) async throws -> [StudyBlockDTO] {
+        try await allPages("/api/v1/study/studyblocks/?scheduled_date=\(day.string)")
+    }
+
+    public func review(on day: APIDay) async throws -> DailyReviewDTO? {
+        let reviews: [DailyReviewDTO] = try await allPages("/api/v1/stats/reviews/?date=\(day.string)")
+        return reviews.first
+    }
+
+    public func profile() async throws -> ProfileDTO {
+        try decode(try await authorized("GET", "/api/v1/auth/profile/"))
+    }
+
+    /// Follows DRF's `next` links until the last page.
+    private func allPages<Item: Sendable & Codable & Equatable>(_ first: String) async throws -> [Item] {
+        var results: [Item] = []
+        var path: String? = first
         while let next = path {
-            let page: Page<TaskDTO> = try decode(try await authorized("GET", next))
+            let page: Page<Item> = try decode(try await authorized("GET", next))
             results += page.results
             path = page.next.map { $0.path() + ($0.query().map { "?\($0)" } ?? "") }
         }
