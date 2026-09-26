@@ -6,11 +6,10 @@ import Testing
 /// The grid's geometry, pure (spec M4, Grid): 06:00-23:00 at 52 pt an hour,
 /// 15-minute snapping, clipping, and lanes for overlapping blocks.
 struct CalendarLayoutTests {
+    typealias Item = CalendarItem
     let layout = CalendarLayout.standard
 
-    func item(_ id: String, _ start: Int, _ end: Int, kind: CalendarItem.Kind = .block, day: String = "d")
-        -> CalendarItem
-    {
+    func item(_ id: String, _ start: Int, _ end: Int, kind: CalendarItem.Kind = .block, day: String = "d") -> Item {
         CalendarItem(id: id, day: day, start: start, end: end, title: id, kind: kind)
     }
 
@@ -23,29 +22,29 @@ struct CalendarLayoutTests {
     }
 
     @Test func aTimeIsItsDistanceFromTheFirstHour() {
-        #expect(layout.y(forMinutes: 6 * 60) == 0)
-        #expect(layout.y(forMinutes: 8 * 60) == 104)
-        #expect(layout.y(forMinutes: 8 * 60 + 30) == 130)
-        #expect(layout.y(forMinutes: 23 * 60) == layout.totalHeight)
+        #expect(layout.offset(forMinutes: 6 * 60) == 0)
+        #expect(layout.offset(forMinutes: 8 * 60) == 104)
+        #expect(layout.offset(forMinutes: 8 * 60 + 30) == 130)
+        #expect(layout.offset(forMinutes: 23 * 60) == layout.totalHeight)
     }
 
     @Test func aPointSnapsToTheNearestQuarterHour() {
         let quarter = layout.hourHeight / 4
-        #expect(layout.minutes(forY: 104) == 480)
-        #expect(layout.minutes(forY: 104 + quarter * 0.49) == 480)
-        #expect(layout.minutes(forY: 104 + quarter * 0.5) == 495)
-        #expect(layout.minutes(forY: 104 + quarter * 1.4) == 495)
+        #expect(layout.minutes(forOffset: 104) == 480)
+        #expect(layout.minutes(forOffset: 104 + quarter * 0.49) == 480)
+        #expect(layout.minutes(forOffset: 104 + quarter * 0.5) == 495)
+        #expect(layout.minutes(forOffset: 104 + quarter * 1.4) == 495)
     }
 
     @Test func aPointOutsideTheGridClampsToItsEdges() {
-        #expect(layout.minutes(forY: -40) == 360)
-        #expect(layout.minutes(forY: 0) == 360)
-        #expect(layout.minutes(forY: layout.totalHeight) == 1380)
-        #expect(layout.minutes(forY: layout.totalHeight + 500) == 1380)
+        #expect(layout.minutes(forOffset: -40) == 360)
+        #expect(layout.minutes(forOffset: 0) == 360)
+        #expect(layout.minutes(forOffset: layout.totalHeight) == 1380)
+        #expect(layout.minutes(forOffset: layout.totalHeight + 500) == 1380)
     }
 
     @Test func anItemIsPlacedByItsStartAndLength() {
-        #expect(layout.band(for: item("a", 540, 630)) == CalendarBand(y: 156, height: 78))
+        #expect(layout.band(for: item("a", 540, 630)) == CalendarBand(top: 156, height: 78))
     }
 
     @Test func aShortItemKeepsAVisibleHeight() {
@@ -54,8 +53,8 @@ struct CalendarLayoutTests {
     }
 
     @Test func anItemIsClippedToTheVisibleHours() {
-        #expect(layout.band(for: item("early", 300, 420)) == CalendarBand(y: 0, height: 52))
-        #expect(layout.band(for: item("late", 22 * 60, 24 * 60 - 1)) == CalendarBand(y: 16 * 52, height: 52))
+        #expect(layout.band(for: item("early", 300, 420)) == CalendarBand(top: 0, height: 52))
+        #expect(layout.band(for: item("late", 22 * 60, 24 * 60 - 1)) == CalendarBand(top: 16 * 52, height: 52))
     }
 
     @Test func anItemWhollyOutsideTheVisibleHoursIsNotDrawn() {
@@ -101,13 +100,14 @@ struct CalendarLayoutTests {
     @Test func aBlockShareOfTheColumnLeavesTheSessionLaneFree() {
         let width: CGFloat = 206
         let usable = width - CalendarLayout.sessionLaneWidth - CalendarLayout.laneGap
-        #expect(CalendarLayout.blockSpan(lane: nil, width: width) == CalendarSpan(x: 0, width: usable - 2))
+        #expect(CalendarLayout.blockSpan(lane: nil, width: width) == CalendarSpan(leading: 0, width: usable - 2))
         let second = CalendarLayout.blockSpan(lane: CalendarLane(index: 1, count: 2), width: width)
-        #expect(second == CalendarSpan(x: usable / 2, width: usable / 2 - CalendarLayout.laneGap))
+        #expect(second == CalendarSpan(leading: usable / 2, width: usable / 2 - CalendarLayout.laneGap))
     }
 
     @Test func aSessionRunsDownTheColumnsTrailingEdge() {
         let span = CalendarLayout.sessionSpan(width: 200)
-        #expect(span == CalendarSpan(x: 200 - CalendarLayout.sessionLaneWidth, width: CalendarLayout.sessionLaneWidth))
+        let lane = CalendarLayout.sessionLaneWidth
+        #expect(span == CalendarSpan(leading: 200 - lane, width: lane))
     }
 }
