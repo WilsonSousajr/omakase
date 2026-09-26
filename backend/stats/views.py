@@ -16,7 +16,7 @@ from tasks.models import Task, TimeBlock
 
 from .models import DailyReview
 from .serializers import DailyReviewSerializer
-from .services import put_review
+from .services import day_workload, put_review
 
 
 class DailyStatsView(APIView):
@@ -178,6 +178,14 @@ class ReviewSummaryView(APIView):
             started_at__date=date,
         ).aggregate(total=Coalesce(Sum("duration_minutes"), 0))["total"]
         return round(total / 60, 1)
+
+
+class WorkloadView(APIView):
+    """The day's planned minutes against the goal (#128): parse, call, respond."""
+
+    def get(self, request):
+        day = parse_client_date(request.query_params.get("date"))
+        return Response(day_workload(request.user, day))
 
 
 class DailyReviewViewSet(IdempotentCreateMixin, viewsets.ModelViewSet):

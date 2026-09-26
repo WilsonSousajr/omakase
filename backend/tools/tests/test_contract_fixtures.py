@@ -188,6 +188,13 @@ class TestContractFixtures:
         assert resp.status_code == 200
         check_fixture("studyblocks_day", _body(resp))
 
+    def test_stats_workload(self, authenticated_client, user):
+        TaskFactory(user=user, scheduled_date=datetime.date(2026, 3, 2), estimated_minutes=50, project=None)
+        TaskFactory(user=user, scheduled_date=datetime.date(2026, 3, 2), estimated_minutes=None, project=None)
+        resp = authenticated_client.get("/api/v1/stats/workload/?date=2026-03-02")
+        assert resp.status_code == 200
+        check_fixture("stats_workload", _body(resp))
+
     def test_profile(self, authenticated_client):
         resp = authenticated_client.get("/api/v1/auth/profile/")
         assert resp.status_code == 200
