@@ -1,0 +1,17 @@
+{
+  "count": 1,
+  "next": null,
+  "previous": null,
+  "results": [
+    {
+      "completed": true,
+      "duration_minutes": 25,
+      "ended_at": "2026-03-07T09:25:00Z",
+      "id": "ac0496c4-caab-40fe-97e5-4dd0b5fe0d91",
+      "session_type": "focus",
+      "started_at": "2026-03-07T09:00:00Z",
+      "task": "5bd33b0f-0841-431b-957e-33beb64163ec",
+      "time_block": "d956e09e-0f83-44d1-bd85-b184b70a004f"
+    }
+  ]
+}
