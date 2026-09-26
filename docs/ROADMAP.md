@@ -15,7 +15,7 @@ reasons for it.
 |---|---|---|
 | M0 | Groundwork | **Done.** #63-#66 and #69, merged to `develop` 2026-09-25 as PRs #67-#71 and #79. |
 | M1 | Foundation | **Built, not yet smoke-tested.** Backend #76-#78 merged (PRs #80-#82). Apple #85-#91 as the stacked PRs #92-#98. The real-stack smoke run waits on the macOS OAuth client. |
-| M2 | Identity | Next. |
+| M2 | Identity | **Built, not yet smoke-tested.** #99-#104 and #131 as PRs #109, #112, #114, #136, #137 and this one. Dark first, translucent, monochrome, the web's layouts and an ensō icon (`docs/design-system-apple.md`). The smoke run waits on the same OAuth client as M1. |
 | M7 | The Field | **Done.** #106-#122 merged to `develop` 2026-09-26 as PRs #111-#133. Its decisions are M8 (#124-#126) and the M2, M3 and M5 additions (#127-#132). |
 | M3-M4 | The daily loop, Plan | Planned below, with what M7 added. |
 | M8 | Repeats and exceptions | Planned, after M4. From M7. |
