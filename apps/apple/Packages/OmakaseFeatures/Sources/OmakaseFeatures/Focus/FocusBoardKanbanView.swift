@@ -68,6 +68,7 @@ struct FocusBoardCardView: View {
                     Text(marks.joined(separator: " · "))
                         .font(TypeScale.caption).foregroundStyle(Palette.inkMuted.color)
                 }
+                if card.hasReminder { ReminderBellView() }
             }
         }
         .padding(Spacing.medium)

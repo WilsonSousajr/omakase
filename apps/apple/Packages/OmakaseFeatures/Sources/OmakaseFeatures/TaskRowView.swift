@@ -10,11 +10,12 @@ public struct TaskRowView: View {
     private let minutes: Int
     private let isCompleted: Bool
     private let marks: [String]
+    private let hasReminder: Bool
     private let toggle: () -> Void
 
     public init(
         title: String, priority: String, minutes: Int = 0, isCompleted: Bool, marks: [String] = [],
-        toggle: @escaping () -> Void = {}
+        hasReminder: Bool = false, toggle: @escaping () -> Void = {}
     ) {
         self.title = title
         self.priority = priority
@@ -22,6 +23,7 @@ public struct TaskRowView: View {
         self.isCompleted = isCompleted
         // Marks, when given, already carry the estimate (FocusMarks).
         self.marks = marks.isEmpty && minutes > 0 ? ["\(minutes)m"] : marks
+        self.hasReminder = hasReminder
         self.toggle = toggle
     }
 
@@ -40,6 +42,7 @@ public struct TaskRowView: View {
                 Text(marks.joined(separator: " · "))
                     .font(TypeScale.caption).monospacedDigit().foregroundStyle(Palette.inkMuted.color)
             }
+            if hasReminder { ReminderBellView() }
             if !priority.isEmpty { PriorityBadgeView(priority: priority).opacity(isCompleted ? 0.5 : 1) }
         }
         .padding(.vertical, Spacing.tiny)
@@ -62,5 +65,15 @@ public struct PriorityBadgeView: View {
         .padding(.horizontal, Spacing.small)
         .padding(.vertical, 2)
         .background(tint.opacity(0.14), in: .capsule)
+    }
+}
+
+/// The small mark on a task with a reminder set (#187).
+struct ReminderBellView: View {
+    var body: some View {
+        Image(systemName: "bell.fill")
+            .font(TypeScale.caption)
+            .foregroundStyle(Palette.inkMuted.color)
+            .accessibilityLabel("Reminder set")
     }
 }

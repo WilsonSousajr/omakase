@@ -27,7 +27,8 @@ struct FocusBoardListView: View {
                 ForEach(cards) { card in
                     TaskRowView(
                         title: card.title, priority: card.priority, isCompleted: card.isCompleted,
-                        marks: FocusMarks.labels(for: card, day: day, calendar: model.calendar)
+                        marks: FocusMarks.labels(for: card, day: day, calendar: model.calendar),
+                        hasReminder: card.hasReminder
                     ) { model.toggle(card.id) }
                     .contextMenu { FocusTaskMenuView(card: card, day: day, model: model) }
                     .padding(.horizontal, Spacing.small)

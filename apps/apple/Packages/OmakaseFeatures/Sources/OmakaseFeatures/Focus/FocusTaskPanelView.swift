@@ -70,7 +70,7 @@ struct FocusSubtasksView: View {
     }
 }
 
-/// Complete (the one primary action) and Reschedule.
+/// Complete (the one primary action), Reschedule and Remind me.
 struct FocusPanelActionsView: View {
     /// The Reschedule menu's label: ink, like the other glass buttons. Left to
     /// itself a `.menuStyle(.button)` menu draws it dim, as if disabled (#172).
@@ -95,6 +95,7 @@ struct FocusPanelActionsView: View {
             .buttonStyle(.glass)
             .fixedSize()
             .popover(isPresented: $picking) { datePicker }
+            FocusRemindMenuView(card: card, model: model)
         }
     }
 
@@ -103,6 +104,44 @@ struct FocusPanelActionsView: View {
             DatePicker("Move to", selection: $picked, displayedComponents: .date).datePickerStyle(.graphical)
             Button("Move") {
                 model.reschedule(card.id, .date(picked), today: day)
+                picking = false
+            }
+            .buttonStyle(.primary)
+        }
+        .padding(Spacing.large)
+    }
+}
+
+/// "Remind me" (#187): the presets on offer now, a picked time, or clear.
+/// Its label is ink, as Reschedule's is (#172).
+struct FocusRemindMenuView: View {
+    let card: FocusCard
+    let model: FocusModel
+    @State private var picking = false
+    @State private var picked = Date.now
+
+    var body: some View {
+        Menu {
+            ForEach(ReminderChoice.presets(now: .now, calendar: model.calendar), id: \.title) { choice in
+                Button(choice.title) { model.remind(card.id, choice) }
+            }
+            Button(ReminderChoice.picked(.now).title) { picking = true }
+            if card.hasReminder { Button(ReminderChoice.clear.title) { model.remind(card.id, .clear) } }
+        } label: {
+            Text("Remind me").foregroundStyle(FocusPanelActionsView.menuLabel.color)
+        }
+        .menuStyle(.button)
+        .buttonStyle(.glass)
+        .fixedSize()
+        .popover(isPresented: $picking) { timePicker }
+    }
+
+    private var timePicker: some View {
+        VStack(spacing: Spacing.medium) {
+            DatePicker("Remind at", selection: $picked, in: Date.now..., displayedComponents: [.date, .hourAndMinute])
+                .datePickerStyle(.graphical)
+            Button("Remind me") {
+                model.remind(card.id, .picked(picked))
                 picking = false
             }
             .buttonStyle(.primary)
