@@ -15,6 +15,7 @@ final class AppServices {
     let coordinator: SyncCoordinator
     private let reachability = Reachability()
     private let notifier = PhaseNotifier()
+    private let reminders = ReminderScheduler()
 
     init() throws {
         container = try StoreSchema.container(inMemory: false)
@@ -53,8 +54,13 @@ final class AppServices {
             move: { [self] id, status in perform(on: id, onOutcome) { try self.writes.setKanbanStatus($0, to: status) }
             },
             reschedule: { [self] id, day in perform(on: id, onOutcome) { try self.writes.reschedule($0, to: day) } },
-            toggleSubtask: { [self] id in toggleSubtask(id, onOutcome) })
+            toggleSubtask: { [self] id in toggleSubtask(id, onOutcome) },
+            remind: { _, _ in })
     }
+
+    /// Replaces the pending reminders with the store's plan (#187): after
+    /// every catch-up and every write, which all end in an outcome.
+    func replanReminders() { reminders.replan(from: container.mainContext) }
 
     /// The review's writes: the day's draft saved locally and PUT through the
     /// outbox, then a catch-up, as Focus's writes do (M3.4 spec §2). Shut down
