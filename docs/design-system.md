@@ -1,5 +1,8 @@
 # Omakase Design System
 
+> The web client was removed in #62; this is its record. The native Apple
+> app's identity, which follows it, is in `docs/design-system-apple.md`.
+
 Monochrome design inspired by wstech.tech, with Sunsama-style productivity layout. Supports light and dark themes via `next-themes`.
 
 ## Color Tokens
