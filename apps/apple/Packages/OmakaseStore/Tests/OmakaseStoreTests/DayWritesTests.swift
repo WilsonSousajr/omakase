@@ -165,6 +165,35 @@ struct DayWritesTests {
         #expect(try context.fetch(FetchDescriptor<DailyReviewRecord>()).first?.shutdownAt != nil)
     }
 
+    func seededTask(_ title: String, on day: String?) throws -> TaskRecord {
+        let record = TaskRecord(dto: try .make(title: title))
+        record.scheduledDay = day
+        context.insert(record)
+        try context.save()
+        return record
+    }
+
+    @Test func shuttingDownPutsTheReviewThenPatchesEachRolloverInOrder() throws {
+        let (first, second) = (try seededTask("a", on: "2026-03-07"), try seededTask("b", on: "2026-03-07"))
+        let rollovers = [TaskRollover(taskID: first.id, day: "2026-03-08"), TaskRollover(taskID: second.id, day: nil)]
+        try ReviewWrites(context: context).shutDown(
+            day: "2026-03-07", rating: 4, win: "Done", energy: 2, rollovers: rollovers)
+        let sent = try entries()
+        #expect(sent.map(\.kind) == ["review.put", "task.patch", "task.patch"])
+        #expect(sent.dropFirst().map(\.subjectID) == [first.id, second.id])
+        #expect(body(sent[0]).contains(#""is_shutdown":true"#))
+        #expect(body(sent[1]) == #"{"scheduled_date":"2026-03-08"}"# && body(sent[2]) == #"{"scheduled_date":null}"#)
+        #expect(first.scheduledDay == "2026-03-08" && second.scheduledDay == nil)
+        #expect(try context.fetch(FetchDescriptor<DailyReviewRecord>()).first?.isShutdown == true)
+    }
+
+    @Test func aRolloverForATaskNoLongerInTheStoreIsSkipped() throws {
+        try ReviewWrites(context: context).shutDown(
+            day: "2026-03-07", rating: nil, win: "", energy: nil,
+            rollovers: [TaskRollover(taskID: "gone", day: "2026-03-08")])
+        #expect(try entries().map(\.kind) == ["review.put"])
+    }
+
     @Test func everyKindTheWritesQueueHasAHandler() {
         let handlers = allHandlers()
         for kind in ["task.patch", "task.create", "subtask.patch", "block.patch", "session.create", "review.put"] {
