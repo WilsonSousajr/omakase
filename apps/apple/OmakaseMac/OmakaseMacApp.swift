@@ -9,6 +9,11 @@ struct OmakaseMacApp: App {
     @State private var signIn: SignInModel?
     @State private var signedIn = false
     @State private var section: SidebarItem? = .focus
+    @State private var focus: FocusModel?
+    /// Recomputed when the app becomes active: a window left open overnight
+    /// moves to the new day (M1's known limitation).
+    @State private var day = FocusDay().today
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some Scene {
         WindowGroup("Omakase") {
@@ -19,6 +24,7 @@ struct OmakaseMacApp: App {
                 .tint(Palette.accent.color)
                 .omakaseWindowBackground()
                 .task { await start() }
+                .onChange(of: scenePhase) { _, phase in if phase == .active { day = FocusDay().today } }
         }
         .modelContainer(services.container)
     }
@@ -28,23 +34,13 @@ struct OmakaseMacApp: App {
             NavigationSplitView {
                 List(SidebarItem.allCases, selection: $section) { Label($0.title, systemImage: $0.symbol) }
             } detail: {
-                today
+                if let focus { FocusView(day: day, model: focus) }
             }
         } else if let signIn {
             SignInView(model: signIn).onChange(of: signIn.state) { _, state in
                 guard case .signedIn = state else { return }
                 signedIn = true
                 Task { handle(await services.coordinator.catchUp()) }
-            }
-        }
-    }
-
-    private var today: some View {
-        TodayView(day: APIDay.today().string) { record in
-            Task {
-                handle(
-                    (try? await services.coordinator.write { try services.writes.toggleCompletion(record) })
-                        ?? .synced)
             }
         }
     }
@@ -56,6 +52,7 @@ struct OmakaseMacApp: App {
             signIn: { try await api.signIn(googleIDToken: $0).email })
         // Stored tokens decide, not a network call: offline, the cached Today
         // still shows (final review C1). The server says otherwise via handle().
+        focus = FocusModel(actions: services.focusActions { handle($0) })
         signedIn = await api.hasStoredSession()
         services.startBackgroundCatchUp { handle($0) }
     }

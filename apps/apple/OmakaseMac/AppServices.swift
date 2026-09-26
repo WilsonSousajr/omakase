@@ -1,5 +1,6 @@
 import Foundation
 import OmakaseAPI
+import OmakaseFeatures
 import OmakaseStore
 import SwiftData
 
@@ -39,6 +40,25 @@ final class AppServices {
                 try? await Task.sleep(for: .seconds(300))
             }
         }
+    }
+
+    /// Focus's writes, by task id: each finds the record, writes it through
+    /// the outbox and catches up at once (#91); `onOutcome` sees the result.
+    func focusActions(onOutcome: @escaping @MainActor (SyncCoordinator.Outcome) -> Void) -> FocusModel.Actions {
+        FocusModel.Actions(
+            toggle: { [self] id in perform(on: id, onOutcome) { try self.writes.toggleCompletion($0) } },
+            move: { [self] id, status in perform(on: id, onOutcome) { try self.writes.setKanbanStatus($0, to: status) }
+            })
+    }
+
+    private func perform(
+        on id: String, _ onOutcome: @escaping @MainActor (SyncCoordinator.Outcome) -> Void,
+        _ write: @escaping (TaskRecord) throws -> Void
+    ) {
+        let descriptor = FetchDescriptor<TaskRecord>(predicate: #Predicate { $0.id == id })
+        guard let record = try? container.mainContext.fetch(descriptor).first else { return }
+        let coordinator = self.coordinator
+        Task { onOutcome((try? await coordinator.write { try write(record) }) ?? .synced) }
     }
 
     /// Every kind of write the app queues, and what applies its reply (M3.1 spec §3).
