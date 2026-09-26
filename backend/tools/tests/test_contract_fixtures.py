@@ -118,6 +118,15 @@ class TestContractFixtures:
         assert resp.status_code == 200
         check_fixture("stats_review_list", _body(resp))
 
+    def test_review_by_date(self, authenticated_client):
+        resp = authenticated_client.put(
+            "/api/v1/stats/reviews/by-date/2026-03-07/",
+            {"productivity_rating": 4, "win_of_the_day": "Shipped M3.1", "energy": 2},
+            format="json",
+        )
+        assert resp.status_code == 200
+        check_fixture("review_by_date", _body(resp))
+
 
 def test_fixtures_hold_no_live_tokens():
     # The fixtures are committed; a JWT signed with this environment's

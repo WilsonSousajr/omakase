@@ -4,6 +4,7 @@ from django.db.models import DurationField, ExpressionWrapper, F, Q, Sum
 from django.db.models.functions import Coalesce
 from django.utils import timezone
 from rest_framework import viewsets
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -15,6 +16,7 @@ from tasks.models import Task, TimeBlock
 
 from .models import DailyReview
 from .serializers import DailyReviewSerializer
+from .services import put_review
 
 
 class DailyStatsView(APIView):
@@ -187,6 +189,16 @@ class DailyReviewViewSet(IdempotentCreateMixin, viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+
+    @action(detail=False, methods=["put"], url_path=r"by-date/(?P<day>[^/]+)")
+    def by_date(self, request, day=None):
+        # The outbox's review write (M3.1 spec §1.3): the path's date is the
+        # key, so a body `date` is ignored rather than trusted.
+        target = parse_client_date(day)
+        serializer = self.get_serializer(data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        values = {k: v for k, v in serializer.validated_data.items() if k != "date"}
+        return Response(self.get_serializer(put_review(request.user, target, values)).data)
 
     def perform_update(self, serializer):
         instance = serializer.instance

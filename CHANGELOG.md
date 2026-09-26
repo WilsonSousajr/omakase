@@ -12,6 +12,11 @@ for each milestone.
 
 ### Added
 
+- **`PUT stats/reviews/by-date/<YYYY-MM-DD>/`** (#144) creates or updates the
+  day's one review with any of `productivity_rating`, `win_of_the_day`,
+  `energy` and `is_shutdown`. Idempotent by (user, date), so a replay leaves
+  one review and a replayed shutdown keeps its first `shutdown_at`.
+
 - **`energy` on the daily review** (#143, #130): optional, 1-3, in every
   review response; anything else is a 400 naming the value.
 
