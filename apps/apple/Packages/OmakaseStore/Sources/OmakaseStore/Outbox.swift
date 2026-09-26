@@ -37,6 +37,14 @@ public enum OutboxRules {
         entry.path.contains(localID) || entry.body.map { text($0).contains(localID) } ?? false
     }
 
+    /// The entries in `candidates` that reference the id `entry` creates: parked
+    /// with it, retried with it, and discarded with it.
+    @MainActor
+    public static func dependents(of entry: OutboxEntry, among candidates: [OutboxEntry]) -> [OutboxEntry] {
+        guard let localID = entry.createsLocalID else { return [] }
+        return candidates.filter { $0.sequence != entry.sequence && references($0, localID: localID) }
+    }
+
     private static func classify(_ response: OutboxResponse) -> Outcome {
         switch response.status {
         case 200..<300: return .accepted(response.body)

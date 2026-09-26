@@ -25,6 +25,29 @@ final class FakeSteps {
     func coordinator() -> SyncCoordinator {
         SyncCoordinator(drain: { await self.drain() }, refresh: { try await self.refresh() })
     }
+
+    func coordinator(wakes: FakeWakeScheduler) -> SyncCoordinator {
+        SyncCoordinator(
+            drain: { await self.drain() }, refresh: { try await self.refresh() },
+            scheduleWake: { date, fire in wakes.schedule(date, fire) })
+    }
+}
+
+/// Records each wake the coordinator asks for, and fires one on demand, so a
+/// test never sleeps until a backoff ends.
+@MainActor
+final class FakeWakeScheduler {
+    private(set) var scheduled: [Date] = []
+    private(set) var cancelled: [Date] = []
+    private var fires: [@MainActor () async -> Void] = []
+
+    func schedule(_ date: Date, _ fire: @escaping @MainActor () async -> Void) -> SyncWake {
+        scheduled.append(date)
+        fires.append(fire)
+        return SyncWake { self.cancelled.append(date) }
+    }
+
+    func fireLatest() async { await fires.last?() }
 }
 
 @MainActor
@@ -82,5 +105,57 @@ struct SyncCoordinatorTests {
         struct DiskFull: Error {}
         await #expect(throws: DiskFull.self) { try await steps.coordinator().write { throw DiskFull() } }
         #expect(steps.drains == 0)
+    }
+
+    @Test func aWaitingDrainWakesItselfOnceAtThatTime() async {
+        // M3.5 spec: a write in backoff waited for the next reconnect, tick or write.
+        let wakes = FakeWakeScheduler()
+        let due = Date(timeIntervalSince1970: 1_772_884_830)
+        steps.drainResult = .waiting(until: due)
+        let coordinator = steps.coordinator(wakes: wakes)
+        _ = await coordinator.catchUp()
+        #expect(wakes.scheduled == [due])
+        steps.drainResult = .empty
+        await wakes.fireLatest()
+        #expect(steps.drains == 2 && wakes.scheduled == [due] && wakes.cancelled.isEmpty)
+    }
+
+    @Test func aLaterEmptyCatchUpCancelsThePendingWake() async {
+        let wakes = FakeWakeScheduler()
+        let due = Date(timeIntervalSince1970: 1_772_884_830)
+        steps.drainResult = .waiting(until: due)
+        let coordinator = steps.coordinator(wakes: wakes)
+        _ = await coordinator.catchUp()
+        steps.drainResult = .empty
+        _ = await coordinator.catchUp()
+        #expect(wakes.cancelled == [due])
+    }
+
+    @Test func twoWaitingsKeepOnlyTheLatestWake() async {
+        let wakes = FakeWakeScheduler()
+        let first = Date(timeIntervalSince1970: 1_772_884_801)
+        let second = Date(timeIntervalSince1970: 1_772_884_802)
+        let coordinator = steps.coordinator(wakes: wakes)
+        steps.drainResult = .waiting(until: first)
+        _ = await coordinator.catchUp()
+        steps.drainResult = .waiting(until: second)
+        _ = await coordinator.catchUp()
+        #expect(wakes.scheduled == [first, second] && wakes.cancelled == [first])
+    }
+}
+
+@MainActor
+struct SyncWakeTests {
+    @Test func aSleepingWakeFiresAtItsTime() async {
+        await withCheckedContinuation { (resumed: CheckedContinuation<Void, Never>) in
+            _ = SyncWake.sleeping(until: .now.addingTimeInterval(0.01)) { resumed.resume() }
+        }
+    }
+
+    @Test func aCancelledSleepingWakeNeverFires() async throws {
+        var fired = false
+        SyncWake.sleeping(until: .now.addingTimeInterval(0.05)) { fired = true }.cancel()
+        try await Task.sleep(for: .milliseconds(200))
+        #expect(fired == false)
     }
 }

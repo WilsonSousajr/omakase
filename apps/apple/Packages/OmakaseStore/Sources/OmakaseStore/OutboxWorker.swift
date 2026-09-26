@@ -83,8 +83,7 @@ public final class OutboxWorker {
 
     private func park(_ entry: OutboxEntry, reason: String) {
         (entry.state, entry.lastError) = (.parked, reason)
-        guard let localID = entry.createsLocalID else { return }
-        for dependent in pendingEntries() where OutboxRules.references(dependent, localID: localID) {
+        for dependent in OutboxRules.dependents(of: entry, among: pendingEntries()) {
             (dependent.state, dependent.lastError) = (.parked, "depends on a rejected create: \(reason)")
         }
     }
@@ -98,12 +97,7 @@ public final class OutboxWorker {
         return .waiting(until: due)
     }
 
-    private func pendingEntries() -> [OutboxEntry] {
-        let pending = OutboxEntry.State.pending.rawValue
-        let descriptor = FetchDescriptor<OutboxEntry>(
-            predicate: #Predicate { $0.stateRaw == pending }, sortBy: [SortDescriptor(\.sequence)])
-        return (try? context.fetch(descriptor)) ?? []
-    }
+    private func pendingEntries() -> [OutboxEntry] { OutboxQueue(context: context).entries(in: .pending) }
 
     private static func serverID(in body: Data) -> String? {
         let object = try? JSONSerialization.jsonObject(with: body) as? [String: Any]
