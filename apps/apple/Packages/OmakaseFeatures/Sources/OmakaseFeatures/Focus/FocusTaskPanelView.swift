@@ -72,6 +72,8 @@ struct FocusSubtasksView: View {
 
 /// Complete (the one primary action) and Reschedule.
 struct FocusPanelActionsView: View {
+    /// The Reschedule menu's label colour; nil leaves the menu's own.
+    static let menuLabel: DesignColor? = nil
     let card: FocusCard
     let day: String
     let model: FocusModel
