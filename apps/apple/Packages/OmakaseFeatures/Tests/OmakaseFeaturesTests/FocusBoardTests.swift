@@ -18,9 +18,10 @@ struct FocusBoardTests {
 
     // Ported unchanged from TodayModelTests (M1): Today's order is Focus's order.
     @Test func incompleteFirstThenPriorityThenTitle() {
-        let cards = FocusBoard.ordered([
-            record("b", "low"), record("done", "urgent", done: true), record("a", "low"), record("z", "urgent"),
-        ].map(FocusCard.init))
+        let cards = FocusBoard.ordered(
+            [
+                record("b", "low"), record("done", "urgent", done: true), record("a", "low"), record("z", "urgent"),
+            ].map(FocusCard.init))
         #expect(cards.map(\.title) == ["z", "a", "b", "done"])
     }
 
