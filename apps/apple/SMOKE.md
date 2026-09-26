@@ -168,3 +168,27 @@ and `curl …` is `curl -H "Authorization: Bearer <token>" localhost:8000/api/v1
 8. Click it. The failed-writes sheet lists the write with the server's
    message. Retry sends it again and it parks again; Discard removes it, and
    the indicator returns to `checkmark.icloud`.
+
+## M3.6
+
+Reminders, against the same stack. The profile keeps its defaults: a
+5-minute heads-up before blocks and no shutdown reminder. `<today>` is the
+Mac's local date, and `curl …` is `curl -H "Authorization: Bearer <token>"
+localhost:8000/api/v1`. Allow notifications when macOS asks.
+
+1. Select one of today's tasks and choose Remind me > In 1 hour. A bell
+   shows on its card and row.
+   - `curl "…/tasks/<id>/"` has `remind_at` about an hour from now, in UTC.
+2. Move it to a minute from now:
+   `curl -X PATCH -H "Content-Type: application/json" -d '{"remind_at":"<now+1min, ISO-8601 with offset>"}' "…/tasks/<id>/"`.
+   After the next refresh (reopen the app, or reconnect), the notification
+   arrives with the task's title.
+3. Create a time block for one of today's tasks starting in about 7 minutes:
+   `curl -X POST -H "Content-Type: application/json" -d '{"task":"<id>","date":"<today>","start_time":"<now+7min>","end_time":"<now+37min>"}' "…/timeblocks/"`.
+   After the next refresh, a heads-up arrives 5 minutes before it starts:
+   the task's title, "Starts in 5 min, at <time>".
+4. Remind me > Clear on the task. The bell goes.
+   - `curl "…/tasks/<id>/"` has `"remind_at": null`.
+5. Set `shutdown_reminder_time` a few minutes ahead
+   (`PATCH …/auth/profile/`), refresh, and shut the day down in Review
+   before it fires: no shutdown reminder arrives.
