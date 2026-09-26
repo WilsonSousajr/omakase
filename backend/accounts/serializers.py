@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 from django.db import transaction
 from rest_framework import serializers
 
-from accounts.models import UserProfile
+from accounts.models import BLOCK_REMINDER_MAX, BLOCK_REMINDER_MIN, UserProfile
 
 
 class GoogleLoginSerializer(serializers.Serializer):
@@ -66,6 +66,10 @@ class UpdateProfileSerializer(serializers.Serializer):
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
+    # Declared, not derived: the derived field's bounds answer "Ensure this value is
+    # less than or equal to 120." without the value sent (#127).
+    block_reminder_minutes = serializers.IntegerField(allow_null=True, required=False)
+
     class Meta:
         model = UserProfile
         fields = [
@@ -77,7 +81,18 @@ class UserProfileSerializer(serializers.ModelSerializer):
             "pomodoros_before_long_break",
             "daily_work_goal_hours",
             "daily_study_goal_hours",
+            "block_reminder_minutes",
+            "shutdown_reminder_time",
             "created_at",
             "updated_at",
         ]
         read_only_fields = ["created_at", "updated_at"]
+
+    def validate_block_reminder_minutes(self, minutes: int | None) -> int | None:
+        """Null turns the heads-up off; anything else must fall in 1-120 (#127)."""
+        if minutes is None or BLOCK_REMINDER_MIN <= minutes <= BLOCK_REMINDER_MAX:
+            return minutes
+        raise serializers.ValidationError(
+            f"block_reminder_minutes {minutes!r} is outside {BLOCK_REMINDER_MIN}-{BLOCK_REMINDER_MAX}; "
+            "send null for off."
+        )

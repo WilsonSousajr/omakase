@@ -44,17 +44,12 @@ public struct WorkloadWarning: Equatable, Sendable {
     /// What the header reads, or nil when there is nothing to say.
     public var text: String? {
         let sum: String
+        let time = MinutesText.format
         switch level {
         case .none: return nil
-        case .within(let planned, let goal): sum = "\(Self.duration(planned)) planned of \(Self.duration(goal))"
-        case .over(let excess, let goal): sum = "\(Self.duration(excess)) over your \(Self.duration(goal)) goal"
+        case .within(let planned, let goal): sum = "\(time(planned)) planned of \(time(goal))"
+        case .over(let excess, let goal): sum = "\(time(excess)) over your \(time(goal)) goal"
         }
         return isPartial ? "\(sum) · \(unestimatedCount) without an estimate" : sum
-    }
-
-    private static func duration(_ minutes: Int) -> String {
-        let (hours, rest) = minutes.quotientAndRemainder(dividingBy: 60)
-        guard hours > 0 else { return "\(rest)m" }
-        return rest == 0 ? "\(hours)h" : "\(hours)h \(rest)m"
     }
 }

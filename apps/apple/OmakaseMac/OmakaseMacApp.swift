@@ -14,6 +14,7 @@ struct OmakaseMacApp: App {
     @State private var timer: TimerModel?
     @State private var failedWrites: FailedWritesModel?
     @State private var prompt: SessionPrompt?
+    @State private var capture: GlobalCapture?
     /// Recomputed when the app becomes active: a window left open overnight
     /// moves to the new day (M1's known limitation).
     @State private var day = FocusDay().today
@@ -29,12 +30,14 @@ struct OmakaseMacApp: App {
                 .omakaseWindowBackground()
                 .task { await start() }
                 .onChange(of: scenePhase) { _, phase in if phase == .active { day = FocusDay().today } }
+                .onChange(of: signedIn) { _, isSignedIn in capture?.setEnabled(isSignedIn) }
                 .onChange(of: timer?.lastFinished) { _, finished in prompt = services.prompt(for: finished) }
                 .sheet(
                     item: $prompt, onDismiss: { timer?.dismissFinished() },
                     content: { prompt in SessionPromptView(prompt: prompt) { services.apply($0) { handle($0) } } })
         }
         .modelContainer(services.container)
+        .commands { CaptureCommands(capture: capture, isEnabled: signedIn) }
 
         // The running timer from anywhere (spec, Menu bar): its countdown is
         // the status item's label while a phase is on.
@@ -98,6 +101,9 @@ struct OmakaseMacApp: App {
         self.timer = timer
         services.startTicking(timer)
         startSyncIndicator()
+        capture = GlobalCapture { [services] title, destination in
+            services.capture(title, to: destination) { handle($0) }
+        }
         signedIn = await api.hasStoredSession()
         services.startBackgroundCatchUp(onPathChange: { failedWrites?.setPathOnline($0) }, onOutcome: { handle($0) })
     }

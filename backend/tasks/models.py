@@ -111,6 +111,8 @@ class Task(models.Model):
     tags = models.ManyToManyField(Tag, blank=True, related_name="tasks")
     scheduled_date = models.DateField(null=True, blank=True, db_index=True)
     due_date = models.DateField(null=True, blank=True)
+    # "Remind me at": an instant the client schedules a notification for (#127).
+    remind_at = models.DateTimeField(null=True, blank=True)
     estimated_minutes = models.PositiveIntegerField(null=True, blank=True)
     kanban_order = models.IntegerField(default=0)
     is_completed = models.BooleanField(default=False, db_index=True)

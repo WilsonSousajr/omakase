@@ -135,3 +135,36 @@ over. `<today>` and `<tomorrow>` are the Mac's local dates.
    the tasks stay where they moved.
 7. Offline (backend stopped): add a task for today, shut down again, then
    start the backend. The review replays first, then the task's move.
+
+## M3.5
+
+Capture and offline, against the same stack. The toolbar indicator is the
+indicator PR's (#185); capture is #186. `<today>` is the Mac's local date,
+and `curl …` is `curl -H "Authorization: Bearer <token>" localhost:8000/api/v1`.
+
+1. Signed in with the backend up and nothing queued, the toolbar shows a
+   quiet `checkmark.icloud`.
+2. `docker-compose stop backend`. The indicator turns to `icloud.slash`.
+3. Switch to another app (Finder, say) and press ⌥⌘N. The capture panel
+   floats over it, centred on the top third of the screen, with the field
+   focused and the footer reading Today and "⏎ Today · ⌘⏎ Inbox · ⎋
+   dismiss".
+   - Type "Smoke capture today" and press ⏎. The panel closes and focus goes
+     back to Finder. The task is on Focus at once.
+   - ⌥⌘N again, type "Smoke capture inbox" and press ⌘⏎. It saves with no
+     date, so Focus doesn't show it.
+   - ⌥⌘N, type something, press ⎋: nothing is saved, and the next ⌥⌘N opens
+     empty. ⏎ on an empty field saves nothing and leaves the panel open.
+4. The indicator shows the queued count, 2.
+5. `docker-compose start backend`. Within seconds the count drains to 0 and
+   the indicator is back to `checkmark.icloud`.
+   - `curl "…/tasks/today/?date=<today>"` has "Smoke capture today".
+   - `curl "…/tasks/?search=Smoke%20capture%20inbox"` has it with
+     `"scheduled_date": null`.
+6. File > Capture Task… (⌥⌘N) opens the same panel while the app is active.
+7. Force a park: `curl -X DELETE "…/tasks/<id>/"` for one of today's tasks,
+   then complete it in the app before the next catch-up. The PATCH gets a
+   404 and parks: the indicator shows `exclamationmark.icloud`.
+8. Click it. The failed-writes sheet lists the write with the server's
+   message. Retry sends it again and it parks again; Discard removes it, and
+   the indicator returns to `checkmark.icloud`.
