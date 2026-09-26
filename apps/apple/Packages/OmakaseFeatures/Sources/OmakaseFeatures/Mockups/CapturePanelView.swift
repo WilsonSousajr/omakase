@@ -8,7 +8,7 @@ struct CapturePanelView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.small) {
             HStack(spacing: Spacing.medium) {
-                Image(systemName: "tray.and.arrow.down").foregroundStyle(Palette.shu.color)
+                Image(systemName: "tray.and.arrow.down").foregroundStyle(Palette.inkMuted.color)
                 TextField("Capture a task…", text: $text)
                     .textFieldStyle(.plain)
                     .font(TypeScale.title)

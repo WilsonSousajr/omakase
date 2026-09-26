@@ -14,9 +14,7 @@ struct SignInMockupView: View {
                 Text("Plan. Focus. Ship.").sectionLabel()
             }
             Button("Sign in with Google") {}
-                .buttonStyle(.glassProminent)
-                .controlSize(.large)
-                .tint(Palette.shu.color)
+                .buttonStyle(.primary)
         }
         .frame(width: 520, height: 420)
     }

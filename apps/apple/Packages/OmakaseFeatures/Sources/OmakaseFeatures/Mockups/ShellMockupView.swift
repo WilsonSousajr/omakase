@@ -16,7 +16,6 @@ struct ShellMockupView: View {
         } detail: {
             detail.navigationTitle(selection.rawValue)
         }
-        .tint(Palette.shu.color)
         .omakaseWindowBackground()
     }
 

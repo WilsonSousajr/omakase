@@ -44,7 +44,7 @@ enum MockupDay {
         Block(title: "Morning review", start: 8.5, hours: 0.5, source: Palette.inkMuted),
         Block(title: "Linear algebra lecture", start: 10, hours: 1.5, source: Palette.indigo, isClass: true),
         Block(title: "Read chapter 4", start: 12, hours: 0.75, source: Palette.matcha),
-        Block(title: "Write the M2 design record", start: 14, hours: 1.5, source: Palette.shu),
+        Block(title: "Write the M2 design record", start: 14, hours: 1.5, source: PriorityMark.medium),
         Block(title: "Linear algebra problem set", start: 16, hours: 1, source: Palette.indigo),
     ]
     /// 14:40, where the current-time line sits.
@@ -59,7 +59,7 @@ struct MockupDesktopView: View {
             LinearGradient(
                 colors: [Palette.indigo.color, Palette.matcha.color, PriorityMark.medium.color],
                 startPoint: .topLeading, endPoint: .bottomTrailing)
-            Circle().fill(Palette.shu.color).frame(width: 420).offset(x: 260, y: -140).blur(radius: 30)
+            Circle().fill(Palette.indigo.color).frame(width: 420).offset(x: 260, y: -140).blur(radius: 30)
             Circle().fill(.white.opacity(0.8)).frame(width: 300).offset(x: -320, y: 180).blur(radius: 20)
         }
     }

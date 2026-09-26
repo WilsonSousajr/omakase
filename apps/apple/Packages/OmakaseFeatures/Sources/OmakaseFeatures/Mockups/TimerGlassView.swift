@@ -53,8 +53,7 @@ public struct TimerGlassView: View {
             } label: {
                 Image(systemName: "pause.fill").padding(.horizontal, Spacing.small)
             }
-            .buttonStyle(.glassProminent)
-            .tint(phase.tint.color)
+            .buttonStyle(.primary)
             Button {
             } label: {
                 Image(systemName: "forward.end.fill")
