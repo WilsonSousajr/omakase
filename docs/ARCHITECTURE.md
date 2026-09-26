@@ -74,6 +74,11 @@ import its mixin.
   work and study goals, timezone, `week_starts_on`). Both are created by
   `post_save` signals in `accounts/signals.py`. `UserProfileView` still does a
   get-or-create, so users created before the signal existed also get one.
+- `UserProfile` also holds two reminder preferences (#127):
+  `block_reminder_minutes`, the heads-up before every time block (1-120, or
+  null for off; default 5, and a check constraint backs the serializer's
+  400), and `shutdown_reminder_time`, a time of day in the user's local time
+  (null for off).
 - `MeView` is a `RetrieveUpdateAPIView`. GET returns `UserSerializer`; PATCH
   uses `UpdateProfileSerializer`, a plain `Serializer` because it writes two
   models, `User` and `Profile`, inside `transaction.atomic()`.
@@ -92,6 +97,14 @@ import its mixin.
   a hex regex.
 - `completed_at` is read-only and set on the server when `is_completed`
   changes.
+- `remind_at` is a nullable, timezone-aware instant ("remind me at"), written
+  through `tasks/` with its UTC offset and returned by every task serializer,
+  `today/` and `carried-over/` included (#127).
+- **Reminders are data, not jobs.** The server stores the three reminder
+  fields and sends no notifications. Each client reads them and schedules
+  local notifications, so every client fires the same reminders. "Fired" is
+  derived (`remind_at` is in the past); "dismissed" waits for a second client
+  (M3.6 spec).
 - **TimeBlock** is polymorphic: nullable `task` and nullable `study_block`,
   both `CASCADE`. A `CheckConstraint` requires at least one; the serializer
   requires exactly one and rejects `end_time <= start_time` with a 400 before
