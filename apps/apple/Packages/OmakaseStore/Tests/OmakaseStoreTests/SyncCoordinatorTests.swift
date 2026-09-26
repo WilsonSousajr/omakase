@@ -142,6 +142,23 @@ struct SyncCoordinatorTests {
         _ = await coordinator.catchUp()
         #expect(wakes.scheduled == [first, second] && wakes.cancelled == [first])
     }
+
+    @Test func everyRunIsReportedOnceTheBackoffWakeIncludedIssue185() async {
+        // The wake's outcome was dropped, so the toolbar said Offline until
+        // the next 5-minute tick after the server came back.
+        let wakes = FakeWakeScheduler()
+        var reported: [SyncCoordinator.Outcome] = []
+        let coordinator = steps.coordinator(wakes: wakes)
+        coordinator.onEveryOutcome = { reported.append($0) }
+        steps.drainResult = .waiting(until: Date(timeIntervalSince1970: 1_772_884_830))
+        steps.refreshError = .transport("offline")
+        async let first = coordinator.catchUp()
+        async let shared = coordinator.catchUp()
+        _ = await (first, shared)
+        (steps.drainResult, steps.refreshError) = (.empty, nil)
+        await wakes.fireLatest()
+        #expect(reported == [.failed("offline"), .synced])
+    }
 }
 
 @MainActor

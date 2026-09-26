@@ -21,6 +21,9 @@ public final class SyncCoordinator {
     private let scheduleWake: SyncWakeScheduler
     /// The catch-up booked for when the current backoff ends; at most one.
     private var pendingWake: SyncWake?
+    /// Sees each run's outcome once, whoever started it: a caller, a shared
+    /// run, or the backoff wake, whose outcome has no caller (#185).
+    public var onEveryOutcome: (@MainActor (Outcome) -> Void)?
 
     /// `scheduleWake` books the catch-up that ends a backoff; the default sleeps in a task.
     public init(
@@ -33,7 +36,11 @@ public final class SyncCoordinator {
     /// Concurrent callers share one run.
     public func catchUp() async -> Outcome {
         if let running { return await running.value }
-        let task = Task { await runOnce() }
+        let task = Task {
+            let outcome = await runOnce()
+            onEveryOutcome?(outcome)
+            return outcome
+        }
         running = task
         defer { running = nil }
         return await task.value

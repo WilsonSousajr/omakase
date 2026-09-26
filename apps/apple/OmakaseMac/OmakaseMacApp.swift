@@ -12,6 +12,7 @@ struct OmakaseMacApp: App {
     @State private var focus: FocusModel?
     @State private var review: ReviewModel?
     @State private var timer: TimerModel?
+    @State private var failedWrites: FailedWritesModel?
     @State private var prompt: SessionPrompt?
     @State private var capture: GlobalCapture?
     /// Recomputed when the app becomes active: a window left open overnight
@@ -66,6 +67,11 @@ struct OmakaseMacApp: App {
             } detail: {
                 detail
             }
+            .toolbar {
+                if let failedWrites {
+                    ToolbarItem(placement: .primaryAction) { SyncIndicatorView(model: failedWrites) }
+                }
+            }
         } else if let signIn {
             SignInView(model: signIn).onChange(of: signIn.state) { _, state in
                 guard case .signedIn = state else { return }
@@ -94,11 +100,21 @@ struct OmakaseMacApp: App {
         let timer = services.makeTimer { handle($0) }
         self.timer = timer
         services.startTicking(timer)
+        startSyncIndicator()
         capture = GlobalCapture { [services] title, destination in
             services.capture(title, to: destination) { handle($0) }
         }
         signedIn = await api.hasStoredSession()
-        services.startBackgroundCatchUp { handle($0) }
+        services.startBackgroundCatchUp(onPathChange: { failedWrites?.setPathOnline($0) }, onOutcome: { handle($0) })
+    }
+
+    /// The toolbar's sync item follows every catch-up, the backoff wake's
+    /// included, rather than polling the outbox (#185).
+    private func startSyncIndicator() {
+        let model = FailedWritesModel(actions: services.failedWritesActions())
+        services.coordinator.onEveryOutcome = { model.record($0) }
+        model.refresh()
+        failedWrites = model
     }
 
     /// Only a definite sign-out leaves Today; an offline failure keeps the cache (review I3).
