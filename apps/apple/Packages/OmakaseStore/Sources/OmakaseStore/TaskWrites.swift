@@ -21,10 +21,12 @@ public final class TaskWrites {
         try patch(record, body: ["is_completed": record.isCompleted])
     }
 
-    /// A Kanban move. Moving to Done completes the task, as the server does.
+    /// A Kanban move, mirroring Task.save: into Done completes the task, out
+    /// of Done uncompletes it (#156).
     public func setKanbanStatus(_ record: TaskRecord, to status: String) throws {
         record.kanbanStatus = status
         if status == "done" && !record.isCompleted { (record.isCompleted, record.completedAt) = (true, .now) }
+        if status != "done" && record.isCompleted { (record.isCompleted, record.completedAt) = (false, nil) }
         try patch(record, body: ["kanban_status": status])
     }
 
