@@ -32,11 +32,20 @@ final class AppServices {
 
     var googleClientID: String { Bundle.main.object(forInfoDictionaryKey: "OmakaseGoogleClientID") as? String ?? "" }
 
-    /// On launch, on reconnect and every 5 minutes; `onOutcome` sees every result.
-    func startBackgroundCatchUp(onOutcome: @escaping @MainActor (SyncCoordinator.Outcome) -> Void) {
+    /// On launch, on reconnect and every 5 minutes; `onOutcome` sees every
+    /// result, and `onPathChange` each time the network comes or goes.
+    func startBackgroundCatchUp(
+        onPathChange: @escaping @MainActor (Bool) -> Void,
+        onOutcome: @escaping @MainActor (SyncCoordinator.Outcome) -> Void
+    ) {
         guard coordinator.claimBackgroundStart() else { return }
         let coordinator = self.coordinator
-        reachability.start { Task { @MainActor in onOutcome(await coordinator.catchUp()) } }
+        reachability.start { isOnline in
+            Task { @MainActor in
+                onPathChange(isOnline)
+                if isOnline { onOutcome(await coordinator.catchUp()) }
+            }
+        }
         Task { @MainActor in
             while !Task.isCancelled {
                 onOutcome(await coordinator.catchUp())
@@ -99,6 +108,25 @@ final class AppServices {
         guard let record = try? container.mainContext.fetch(descriptor).first else { return }
         let coordinator = self.coordinator
         Task { onOutcome((try? await coordinator.write { try write(record) }) ?? .synced) }
+    }
+
+    /// The failed-writes sheet's hands on the outbox: a retry or discard is
+    /// followed by a catch-up, whose outcome the model sees through
+    /// `coordinator.onEveryOutcome` (#185).
+    func failedWritesActions() -> FailedWritesModel.Actions {
+        let (maintenance, coordinator) = (OutboxMaintenance(context: container.mainContext), self.coordinator)
+        let catchUp = { Task { _ = await coordinator.catchUp() } }
+        return FailedWritesModel.Actions(
+            status: { maintenance.status() },
+            retry: { sequence in
+                try maintenance.retry(sequence: sequence)
+                catchUp()
+            },
+            discard: { sequence in
+                try maintenance.discard(sequence: sequence)
+                catchUp()
+            },
+            syncNow: { catchUp() })
     }
 
     /// The pomodoro, resumed from the store: a phase that ran out while the
