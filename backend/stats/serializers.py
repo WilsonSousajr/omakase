@@ -11,12 +11,19 @@ class DailyReviewSerializer(serializers.ModelSerializer):
             "date",
             "productivity_rating",
             "win_of_the_day",
+            "energy",
             "is_shutdown",
             "shutdown_at",
             "created_at",
             "updated_at",
         ]
         read_only_fields = ["id", "shutdown_at", "created_at", "updated_at"]
+
+    def validate_energy(self, value: int | None) -> int | None:
+        # Invariant 3: a 400 here, before the check constraint can 500.
+        if value is not None and not 1 <= value <= 3:
+            raise serializers.ValidationError(f"energy {value} is not 1, 2 or 3")
+        return value
 
     def validate(self, data):
         request = self.context.get("request")

@@ -1,0 +1,18 @@
+{
+  "count": 1,
+  "next": null,
+  "previous": null,
+  "results": [
+    {
+      "created_at": "2026-09-26T13:47:47.016716Z",
+      "date": "2026-03-07",
+      "energy": 2,
+      "id": "9f4ba27a-9b10-4cef-b720-dc5c3ec0e5c2",
+      "is_shutdown": false,
+      "productivity_rating": 4,
+      "shutdown_at": null,
+      "updated_at": "2026-09-26T13:47:47.016719Z",
+      "win_of_the_day": ""
+    }
+  ]
+}

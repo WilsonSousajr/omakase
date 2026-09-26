@@ -12,6 +12,9 @@ for each milestone.
 
 ### Added
 
+- **`energy` on the daily review** (#143, #130): optional, 1-3, in every
+  review response; anything else is a 400 naming the value.
+
 - **`Idempotency-Key` on the creates the Mac client replays.** `POST tasks/`,
   `pomodoro/sessions/` and `stats/reviews/` run once per key and replay the
   first response for 7 days (`Idempotent-Replayed: true`); the same key on a
