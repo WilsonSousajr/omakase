@@ -11,6 +11,7 @@ struct OmakaseMacApp: App {
     @State private var section: SidebarItem? = .focus
     @State private var focus: FocusModel?
     @State private var timer: TimerModel?
+    @State private var prompt: SessionPrompt?
     /// Recomputed when the app becomes active: a window left open overnight
     /// moves to the new day (M1's known limitation).
     @State private var day = FocusDay().today
@@ -26,6 +27,10 @@ struct OmakaseMacApp: App {
                 .omakaseWindowBackground()
                 .task { await start() }
                 .onChange(of: scenePhase) { _, phase in if phase == .active { day = FocusDay().today } }
+                .onChange(of: timer?.lastFinished) { _, finished in prompt = services.prompt(for: finished) }
+                .sheet(
+                    item: $prompt, onDismiss: { timer?.dismissFinished() },
+                    content: { prompt in SessionPromptView(prompt: prompt) { services.apply($0) { handle($0) } } })
         }
         .modelContainer(services.container)
     }
