@@ -33,4 +33,12 @@ struct MenuBarTests {
         #expect(PhaseNotice.ending(.shortBreak) == PhaseNotice(title: "Break over", body: "Ready to focus?"))
         #expect(PhaseNotice.ending(.longBreak) == PhaseNotice(title: "Break over", body: "Ready to focus?"))
     }
+
+    @Test func theClockIsZeroPaddedTwentyFourHour() {
+        var utc = Calendar(identifier: .gregorian)
+        utc.timeZone = .gmt
+        // Block times compare as HH:MM strings, so "2:30 PM" would never match.
+        #expect(DayString.time(Date(timeIntervalSince1970: 1_772_893_800), calendar: utc) == "14:30")
+        #expect(DayString.time(Date(timeIntervalSince1970: 1_772_845_500), calendar: utc) == "01:05")
+    }
 }
