@@ -12,6 +12,14 @@ for each milestone.
 
 ### Added
 
+- **Reminders defined on the server** (#127). `auth/profile/` gains
+  `block_reminder_minutes` (the heads-up before every time block, 1-120 or
+  null for off, default 5; outside the range is a 400) and
+  `shutdown_reminder_time` (a local time of day, null for off). Tasks gain
+  `remind_at`, a nullable timezone-aware datetime written through `tasks/`
+  and returned by `tasks/`, `tasks/today/` and `tasks/carried-over/`. Each
+  client schedules its own notifications from these fields.
+
 - **`GET stats/workload/?date=YYYY-MM-DD`** (#128) gives the day's planned
   minutes against the goal: `task_minutes` and `study_block_minutes` (the
   estimates of what is scheduled on the day, done or not), `class_minutes`
