@@ -13,16 +13,58 @@ actor FakeAPIClient: APIClient {
     private var tasksByDay: [String: [TaskDTO]] = [:]
     private var outcomes: [SendOutcome] = []
     private(set) var sentRequests: [OutboxRequest] = []
+    private var carriedByDay: [String: [TaskDTO]] = [:]
+    private var blocksByDay: [String: [TimeBlockDTO]] = [:]
+    private var studiesByDay: [String: [StudyBlockDTO]] = [:]
+    private var reviewsByDay: [String: DailyReviewDTO] = [:]
+    private var storedProfile: ProfileDTO?
+    /// Every day a read asked for, in order: how DaySync's tests see one refresh use one day.
+    private(set) var requestedDays: [String] = []
 
     func setTasks(_ tasks: [TaskDTO], on day: String) { tasksByDay[day] = tasks }
     func script(_ outcomes: [SendOutcome]) { self.outcomes = outcomes }
+    func setCarriedOver(_ tasks: [TaskDTO], on day: String) { carriedByDay[day] = tasks }
+    func setBlocks(_ blocks: [TimeBlockDTO], on day: String) { blocksByDay[day] = blocks }
+    func setStudies(_ studies: [StudyBlockDTO], on day: String) { studiesByDay[day] = studies }
+    func setReview(_ review: DailyReviewDTO?, on day: String) { reviewsByDay[day] = review }
+    func setProfile(_ profile: ProfileDTO) { storedProfile = profile }
 
     func signIn(googleIDToken: String) async throws -> UserDTO { throw APIError.signedOut }
     func me() async throws -> UserDTO { throw APIError.signedOut }
     func signOut() async {}
     func hasStoredSession() async -> Bool { true }
 
-    func tasks(on day: APIDay) async throws -> [TaskDTO] { tasksByDay[day.string] ?? [] }
+    func tasks(on day: APIDay) async throws -> [TaskDTO] {
+        note(day)
+        return tasksByDay[day.string] ?? []
+    }
+
+    func carriedOver(on day: APIDay) async throws -> [TaskDTO] {
+        note(day)
+        return carriedByDay[day.string] ?? []
+    }
+
+    func timeBlocks(on day: APIDay) async throws -> [TimeBlockDTO] {
+        note(day)
+        return blocksByDay[day.string] ?? []
+    }
+
+    func studyBlocks(on day: APIDay) async throws -> [StudyBlockDTO] {
+        note(day)
+        return studiesByDay[day.string] ?? []
+    }
+
+    func review(on day: APIDay) async throws -> DailyReviewDTO? {
+        note(day)
+        return reviewsByDay[day.string]
+    }
+
+    func profile() async throws -> ProfileDTO {
+        guard let storedProfile else { throw APIError.transport("no profile scripted") }
+        return storedProfile
+    }
+
+    private func note(_ day: APIDay) { requestedDays.append(day.string) }
 
     func send(_ request: OutboxRequest) async throws -> OutboxResponse {
         sentRequests.append(request)

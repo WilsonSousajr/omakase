@@ -28,6 +28,8 @@ public struct TaskDTO: Sendable, Codable, Equatable, Identifiable {
     public let completedAt: Date?
     public let createdAt: Date
     public let updatedAt: Date
+    /// Embedded by today and carried-over only; nil elsewhere, and then sync leaves local subtasks alone.
+    public let subtasks: [SubtaskDTO]?
 }
 
 public struct TagDTO: Sendable, Codable, Equatable, Identifiable {

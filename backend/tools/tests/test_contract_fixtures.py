@@ -17,7 +17,16 @@ from unittest.mock import patch
 import pytest
 
 from accounts.tests.fakes import FakeGoogleVerifier
-from conftest import DailyReviewFactory, SubtaskFactory, TagFactory, TaskFactory, TimeBlockFactory
+from conftest import (
+    DailyReviewFactory,
+    DisciplineFactory,
+    SemesterFactory,
+    StudyBlockFactory,
+    SubtaskFactory,
+    TagFactory,
+    TaskFactory,
+    TimeBlockFactory,
+)
 
 REPO = Path(os.environ.get("REPO_ROOT", Path(__file__).resolve().parents[3]))
 FIXTURES = REPO / "apps" / "apple" / "Fixtures"
@@ -160,6 +169,29 @@ class TestContractFixtures:
         )
         assert resp.status_code == 201, resp.content
         check_fixture("pomodoro_session", _body(resp))
+
+    def test_timeblocks_day(self, authenticated_client, user):
+        TimeBlockFactory(
+            task=TaskFactory(user=user, project=None, discipline=None),
+            date=datetime.date(2026, 3, 7),
+            notes="Draft",
+            session_rating=4,
+        )
+        resp = authenticated_client.get("/api/v1/timeblocks/?date=2026-03-07")
+        assert resp.status_code == 200
+        check_fixture("timeblocks_day", _body(resp))
+
+    def test_studyblocks_day(self, authenticated_client, user):
+        discipline = DisciplineFactory(semester=SemesterFactory(user=user))
+        StudyBlockFactory(discipline=discipline, scheduled_date=datetime.date(2026, 3, 7), estimated_minutes=45)
+        resp = authenticated_client.get("/api/v1/study/studyblocks/?scheduled_date=2026-03-07")
+        assert resp.status_code == 200
+        check_fixture("studyblocks_day", _body(resp))
+
+    def test_profile(self, authenticated_client):
+        resp = authenticated_client.get("/api/v1/auth/profile/")
+        assert resp.status_code == 200
+        check_fixture("profile", _body(resp))
 
 
 def test_fixtures_hold_no_live_tokens():
