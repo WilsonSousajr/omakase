@@ -18,9 +18,16 @@ public final class SyncCoordinator {
     private let refresh: () async throws -> Void
     private var running: Task<Outcome, Never>?
     private var backgroundStarted = false
+    private let scheduleWake: SyncWakeScheduler
+    /// The catch-up booked for when the current backoff ends; at most one.
+    private var pendingWake: SyncWake?
 
-    public init(drain: @escaping () async -> OutboxWorker.DrainResult, refresh: @escaping () async throws -> Void) {
-        (self.drain, self.refresh) = (drain, refresh)
+    /// `scheduleWake` books the catch-up that ends a backoff; the default sleeps in a task.
+    public init(
+        drain: @escaping () async -> OutboxWorker.DrainResult, refresh: @escaping () async throws -> Void,
+        scheduleWake: @escaping SyncWakeScheduler = { date, fire in SyncWake.sleeping(until: date, fire: fire) }
+    ) {
+        (self.drain, self.refresh, self.scheduleWake) = (drain, refresh, scheduleWake)
     }
 
     /// Concurrent callers share one run.
@@ -50,7 +57,9 @@ public final class SyncCoordinator {
     }
 
     private func runOnce() async -> Outcome {
-        guard await drain() != .signedOut else { return .signedOut }
+        let drained = await drain()
+        rescheduleWake(after: drained)
+        guard drained != .signedOut else { return .signedOut }
         do {
             try await refresh()
             return .synced
@@ -60,6 +69,19 @@ public final class SyncCoordinator {
             return .failed(reason)
         } catch {
             return .failed(String(describing: error))
+        }
+    }
+
+    /// A write in backoff is retried when the backoff ends, not at the next
+    /// reconnect, tick or write (M3.5 spec). Any other result makes the
+    /// booked wake stale.
+    private func rescheduleWake(after drained: OutboxWorker.DrainResult) {
+        pendingWake?.cancel()
+        pendingWake = nil
+        guard case .waiting(let due) = drained else { return }
+        pendingWake = scheduleWake(due) { [weak self] in
+            self?.pendingWake = nil
+            _ = await self?.catchUp()
         }
     }
 }
