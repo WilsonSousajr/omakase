@@ -17,7 +17,7 @@ from unittest.mock import patch
 import pytest
 
 from accounts.tests.fakes import FakeGoogleVerifier
-from conftest import TagFactory, TaskFactory
+from conftest import TagFactory, TaskFactory, TimeBlockFactory
 
 REPO = Path(os.environ.get("REPO_ROOT", Path(__file__).resolve().parents[3]))
 FIXTURES = REPO / "apps" / "apple" / "Fixtures"
@@ -111,6 +111,26 @@ class TestContractFixtures:
         resp = authenticated_client.patch(f"/api/v1/tasks/{task.pk}/", {"is_completed": True}, format="json")
         assert resp.status_code == 200
         check_fixture("task_patch", _body(resp))
+
+    # The fixture's dates are fixed, so "now" is frozen inside the session window (#142).
+    @patch("pomodoro.serializers.timezone.now", return_value=datetime.datetime(2026, 3, 7, 10, tzinfo=datetime.UTC))
+    def test_pomodoro_session_create(self, _now, authenticated_client, user):
+        block = TimeBlockFactory(task=TaskFactory(user=user, project=None, discipline=None))
+        resp = authenticated_client.post(
+            "/api/v1/pomodoro/sessions/",
+            {
+                "task": str(block.task.pk),
+                "time_block": str(block.pk),
+                "session_type": "focus",
+                "duration_minutes": 25,
+                "started_at": "2026-03-07T09:00:00Z",
+                "ended_at": "2026-03-07T09:25:00Z",
+                "completed": True,
+            },
+            format="json",
+        )
+        assert resp.status_code == 201, resp.content
+        check_fixture("pomodoro_session", _body(resp))
 
 
 def test_fixtures_hold_no_live_tokens():
