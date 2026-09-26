@@ -8,11 +8,16 @@ struct OmakaseMacApp: App {
     @State private var services = Self.makeServices()
     @State private var signIn: SignInModel?
     @State private var signedIn = false
+    @State private var section: SidebarItem? = .focus
 
     var body: some Scene {
         WindowGroup("Omakase") {
             content
-                .frame(minWidth: 520, minHeight: 420)
+                .frame(minWidth: WindowSize.minimum.width, minHeight: WindowSize.minimum.height)
+                // Dark first, grey accent, translucent ground (docs/design-system-apple.md).
+                .preferredColorScheme(Appearance.default.colorScheme)
+                .tint(Palette.accent.color)
+                .omakaseWindowBackground()
                 .task { await start() }
         }
         .modelContainer(services.container)
@@ -20,20 +25,26 @@ struct OmakaseMacApp: App {
 
     @ViewBuilder private var content: some View {
         if signedIn {
-            NavigationStack {
-                TodayView(day: APIDay.today().string) { record in
-                    Task {
-                        handle(
-                            (try? await services.coordinator.write { try services.writes.toggleCompletion(record) })
-                                ?? .synced)
-                    }
-                }
+            NavigationSplitView {
+                List(SidebarItem.allCases, selection: $section) { Label($0.title, systemImage: $0.symbol) }
+            } detail: {
+                today
             }
         } else if let signIn {
             SignInView(model: signIn).onChange(of: signIn.state) { _, state in
                 guard case .signedIn = state else { return }
                 signedIn = true
                 Task { handle(await services.coordinator.catchUp()) }
+            }
+        }
+    }
+
+    private var today: some View {
+        TodayView(day: APIDay.today().string) { record in
+            Task {
+                handle(
+                    (try? await services.coordinator.write { try services.writes.toggleCompletion(record) })
+                        ?? .synced)
             }
         }
     }
