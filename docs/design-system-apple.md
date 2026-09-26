@@ -37,7 +37,7 @@ Ratios are WCAG 2.x contrast, measured from the token values.
 | `background` | `#141312` sumi | `#F7F4EE` paper | the window's ground, laid at 50% over the blurred desktop (#170) | - |
 | `surface` | `#1E1C1A` | `#EFEBE3` | cards, rows, calendar blocks (opaque) | - |
 | `ink` | `#EDE8DF` | `#1C1A17` | text | 15.2 / 15.8 on background, 13.9 / 14.6 on surface |
-| `inkMuted` | `#9B958B` | `#69645C` | secondary text, section labels | 6.24 / 5.35 on background, 5.72 / 4.94 on surface |
+| `inkMuted` | `#9B958B` | `#69645C` | secondary text, section labels, the timer's track (#173) | 6.24 / 5.35 on background, 5.72 / 4.94 on surface |
 | `hairline` | `#2E2B28` | `#DDD7CC` | separators | decorative |
 | `accent` | `#77726A` | `#6F6A62` | checkboxes, selection, `AccentColor` | white on it 4.77 / 5.37; 3.89 / 4.89 on background |
 | `shu` | `#D0462C` | `#C8402A` | focus phase, the now line | 4.06 / 4.53 on background |
@@ -131,7 +131,9 @@ measured, not guessed: `TranslucencyTests`.
 
 - **The timer:**
   - a ring in the phase colour: focus shu, short break matcha, long break
-    indigo (`TimerPhase.tint`)
+    indigo (`TimerPhase.tint`), over an `inkMuted` track so an idle dial
+    reads as a dial (3:1 over the blurred ground; the hairline was 1.6:1,
+    #173)
   - a disc of glass tinted 18% toward that colour
 - **Now:** a shu dot and line across the calendar.
 - **Priority:** the web's pill (`PriorityBadgeView`), a tinted capsule with
