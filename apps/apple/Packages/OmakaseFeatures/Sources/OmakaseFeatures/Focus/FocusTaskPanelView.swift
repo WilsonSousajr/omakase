@@ -2,12 +2,13 @@ import OmakaseStore
 import SwiftData
 import SwiftUI
 
-/// The selected task: its dates, subtasks and actions. M3.3 puts the timer
-/// above the subtasks (M3.2 decision: nothing inert ships before it).
+/// The selected task: its dates, the pomodoro timer (M3.3), its subtasks
+/// and actions.
 struct FocusTaskPanelView: View {
     let card: FocusCard?
     let day: String
     let model: FocusModel
+    let timer: TimerModel
 
     var body: some View {
         if let card {
@@ -15,6 +16,7 @@ struct FocusTaskPanelView: View {
                 VStack(alignment: .leading, spacing: Spacing.large) {
                     Text(card.title).font(TypeScale.title).foregroundStyle(Palette.ink.color)
                     FocusMarksView(card: card, day: day, calendar: model.calendar)
+                    FocusTimerView(timer: timer, taskID: card.id)
                     FocusSubtasksView(taskID: card.id, model: model)
                     FocusPanelActionsView(card: card, day: day, model: model)
                 }

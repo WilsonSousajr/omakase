@@ -7,12 +7,13 @@ import SwiftUI
 /// `FocusModel`'s injected actions, so they queue offline.
 public struct FocusView: View {
     @Bindable private var model: FocusModel
+    private let timer: TimerModel
     @Query private var records: [TaskRecord]
     @Query private var studies: [StudyBlockRecord]
     private let day: String
 
-    public init(day: String, model: FocusModel) {
-        (self.day, self.model) = (day, model)
+    public init(day: String, model: FocusModel, timer: TimerModel) {
+        (self.day, self.model, self.timer) = (day, model, timer)
         let target: String? = day
         _records = Query(filter: #Predicate<TaskRecord> { $0.scheduledDay == target || $0.isCarriedOver })
         _studies = Query(filter: #Predicate<StudyBlockRecord> { $0.scheduledDay == target })
@@ -23,7 +24,8 @@ public struct FocusView: View {
         HStack(spacing: 0) {
             boardColumn(board)
             Divider().overlay(Palette.hairline.color)
-            FocusTaskPanelView(card: model.selectedCard(in: board), day: day, model: model).frame(width: 340)
+            FocusTaskPanelView(card: model.selectedCard(in: board), day: day, model: model, timer: timer)
+                .frame(width: 340)
         }
         .onChange(of: board, initial: true) { _, board in model.keepSelection(in: board) }
         .navigationTitle("Focus")

@@ -2,7 +2,7 @@
 /// glance, in the window and in the menu bar (IDEA.md, Focus Mode).
 ///
 ///     TimerGlass().tint(TimerPhase.focus.tint.color)
-public enum TimerPhase: String, CaseIterable, Sendable {
+public enum TimerPhase: String, CaseIterable, Codable, Sendable {
     case focus
     case shortBreak
     case longBreak
