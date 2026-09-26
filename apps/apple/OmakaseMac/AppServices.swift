@@ -109,6 +109,38 @@ final class AppServices {
         Task { onOutcome((try? await coordinator.write { try writes.record(session, task: task) }) ?? .synced) }
     }
 
+    /// The prompt for a focus that just finished: its task's title and the
+    /// subtasks it has checked (#163).
+    func prompt(for finished: CompletedPhase?) -> SessionPrompt? {
+        guard let taskID = finished?.taskID else { return nil }
+        let context = container.mainContext
+        let task = try? context.fetch(FetchDescriptor<TaskRecord>(predicate: #Predicate { $0.id == taskID })).first
+        let done = FetchDescriptor<SubtaskRecord>(
+            predicate: #Predicate { $0.taskID == taskID && $0.isCompleted }, sortBy: [SortDescriptor(\.order)])
+        let subtasks = (try? context.fetch(done)) ?? []
+        return SessionPrompt.make(for: finished, taskTitle: task?.title, doneSubtasks: subtasks.map(\.title))
+    }
+
+    /// Saves the prompt's rating and notes to the block, through the outbox.
+    func apply(_ writes: [SessionPrompt.Write], onOutcome: @escaping @MainActor (SyncCoordinator.Outcome) -> Void) {
+        let context = container.mainContext
+        let (coordinator, blocks) = (self.coordinator, BlockWrites(context: context))
+        func block(_ id: String) -> TimeBlockRecord? {
+            try? context.fetch(FetchDescriptor<TimeBlockRecord>(predicate: #Predicate { $0.id == id })).first
+        }
+        Task {
+            let outcome = try? await coordinator.write {
+                for write in writes {
+                    switch write {
+                    case .rate(let id, let value): if let found = block(id) { try blocks.rate(found, value) }
+                    case .notes(let id, let text): if let found = block(id) { try blocks.saveNotes(found, text) }
+                    }
+                }
+            }
+            onOutcome(outcome ?? .synced)
+        }
+    }
+
     /// Ticks the timer every second while the app runs, so a phase ends on
     /// time with the window closed (the menu bar and notifications rely on it).
     func startTicking(_ timer: TimerModel) {
