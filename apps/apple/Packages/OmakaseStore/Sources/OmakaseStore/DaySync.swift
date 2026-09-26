@@ -33,12 +33,17 @@ public final class DaySync {
         async let studies = api.studyBlocks(on: day)
         async let review = api.review(on: day)
         async let profile = api.profile()
-        let apply = DayApply(context: context, pending: try pendingSubjects())
-        try apply.tasks(try await today, carried: try await carried, on: day.string)
-        try apply.blocks(try await blocks, on: day.string)
-        try apply.studies(try await studies, on: day.string)
-        try apply.review(try await review, on: day.string)
-        try apply.profile(try await profile)
+        let queuedBefore = try pendingSubjects()
+        let fetched = try await (today, carried, blocks, studies, review, profile)
+        // Read after the network too: a write made while the reads were in
+        // flight must keep its local state (final review, Important 1). The
+        // earlier snapshot covers writes accepted and removed meanwhile.
+        let apply = DayApply(context: context, pending: queuedBefore.union(try pendingSubjects()))
+        try apply.tasks(fetched.0, carried: fetched.1, on: day.string)
+        try apply.blocks(fetched.2, on: day.string)
+        try apply.studies(fetched.3, on: day.string)
+        try apply.review(fetched.4, on: day.string)
+        try apply.profile(fetched.5)
         try context.save()
     }
 
