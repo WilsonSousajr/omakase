@@ -69,6 +69,14 @@ struct DayApply {
         }
     }
 
+    /// The server's sum replaces the cached one: nothing local writes it.
+    func workload(_ dto: WorkloadDTO, on day: String) throws {
+        let found = try context.fetch(FetchDescriptor<WorkloadRecord>(predicate: #Predicate { $0.day == day }))
+        let record = found.first ?? WorkloadRecord(day: day)
+        if found.isEmpty { context.insert(record) }
+        record.apply(dto)
+    }
+
     private func upsertTask(_ dto: TaskDTO, carried: Bool) throws {
         let id = dto.id.uuidString
         guard !pending.contains(id) else { return }

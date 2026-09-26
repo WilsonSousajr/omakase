@@ -118,6 +118,28 @@ struct DaySyncTests {
         await api.setProfile(try .make())
         try await sync().refresh()
         #expect(Set(await api.requestedDays) == ["2026-03-07"])
+        // The workload is the seventh request (#177); the profile names no day.
+        #expect(await api.requestedDays.count == 6)
+    }
+
+    @Test func theDaysWorkloadIsCached() async throws {
+        await api.setProfile(try .make())
+        await api.setWorkload(try .make(day: "2026-03-07", planned: 300, unestimated: 2), on: "2026-03-07")
+        try await sync().refresh()
+        let record = try #require(try container.mainContext.fetch(FetchDescriptor<WorkloadRecord>()).first)
+        #expect(record.day == "2026-03-07" && record.plannedMinutes == 300 && record.taskMinutes == 300)
+        #expect(record.goalMinutes == 720 && record.overMinutes == -420 && record.unestimatedCount == 2)
+    }
+
+    @Test func aRefreshReplacesTheDaysWorkloadInPlace() async throws {
+        await api.setProfile(try .make())
+        await api.setWorkload(try .make(day: "2026-03-07", planned: 300), on: "2026-03-07")
+        let today = sync()
+        try await today.refresh()
+        await api.setWorkload(try .make(day: "2026-03-07", planned: 800), on: "2026-03-07")
+        try await today.refresh()
+        let records = try container.mainContext.fetch(FetchDescriptor<WorkloadRecord>())
+        #expect(records.count == 1 && records.first?.overMinutes == 80)
     }
 
     @Test func carriedOverTasksAreMarked() async throws {

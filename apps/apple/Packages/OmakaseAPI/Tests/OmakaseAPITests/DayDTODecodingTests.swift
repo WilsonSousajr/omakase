@@ -52,4 +52,12 @@ struct DayDTODecodingTests {
         #expect(profile.pomodoroWorkMinutes == 25 && profile.pomodorosBeforeLongBreak == 4)
         #expect(profile.workGoalHours == 8)
     }
+
+    @Test func decodesTheDaysWorkload() throws {
+        // over_minutes is negative while the day has headroom (#128).
+        let workload = try OmakaseJSON.decoder.decode(WorkloadDTO.self, from: Fixture.data("stats_workload"))
+        #expect(workload.date.string == "2026-03-02" && workload.plannedMinutes == 50)
+        #expect(workload.taskMinutes == 50 && workload.studyBlockMinutes == 0 && workload.classMinutes == 0)
+        #expect(workload.goalMinutes == 720 && workload.overMinutes == -670 && workload.unestimatedCount == 1)
+    }
 }

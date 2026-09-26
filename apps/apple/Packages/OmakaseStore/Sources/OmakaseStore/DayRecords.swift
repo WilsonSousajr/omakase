@@ -117,3 +117,25 @@ public final class ProfileRecord {
         (workGoalHours, studyGoalHours) = (dto.workGoalHours, dto.studyGoalHours)
     }
 }
+
+/// The day's planned minutes against the goal, as the server last summed
+/// them (#128): cached so the Focus header can warn offline.
+@Model
+public final class WorkloadRecord {
+    @Attribute(.unique) public var day: String
+    public var taskMinutes: Int = 0
+    public var studyBlockMinutes: Int = 0
+    public var classMinutes: Int = 0
+    public var plannedMinutes: Int = 0
+    public var goalMinutes: Int = 0
+    public var overMinutes: Int = 0
+    public var unestimatedCount: Int = 0
+
+    public init(day: String) { self.day = day }
+
+    public func apply(_ dto: WorkloadDTO) {
+        (taskMinutes, studyBlockMinutes, classMinutes) = (dto.taskMinutes, dto.studyBlockMinutes, dto.classMinutes)
+        (plannedMinutes, goalMinutes) = (dto.plannedMinutes, dto.goalMinutes)
+        (overMinutes, unestimatedCount) = (dto.overMinutes, dto.unestimatedCount)
+    }
+}

@@ -54,4 +54,10 @@ struct DayAPIClientTests {
         #expect(try await api.profile().pomodoroWorkMinutes == 25)
         #expect(await transport.sent.first?.url?.path() == "/api/v1/auth/profile/")
     }
+
+    @Test func workloadSendsTheDay() async throws {
+        let (api, transport) = client([.success(.init(status: 200, body: try Fixture.data("stats_workload")))])
+        #expect(try await api.workload(on: day).goalMinutes == 720)
+        #expect(await sentURL(transport) == "/api/v1/stats/workload/?date=2026-03-07")
+    }
 }

@@ -18,6 +18,7 @@ actor FakeAPIClient: APIClient {
     private var studiesByDay: [String: [StudyBlockDTO]] = [:]
     private var reviewsByDay: [String: DailyReviewDTO] = [:]
     private var storedProfile: ProfileDTO?
+    private var workloadsByDay: [String: WorkloadDTO] = [:]
     /// Every day a read asked for, in order: how DaySync's tests see one refresh use one day.
     private(set) var requestedDays: [String] = []
     /// Runs while `tasks(on:)` is "on the network": how a test makes a local
@@ -31,6 +32,7 @@ actor FakeAPIClient: APIClient {
     func setStudies(_ studies: [StudyBlockDTO], on day: String) { studiesByDay[day] = studies }
     func setReview(_ review: DailyReviewDTO?, on day: String) { reviewsByDay[day] = review }
     func setProfile(_ profile: ProfileDTO) { storedProfile = profile }
+    func setWorkload(_ workload: WorkloadDTO, on day: String) { workloadsByDay[day] = workload }
     func setDuringTasksFetch(_ hook: @escaping @Sendable () async -> Void) { duringTasksFetch = hook }
 
     func signIn(googleIDToken: String) async throws -> UserDTO { throw APIError.signedOut }
@@ -67,6 +69,11 @@ actor FakeAPIClient: APIClient {
     func profile() async throws -> ProfileDTO {
         guard let storedProfile else { throw APIError.transport("no profile scripted") }
         return storedProfile
+    }
+
+    func workload(on day: APIDay) async throws -> WorkloadDTO {
+        note(day)
+        return try workloadsByDay[day.string] ?? .make(day: day.string)
     }
 
     private func note(_ day: APIDay) { requestedDays.append(day.string) }
@@ -149,5 +156,16 @@ extension SubtaskDTO {
     static func make(id: UUID = UUID(), title: String, done: Bool = false) throws -> SubtaskDTO {
         let json = #"{"id":"\#(id)","title":"\#(title)","is_completed":\#(done),"order":0}"#
         return try OmakaseJSON.decoder.decode(SubtaskDTO.self, from: Data(json.utf8))
+    }
+}
+
+extension WorkloadDTO {
+    static func make(day: String, planned: Int = 0, goal: Int = 720, unestimated: Int = 0) throws -> WorkloadDTO {
+        let json = """
+            {"date":"\(day)","task_minutes":\(planned),"study_block_minutes":0,"class_minutes":0,
+             "planned_minutes":\(planned),"goal_minutes":\(goal),"over_minutes":\(planned - goal),
+             "unestimated_count":\(unestimated)}
+            """
+        return try OmakaseJSON.decoder.decode(WorkloadDTO.self, from: Data(json.utf8))
     }
 }

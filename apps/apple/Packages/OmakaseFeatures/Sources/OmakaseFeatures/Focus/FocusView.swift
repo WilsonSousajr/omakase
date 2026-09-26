@@ -10,6 +10,7 @@ public struct FocusView: View {
     private let timer: TimerModel
     @Query private var records: [TaskRecord]
     @Query private var studies: [StudyBlockRecord]
+    @Query private var workloads: [WorkloadRecord]
     private let day: String
 
     public init(day: String, model: FocusModel, timer: TimerModel) {
@@ -17,6 +18,7 @@ public struct FocusView: View {
         let target: String? = day
         _records = Query(filter: #Predicate<TaskRecord> { $0.scheduledDay == target || $0.isCarriedOver })
         _studies = Query(filter: #Predicate<StudyBlockRecord> { $0.scheduledDay == target })
+        _workloads = Query(filter: #Predicate<WorkloadRecord> { $0.day == day })
     }
 
     public var body: some View {
@@ -33,7 +35,7 @@ public struct FocusView: View {
 
     private func boardColumn(_ board: FocusBoard) -> some View {
         VStack(alignment: .leading, spacing: 0) {
-            FocusHeaderView(day: day, layout: $model.layout)
+            FocusHeaderView(day: day, workload: WorkloadWarning(record: workloads.first), layout: $model.layout)
             Divider().overlay(Palette.hairline.color)
             content(board).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             if !studies.isEmpty {
@@ -54,14 +56,16 @@ public struct FocusView: View {
     }
 }
 
-/// The day and the List/Kanban toggle.
+/// The day, its workload check, and the List/Kanban toggle.
 struct FocusHeaderView: View {
     let day: String
+    let workload: WorkloadWarning
     @Binding var layout: FocusModel.Layout
 
     var body: some View {
         HStack {
             Text(day).sectionLabel()
+            WorkloadBannerView(warning: workload)
             Spacer()
             Picker("Layout", selection: $layout) {
                 Text("List").tag(FocusModel.Layout.list)
