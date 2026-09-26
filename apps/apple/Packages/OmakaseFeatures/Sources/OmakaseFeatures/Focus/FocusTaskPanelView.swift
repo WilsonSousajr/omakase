@@ -72,6 +72,9 @@ struct FocusSubtasksView: View {
 
 /// Complete (the one primary action) and Reschedule.
 struct FocusPanelActionsView: View {
+    /// The Reschedule menu's label: ink, like the other glass buttons. Left to
+    /// itself a `.menuStyle(.button)` menu draws it dim, as if disabled (#172).
+    static let menuLabel = Palette.ink
     let card: FocusCard
     let day: String
     let model: FocusModel
@@ -82,9 +85,11 @@ struct FocusPanelActionsView: View {
         HStack(spacing: Spacing.medium) {
             Button(card.isCompleted ? "Reopen" : "Complete") { model.toggle(card.id) }
                 .buttonStyle(.primary)
-            Menu("Reschedule") {
+            Menu {
                 FocusRescheduleItems(card: card, day: day, model: model)
                 Button("Pick a date…") { picking = true }
+            } label: {
+                Text("Reschedule").foregroundStyle(Self.menuLabel.color)
             }
             .menuStyle(.button)
             .buttonStyle(.glass)
