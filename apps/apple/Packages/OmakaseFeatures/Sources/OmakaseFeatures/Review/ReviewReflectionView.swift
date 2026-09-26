@@ -78,8 +78,11 @@ struct ReviewWinView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.small) {
             Text("Win of the day").font(TypeScale.body).foregroundStyle(Palette.ink.color)
+            // An explicit closure, not `set: model.setWin`: partially applying the
+            // main-actor method crashes Swift 6.2's IRGen (Xcode 26.6, CI).
             TextField(
-                "What was your biggest win today?", text: Binding(get: { model.draft.win }, set: model.setWin),
+                "What was your biggest win today?",
+                text: Binding(get: { model.draft.win }, set: { model.setWin($0) }),
                 axis: .vertical
             )
             .textFieldStyle(.plain)
