@@ -52,6 +52,30 @@ struct ReviewSummaryTests {
         #expect(ReviewSummary(cards: cards, day: day).unfinished.map(\.id) == ["old", "going", "today"])
     }
 
+    @Test func theDoneLabelReadsDoneOfPlanned() {
+        let summary = ReviewSummary(cards: [card("a", done: true), card("b"), card("c")], day: day)
+        #expect(summary.doneLabel == "1 of 3 done")
+    }
+
+    @Test func theEstimateLabelReadsInHoursAndMinutes() {
+        let cards = [card("a", minutes: 45, done: true), card("b", minutes: 30, done: true)]
+        #expect(ReviewSummary(cards: cards, day: day).estimateLabel == "1h 15m estimated")
+    }
+
+    @Test func theEstimateLabelUnderAnHourIsMinutesAndWholeHoursDropTheMinutes() {
+        #expect(ReviewSummary(cards: [card("a", minutes: 45, done: true)], day: day).estimateLabel == "45m estimated")
+        #expect(ReviewSummary(cards: [card("a", minutes: 120, done: true)], day: day).estimateLabel == "2h estimated")
+    }
+
+    @Test func theEstimateLabelSaysWhenItIsPartial() {
+        let cards = [card("a", minutes: 30, done: true), card("b", done: true), card("c", done: true)]
+        #expect(ReviewSummary(cards: cards, day: day).estimateLabel == "30m estimated, 2 without an estimate")
+    }
+
+    @Test func nothingDoneHasNoEstimateLabel() {
+        #expect(ReviewSummary(cards: [card("a", minutes: 30)], day: day).estimateLabel == nil)
+    }
+
     @Test func anEmptyDaySumsToNothing() {
         let summary = ReviewSummary(cards: [], day: day)
         #expect(summary.plannedCount == 0)
