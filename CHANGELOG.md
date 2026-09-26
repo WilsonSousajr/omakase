@@ -12,6 +12,18 @@ for each milestone.
 
 ### Added
 
+- **`POST timeblocks/` is idempotent** (#199). It honours `Idempotency-Key`
+  like the other creates the Mac outbox replays, so a retried block create
+  books one block.
+
+- **`pomodoro/sessions/` lists by time and by block** (#199).
+  `?started_after=` (inclusive) and `?started_before=` (exclusive) take
+  ISO-8601 instants with an offset (`2026-09-26T10:00:00-03:00`, or `Z`;
+  percent-encode the `+` of a positive offset). A naive or malformed bound is
+  a 400 naming the value and the expected shape. `?time_block=<uuid>` keeps
+  one block's sessions. The list stays newest first, and now breaks
+  `started_at` ties by `id`, so pages are stable.
+
 - **Reminders defined on the server** (#127). `auth/profile/` gains
   `block_reminder_minutes` (the heads-up before every time block, 1-120 or
   null for off, default 5; outside the range is a 400) and
