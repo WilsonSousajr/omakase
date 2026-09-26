@@ -34,6 +34,14 @@ struct DTODecodingTests {
         #expect(task.isCompleted && task.completedAt != nil)
     }
 
+    @Test func decodesATaskReminderAsAUTCInstant() throws {
+        // #187: remind_at is an ISO-8601 datetime in UTC with a "Z".
+        let reminded = try OmakaseJSON.decoder.decode(TaskDTO.self, from: Fixture.data("task_patch"))
+        #expect(reminded.remindAt?.timeIntervalSince1970 == 1_772_884_800)
+        let page = try OmakaseJSON.decoder.decode(Page<TaskDTO>.self, from: Fixture.data("tasks_today"))
+        #expect(page.results.first?.remindAt == nil)
+    }
+
     @Test func decodesMicrosecondAndWholeSecondDatetimes() throws {
         // Review Focus 3: DRF emits microseconds; some producers emit none.
         let json = #"["2026-03-07T12:00:00.123456Z", "2026-03-07T12:00:00Z", "2026-03-07T12:00:00.1+00:00"]"#
