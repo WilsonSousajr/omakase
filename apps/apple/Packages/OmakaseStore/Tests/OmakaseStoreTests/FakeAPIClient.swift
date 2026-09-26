@@ -103,7 +103,10 @@ extension TaskDTO {
     /// The same title gives the same id within a test run, so a task re-sent with
     /// fewer subtasks keeps the survivors' ids, as the server would.
     private static func stableID(_ title: String) -> UUID {
-        UUID(uuidString: String(format: "00000000-0000-4000-8000-%012llx", UInt64(bitPattern: Int64(title.hashValue)) & 0xFFFF_FFFF_FFFF))!
+        UUID(
+            uuidString: String(
+                format: "00000000-0000-4000-8000-%012llx", UInt64(bitPattern: Int64(title.hashValue)) & 0xFFFF_FFFF_FFFF
+            ))!
     }
 }
 
