@@ -29,6 +29,10 @@ for each milestone.
 
 ### Changed
 
+- **`tasks/today/` and `tasks/carried-over/` embed each task's `subtasks`**
+  (#145), ordered, prefetched in one query. The plain `tasks/` list is
+  unchanged.
+
 - **Pomodoro sessions keep the client's clock and record their block.**
   `POST pomodoro/sessions/` accepts `started_at` (at most 5 minutes ahead and
   8 days back; still server-stamped when omitted) and an optional
