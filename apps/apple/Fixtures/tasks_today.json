@@ -7,29 +7,38 @@
       "actual_minutes": 0,
       "area": "work",
       "completed_at": null,
-      "created_at": "2026-09-25T14:35:41.703079Z",
+      "created_at": "2026-09-26T13:53:23.910188Z",
       "description": "",
       "discipline": null,
       "due_date": "2026-03-09",
       "estimated_minutes": 25,
-      "id": "94e320e4-9ef7-41bd-9eb9-c2325cb85942",
+      "id": "06569e9b-e8b4-4789-b869-c9ba8a800aac",
       "is_completed": false,
       "kanban_order": 0,
       "kanban_status": "todo",
       "priority": "medium",
       "project": null,
       "scheduled_date": "2026-03-07",
+      "subtasks": [
+        {
+          "created_at": "2026-09-26T13:53:23.913301Z",
+          "id": "cbe22bc6-2f04-4044-9b9f-cf5dd966e50b",
+          "is_completed": false,
+          "order": 0,
+          "title": "Outline"
+        }
+      ],
       "tags": [
         {
           "area": "work",
           "color": "#6366f1",
-          "created_at": "2026-09-25T14:35:41.704160Z",
-          "id": "4d2692ae-cf2b-4847-acf1-8ad7c500cd67",
+          "created_at": "2026-09-26T13:53:23.912076Z",
+          "id": "0ccf4a1a-9101-4bba-a13c-683b38c14114",
           "name": "Tag 0"
         }
       ],
       "title": "Task 0",
-      "updated_at": "2026-09-25T14:35:41.703719Z"
+      "updated_at": "2026-09-26T13:53:23.911308Z"
     }
   ]
 }

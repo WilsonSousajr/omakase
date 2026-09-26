@@ -17,7 +17,7 @@ from unittest.mock import patch
 import pytest
 
 from accounts.tests.fakes import FakeGoogleVerifier
-from conftest import DailyReviewFactory, TagFactory, TaskFactory
+from conftest import DailyReviewFactory, SubtaskFactory, TagFactory, TaskFactory, TimeBlockFactory
 
 REPO = Path(os.environ.get("REPO_ROOT", Path(__file__).resolve().parents[3]))
 FIXTURES = REPO / "apps" / "apple" / "Fixtures"
@@ -95,6 +95,7 @@ class TestContractFixtures:
             discipline=None,
         )
         task.tags.add(TagFactory(user=user))
+        SubtaskFactory(task=task, title="Outline")
         resp = authenticated_client.get("/api/v1/tasks/today/?date=2026-03-07")
         assert resp.status_code == 200
         check_fixture("tasks_today", _body(resp))
@@ -126,6 +127,39 @@ class TestContractFixtures:
         )
         assert resp.status_code == 200
         check_fixture("review_by_date", _body(resp))
+
+    def test_tasks_carried_over(self, authenticated_client, user):
+        task = TaskFactory(
+            user=user,
+            scheduled_date=datetime.date(2026, 3, 6),
+            is_completed=False,
+            project=None,
+            discipline=None,
+        )
+        SubtaskFactory(task=task, title="Outline")
+        resp = authenticated_client.get("/api/v1/tasks/carried-over/?date=2026-03-07")
+        assert resp.status_code == 200
+        check_fixture("tasks_carried_over", _body(resp))
+
+    # The fixture's dates are fixed, so "now" is frozen inside the session window (#142).
+    @patch("pomodoro.serializers.timezone.now", return_value=datetime.datetime(2026, 3, 7, 10, tzinfo=datetime.UTC))
+    def test_pomodoro_session_create(self, _now, authenticated_client, user):
+        block = TimeBlockFactory(task=TaskFactory(user=user, project=None, discipline=None))
+        resp = authenticated_client.post(
+            "/api/v1/pomodoro/sessions/",
+            {
+                "task": str(block.task.pk),
+                "time_block": str(block.pk),
+                "session_type": "focus",
+                "duration_minutes": 25,
+                "started_at": "2026-03-07T09:00:00Z",
+                "ended_at": "2026-03-07T09:25:00Z",
+                "completed": True,
+            },
+            format="json",
+        )
+        assert resp.status_code == 201, resp.content
+        check_fixture("pomodoro_session", _body(resp))
 
 
 def test_fixtures_hold_no_live_tokens():

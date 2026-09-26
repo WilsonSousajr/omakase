@@ -34,6 +34,15 @@ for each milestone.
 
 ### Changed
 
+- **`tasks/today/` and `tasks/carried-over/` embed each task's `subtasks`**
+  (#145), ordered, prefetched in one query. The plain `tasks/` list is
+  unchanged.
+
+- **Pomodoro sessions keep the client's clock and record their block.**
+  `POST pomodoro/sessions/` accepts `started_at` (at most 5 minutes ahead and
+  8 days back; still server-stamped when omitted) and an optional
+  `time_block` the user owns; `ended_at` may not precede `started_at` (#142).
+
 - **Google sign-in accepts several OAuth clients.** `GOOGLE_CLIENT_IDS`
   lists them; `GOOGLE_CLIENT_ID` is still read for one release. (#76)
 - **Every `?date=` is parsed one way.** `YYYY-MM-DD` only - `20260307` and
