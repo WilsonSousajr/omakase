@@ -25,6 +25,12 @@ public protocol APIClient: Sendable {
     func carriedOver(on day: APIDay) async throws -> [TaskDTO]
     func timeBlocks(on day: APIDay) async throws -> [TimeBlockDTO]
     func studyBlocks(on day: APIDay) async throws -> [StudyBlockDTO]
+    /// Every block dated `from` through `to`, both inclusive (#200).
+    func timeBlocks(from first: APIDay, to last: APIDay) async throws -> [TimeBlockDTO]
+    /// The weekly classes that fall on `from` through `to`; the server caps the range at 90 days.
+    func classOccurrences(from first: APIDay, to last: APIDay) async throws -> [ClassOccurrenceDTO]
+    /// Sessions started at or after `startedAfter` and before `startedBefore`.
+    func sessions(startedAfter: Date, startedBefore: Date) async throws -> [PomodoroSessionDTO]
     /// The day's one review, or nil before one exists.
     func review(on day: APIDay) async throws -> DailyReviewDTO?
     func profile() async throws -> ProfileDTO
@@ -75,6 +81,24 @@ public actor OmakaseAPIClient: APIClient {
 
     public func studyBlocks(on day: APIDay) async throws -> [StudyBlockDTO] {
         try await allPages("/api/v1/study/studyblocks/?scheduled_date=\(day.string)")
+    }
+
+    public func timeBlocks(from first: APIDay, to last: APIDay) async throws -> [TimeBlockDTO] {
+        try await allPages("/api/v1/timeblocks/?date_from=\(first.string)&date_to=\(last.string)")
+    }
+
+    public func classOccurrences(from first: APIDay, to last: APIDay) async throws -> [ClassOccurrenceDTO] {
+        // Not paginated: the view returns a plain list (backend/study/views.py).
+        let path = "/api/v1/study/class-occurrences/?date_from=\(first.string)&date_to=\(last.string)"
+        return try decode(try await authorized("GET", path))
+    }
+
+    /// The bounds go out in UTC with "Z": a "+hh:mm" offset would reach Django
+    /// as a space, because a query string reads `+` as one (#200).
+    public func sessions(startedAfter: Date, startedBefore: Date) async throws -> [PomodoroSessionDTO] {
+        let formatter = ISO8601DateFormatter()
+        let (after, before) = (formatter.string(from: startedAfter), formatter.string(from: startedBefore))
+        return try await allPages("/api/v1/pomodoro/sessions/?started_after=\(after)&started_before=\(before)")
     }
 
     public func review(on day: APIDay) async throws -> DailyReviewDTO? {
