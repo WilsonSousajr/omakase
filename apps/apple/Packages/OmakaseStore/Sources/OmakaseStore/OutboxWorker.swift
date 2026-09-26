@@ -4,7 +4,7 @@ import SwiftData
 
 /// Replays queued writes one at a time, in order (spec, Data flow -> Replay).
 ///
-///     let result = await OutboxWorker(context: ctx, api: api, onAccepted: apply).drain()
+///     let result = await OutboxWorker(context: ctx, api: api, handlers: handlers).drain()
 @MainActor
 public final class OutboxWorker {
     public enum DrainResult: Equatable, Sendable {
@@ -16,17 +16,16 @@ public final class OutboxWorker {
     private let context: ModelContext
     private let api: any APIClient
     private let clock: () -> Date
-    private let onAccepted: (OutboxEntry, Data) -> Void
+    private let handlers: OutboxHandlers
     /// The drain in progress, if any. A second caller awaits it rather than
     /// starting another: drain() suspends at send() with the entry still
     /// pending, so two drains would send it twice (review finding C2).
     private var running: Task<DrainResult, Never>?
 
     public init(
-        context: ModelContext, api: any APIClient, clock: @escaping () -> Date = { .now },
-        onAccepted: @escaping (OutboxEntry, Data) -> Void
+        context: ModelContext, api: any APIClient, clock: @escaping () -> Date = { .now }, handlers: OutboxHandlers
     ) {
-        (self.context, self.api, self.clock, self.onAccepted) = (context, api, clock, onAccepted)
+        (self.context, self.api, self.clock, self.handlers) = (context, api, clock, handlers)
     }
 
     /// Sends pending entries until the queue is empty, one must wait, or the user is signed out.
@@ -41,6 +40,12 @@ public final class OutboxWorker {
 
     private func drainOnce() async -> DrainResult {
         while let entry = pendingEntries().first {
+            guard handlers.handles(entry.kind) else {
+                // Never send what nothing can apply; never drop it either.
+                park(entry, reason: "no handler for write kind \(entry.kind.debugDescription)")
+                try? context.save()
+                continue
+            }
             if let due = entry.nextAttemptAt, due > clock() { return .waiting(until: due) }
             if let stop = await attempt(entry) { return stop }
         }
@@ -72,7 +77,7 @@ public final class OutboxWorker {
         if let localID = entry.createsLocalID, let serverID = Self.serverID(in: body) {
             for pending in pendingEntries() { OutboxRules.rewrite(pending, localID: localID, serverID: serverID) }
         }
-        onAccepted(entry, body)
+        handlers.apply(entry, body: body)
         context.delete(entry)
     }
 

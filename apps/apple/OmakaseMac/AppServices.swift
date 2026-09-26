@@ -20,7 +20,9 @@ final class AppServices {
         let writes = TaskWrites(context: container.mainContext)
         self.writes = writes
         let sync = DaySync(context: container.mainContext, api: api)
-        let worker = OutboxWorker(context: container.mainContext, api: api, onAccepted: writes.applyServerCopy)
+        let worker = OutboxWorker(
+            context: container.mainContext, api: api,
+            handlers: OutboxHandlers([TaskHandler(context: container.mainContext)]))
         coordinator = SyncCoordinator(drain: { await worker.drain() }, refresh: { try await sync.refresh() })
     }
 
