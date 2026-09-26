@@ -28,11 +28,22 @@ struct TranslucencyTests {
         }
     }
 
-    /// Muted text (section and hour labels) is held to 3:1 in this worst case;
-    /// on the real blurred material, and on opaque surfaces, it reaches 4.5.
-    @Test func mutedInkStaysVisibleOverAnyDesktop() {
+    /// The user asked for clearly visible transparency (#170): the desktop
+    /// must show through the tint, not sit behind a near-opaque sumi.
+    @Test func theDesktopClearlyShowsThroughIssue170() {
+        #expect(Translucency.window <= 0.65)
+    }
+
+    /// Muted text (section and hour labels) is held to 3:1 over a blurred
+    /// desktop - the material averages what is behind to about mid-grey. Over
+    /// an unblurred white window it would fall to ~2:1; #170 accepted that
+    /// for visible transparency (this test was "over any desktop, no blur
+    /// credited" until then). Text on cards and rows is on opaque `surface`.
+    @Test func mutedInkStaysVisibleOverABlurredDesktop() {
         for dark in Self.sides {
-            #expect(RGB.contrast(Palette.inkMuted.side(dark: dark), Self.ground(dark: dark)) >= 3)
+            let blurred = Palette.background.side(dark: dark)
+                .composited(over: RGB(0x808080), opacity: Translucency.window)
+            #expect(RGB.contrast(Palette.inkMuted.side(dark: dark), blurred) >= 3)
         }
     }
 
