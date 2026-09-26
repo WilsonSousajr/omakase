@@ -83,8 +83,7 @@ public final class OutboxWorker {
 
     private func park(_ entry: OutboxEntry, reason: String) {
         (entry.state, entry.lastError) = (.parked, reason)
-        guard let localID = entry.createsLocalID else { return }
-        for dependent in pendingEntries() where OutboxRules.references(dependent, localID: localID) {
+        for dependent in OutboxRules.dependents(of: entry, among: pendingEntries()) {
             (dependent.state, dependent.lastError) = (.parked, "depends on a rejected create: \(reason)")
         }
     }
