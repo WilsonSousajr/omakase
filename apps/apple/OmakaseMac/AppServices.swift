@@ -55,7 +55,7 @@ final class AppServices {
             },
             reschedule: { [self] id, day in perform(on: id, onOutcome) { try self.writes.reschedule($0, to: day) } },
             toggleSubtask: { [self] id in toggleSubtask(id, onOutcome) },
-            remind: { _, _ in })
+            remind: { [self] id, date in perform(on: id, onOutcome) { try self.writes.setReminder($0, at: date) } })
     }
 
     /// Replaces the pending reminders with the store's plan (#187): after
