@@ -16,7 +16,8 @@ struct OutboxWorkerTests {
 
     func worker(now: Date? = nil) -> OutboxWorker {
         let fixed = now ?? start
-        return OutboxWorker(context: context, api: api, clock: { fixed }, handlers: OutboxHandlers([RecordingHandler()]))
+        return OutboxWorker(
+            context: context, api: api, clock: { fixed }, handlers: OutboxHandlers([RecordingHandler()]))
     }
 
     func enqueue(_ sequence: Int, _ path: String, creates: String? = nil) {
