@@ -50,6 +50,16 @@ public struct OutboxStatus: Equatable, Sendable {
 ///     try maintenance.retry(sequence: status.parked[0].sequence)
 @MainActor
 public struct OutboxMaintenance {
+    public enum Failure: Error, Equatable, CustomStringConvertible {
+        case noEntry(sequence: Int)
+
+        public var description: String {
+            switch self {
+            case .noEntry(let sequence): "no outbox entry with sequence \(sequence); it was sent or discarded"
+            }
+        }
+    }
+
     private let context: ModelContext
     private let queue: OutboxQueue
 
@@ -60,5 +70,21 @@ public struct OutboxMaintenance {
         return OutboxStatus(
             pendingCount: pending.count, parked: queue.entries(in: .parked).map(ParkedWrite.init),
             nextAttemptAt: pending.compactMap(\.nextAttemptAt).min())
+    }
+
+    /// Sends a parked write again from a clean slate, with the writes parked
+    /// because they depend on it. The next drain picks them up.
+    public func retry(sequence: Int) throws {
+        let entry = try entry(sequence)
+        for retried in [entry] + OutboxRules.dependents(of: entry, among: queue.entries(in: .parked)) {
+            (retried.state, retried.attempts, retried.nextAttemptAt, retried.lastError) = (.pending, 0, nil, nil)
+        }
+        try context.save()
+    }
+
+    private func entry(_ sequence: Int) throws -> OutboxEntry {
+        let descriptor = FetchDescriptor<OutboxEntry>(predicate: #Predicate { $0.sequence == sequence })
+        guard let entry = try context.fetch(descriptor).first else { throw Failure.noEntry(sequence: sequence) }
+        return entry
     }
 }

@@ -54,4 +54,37 @@ struct OutboxMaintenanceTests {
                     method: "PATCH", path: "/d/")
             ])
     }
+
+    @Test func aRetriedParkedWriteIsSentAgain() async throws {
+        enqueue(1, "/a/")
+        await api.script([.reply(400, #"{"detail":"title required"}"#), .reply(200, "{}")])
+        _ = await worker().drain()
+        let parked = try #require(try remaining().first)
+        parked.attempts = 3
+        try maintenance.retry(sequence: 1)
+        #expect(parked.state == .pending && parked.attempts == 0)
+        #expect(parked.lastError == nil && parked.nextAttemptAt == nil)
+        #expect(await worker().drain() == .empty)
+        #expect(await api.sentRequests.map(\.path) == ["/a/", "/a/"])
+        #expect(try remaining().isEmpty)
+    }
+
+    @Test func retryingACreateUnparksItsDependents() async throws {
+        let serverID = "9F1C0000-0000-0000-0000-000000000000"
+        enqueue(1, "/api/v1/tasks/", creates: "local-1")
+        enqueue(2, "/api/v1/tasks/local-1/")
+        enqueue(3, "/other/")
+        await api.script([.reply(400, #"{"detail":"bad"}"#), .reply(400, #"{"detail":"own"}"#)])
+        _ = await worker().drain()
+        try maintenance.retry(sequence: 1)
+        #expect(try remaining().map(\.state) == [.pending, .pending, .parked])
+        await api.script([.reply(201, #"{"id":"\#(serverID)"}"#), .reply(200, "{}")])
+        #expect(await worker().drain() == .empty)
+        #expect(await api.sentRequests.suffix(2).map(\.path) == ["/api/v1/tasks/", "/api/v1/tasks/\(serverID)/"])
+    }
+
+    @Test func retryingAnUnknownWriteSaysWhichOne() {
+        #expect(throws: OutboxMaintenance.Failure.noEntry(sequence: 7)) { try maintenance.retry(sequence: 7) }
+        #expect("\(OutboxMaintenance.Failure.noEntry(sequence: 7))".contains("7"))
+    }
 }
