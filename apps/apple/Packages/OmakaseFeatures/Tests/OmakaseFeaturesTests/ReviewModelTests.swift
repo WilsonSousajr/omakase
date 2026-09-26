@@ -154,10 +154,13 @@ struct ReviewModelTests {
         #expect(ReviewValues(record: nil) == .empty)
     }
 
-    @Test func theAppsDebounceRunsTheSaveAfterItsPause() async throws {
+    /// Waits for the save with a bound, not a fixed sleep: a fixed 100 ms
+    /// raced a loaded CI runner (#194). It fails only if the save never runs.
+    @Test func theAppsDebounceRunsTheSaveAfterItsPauseIssue194() async throws {
         var ran = false
         ReviewModel.afterPause(.milliseconds(1))({ ran = true })
-        try await Task.sleep(for: .milliseconds(100))
+        let deadline = ContinuousClock.now + .seconds(5)
+        while !ran, ContinuousClock.now < deadline { try await Task.sleep(for: .milliseconds(10)) }
         #expect(ran)
     }
 }
