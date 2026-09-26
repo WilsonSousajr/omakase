@@ -70,16 +70,16 @@ struct ReminderPlannerTests {
     }
 
     @Test func afterShutdownOnlyTaskRemindersStay() {
-        let plan = ReminderPlanner.plan(
-            input(blocks: [block("b1", at: "14:00:00")], tasks: [task("t1", in: 600)], shutdown: "17:30",
-                isShutdown: true))
+        let day = input(
+            blocks: [block("b1", at: "14:00:00")], tasks: [task("t1", in: 600)], shutdown: "17:30", isShutdown: true)
+        let plan = ReminderPlanner.plan(day)
         #expect(plan.map(\.id) == ["omakase.reminder.task.t1"])
     }
 
     @Test func remindersAreSortedByFireDate() {
-        let plan = ReminderPlanner.plan(
-            input(blocks: [block("b1", at: "14:00:00")], tasks: [task("t1", in: 9000), task("t2", in: 60)]))
-        #expect(plan.map(\.id) == ["omakase.reminder.task.t2", "omakase.reminder.block.b1", "omakase.reminder.task.t1"])
+        let day = input(blocks: [block("b1", at: "14:00:00")], tasks: [task("t1", in: 9000), task("t2", in: 60)])
+        let ids = ReminderPlanner.plan(day).map(\.id)
+        #expect(ids == ["omakase.reminder.task.t2", "omakase.reminder.block.b1", "omakase.reminder.task.t1"])
     }
 
     @Test func moreThanSixtyFourKeepsTheSoonestSixtyFour() {
