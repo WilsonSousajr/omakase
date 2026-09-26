@@ -52,6 +52,16 @@ struct OutboxKindTests {
         #expect(entry.kind == "task.patch" && body(entry) == #"{"kanban_status":"done"}"#)
     }
 
+    @Test func movingOutOfDoneUncompletesTheTaskIssue156() throws {
+        // Task.save unchecks a task moved out of Done; the local record must
+        // mirror it, or a card dragged back from Done stays done offline.
+        let record = TaskRecord(id: "t1", title: "T", isCompleted: true)
+        record.kanbanStatus = "done"
+        context.insert(record)
+        try TaskWrites(context: context).setKanbanStatus(record, to: "todo")
+        #expect(!record.isCompleted && record.completedAt == nil && record.kanbanStatus == "todo")
+    }
+
     @Test func movingToInProgressLeavesCompletionAlone() throws {
         let record = TaskRecord(id: "t1", title: "T")
         context.insert(record)
