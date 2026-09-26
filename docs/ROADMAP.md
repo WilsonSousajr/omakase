@@ -76,7 +76,7 @@ first and then as tokens applied to the shell (`docs/design-system-apple.md`).
 **Why before M3:** M3 builds the screens you use every day. Building them on
 a placeholder look means building them twice.
 
-**Also decides (from M7, R7):** the macOS deployment target. macOS 27
+**Also decides (from M7, R7, #131):** the macOS deployment target. macOS 27
 shipped on 2026-09-14 and `apps/apple/project.yml` targets 26.0. Liquid
 Glass is the reason either answer might be right, so the identity work is
 where it gets decided, on purpose rather than by default.
@@ -123,18 +123,18 @@ with its failed-writes sheet.
 
 **Added by M7:**
 
-- **A reminder model in the API before notifications (R5).** Reminders are
+- **A reminder model in the API before notifications (R5, #127).** Reminders are
   asked for in four of the five venues M7 read. Defined once on the server,
   each client only schedules them; defined in the Mac app, iOS has to
   define them again.
-- **A workload check when planning the day (R4).** Estimated minutes, the
+- **A workload check when planning the day (R4, #128).** Estimated minutes, the
   day's goal hours and the day's classes, summed and shown as a warning -
   Sunsama's threshold, Motion's capacity and Shovel's time cushion are the
   same number. A warning on a plan you placed, not a plan placed for you.
-- **Three signals already in the API (R8):** carried-over tasks marked as
+- **Three signals already in the API (R8, #129):** carried-over tasks marked as
   such, the plan date shown apart from the deadline, and focus sessions
   recorded against the block they worked.
-- **Energy on the daily review (R10).** One field beside the rating and
+- **Energy on the daily review (R10, #130).** One field beside the rating and
   the win of the day; it is the data IDEA §13's energy mapping has no
   other source for.
 
@@ -148,8 +148,9 @@ already usable. Focus sessions are drawn beside the blocks they worked
 
 ## M8 - Repeats and exceptions
 
-**Delivers:** recurring tasks, and a class timetable that survives a real
-term: holidays, a cancelled class, and Week A/B rotation.
+**Delivers:** recurring tasks (#124), and a class timetable that survives a
+real term: holidays and a cancelled class (#125), and Week A/B rotation
+(#126).
 
 **Why one milestone:** they are one design. Class occurrences are computed
 from a rule and never stored (`study/class-occurrences/`), which is why
@@ -169,7 +170,7 @@ Study (semesters, disciplines, class schedules), Settings, the read-only
 Calendar.app overlay, and launch at login. After M5 the web client is not
 missed.
 
-**Added by M7 (R3, first half):** a test that pins class occurrences across
+**Added by M7 (R3, first half, #132):** a test that pins class occurrences across
 a daylight-saving change. MyStudyLife and Power Planner users report class
 times moving after a clock change; no test here checks that Omakase's
 computed occurrences do not.
