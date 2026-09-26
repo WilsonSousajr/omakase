@@ -2,7 +2,8 @@ import OmakaseStore
 import SwiftData
 import SwiftUI
 
-/// M1's plain Today list. M2 gives it its look; M3 turns it into Focus.
+/// Focus's list view: today's tasks on the translucent ground, each a
+/// `TaskRowView` with its priority pill. M3 adds the kanban board and timer.
 public struct TodayView: View {
     @Query private var records: [TaskRecord]
     private let day: String
@@ -16,16 +17,23 @@ public struct TodayView: View {
     }
 
     public var body: some View {
-        List(TodayModel.rows(records)) { row in
-            Toggle(isOn: Binding(get: { row.isCompleted }, set: { _ in toggleRow(row.id) })) {
-                Text(row.title).strikethrough(row.isCompleted)
+        List {
+            Section {
+                ForEach(TodayModel.rows(records)) { row in
+                    TaskRowView(title: row.title, priority: row.priority, isCompleted: row.isCompleted) {
+                        toggleRow(row.id)
+                    }
+                    .listRowBackground(Color.clear)
+                }
+            } header: {
+                Text(day).sectionLabel()
             }
-            .toggleStyle(.checkbox)
         }
+        .scrollContentBackground(.hidden)
         .overlay {
             if records.isEmpty { ContentUnavailableView("Nothing scheduled for \(day)", systemImage: "sun.max") }
         }
-        .navigationTitle("Today")
+        .navigationTitle("Focus")
     }
 
     private func toggleRow(_ id: String) {
