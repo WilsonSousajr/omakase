@@ -1,0 +1,117 @@
+import SwiftUI
+
+/// Plan (spec M4, N1): the tasks to plan from on the left, then the day or
+/// week as a calendar. It draws values, not records, so classes and focus
+/// sessions (#200) join `items` without the view changing; dragging (#203)
+/// comes later, so this is read-only.
+///
+///     PlanView(model: plan, items: blocks + classes + sessions, tasks: cards)
+public struct PlanView: View {
+    private let model: PlanModel
+    private let items: [CalendarItem]
+    private let tasks: [FocusCard]
+
+    public init(model: PlanModel, items: [CalendarItem], tasks: [FocusCard]) {
+        (self.model, self.items, self.tasks) = (model, items, tasks)
+    }
+
+    public var body: some View {
+        HStack(spacing: 0) {
+            PlanTasksColumnView(board: FocusBoard(cards: tasks)).frame(width: 380)
+            Divider().overlay(Palette.hairline.color)
+            VStack(spacing: 0) {
+                PlanHeaderView(model: model)
+                Divider().overlay(Palette.hairline.color)
+                CalendarGridView(model: model, items: items)
+            }
+        }
+        .navigationTitle("Plan")
+    }
+}
+
+/// The title, Today, ‹ ›, and the Day/Week switch.
+struct PlanHeaderView: View {
+    @Bindable var model: PlanModel
+
+    var body: some View {
+        HStack(spacing: Spacing.medium) {
+            Text(model.title).font(TypeScale.title).foregroundStyle(Palette.ink.color)
+            Spacer()
+            Button("Today") { model.goToday() }.buttonStyle(.glass)
+            HStack(spacing: Spacing.tiny) {
+                Button("Previous", systemImage: "chevron.left") { model.previous() }
+                Button("Next", systemImage: "chevron.right") { model.next() }
+            }
+            .labelStyle(.iconOnly)
+            .buttonStyle(.glass)
+            Picker("Range", selection: $model.mode) {
+                Text("Day").tag(PlanModel.Mode.day)
+                Text("Week").tag(PlanModel.Mode.week)
+            }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+            .frame(width: 140)
+        }
+        .padding(Spacing.large)
+    }
+}
+
+/// The open tasks the store holds: carried over, in progress, to do.
+struct PlanTasksColumnView: View {
+    let board: FocusBoard
+
+    private var open: [FocusCard] { board.carriedOver + board.inProgress + board.toDo }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text("Tasks").sectionLabel().padding(Spacing.large)
+            Divider().overlay(Palette.hairline.color)
+            if open.isEmpty {
+                ContentUnavailableView("Nothing to plan", systemImage: "checkmark.circle")
+            } else {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: Spacing.small) {
+                        ForEach(open) { PlanTaskRowView(card: $0) }
+                    }
+                    .padding(Spacing.large)
+                }
+            }
+        }
+        .frame(maxHeight: .infinity, alignment: .top)
+    }
+}
+
+/// A task to plan: its title, estimate and priority, on an opaque row. No
+/// checkbox, because completing belongs to Focus.
+struct PlanTaskRowView: View {
+    let card: FocusCard
+
+    var body: some View {
+        HStack(spacing: Spacing.small) {
+            Text(card.title).font(TypeScale.body).foregroundStyle(Palette.ink.color).lineLimit(1)
+            Spacer(minLength: Spacing.small)
+            if let minutes = card.minutes, minutes > 0 {
+                Text("\(minutes)m").font(TypeScale.caption).monospacedDigit().foregroundStyle(Palette.inkMuted.color)
+            }
+            PriorityBadgeView(priority: card.priority)
+        }
+        .padding(.horizontal, Spacing.medium)
+        .padding(.vertical, Spacing.small)
+        .background(Palette.surface.color, in: .rect(cornerRadius: Radius.medium))
+    }
+}
+
+private let previewItems = [
+    CalendarItem(
+        id: "c", day: "2026-09-26", start: 480, end: 570, title: "Linear algebra", kind: .classOccurrence,
+        tint: Palette.indigo),
+    CalendarItem(id: "b1", day: "2026-09-26", start: 540, end: 630, title: "Write the essay", kind: .block),
+    CalendarItem(id: "b2", day: "2026-09-26", start: 600, end: 660, title: "Review PR", kind: .block),
+    CalendarItem(id: "s", day: "2026-09-26", start: 545, end: 570, title: "Focus", kind: .focusSession),
+]
+
+#Preview("Plan, dark") {
+    PlanView(model: PlanModel { "2026-09-26" }, items: previewItems, tasks: [])
+        .frame(width: 1120, height: 680)
+        .preferredColorScheme(.dark)
+}
