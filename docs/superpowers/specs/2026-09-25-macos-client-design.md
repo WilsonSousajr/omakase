@@ -110,6 +110,11 @@ appends an `OutboxEntry`:
 | `idempotencyKey` | A UUID created with the entry and never regenerated |
 | `createdAt`, `attempts`, `lastError` | For backoff and for the failed-writes sheet |
 | `state` | `pending`, `inFlight` or `parked` |
+| `kind` | Which handler applies the reply (`task.patch`, `review.put`, …); added in M3.1 |
+
+*M3.1:* there is no `inFlight` state. The worker drains serially inside one
+actor, so no second sender can take an entry mid-send; an unknown `kind`
+parks unsent (`docs/superpowers/specs/2026-09-26-m3-1-data-foundation-design.md` §3).
 
 ### Replay
 
