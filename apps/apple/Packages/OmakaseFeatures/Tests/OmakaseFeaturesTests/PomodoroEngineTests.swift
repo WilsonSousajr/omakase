@@ -95,4 +95,8 @@ struct PomodoroEngineTests {
         #expect(PomodoroSettings.standard == PomodoroSettings(
             workMinutes: 25, shortBreakMinutes: 5, longBreakMinutes: 15, beforeLongBreak: 4))
     }
+
+    @Test func eachPhaseHasTheServersSessionType() {
+        #expect(TimerPhase.allCases.map(\.sessionType) == ["focus", "short_break", "long_break"])
+    }
 }
