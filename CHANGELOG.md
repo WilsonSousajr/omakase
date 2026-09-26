@@ -12,6 +12,13 @@ for each milestone.
 
 ### Added
 
+- **`GET stats/workload/?date=YYYY-MM-DD`** (#128) gives the day's planned
+  minutes against the goal: `task_minutes` and `study_block_minutes` (the
+  estimates of what is scheduled on the day, done or not), `class_minutes`
+  (the day's class occurrences), `planned_minutes`, `goal_minutes` (work
+  plus study goal hours), `over_minutes` (negative when there is headroom)
+  and `unestimated_count`. A missing or malformed date is a 400.
+
 - **`PUT stats/reviews/by-date/<YYYY-MM-DD>/`** (#144) creates or updates the
   day's one review with any of `productivity_rating`, `win_of_the_day`,
   `energy` and `is_shutdown`. Idempotent by (user, date), so a replay leaves
