@@ -79,3 +79,30 @@ first:
 9. Leave the app open past midnight, or change the Mac's date, and
    reactivate it. The header shows the new day.
 
+## M3.3
+
+The timer, against the same stack. Use short durations: set the profile to
+2/1/1 minutes with 2 before a long break (`PATCH /api/v1/auth/profile/`),
+and give one of today's tasks a time block covering now.
+
+1. Select that task and click Start focus. The disc counts down in shu, and
+   the menu bar shows the countdown.
+2. Pause, wait, then Resume: the paused time isn't counted. Quit the app
+   while it's running, relaunch: the remaining time is right.
+3. Let it run out, with the window hidden. A notification says "Focus done",
+   and the sheet asks for a rating and notes, prefilled with the checked
+   subtasks. Save.
+   - The server has a session with the Mac's `started_at` and the block's
+     `time_block`: `curl …/pomodoro/sessions/`.
+   - The block has the rating and notes: `curl …/timeblocks/?date=<today>`.
+4. The next phase is a short break, and it waits for Start. After two
+   focuses, the break is the long one.
+5. Start a focus and quit the app. Relaunch after it would have ended: the
+   session is recorded, ending when it was due.
+6. Skip a focus after a minute: a session with `completed: false` and the
+   elapsed minutes. Skip within a minute: no session.
+7. Offline (backend stopped): finish a focus, then start the backend. The
+   session replays.
+8. The menu-bar panel shows the next block and what's left today. Clicking a
+   task focuses it in the window.
+
