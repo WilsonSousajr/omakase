@@ -25,26 +25,42 @@ public struct RGB: Equatable, Sendable {
         return (high + 0.05) / (low + 0.05)
     }
 
+    /// This colour laid over `backdrop` at `opacity`, blended in sRGB as the
+    /// compositor does.
+    public func composited(over backdrop: RGB, opacity: Double) -> RGB {
+        RGB(
+            red: opacity * red + (1 - opacity) * backdrop.red,
+            green: opacity * green + (1 - opacity) * backdrop.green,
+            blue: opacity * blue + (1 - opacity) * backdrop.blue)
+    }
+
+    private init(red: Double, green: Double, blue: Double) {
+        self.red = red
+        self.green = green
+        self.blue = blue
+    }
+
     private static func linear(_ channel: Double) -> Double {
         channel <= 0.04045 ? channel / 12.92 : pow((channel + 0.055) / 1.055, 2.4)
     }
 }
 
-/// One design token: the colour it is in light appearance and in dark.
+/// One design token: the colour it is in dark appearance and in light. Dark
+/// comes first because it is the default (IDEA.md; `Appearance.default`).
 ///
-///     let shu = DesignColor(light: 0xC8402A, dark: 0xD0462C)
+///     let shu = DesignColor(dark: 0xD0462C, light: 0xC8402A)
 ///     Text("Focus").foregroundStyle(shu.color)
 public struct DesignColor: Equatable, Sendable {
-    public let light: RGB
     public let dark: RGB
+    public let light: RGB
 
-    public init(light: UInt32, dark: UInt32) {
-        self.light = RGB(light)
+    public init(dark: UInt32, light: UInt32) {
         self.dark = RGB(dark)
+        self.light = RGB(light)
     }
 
     /// A token that does not change with appearance (priority marks).
     public init(both hex: UInt32) {
-        self.init(light: hex, dark: hex)
+        self.init(dark: hex, light: hex)
     }
 }

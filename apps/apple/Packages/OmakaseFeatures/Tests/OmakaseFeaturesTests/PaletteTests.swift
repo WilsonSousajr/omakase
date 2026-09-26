@@ -7,7 +7,7 @@ import Testing
 /// The palette's legibility is pinned here, so a later hue tweak cannot make
 /// text unreadable without failing the gate (M2 plan, Review Focus 1-4).
 struct PaletteTests {
-    static let sides = [false, true]  // dark?
+    static let sides = [true, false]  // dark first
 
     @Test func textMeetsAAOnEverySurface() {
         for dark in Self.sides {
