@@ -22,7 +22,9 @@ public struct SessionPrompt: Identifiable, Equatable, Sendable {
         (self.blockID, self.taskTitle, self.prefill) = (blockID, taskTitle, prefill)
     }
 
-    public static func make(for finished: CompletedPhase?, taskTitle: String?, doneSubtasks: [String]) -> SessionPrompt? {
+    public static func make(
+        for finished: CompletedPhase?, taskTitle: String?, doneSubtasks: [String]
+    ) -> SessionPrompt? {
         guard let finished, finished.phase == .focus, finished.completed, let blockID = finished.blockID else {
             return nil
         }
