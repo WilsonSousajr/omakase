@@ -69,3 +69,16 @@ public struct ProfileDTO: Sendable, Codable, Equatable {
     public var workGoalHours: Double { Double(dailyWorkGoalHours) ?? 0 }
     public var studyGoalHours: Double { Double(dailyStudyGoalHours) ?? 0 }
 }
+
+/// `stats/workload/`: the day's planned minutes against the goal (#128).
+/// `overMinutes` is `planned - goal`, negative while there is headroom.
+public struct WorkloadDTO: Sendable, Codable, Equatable {
+    public let date: APIDay
+    public let taskMinutes: Int
+    public let studyBlockMinutes: Int
+    public let classMinutes: Int
+    public let plannedMinutes: Int
+    public let goalMinutes: Int
+    public let overMinutes: Int
+    public let unestimatedCount: Int
+}

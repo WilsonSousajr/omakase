@@ -28,6 +28,8 @@ public protocol APIClient: Sendable {
     /// The day's one review, or nil before one exists.
     func review(on day: APIDay) async throws -> DailyReviewDTO?
     func profile() async throws -> ProfileDTO
+    /// The day's planned minutes against the goal, summed on the server (#128).
+    func workload(on day: APIDay) async throws -> WorkloadDTO
     /// Any HTTP status is a response; only a missing answer throws.
     func send(_ request: OutboxRequest) async throws -> OutboxResponse
     func signOut() async
@@ -82,6 +84,10 @@ public actor OmakaseAPIClient: APIClient {
 
     public func profile() async throws -> ProfileDTO {
         try decode(try await authorized("GET", "/api/v1/auth/profile/"))
+    }
+
+    public func workload(on day: APIDay) async throws -> WorkloadDTO {
+        try decode(try await authorized("GET", "/api/v1/stats/workload/?date=\(day.string)"))
     }
 
     /// Follows DRF's `next` links until the last page.
