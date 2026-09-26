@@ -4,17 +4,13 @@ import Testing
 @testable import OmakaseFeatures
 
 /// The window's ground is translucent: the desktop shows through the sumi
-/// tint. Text drawn straight on it must stay legible over the worst desktop,
-/// pure white behind dark and pure black behind light, even before the
-/// system material's blur calms it.
+/// tint. The user chose 50% for clearly visible transparency (#170), knowing
+/// text on the bare ground gets hard to read over a bright, unblurred window
+/// directly behind (main text ~2.9:1). So legibility is checked over a
+/// blurred desktop, which the behind-window material averages to about
+/// mid-grey; text on cards and rows sits on the opaque `surface`.
 struct TranslucencyTests {
     static let sides = [true, false]  // dark first
-    static func worstDesktop(dark: Bool) -> RGB { RGB(dark ? 0xFFFFFF : 0x000000) }
-
-    static func ground(dark: Bool) -> RGB {
-        Palette.background.side(dark: dark)
-            .composited(over: worstDesktop(dark: dark), opacity: Translucency.window)
-    }
 
     @Test func compositingIsALinearBlendInSRGB() {
         let half = RGB(0x000000).composited(over: RGB(0xFFFFFF), opacity: 0.5)
@@ -22,16 +18,23 @@ struct TranslucencyTests {
         #expect(RGB(0x123456).composited(over: RGB(0xFFFFFF), opacity: 1) == RGB(0x123456))
     }
 
-    @Test func inkReadsOverAnyDesktop() {
+    static func blurred(dark: Bool) -> RGB {
+        Palette.background.side(dark: dark).composited(over: RGB(0x808080), opacity: Translucency.window)
+    }
+
+    /// Until #170 this held over an unblurred white (dark) or black (light)
+    /// desktop; at the 50% the user chose that is ~2.9:1, a trade-off they
+    /// accepted for visible transparency.
+    @Test func inkReadsOverABlurredDesktop() {
         for dark in Self.sides {
-            #expect(RGB.contrast(Palette.ink.side(dark: dark), Self.ground(dark: dark)) >= 4.5)
+            #expect(RGB.contrast(Palette.ink.side(dark: dark), Self.blurred(dark: dark)) >= 4.5)
         }
     }
 
     /// The user asked for clearly visible transparency (#170): the desktop
     /// must show through the tint, not sit behind a near-opaque sumi.
     @Test func theDesktopClearlyShowsThroughIssue170() {
-        #expect(Translucency.window <= 0.65)
+        #expect(Translucency.window <= 0.5)
     }
 
     /// Muted text (section and hour labels) is held to 3:1 over a blurred
@@ -41,9 +44,7 @@ struct TranslucencyTests {
     /// credited" until then). Text on cards and rows is on opaque `surface`.
     @Test func mutedInkStaysVisibleOverABlurredDesktop() {
         for dark in Self.sides {
-            let blurred = Palette.background.side(dark: dark)
-                .composited(over: RGB(0x808080), opacity: Translucency.window)
-            #expect(RGB.contrast(Palette.inkMuted.side(dark: dark), blurred) >= 3)
+            #expect(RGB.contrast(Palette.inkMuted.side(dark: dark), Self.blurred(dark: dark)) >= 3)
         }
     }
 
