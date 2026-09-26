@@ -10,7 +10,7 @@ public enum Palette {
     public static let background = DesignColor(dark: 0x141312, light: 0xF7F4EE)
     public static let surface = DesignColor(dark: 0x1E1C1A, light: 0xEFEBE3)
     public static let ink = DesignColor(dark: 0xEDE8DF, light: 0x1C1A17)
-    public static let inkMuted = DesignColor(dark: 0x9A948A, light: 0x6F6A62)
+    public static let inkMuted = DesignColor(dark: 0x9B958B, light: 0x69645C)
     public static let hairline = DesignColor(dark: 0x2E2B28, light: 0xDDD7CC)
     /// The system accent (checkboxes, selection): grey, so the chrome is
     /// fully monochrome, as the web client's was.

@@ -34,10 +34,10 @@ Ratios are WCAG 2.x contrast, measured from the token values.
 
 | Token | Dark | Light | Role | Measured |
 |---|---|---|---|---|
-| `background` | `#141312` sumi | `#F7F4EE` paper | the window's ground, laid at 80% over the blurred desktop | - |
+| `background` | `#141312` sumi | `#F7F4EE` paper | the window's ground, laid at 50% over the blurred desktop (#170) | - |
 | `surface` | `#1E1C1A` | `#EFEBE3` | cards, rows, calendar blocks (opaque) | - |
 | `ink` | `#EDE8DF` | `#1C1A17` | text | 15.2 / 15.8 on background, 13.9 / 14.6 on surface |
-| `inkMuted` | `#9A948A` | `#6F6A62` | secondary text, section labels | 6.17 / 4.89 on background, 5.64 / 4.51 on surface |
+| `inkMuted` | `#9B958B` | `#69645C` | secondary text, section labels | 6.24 / 5.35 on background, 5.72 / 4.94 on surface |
 | `hairline` | `#2E2B28` | `#DDD7CC` | separators | decorative |
 | `accent` | `#77726A` | `#6F6A62` | checkboxes, selection, `AccentColor` | white on it 4.77 / 5.37; 3.89 / 4.89 on background |
 | `shu` | `#D0462C` | `#C8402A` | focus phase, the now line | 4.06 / 4.53 on background |
@@ -58,13 +58,19 @@ medium `#F59E0B`, high `#F97316`, urgent `#EF4444`.
   and cards, and has no more chroma than the neutrals. A pure grey would look
   blue next to warm sumi.
 - The primary pill's label is ≥ 4.5:1 on the pill.
-- Over the worst desktop (white behind dark, black behind light) with no
-  blur credited, `ink` stays ≥ 4.5:1 (8.2 / 9.9) and `inkMuted` ≥ 3:1
-  (3.32 / 3.06).
-  - **The trade-off:** muted text drops below 4.5:1 only in this unblurred
-    worst case. The real material keeps it well above.
-  - A tint over 90% would close the gap and remove the translucency the user
-    asked for.
+- Over a blurred desktop (the behind-window material averages what is
+  behind to about mid-grey), `ink` stays ≥ 4.5:1 (7.3 / 9.0) and `inkMuted`
+  ≥ 3:1 (3.0 / 3.0).
+  - **The trade-off (#170):** the user asked for clearly visible
+    transparency and chose 50% with no layout change. Over a bright,
+    *unblurred* window directly behind, text on the bare ground drops to
+    about 2.9:1 (dark) / 4.1:1 (light). Text on cards and rows sits on the
+    opaque `surface` and is unaffected.
+  - Until #170 the tint was 80% and these rules held over an unblurred
+    white or black desktop. On a dark wallpaper that barely showed any
+    transparency.
+  - `inkMuted` was nudged one step (from `#9A948A` / `#6F6A62`) to keep
+    3:1 at 50%.
 
 Dark shu is `#D0462C`, not the first proposal `#E4583C`. That value gave a
 white label only 3.65:1, and was the negative control when the tests were
@@ -99,7 +105,7 @@ No `Color(red:…)`, hex literal or bare `.padding(<number>)` appears outside
 
 | Surface | Treatment |
 |---|---|
-| Window ground | `omakaseWindowBackground()`: the system's blurred material under `background` at `Translucency.window` (80%) |
+| Window ground | `omakaseWindowBackground()`: the system's blurred material under `background` at `Translucency.window` (50%). The material is the window's own container background, so it blurs what is behind the window (#170) |
 | Cards, rows, calendar blocks | opaque `surface`, so neither the desktop nor the hour lines show through |
 | Chrome (sidebar, toolbar) | the system's own Liquid Glass, untinted |
 | Floating surfaces (timer, capture) | `glassEffect` inside a `GlassEffectContainer`; the timer is tinted 18% toward its phase, capture is neutral |

@@ -16,18 +16,17 @@ public enum Appearance: Sendable {
 /// the system's blurred material. `TranslucencyTests` pins the text contrast
 /// this leaves over the worst desktop.
 public enum Translucency {
-    public static let window = 0.8
+    public static let window = 0.5
 }
 
 extension View {
     /// The window's translucent ground: the blurred desktop behind, tinted
     /// with sumi (or paper). Content on it stays unfilled; cards use `surface`.
     public func omakaseWindowBackground() -> some View {
-        containerBackground(for: .window) {
-            ZStack {
-                Rectangle().fill(.ultraThinMaterial)
-                Palette.background.color.opacity(Translucency.window)
-            }
-        }
+        // The material must be the window's own container background to blur
+        // what is behind the window; a material filled inside the window only
+        // blurs the window's content, which is why the ground was opaque (#170).
+        background(Palette.background.color.opacity(Translucency.window).ignoresSafeArea())
+            .containerBackground(.ultraThinMaterial, for: .window)
     }
 }
