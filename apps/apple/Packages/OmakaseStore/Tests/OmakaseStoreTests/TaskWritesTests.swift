@@ -40,7 +40,7 @@ struct TaskWritesTests {
         try writes.toggleCompletion(record)
         let api = FakeAPIClient()
         await api.script([.reply(200, "{}"), .reply(200, "{}")])
-        _ = await OutboxWorker(context: context, api: api, onAccepted: { _, _ in }).drain()
+        _ = await OutboxWorker(context: context, api: api, handlers: OutboxHandlers([RecordingHandler()])).drain()
         let bodies = await api.sentRequests.map { String(bytes: $0.body ?? Data(), encoding: .utf8) ?? "" }
         #expect(bodies == [#"{"is_completed":true}"#, #"{"is_completed":false}"#])
         #expect(record.completedAt == nil)
@@ -59,7 +59,7 @@ struct TaskWritesTests {
         let record = try seeded()
         let server = try TaskDTO.make(id: UUID(uuidString: record.id)!, title: "Renamed on server", completed: true)
         let entry = OutboxEntry(sequence: 1, method: "PATCH", path: "/x/", body: nil, subjectID: record.id)
-        TaskWrites(context: context).applyServerCopy(entry, body: try OmakaseJSON.encoder.encode(server))
+        TaskHandler(context: context).apply(entry, body: try OmakaseJSON.encoder.encode(server))
         #expect(record.title == "Renamed on server" && record.isCompleted)
     }
 
@@ -70,14 +70,14 @@ struct TaskWritesTests {
         let entry = OutboxEntry(
             sequence: 1, method: "POST", path: "/api/v1/tasks/", body: nil, subjectID: "local-7",
             createsLocalID: "local-7")
-        TaskWrites(context: context).applyServerCopy(entry, body: try OmakaseJSON.encoder.encode(server))
+        TaskHandler(context: context).apply(entry, body: try OmakaseJSON.encoder.encode(server))
         #expect(local.id == server.id.uuidString && local.title == "Captured")
     }
 
     @Test func aBodyThatIsNotATaskChangesNothing() throws {
         let record = try seeded()
         let entry = OutboxEntry(sequence: 1, method: "PATCH", path: "/x/", body: nil, subjectID: record.id)
-        TaskWrites(context: context).applyServerCopy(entry, body: Data("{}".utf8))
+        TaskHandler(context: context).apply(entry, body: Data("{}".utf8))
         let count = try context.fetch(FetchDescriptor<TaskRecord>()).count
         #expect(record.title == "Task" && count == 1)
     }
@@ -100,7 +100,8 @@ struct TaskWritesTests {
         let api = FakeAPIClient()
         let body = String(bytes: try OmakaseJSON.encoder.encode(serverCopy), encoding: .utf8) ?? ""
         await api.script([.reply(200, body), .offline])
-        _ = await OutboxWorker(context: context, api: api, onAccepted: writes.applyServerCopy).drain()
+        _ = await OutboxWorker(context: context, api: api, handlers: OutboxHandlers([TaskHandler(context: context)]))
+            .drain()
         #expect(record.isCompleted == false)
         #expect(try outbox().count == 1)
     }

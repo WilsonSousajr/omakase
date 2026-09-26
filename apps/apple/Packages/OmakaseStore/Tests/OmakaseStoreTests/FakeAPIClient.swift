@@ -20,6 +20,9 @@ actor FakeAPIClient: APIClient {
     private var storedProfile: ProfileDTO?
     /// Every day a read asked for, in order: how DaySync's tests see one refresh use one day.
     private(set) var requestedDays: [String] = []
+    /// Runs while `tasks(on:)` is "on the network": how a test makes a local
+    /// write land in the middle of a refresh.
+    private var duringTasksFetch: (@Sendable () async -> Void)?
 
     func setTasks(_ tasks: [TaskDTO], on day: String) { tasksByDay[day] = tasks }
     func script(_ outcomes: [SendOutcome]) { self.outcomes = outcomes }
@@ -28,6 +31,7 @@ actor FakeAPIClient: APIClient {
     func setStudies(_ studies: [StudyBlockDTO], on day: String) { studiesByDay[day] = studies }
     func setReview(_ review: DailyReviewDTO?, on day: String) { reviewsByDay[day] = review }
     func setProfile(_ profile: ProfileDTO) { storedProfile = profile }
+    func setDuringTasksFetch(_ hook: @escaping @Sendable () async -> Void) { duringTasksFetch = hook }
 
     func signIn(googleIDToken: String) async throws -> UserDTO { throw APIError.signedOut }
     func me() async throws -> UserDTO { throw APIError.signedOut }
@@ -36,6 +40,7 @@ actor FakeAPIClient: APIClient {
 
     func tasks(on day: APIDay) async throws -> [TaskDTO] {
         note(day)
+        await duringTasksFetch?()
         return tasksByDay[day.string] ?? []
     }
 
@@ -137,5 +142,12 @@ extension ProfileDTO {
              "pomodoros_before_long_break":4,"daily_work_goal_hours":"8.0","daily_study_goal_hours":"4.0"}
             """
         return try OmakaseJSON.decoder.decode(ProfileDTO.self, from: Data(json.utf8))
+    }
+}
+
+extension SubtaskDTO {
+    static func make(id: UUID = UUID(), title: String, done: Bool = false) throws -> SubtaskDTO {
+        let json = #"{"id":"\#(id)","title":"\#(title)","is_completed":\#(done),"order":0}"#
+        return try OmakaseJSON.decoder.decode(SubtaskDTO.self, from: Data(json.utf8))
     }
 }

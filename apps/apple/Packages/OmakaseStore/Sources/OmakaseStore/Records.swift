@@ -63,6 +63,8 @@ public final class OutboxEntry {
     public var nextAttemptAt: Date?
     public var lastError: String?
     public var stateRaw: String
+    /// Which OutboxHandler applies the reply. The default keeps M1's queued entries valid (M3.1 spec §3).
+    public var kind: String = "task.patch"
 
     public var state: State {
         get { State(rawValue: stateRaw) ?? .pending }
@@ -71,9 +73,9 @@ public final class OutboxEntry {
 
     public init(
         sequence: Int, method: String, path: String, body: Data?, subjectID: String?,
-        createsLocalID: String? = nil, now: Date = .now
+        createsLocalID: String? = nil, kind: String = "task.patch", now: Date = .now
     ) {
-        (self.sequence, self.method, self.path, self.body) = (sequence, method, path, body)
+        (self.sequence, self.method, self.path, self.body, self.kind) = (sequence, method, path, body, kind)
         (self.subjectID, self.createsLocalID, createdAt) = (subjectID, createsLocalID, now)
         (idempotencyKey, attempts, stateRaw) = (UUID().uuidString, 0, State.pending.rawValue)
     }
