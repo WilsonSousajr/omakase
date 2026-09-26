@@ -99,6 +99,23 @@ struct DayWritesTests {
         #expect(sent.count == 2 && sessionBody.contains(server.id.uuidString) && !sessionBody.contains("local-"))
     }
 
+    @Test func aSessionRecordedAfterItsCaptureWasAcceptedSendsTheServerID() async throws {
+        // Final review, Important 2: the capture is accepted during the
+        // pomodoro, so no queued session exists to rewrite; the session must
+        // still name the server's id, or it parks and the focus time is lost.
+        let task = try TaskWrites(context: context).capture(title: "New", day: "2026-03-07")
+        let capturedID = task.id
+        let server = try TaskDTO.make(title: "New")
+        await api.script([.reply(201, String(bytes: try OmakaseJSON.encoder.encode(server), encoding: .utf8)!)])
+        await drain()
+        try SessionWrites(context: context).record(
+            FinishedSession(
+                taskID: capturedID, timeBlockID: nil, type: "focus", minutes: 25,
+                startedAt: .now.addingTimeInterval(-1500), endedAt: .now, completed: true))
+        let sent = body(try #require(try entries().first))
+        #expect(sent.contains(server.id.uuidString) && !sent.contains("local-"))
+    }
+
     @Test func applyingASessionReplyChangesNothingLocal() throws {
         // Sessions are not cached until M3.3 shows history.
         let entry = OutboxEntry(
