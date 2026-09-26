@@ -3,13 +3,24 @@ import Testing
 
 @testable import OmakaseFeatures
 
-/// A named fake for the app's review write: records each save.
+/// A named fake for the app's review writes: records each save and shutdown.
 @MainActor
 final class RecordingReviewActions {
     private(set) var saved: [(day: String, values: ReviewValues)] = []
+    private(set) var shutDowns: [SentShutdown] = []
+
+    struct SentShutdown {
+        let day: String
+        let values: ReviewValues
+        let rollovers: [TaskRollover]
+    }
 
     var actions: ReviewModel.Actions {
-        ReviewModel.Actions(save: { [unowned self] day, values in saved.append((day, values)) })
+        ReviewModel.Actions(
+            save: { [unowned self] day, values in saved.append((day, values)) },
+            shutDown: { [unowned self] day, values, rollovers in
+                shutDowns.append(SentShutdown(day: day, values: values, rollovers: rollovers))
+            })
     }
 }
 
@@ -41,7 +52,7 @@ struct ReviewModelTests {
     let day = "2026-03-07"
 
     func model(loading values: ReviewValues = .empty) -> ReviewModel {
-        let model = ReviewModel(actions: recorder.actions, schedule: debounce.schedule)
+        let model = ReviewModel(actions: recorder.actions, schedule: debounce.schedule, calendar: Self.utc)
         model.load(day: day, values: values)
         return model
     }

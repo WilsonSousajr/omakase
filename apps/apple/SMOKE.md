@@ -106,3 +106,32 @@ and give one of today's tasks a time block covering now.
 8. The menu-bar panel shows the next block and what's left today. Clicking a
    task focuses it in the window.
 
+
+## M3.4
+
+Review and shutdown, against the same stack. Seed three tasks scheduled
+today, none done, two of them with `estimated_minutes`, and set the profile's
+daily goals low enough (`PATCH /api/v1/auth/profile/`) that today's plan goes
+over. `<today>` and `<tomorrow>` are the Mac's local dates.
+
+1. The Focus header shows the workload line: planned against the goal, over,
+   and partial because one task has no estimate.
+   `curl …/stats/workload/?date=<today>` has the same `planned_minutes`,
+   `goal_minutes` and `unestimated_count: 1`.
+2. Complete one task, then open Review from the sidebar. The summary says
+   "1 of 3 done"; the two open tasks are listed, each set to Tomorrow.
+3. Rate the day, choose an energy and type a win. Pause a second, then
+   `curl …/stats/reviews/?date=<today>`: the rating, `energy` and
+   `win_of_the_day` are there, and `is_shutdown` is false.
+4. Set one open task to Backlog; leave the other on Tomorrow. The hint under
+   Shut down says "Moves 2 tasks and closes the day".
+5. Shut down. The screen shows Day closed, "Great work today. Time to
+   rest." and Reopen; the rollover rows are gone.
+   - `curl …/stats/reviews/?date=<today>`: `is_shutdown: true` and
+     `shutdown_at` set.
+   - `curl …/tasks/<id>/` for each task: `"scheduled_date": "<tomorrow>"`
+     for the first, `"scheduled_date": null` for the second.
+6. Reopen. `curl …/stats/reviews/?date=<today>` has `is_shutdown: false`;
+   the tasks stay where they moved.
+7. Offline (backend stopped): add a task for today, shut down again, then
+   start the backend. The review replays first, then the task's move.

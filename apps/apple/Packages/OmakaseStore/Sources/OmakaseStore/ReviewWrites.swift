@@ -23,6 +23,24 @@ public final class ReviewWrites {
         try context.save()
     }
 
+    /// Shut down (M3.4 spec, Decisions): the review closes the day, then
+    /// each unfinished task moves as chosen, one `task.patch` each, in order.
+    /// Call it inside one `coordinator.write` so the day closes as one write.
+    ///
+    ///     try writes.shutDown(day: "2026-03-07", rating: 4, win: "", energy: 2,
+    ///                         rollovers: [TaskRollover(taskID: id, day: "2026-03-08")])
+    public func shutDown(day: String, rating: Int?, win: String, energy: Int?, rollovers: [TaskRollover]) throws {
+        try save(day: day, rating: rating, win: win, energy: energy, shutdown: true)
+        let tasks = TaskWrites(context: context)
+        for rollover in rollovers {
+            let id = rollover.taskID
+            let found = try context.fetch(FetchDescriptor<TaskRecord>(predicate: #Predicate { $0.id == id }))
+            // A task deleted by a sync since the review loaded has nothing left to move.
+            guard let record = found.first else { continue }
+            try tasks.reschedule(record, to: rollover.day)
+        }
+    }
+
     private func review(on day: String) throws -> DailyReviewRecord {
         let found = try context.fetch(FetchDescriptor<DailyReviewRecord>(predicate: #Predicate { $0.day == day }))
         if let existing = found.first { return existing }
@@ -50,6 +68,17 @@ public final class ReviewWrites {
             try container.encode(isShutdown, forKey: .isShutdown)
         }
     }
+}
+
+/// Where an unfinished task goes when the day shuts down: `day` is its new
+/// `YYYY-MM-DD`, or nil for the backlog.
+///
+///     TaskRollover(taskID: "t1", day: "2026-03-08")
+public struct TaskRollover: Equatable, Sendable {
+    public let taskID: String
+    public let day: String?
+
+    public init(taskID: String, day: String?) { (self.taskID, self.day) = (taskID, day) }
 }
 
 /// The server's copy of the review replaces the local one, unless a later write is queued.
