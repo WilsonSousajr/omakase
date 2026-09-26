@@ -16,7 +16,7 @@ struct OutboxWorkerTests {
 
     func worker(now: Date? = nil) -> OutboxWorker {
         let fixed = now ?? start
-        return OutboxWorker(context: context, api: api, clock: { fixed }, onAccepted: { _, _ in })
+        return OutboxWorker(context: context, api: api, clock: { fixed }, handlers: OutboxHandlers([RecordingHandler()]))
     }
 
     func enqueue(_ sequence: Int, _ path: String, creates: String? = nil) {
@@ -98,13 +98,11 @@ struct OutboxWorkerTests {
     @Test func acceptedEntriesReachTheCallbackWithTheServersBody() async throws {
         enqueue(1, "/a/")
         await api.script([.reply(200, #"{"ok":true}"#)])
-        var received: [String] = []
+        let recorder = RecordingHandler()
         let worker = OutboxWorker(
-            context: context, api: api, clock: { [start] in start },
-            onAccepted: { entry, body in received.append("\(entry.path) \(String(bytes: body, encoding: .utf8) ?? "")")
-            })
+            context: context, api: api, clock: { [start] in start }, handlers: OutboxHandlers([recorder]))
         _ = await worker.drain()
-        #expect(received == [#"/a/ {"ok":true}"#])
+        #expect(recorder.received == [#"/a/ {"ok":true}"#])
     }
 
     @Test func concurrentDrainsSendEachEntryOnce() async throws {
