@@ -26,7 +26,7 @@ distribution in this design.
 
 | Constraint | Consequence |
 |---|---|
-| Liquid Glass | SwiftUI (and AppKit where needed), macOS 26 minimum. Rules out Compose Multiplatform for the Apple apps. |
+| Liquid Glass | SwiftUI (and AppKit where needed), macOS 26 minimum. Rules out Compose Multiplatform for the Apple apps. Kept at 26 after macOS 27 shipped: everything the M2 identity uses is in 26 (#131). |
 | Free Apple ID, no paid membership | Local signing on this Mac. No notarization, no TestFlight, no App Sandbox. CI builds and tests unsigned. |
 | Offline focus, not offline-first | An outbox of queued writes; no two-way sync, no change tracking, no tombstones. |
 | Local backend first | The API base URL is a setting. The app runs against `docker-compose` until M6 moves it to the VPS. |
@@ -173,6 +173,9 @@ contract change (invariant 8).
   chrome. Custom floating surfaces (the timer and the capture panel) use
   `glassEffect` inside a `GlassEffectContainer`. Content (lists and the
   calendar grid) stays opaque.
+  - *Superseded in M2:* the sidebar follows the web client (Plan, Focus,
+    Review, Projects, Study). The window's ground is translucent, and only
+    cards, rows and blocks stay opaque. See `docs/design-system-apple.md`.
 - **Plan**: a custom SwiftUI day/week grid.
   - Drag a task or study block onto a slot to create a time block and set
     `scheduled_date`.
@@ -204,6 +207,9 @@ tinting and the Today/Focus layout are explored as mockups before the M3
 screens are built, and the chosen tokens are recorded in
 `docs/design-system-apple.md`. `docs/design-system.md` stays as the web
 record.
+- *Done in M2 (#99-#104):* dark first, a translucent ground, monochrome
+  chrome with a grey accent, shu as a signal only, the web's layouts, and
+  an ensō icon. They are recorded in `docs/design-system-apple.md`.
 
 ## Testing and the Apple gate
 
