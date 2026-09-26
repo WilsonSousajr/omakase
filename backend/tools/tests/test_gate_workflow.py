@@ -141,3 +141,30 @@ class TestTheAppleGateIsTheCIAppleGate:
         )
         for tool in ("XCODE_VERSION", "SWIFTLINT_VERSION", "XCODEGEN_VERSION"):
             assert re.fullmatch(r"\d+(\.\d+)+", pins[tool]), f"{tool}={pins.get(tool)!r} is not an exact version"
+
+
+APPLE_TEST_PACKAGES = REPO / "apps" / "apple" / "test-packages.sh"
+
+
+class TestSwiftBuildsOutsideTheCheckout:
+    """#134: under an iCloud-synced checkout (~/Documents), the File Provider
+    tags each freshly built .xctest bundle with com.apple.FinderInfo, and
+    codesign rejects it ("resource fork, Finder information, or similar
+    detritus not allowed"). SwiftPM's build products must live outside the
+    checkout, where no sync provider reaches them."""
+
+    def _script(self) -> str:
+        return APPLE_TEST_PACKAGES.read_text()
+
+    def test_every_swift_test_passes_a_scratch_path_issue134(self):
+        invocations = [line for line in self._script().splitlines() if line.strip().startswith("swift test")]
+        assert invocations, "test-packages.sh runs no swift test"
+        for line in invocations:
+            assert "--scratch-path" in line, f"{line.strip()!r} builds inside the checkout"
+
+    def test_the_default_scratch_is_the_user_cache_not_the_repo_issue134(self):
+        default = re.search(r'SCRATCH="\$\{OMAKASE_SWIFTPM_SCRATCH:-([^}]+)\}"', self._script())
+        assert default, "test-packages.sh must set SCRATCH from OMAKASE_SWIFTPM_SCRATCH with a default"
+        assert default.group(1).startswith("$HOME/Library/Caches/"), (
+            f"default scratch {default.group(1)!r} is not under ~/Library/Caches (never synced)"
+        )
