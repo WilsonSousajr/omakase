@@ -379,6 +379,17 @@ approval.**
 - If `git worktree add` is interrupted, the index ends up with every file
   both `D` and `??`. Don't repair it; `git worktree remove --force` and
   recreate.
+- **iCloud-synced checkouts** (anything under `~/Documents` with iCloud
+  Drive on) cause two problems.
+  - **Codesign rejects the test bundles.** The File Provider tags new build
+    products, and codesign refuses them, so SwiftPM builds into
+    `~/Library/Caches/omakase/swiftpm` instead (`test-packages.sh`, #134).
+  - **Branch switches leave " 2" conflict copies** (`Spacing 2.swift`).
+    `.gitignore` hides them (`* 2.*`), but SwiftPM compiles every `.swift`
+    file in `Sources`, so they break the build with "invalid redeclaration".
+    List them with `find . -path ./.git -prune -o -name '* [0-9].*' -print`,
+    and check each one against git history (`git hash-object`) before
+    removing it. Moving the checkout out of iCloud ends both.
 - To dry-run a merge of a stale branch, `git merge-tree --write-tree <base>
   <branch>` merges to a tree object without touching anything. Only
   `Auto-merging` lines means the merge is clean.
