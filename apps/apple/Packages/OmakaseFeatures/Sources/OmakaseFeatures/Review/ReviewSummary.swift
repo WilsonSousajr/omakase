@@ -32,4 +32,21 @@ public struct ReviewSummary: Equatable, Sendable {
         doneUnestimatedCount = board.done.filter { $0.minutes == nil }.count
         unfinished = board.carriedOver + board.inProgress + board.toDo
     }
+
+    /// "3 of 5 done".
+    public var doneLabel: String { "\(doneCount) of \(plannedCount) done" }
+
+    /// "1h 15m estimated", partial when some done tasks had no estimate; nil
+    /// when nothing is done.
+    public var estimateLabel: String? {
+        guard doneCount > 0 else { return nil }
+        let sum = "\(Self.duration(doneEstimatedMinutes)) estimated"
+        return doneUnestimatedCount == 0 ? sum : "\(sum), \(doneUnestimatedCount) without an estimate"
+    }
+
+    private static func duration(_ minutes: Int) -> String {
+        let (hours, rest) = minutes.quotientAndRemainder(dividingBy: 60)
+        guard hours > 0 else { return "\(rest)m" }
+        return rest == 0 ? "\(hours)h" : "\(hours)h \(rest)m"
+    }
 }
