@@ -18,7 +18,9 @@ final class AppServices {
 
     init() throws {
         container = try StoreSchema.container(inMemory: false)
-        api = OmakaseAPIClient(baseURL: Self.baseURL, transport: URLSessionTransport(), tokens: KeychainTokenStore())
+        api = OmakaseAPIClient(
+            baseURL: Self.baseURL, transport: URLSessionTransport(),
+            tokens: CachingTokenStore(wrapping: KeychainTokenStore()))
         let writes = TaskWrites(context: container.mainContext)
         self.writes = writes
         let sync = DaySync(context: container.mainContext, api: api)
