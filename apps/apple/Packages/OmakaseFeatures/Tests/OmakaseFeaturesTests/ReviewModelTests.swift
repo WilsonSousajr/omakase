@@ -24,7 +24,7 @@ final class ManualDebounce {
     func pauseEnds() {
         let due = waiting
         waiting = []
-        due.forEach { $0() }
+        for work in due { work() }
     }
 
     /// Ends only the oldest pause, as a clock would when changes are spaced.
