@@ -20,6 +20,16 @@ public struct FocusView: View {
 
     public var body: some View {
         let board = FocusBoard(records: records)
+        HStack(spacing: 0) {
+            boardColumn(board)
+            Divider().overlay(Palette.hairline.color)
+            FocusTaskPanelView(card: model.selectedCard(in: board), day: day, model: model).frame(width: 340)
+        }
+        .onChange(of: board, initial: true) { _, board in model.keepSelection(in: board) }
+        .navigationTitle("Focus")
+    }
+
+    private func boardColumn(_ board: FocusBoard) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             FocusHeaderView(day: day, layout: $model.layout)
             Divider().overlay(Palette.hairline.color)
@@ -29,17 +39,15 @@ public struct FocusView: View {
                 FocusStudyBlocksView(studies: studies)
             }
         }
-        .onChange(of: board, initial: true) { _, board in model.keepSelection(in: board) }
-        .navigationTitle("Focus")
     }
 
     @ViewBuilder private func content(_ board: FocusBoard) -> some View {
         if board.cards.isEmpty {
             ContentUnavailableView("Nothing scheduled for \(day)", systemImage: "sun.max")
         } else if model.layout == .kanban {
-            FocusBoardKanbanView(board: board, model: model)
+            FocusBoardKanbanView(board: board, day: day, model: model)
         } else {
-            FocusBoardListView(board: board, model: model)
+            FocusBoardListView(board: board, day: day, model: model)
         }
     }
 }
