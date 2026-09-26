@@ -155,8 +155,16 @@ for time blocking (M4 builds it).
 ![Plan, light](design-system-apple/plan-light.png)
 
 **Focus** is the day as a Kanban board or a list, with today's study blocks
-under it, and the active task on the right: the timer, subtasks and notes
-(M3 builds it).
+under it, and the selected task on the right (built in M3.2,
+`OmakaseFeatures/Focus/`).
+- **The board:** carried-over tasks sit in To do, marked "from Mon 2". In
+  the list they have their own section.
+- **Marks:** a deadline shows as "Due Fri 13", or "Overdue", only when it
+  differs from the plan day.
+- **Order:** columns sort by priority, then title, with no manual reorder.
+  Dragging between columns works offline.
+- **The panel:** Complete (the ink pill), Reschedule, and the subtasks.
+- **The timer:** its disc and session notes join the panel in M3.3.
 
 ![Focus, kanban, dark](design-system-apple/focus-kanban-dark.png)
 ![Focus, list, dark](design-system-apple/focus-list-dark.png)

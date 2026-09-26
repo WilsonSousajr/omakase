@@ -52,3 +52,30 @@ Run with the built app, against the same stack as M1.
    `grep -rnE 'Color\(red|\.padding\([0-9]|0x[0-9A-Fa-f]{6}' apps/apple --include='*.swift' | grep -v -e '/Design/' -e '/Tests/' -e '/.build/'`
 8. The M1 checklist above passes again.
 
+## M3.2
+
+Focus, against the same stack. Seed through the API or the Django admin
+first:
+- three tasks scheduled today, with different priorities, one with a due
+  date two days out and one with subtasks
+- one task scheduled yesterday and not done, so it is carried over
+
+1. The Focus sidebar item opens the Kanban board.
+   - To do lists the carried task first, marked "from <weekday> <day>".
+   - The task with a deadline shows "Due <weekday> <day>".
+2. Switch to List: the sections are Carried over, To do, and so on. Quit and
+   relaunch: List is remembered.
+3. Click a task. The right panel shows its title, marks, subtasks, Complete
+   and Reschedule.
+4. Check a subtask. `curl …/tasks/<id>/` shows it `is_completed: true`.
+5. Drag a card to Done: it completes. Drag it back to To do: it reopens.
+   The server agrees each time (`curl …/tasks/today/?date=<today>`).
+6. Reschedule a task to Tomorrow: it leaves the board, and the server has
+   tomorrow's `scheduled_date`. Reschedule another to Backlog: the server
+   has `"scheduled_date": null`.
+7. Carried task, then Move to today: it moves into To do without the mark.
+8. Stop the backend. Drag a card to In progress, then start the backend:
+   the move replays, and the server has `kanban_status: "in_progress"`.
+9. Leave the app open past midnight, or change the Mac's date, and
+   reactivate it. The header shows the new day.
+
