@@ -14,6 +14,7 @@
     "kanban_status": "todo",
     "priority": "medium",
     "project": null,
+    "remind_at": null,
     "scheduled_date": "2026-03-06",
     "subtasks": [
       {

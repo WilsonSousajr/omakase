@@ -118,7 +118,10 @@ class TestContractFixtures:
             project=None,
             discipline=None,
         )
-        resp = authenticated_client.patch(f"/api/v1/tasks/{task.pk}/", {"is_completed": True}, format="json")
+        # remind_at is set so the Swift test decodes a date, not only a null (#127).
+        resp = authenticated_client.patch(
+            f"/api/v1/tasks/{task.pk}/", {"is_completed": True, "remind_at": "2026-03-07T12:00:00Z"}, format="json"
+        )
         assert resp.status_code == 200
         check_fixture("task_patch", _body(resp))
 
