@@ -14,6 +14,7 @@ final class AppServices {
     let writes: TaskWrites
     let coordinator: SyncCoordinator
     private let reachability = Reachability()
+    private let notifier = PhaseNotifier()
 
     init() throws {
         container = try StoreSchema.container(inMemory: false)
@@ -84,7 +85,7 @@ final class AppServices {
             actions: TimerModel.Actions(
                 save: { try? store.save(JSONEncoder().encode($0)) },
                 record: { [self] in record($0, onOutcome) },
-                notify: { _, _ in }))
+                notify: { [notifier] in notifier.notify(at: $0, ending: $1) }))
     }
 
     private func blockNow(for taskID: String) -> String? {
@@ -92,9 +93,7 @@ final class AppServices {
         let descriptor = FetchDescriptor<TimeBlockRecord>(predicate: #Predicate { $0.day == day })
         let blocks = (try? container.mainContext.fetch(descriptor)) ?? []
         let slots = blocks.map { SessionBlock.Slot(id: $0.id, taskID: $0.taskID, start: $0.startTime, end: $0.endTime) }
-        let now = Calendar.current.dateComponents([.hour, .minute], from: .now)
-        return SessionBlock.pick(
-            for: taskID, in: slots, at: String(format: "%02d:%02d", now.hour ?? 0, now.minute ?? 0))
+        return SessionBlock.pick(for: taskID, in: slots, at: DayString.time(.now, calendar: .current))
     }
 
     private func record(_ phase: CompletedPhase, _ onOutcome: @escaping @MainActor (SyncCoordinator.Outcome) -> Void) {
