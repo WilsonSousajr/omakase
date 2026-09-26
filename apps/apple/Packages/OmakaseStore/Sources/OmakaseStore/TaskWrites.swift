@@ -10,48 +10,57 @@ import SwiftData
 @MainActor
 public final class TaskWrites {
     private let context: ModelContext
-    public init(context: ModelContext) { self.context = context }
+    private let queue: OutboxQueue
+
+    public init(context: ModelContext) { (self.context, queue) = (context, OutboxQueue(context: context)) }
 
     public func toggleCompletion(_ record: TaskRecord) throws {
         record.isCompleted.toggle()
-        record.completedAt = record.isCompleted ? .now : nil
-        let body = try OmakaseJSON.encoder.encode(["is_completed": record.isCompleted])
-        context.insert(
-            OutboxEntry(
-                sequence: try nextSequence(), method: "PATCH", path: "/api/v1/tasks/\(record.id)/", body: body,
-                subjectID: record.id))
+        // Mirrors Task.save both ways (M3.1 spec, Decisions).
+        (record.completedAt, record.kanbanStatus) = record.isCompleted ? (.now, "done") : (nil, "todo")
+        try patch(record, body: ["is_completed": record.isCompleted])
+    }
+
+    /// A Kanban move. Moving to Done completes the task, as the server does.
+    public func setKanbanStatus(_ record: TaskRecord, to status: String) throws {
+        record.kanbanStatus = status
+        if status == "done" && !record.isCompleted { (record.isCompleted, record.completedAt) = (true, .now) }
+        try patch(record, body: ["kanban_status": status])
+    }
+
+    /// `day` nil moves the task to the backlog.
+    public func reschedule(_ record: TaskRecord, to day: String?) throws {
+        record.scheduledDay = day
+        // An explicit null: `nil` in a synthesized Encodable is omitted (Review Focus 2).
+        let value = day.map { "\"\($0)\"" } ?? "null"
+        try patch(record, raw: Data(#"{"scheduled_date":\#(value)}"#.utf8))
+    }
+
+    /// A task captured now, offline or not: shown at once under a `local-` id.
+    public func capture(title: String, day: String?) throws -> TaskRecord {
+        let record = TaskRecord(id: "local-\(UUID().uuidString)", title: title, scheduledDay: day)
+        context.insert(record)
+        let body = try OmakaseJSON.encoder.encode(CaptureBody(title: title, scheduledDate: day))
+        try queue.enqueue(
+            kind: "task.create", method: "POST", path: "/api/v1/tasks/", body: body, subjectID: record.id,
+            createsLocalID: record.id)
+        try context.save()
+        return record
+    }
+
+    private func patch(_ record: TaskRecord, body: some Encodable) throws {
+        try patch(record, raw: try OmakaseJSON.encoder.encode(body))
+    }
+
+    private func patch(_ record: TaskRecord, raw: Data) throws {
+        try queue.enqueue(
+            kind: "task.patch", method: "PATCH", path: "/api/v1/tasks/\(record.id)/", body: raw, subjectID: record.id)
         try context.save()
     }
 
-    /// The outbox's `onAccepted`: the server's copy of a task replaces the local one.
-    public func applyServerCopy(_ entry: OutboxEntry, body: Data) {
-        guard let dto = try? OmakaseJSON.decoder.decode(TaskDTO.self, from: body) else { return }
-        let serverID = dto.id.uuidString
-        let localID = entry.createsLocalID ?? serverID
-        let descriptor = FetchDescriptor<TaskRecord>(predicate: #Predicate { $0.id == localID || $0.id == serverID })
-        guard let record = try? context.fetch(descriptor).first else {
-            context.insert(TaskRecord(dto: dto))
-            return
-        }
-        record.id = serverID
-        // A later write for this task is still queued: the user's newer local
-        // state stands until it is sent, as in DaySync (review finding I5).
-        guard !hasLaterPendingWrite(than: entry, for: [localID, serverID]) else { return }
-        record.apply(dto)
-    }
-
-    private func hasLaterPendingWrite(than entry: OutboxEntry, for ids: [String]) -> Bool {
-        let sequence = entry.sequence
-        let pending = OutboxEntry.State.pending.rawValue
-        let later = FetchDescriptor<OutboxEntry>(
-            predicate: #Predicate { $0.sequence > sequence && $0.stateRaw == pending })
-        let subjects = ((try? context.fetch(later)) ?? []).compactMap(\.subjectID)
-        return subjects.contains { ids.contains($0) }
-    }
-
-    private func nextSequence() throws -> Int {
-        var descriptor = FetchDescriptor<OutboxEntry>(sortBy: [SortDescriptor(\.sequence, order: .reverse)])
-        descriptor.fetchLimit = 1
-        return (try context.fetch(descriptor).first?.sequence ?? 0) + 1
+    /// On a create a missing `scheduled_date` is already null, so nil may be omitted here.
+    private struct CaptureBody: Encodable {
+        let title: String
+        let scheduledDate: String?
     }
 }
