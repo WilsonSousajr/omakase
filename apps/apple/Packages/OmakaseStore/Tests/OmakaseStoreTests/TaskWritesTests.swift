@@ -32,6 +32,25 @@ struct TaskWritesTests {
         #expect(String(bytes: entry.body ?? Data(), encoding: .utf8) == #"{"is_completed":true}"#)
     }
 
+    @Test func settingAReminderQueuesItsInstant() throws {
+        let record = try seeded()
+        try TaskWrites(context: context).setReminder(record, at: Date(timeIntervalSince1970: 1_772_884_800))
+        let entry = try #require(try outbox().first)
+        #expect(record.remindAt == Date(timeIntervalSince1970: 1_772_884_800))
+        #expect(entry.kind == "task.patch" && entry.path == "/api/v1/tasks/\(record.id)/")
+        #expect(String(bytes: entry.body ?? Data(), encoding: .utf8) == #"{"remind_at":"2026-03-07T12:00:00.000Z"}"#)
+    }
+
+    @Test func clearingAReminderSendsAnExplicitNull() throws {
+        // Spec §Verification: an omitted key would leave the server's reminder set.
+        let record = try seeded()
+        record.remindAt = .now
+        try TaskWrites(context: context).setReminder(record, at: nil)
+        let entry = try #require(try outbox().first)
+        #expect(record.remindAt == nil)
+        #expect(String(bytes: entry.body ?? Data(), encoding: .utf8) == #"{"remind_at":null}"#)
+    }
+
     @Test func twoTogglesReplayInOrder() async throws {
         // Review Focus 5: complete, then undo, both offline.
         let record = try seeded()

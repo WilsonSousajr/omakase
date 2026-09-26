@@ -173,6 +173,27 @@ struct DaySyncTests {
         #expect(try context.fetch(FetchDescriptor<ProfileRecord>()).first?.workGoalHours == 8)
     }
 
+    @Test func reminderFieldsAreCached() async throws {
+        // #187: the planner reads these from the store, never the network.
+        await api.setProfile(try .make(blockReminderMinutes: 10, shutdownReminderTime: "17:30:00"))
+        await api.setTasks([try .make(title: "Call", remindAt: "2026-03-07T15:00:00Z")], on: "2026-03-07")
+        try await sync().refresh()
+        let profile = try #require(try container.mainContext.fetch(FetchDescriptor<ProfileRecord>()).first)
+        #expect(profile.blockReminderMinutes == 10 && profile.shutdownReminderTime == "17:30:00")
+        #expect(try records().first?.remindAt == Date(timeIntervalSince1970: 1_772_895_600))
+    }
+
+    @Test func aClearedReminderIsClearedLocally() async throws {
+        await api.setProfile(try .make(blockReminderMinutes: nil))
+        let id = UUID()
+        await api.setTasks([try .make(id: id, remindAt: "2026-03-07T15:00:00Z")], on: "2026-03-07")
+        try await sync().refresh()
+        await api.setTasks([try .make(id: id)], on: "2026-03-07")
+        try await sync().refresh()
+        #expect(try records().first?.remindAt == nil)
+        #expect(try container.mainContext.fetch(FetchDescriptor<ProfileRecord>()).first?.blockReminderMinutes == nil)
+    }
+
     @Test func aBlockGoneFromTheServerIsRemovedUnlessQueued() async throws {
         await api.setProfile(try .make())
         let kept = try TimeBlockDTO.make(day: "2026-03-07")
