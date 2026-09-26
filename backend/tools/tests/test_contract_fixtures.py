@@ -17,7 +17,7 @@ from unittest.mock import patch
 import pytest
 
 from accounts.tests.fakes import FakeGoogleVerifier
-from conftest import TagFactory, TaskFactory, TimeBlockFactory
+from conftest import SubtaskFactory, TagFactory, TaskFactory, TimeBlockFactory
 
 REPO = Path(os.environ.get("REPO_ROOT", Path(__file__).resolve().parents[3]))
 FIXTURES = REPO / "apps" / "apple" / "Fixtures"
@@ -95,6 +95,7 @@ class TestContractFixtures:
             discipline=None,
         )
         task.tags.add(TagFactory(user=user))
+        SubtaskFactory(task=task, title="Outline")
         resp = authenticated_client.get("/api/v1/tasks/today/?date=2026-03-07")
         assert resp.status_code == 200
         check_fixture("tasks_today", _body(resp))
@@ -111,6 +112,19 @@ class TestContractFixtures:
         resp = authenticated_client.patch(f"/api/v1/tasks/{task.pk}/", {"is_completed": True}, format="json")
         assert resp.status_code == 200
         check_fixture("task_patch", _body(resp))
+
+    def test_tasks_carried_over(self, authenticated_client, user):
+        task = TaskFactory(
+            user=user,
+            scheduled_date=datetime.date(2026, 3, 6),
+            is_completed=False,
+            project=None,
+            discipline=None,
+        )
+        SubtaskFactory(task=task, title="Outline")
+        resp = authenticated_client.get("/api/v1/tasks/carried-over/?date=2026-03-07")
+        assert resp.status_code == 200
+        check_fixture("tasks_carried_over", _body(resp))
 
     # The fixture's dates are fixed, so "now" is frozen inside the session window (#142).
     @patch("pomodoro.serializers.timezone.now", return_value=datetime.datetime(2026, 3, 7, 10, tzinfo=datetime.UTC))
