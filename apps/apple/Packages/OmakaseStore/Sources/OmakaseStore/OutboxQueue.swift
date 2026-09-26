@@ -31,6 +31,14 @@ public struct OutboxQueue {
         return subjects.contains { ids.contains($0) }
     }
 
+    /// The entries in `state`, in the order they are sent.
+    func entries(in state: OutboxEntry.State) -> [OutboxEntry] {
+        let raw = state.rawValue
+        let descriptor = FetchDescriptor<OutboxEntry>(
+            predicate: #Predicate { $0.stateRaw == raw }, sortBy: [SortDescriptor(\.sequence)])
+        return (try? context.fetch(descriptor)) ?? []
+    }
+
     private func nextSequence() throws -> Int {
         var descriptor = FetchDescriptor<OutboxEntry>(sortBy: [SortDescriptor(\.sequence, order: .reverse)])
         descriptor.fetchLimit = 1

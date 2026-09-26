@@ -98,12 +98,7 @@ public final class OutboxWorker {
         return .waiting(until: due)
     }
 
-    private func pendingEntries() -> [OutboxEntry] {
-        let pending = OutboxEntry.State.pending.rawValue
-        let descriptor = FetchDescriptor<OutboxEntry>(
-            predicate: #Predicate { $0.stateRaw == pending }, sortBy: [SortDescriptor(\.sequence)])
-        return (try? context.fetch(descriptor)) ?? []
-    }
+    private func pendingEntries() -> [OutboxEntry] { OutboxQueue(context: context).entries(in: .pending) }
 
     private static func serverID(in body: Data) -> String? {
         let object = try? JSONSerialization.jsonObject(with: body) as? [String: Any]
