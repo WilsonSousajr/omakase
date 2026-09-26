@@ -114,6 +114,7 @@ class TaskListSerializer(serializers.ModelSerializer):
             "tag_ids",
             "scheduled_date",
             "due_date",
+            "remind_at",
             "estimated_minutes",
             "actual_minutes",
             "kanban_order",
