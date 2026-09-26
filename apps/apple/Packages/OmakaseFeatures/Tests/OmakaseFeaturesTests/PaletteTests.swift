@@ -35,6 +35,28 @@ struct PaletteTests {
         }
     }
 
+    /// The user chose a fully monochrome UI: the system accent (checkboxes,
+    /// selection) is grey. White drawn on it must read, and it must stand
+    /// out from the ground and from cards.
+    @Test func greyAccentCarriesWhiteAndStandsOut() {
+        for dark in Self.sides {
+            let accent = Palette.accent.side(dark: dark)
+            #expect(RGB.contrast(RGB(0xFFFFFF), accent) >= 4.5)
+            #expect(RGB.contrast(accent, Palette.background.side(dark: dark)) >= 3)
+            #expect(RGB.contrast(accent, Palette.surface.side(dark: dark)) >= 3)
+        }
+    }
+
+    /// Grey, not a hue: the accent carries no more colour than the sumi
+    /// neutrals it sits among (they are warm, so pure-grey would clash).
+    @Test func accentIsNoMoreColourfulThanTheNeutrals() {
+        let neutrals = [Palette.background, Palette.surface, Palette.ink, Palette.inkMuted, Palette.hairline]
+        for dark in Self.sides {
+            let warmest = neutrals.map { chroma($0.side(dark: dark)) }.max() ?? 0
+            #expect(chroma(Palette.accent.side(dark: dark)) <= warmest)
+        }
+    }
+
     @Test func bridgeResolvesPerAppearance() {
         #expect(resolved(Palette.shu, .aqua) == Palette.shu.light)
         #expect(resolved(Palette.shu, .darkAqua) == Palette.shu.dark)
@@ -54,6 +76,10 @@ struct PaletteTests {
             result = RGB(hex(srgb.redComponent) << 16 | hex(srgb.greenComponent) << 8 | hex(srgb.blueComponent))
         }
         return result
+    }
+
+    private func chroma(_ rgb: RGB) -> Double {
+        max(rgb.red, rgb.green, rgb.blue) - min(rgb.red, rgb.green, rgb.blue)
     }
 
     private func hex(_ component: CGFloat) -> UInt32 { UInt32((component * 255).rounded()) }
