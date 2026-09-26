@@ -73,10 +73,13 @@ struct DayWritesTests {
 
     @Test func aSessionPostsTheMacsClockAndItsBlock() throws {
         let started = Date(timeIntervalSince1970: 1_772_874_000)  // 2026-03-07 09:00 UTC
+        let task = TaskRecord(id: "t1", title: "T")
+        context.insert(task)
         try SessionWrites(context: context).record(
             FinishedSession(
-                taskID: "t1", timeBlockID: "b1", type: "focus", minutes: 25, startedAt: started,
-                endedAt: started.addingTimeInterval(1500), completed: true))
+                timeBlockID: "b1", type: "focus", minutes: 25, startedAt: started,
+                endedAt: started.addingTimeInterval(1500), completed: true),
+            task: task)
         let entry = try #require(try entries().first)
         #expect(entry.kind == "session.create" && entry.method == "POST" && entry.path == "/api/v1/pomodoro/sessions/")
         #expect(body(entry).contains(#""started_at":"2026-03-07T09:00:00.000Z""#))
@@ -88,8 +91,9 @@ struct DayWritesTests {
         let task = try TaskWrites(context: context).capture(title: "New", day: "2026-03-07")
         try SessionWrites(context: context).record(
             FinishedSession(
-                taskID: task.id, timeBlockID: nil, type: "focus", minutes: 25,
-                startedAt: .now.addingTimeInterval(-1500), endedAt: .now, completed: true))
+                timeBlockID: nil, type: "focus", minutes: 25, startedAt: .now.addingTimeInterval(-1500),
+                endedAt: .now, completed: true),
+            task: task)
         let server = try TaskDTO.make(title: "New")
         let created = String(bytes: try OmakaseJSON.encoder.encode(server), encoding: .utf8)!
         await api.script([.reply(201, created), .reply(201, "{}")])
@@ -104,14 +108,14 @@ struct DayWritesTests {
         // pomodoro, so no queued session exists to rewrite; the session must
         // still name the server's id, or it parks and the focus time is lost.
         let task = try TaskWrites(context: context).capture(title: "New", day: "2026-03-07")
-        let capturedID = task.id
         let server = try TaskDTO.make(title: "New")
         await api.script([.reply(201, String(bytes: try OmakaseJSON.encoder.encode(server), encoding: .utf8)!)])
         await drain()
         try SessionWrites(context: context).record(
             FinishedSession(
-                taskID: capturedID, timeBlockID: nil, type: "focus", minutes: 25,
-                startedAt: .now.addingTimeInterval(-1500), endedAt: .now, completed: true))
+                timeBlockID: nil, type: "focus", minutes: 25, startedAt: .now.addingTimeInterval(-1500),
+                endedAt: .now, completed: true),
+            task: task)
         let sent = body(try #require(try entries().first))
         #expect(sent.contains(server.id.uuidString) && !sent.contains("local-"))
     }

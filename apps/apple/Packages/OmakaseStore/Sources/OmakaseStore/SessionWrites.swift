@@ -3,9 +3,9 @@ import OmakaseAPI
 import SwiftData
 
 /// A pomodoro as it ran on the Mac. The server records it; it never drives
-/// the clock (spec, The app on macOS).
+/// the clock (spec, The app on macOS). Its task is passed to `record` as the
+/// record itself, not an id (see there).
 public struct FinishedSession: Sendable, Equatable {
-    public let taskID: String?
     public let timeBlockID: String?
     public let type: String
     public let minutes: Int
@@ -13,18 +13,15 @@ public struct FinishedSession: Sendable, Equatable {
     public let endedAt: Date
     public let completed: Bool
 
-    public init(
-        taskID: String?, timeBlockID: String?, type: String, minutes: Int, startedAt: Date, endedAt: Date,
-        completed: Bool
-    ) {
-        (self.taskID, self.timeBlockID, self.type, self.minutes) = (taskID, timeBlockID, type, minutes)
+    public init(timeBlockID: String?, type: String, minutes: Int, startedAt: Date, endedAt: Date, completed: Bool) {
+        (self.timeBlockID, self.type, self.minutes) = (timeBlockID, type, minutes)
         (self.startedAt, self.endedAt, self.completed) = (startedAt, endedAt, completed)
     }
 }
 
 /// Posts a finished session with the Mac's clock and its block (#142).
 ///
-///     try SessionWrites(context: ctx).record(finished)
+///     try SessionWrites(context: ctx).record(finished, task: record)
 @MainActor
 public final class SessionWrites {
     private let context: ModelContext
@@ -32,9 +29,12 @@ public final class SessionWrites {
 
     public init(context: ModelContext) { (self.context, queue) = (context, OutboxQueue(context: context)) }
 
-    public func record(_ session: FinishedSession) throws {
+    /// `task` is read at recording time, not when the pomodoro started: a
+    /// task captured offline may have taken its server id meanwhile, and a
+    /// stale `local-` id would park the session (final review, Important 2).
+    public func record(_ session: FinishedSession, task: TaskRecord?) throws {
         let body = SessionBody(
-            task: session.taskID, timeBlock: session.timeBlockID, sessionType: session.type,
+            task: task?.id, timeBlock: session.timeBlockID, sessionType: session.type,
             durationMinutes: session.minutes, startedAt: session.startedAt, endedAt: session.endedAt,
             completed: session.completed)
         // No subject: no local record depends on a session's reply.
