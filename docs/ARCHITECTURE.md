@@ -62,8 +62,8 @@ backend/
   idempotency/ Idempotency-Key: one stored response per (user, key), 7 days.
 ```
 
-`stats` reads `tasks`, `study` and `pomodoro`, and nothing reads `stats`. The
-other apps do not import each other. #66 enforces this with import-linter.
+`stats` reads `tasks`, `study`, `pomodoro` and `accounts`' `UserProfile`, and
+nothing reads `stats`. The other apps do not import each other. #66 enforces this with import-linter.
 `idempotency` imports no app; the apps whose creates the Mac outbox replays
 import its mixin.
 
@@ -117,7 +117,9 @@ import its mixin.
 - **Class occurrences are computed, not stored.** `class-occurrences/`
   expands schedules over `date_from..date_to` (both required, at most 90 days),
   inside each semester's dates. Occurrences have composite ids
-  `{schedule_id}-{date}` because they are not database rows.
+  `{schedule_id}-{date}` because they are not database rows. The expansion
+  is `study/services.py: class_occurrences(user, start, end)`, which the
+  view and `stats/workload/` both call (#176).
 
 ### stats
 
@@ -129,6 +131,15 @@ import its mixin.
   uniqueness from the request context because `user` is not a serializer
   field. `perform_update` stamps `shutdown_at` when `is_shutdown` becomes
   true.
+- `workload/?date=`: the day's planned minutes against the goal (#128),
+  computed in `stats/services.py: day_workload`. It sums `estimated_minutes`
+  over the tasks and study blocks scheduled on the day (done or not; items
+  carried over count only once rescheduled onto it), adds the minutes of the
+  day's class occurrences from `study.services.class_occurrences`, and
+  compares the total with `UserProfile`'s work plus study goal hours,
+  creating the profile with defaults if it is missing. Items with no
+  estimate are counted in `unestimated_count`, so a client can say the total
+  is partial.
 - Rolling work over to another day is a PATCH of `scheduled_date` (tomorrow,
   a chosen date, or `null` for the backlog). No dedicated endpoint exists.
 
@@ -180,6 +191,7 @@ and `auth/token/refresh/`.
 | `stats/daily/` | GET | |
 | `stats/review/` | GET | `date` required |
 | `stats/reviews/` | CRUD | one per user and day |
+| `stats/workload/` | GET | `date` required; planned minutes against the goal |
 | `study/semesters/` | CRUD | annotated `discipline_count` |
 | `study/disciplines/` | CRUD | filter by semester and status; annotated `study_block_count` |
 | `study/studyblocks/` | CRUD | plus `carried-over/`; filter by discipline, type and status |
