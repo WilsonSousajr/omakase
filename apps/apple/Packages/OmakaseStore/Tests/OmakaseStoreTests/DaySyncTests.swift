@@ -184,4 +184,36 @@ struct DaySyncTests {
         try await daySync.refresh()
         #expect(await api.requestedDays.last == "2026-03-08")
     }
+
+    @Test func aWriteMadeDuringARefreshIsNotOverwritten() async throws {
+        // Final review, Important 1: a toggle while the refresh waits on the
+        // network must survive it, as it did under TodaySync.
+        await api.setProfile(try .make())
+        await api.setTasks([try .make(title: "Mine", completed: false)], on: "2026-03-07")
+        try await sync().refresh()
+        let container = self.container
+        await api.setDuringTasksFetch {
+            await MainActor.run {
+                guard let record = try? container.mainContext.fetch(FetchDescriptor<TaskRecord>()).first else { return }
+                try? TaskWrites(context: container.mainContext).toggleCompletion(record)
+            }
+        }
+        try await sync().refresh()
+        #expect(try records().first?.isCompleted == true)
+    }
+
+    @Test func aReviewSavedDuringARefreshIsNotDeleted() async throws {
+        // Final review, Important 1: the server has no review yet; the one
+        // saved mid-refresh must not be deleted for being missing.
+        await api.setProfile(try .make())
+        let container = self.container
+        await api.setDuringTasksFetch {
+            await MainActor.run {
+                try? ReviewWrites(context: container.mainContext).save(
+                    day: "2026-03-07", rating: 4, win: "typed it", energy: nil, shutdown: false)
+            }
+        }
+        try await sync().refresh()
+        #expect(try container.mainContext.fetch(FetchDescriptor<DailyReviewRecord>()).first?.win == "typed it")
+    }
 }
