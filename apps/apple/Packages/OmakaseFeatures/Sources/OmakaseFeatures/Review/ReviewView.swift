@@ -3,9 +3,10 @@ import SwiftData
 import SwiftUI
 
 /// Review: the day's close as one scrolling column, not a wizard (M3.4
-/// spec, Decisions): the summary, what is left open, then how it went.
-/// Reads the store; the draft saves through `ReviewModel`'s injected write,
-/// so it queues offline. Rollover and Shut down join the column in #179.
+/// spec, Decisions): the summary, where each open task goes, how it went,
+/// then Shut down. A closed day shows its calm state and Reopen instead.
+/// Reads the store; the draft saves through `ReviewModel`'s injected writes,
+/// so it queues offline.
 public struct ReviewView: View {
     private let model: ReviewModel
     @Query private var records: [TaskRecord]
@@ -35,9 +36,13 @@ public struct ReviewView: View {
 
     private func column(_ summary: ReviewSummary) -> some View {
         VStack(alignment: .leading, spacing: Spacing.xLarge) {
+            if model.isShutdown { ReviewClosedView(model: model) }
             ReviewSummaryCardView(summary: summary)
-            if !summary.unfinished.isEmpty { ReviewUnfinishedView(cards: summary.unfinished) }
+            if !model.isShutdown && !summary.unfinished.isEmpty {
+                ReviewRolloverView(cards: summary.unfinished, model: model)
+            }
             ReviewReflectionView(model: model)
+            if !model.isShutdown { ReviewShutdownView(model: model, unfinished: summary.unfinished.map(\.id)) }
         }
         .padding(Spacing.large)
         .frame(maxWidth: 640, alignment: .leading)
@@ -72,32 +77,6 @@ struct ReviewSummaryCardView: View {
             }
         }
         .reviewCard()
-    }
-}
-
-/// The tasks still open, carried-over first: read-only until the rollover (#179).
-struct ReviewUnfinishedView: View {
-    let cards: [FocusCard]
-    @Environment(\.calendar) private var calendar
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: Spacing.small) {
-            Text("Unfinished").sectionLabel()
-            ForEach(cards) { card in row(card) }
-        }
-        .reviewCard()
-    }
-
-    private func row(_ card: FocusCard) -> some View {
-        HStack(spacing: Spacing.small) {
-            Text(card.title).font(TypeScale.body).foregroundStyle(Palette.ink.color).lineLimit(1)
-            Spacer(minLength: Spacing.small)
-            if let carried = card.carriedFromLabel(calendar: calendar) {
-                Text(carried).font(TypeScale.caption).foregroundStyle(Palette.inkMuted.color)
-            }
-            PriorityBadgeView(priority: card.priority)
-        }
-        .padding(.vertical, Spacing.tiny)
     }
 }
 
