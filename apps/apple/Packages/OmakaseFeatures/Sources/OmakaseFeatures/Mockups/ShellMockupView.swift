@@ -1,60 +1,71 @@
 import SwiftUI
 
-/// M2 mockup: the window (spec, Window structure). A sidebar, Today on opaque
-/// paper/sumi, and an inspector for the selected task. Chrome keeps the
-/// system's untinted glass.
+/// M2 mockup: the window, with the web client's navigation. Plan, Focus,
+/// Review, Projects and Study in the sidebar, the account and Settings at its
+/// foot. Chrome keeps the system's untinted glass; content is opaque.
 struct ShellMockupView: View {
-    @State private var inspecting = true
+    @State var selection: ShellSection = .plan
 
     var body: some View {
         NavigationSplitView {
-            List { Label("Today", systemImage: "sun.max").tag(0) }
-                .navigationSplitViewColumnWidth(180)
+            List(ShellSection.allCases, selection: $selection) { section in
+                Label(section.rawValue, systemImage: section.symbol).tag(section)
+            }
+            .safeAreaInset(edge: .bottom) { ShellAccountView() }
+            .navigationSplitViewColumnWidth(190)
         } detail: {
-            ShellTodayView()
-                .inspector(isPresented: $inspecting) { ShellInspectorView() }
+            detail.navigationTitle(selection.rawValue)
         }
         .tint(Palette.shu.color)
-        .frame(width: 1000, height: 560)
     }
-}
 
-struct ShellTodayView: View {
-    var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: Spacing.xLarge) {
-                Text("Thursday, 25 September").sectionLabel()
-                ForEach(MockupDay.toDo + MockupDay.inProgress + MockupDay.done) {
-                    TaskRowView(title: $0.title, priority: $0.priority, isCompleted: $0.isCompleted)
-                }
-            }
-            .padding(Spacing.xLarge)
-            .frame(maxWidth: .infinity, alignment: .leading)
+    @ViewBuilder private var detail: some View {
+        switch selection {
+        case .plan: PlanMockupView()
+        case .focus: FocusMockupView(layout: .kanban)
+        default:
+            ContentUnavailableView(
+                selection.rawValue, systemImage: selection.symbol, description: Text("Not mocked in M2"))
         }
-        .background(Palette.background.color)
-        .navigationTitle("Today")
     }
 }
 
-struct ShellInspectorView: View {
+enum ShellSection: String, CaseIterable, Identifiable {
+    case plan = "Plan"
+    case focus = "Focus"
+    case review = "Review"
+    case projects = "Projects"
+    case study = "Study"
+
+    var id: Self { self }
+
+    var symbol: String {
+        switch self {
+        case .plan: "calendar"
+        case .focus: "scope"
+        case .review: "checkmark.square"
+        case .projects: "folder"
+        case .study: "book"
+        }
+    }
+}
+
+struct ShellAccountView: View {
     var body: some View {
-        VStack(alignment: .leading, spacing: Spacing.large) {
-            Text("Outline the thesis chapter").font(TypeScale.headline).foregroundStyle(Palette.ink.color)
-            MockupSectionView(title: "Priority") {
-                HStack(spacing: Spacing.small) {
-                    Capsule().fill(PriorityMark.urgent.color).frame(width: 3, height: 16)
-                    Text("Urgent").font(TypeScale.body).foregroundStyle(Palette.ink.color)
-                }
-            }
-            MockupSectionView(title: "Scheduled") {
-                Text("Today · 16:00, 90 min").font(TypeScale.body).foregroundStyle(Palette.ink.color)
-            }
+        HStack(spacing: Spacing.small) {
+            Circle().fill(Palette.surface.color).frame(width: 24, height: 24)
+                .overlay(Text("W").font(TypeScale.caption).foregroundStyle(Palette.ink.color))
+            Text("will").font(TypeScale.caption).foregroundStyle(Palette.inkMuted.color)
             Spacer()
+            Image(systemName: "gearshape").foregroundStyle(Palette.inkMuted.color)
         }
-        .padding(Spacing.large)
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(Spacing.medium)
     }
 }
 
-#Preview("Shell, light") { ShellMockupView().preferredColorScheme(.light) }
-#Preview("Shell, dark") { ShellMockupView().preferredColorScheme(.dark) }
+#Preview("Shell, Plan, light") {
+    ShellMockupView(selection: .plan).frame(width: 1300, height: 760).preferredColorScheme(.light)
+}
+#Preview("Shell, Focus, dark") {
+    ShellMockupView(selection: .focus).frame(width: 1300, height: 760).preferredColorScheme(.dark)
+}

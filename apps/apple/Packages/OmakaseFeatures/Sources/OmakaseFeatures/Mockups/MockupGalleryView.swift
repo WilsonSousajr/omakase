@@ -21,11 +21,19 @@ public enum MockupGallery {
     }
 
     public static let pages: [Page] = [
-        Page("focus") { AnyView(FocusLayoutView().mockupCanvas($0)) },
+        Page("shell-plan", isWindow: true) {
+            AnyView(ShellMockupView(selection: .plan).frame(width: 1300, height: 760).preferredColorScheme($0))
+        },
+        Page("focus-kanban", isWindow: true) {
+            AnyView(ShellMockupView(selection: .focus).frame(width: 1300, height: 760).preferredColorScheme($0))
+        },
+        Page("plan") { AnyView(PlanMockupView().frame(width: 1120, height: 680).preferredColorScheme($0)) },
+        Page("focus-list") {
+            AnyView(FocusMockupView(layout: .list).frame(width: 1120, height: 720).preferredColorScheme($0))
+        },
         Page("timer") { AnyView(TimerPhasesView().mockupCanvas($0)) },
         Page("menubar") { AnyView(MenuBarPanelView().mockupCanvas($0)) },
         Page("capture") { AnyView(CaptureOverDesktopView().preferredColorScheme($0)) },
         Page("signin") { AnyView(SignInMockupView().preferredColorScheme($0)) },
-        Page("shell", isWindow: true) { AnyView(ShellMockupView().preferredColorScheme($0)) },
     ]
 }
