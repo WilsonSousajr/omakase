@@ -72,6 +72,7 @@ extension View {
             .background { MockupDesktopView() }
             .preferredColorScheme(scheme)
             .environment(\.colorScheme, scheme)
+            .tint(Palette.accent.color)
     }
 
     /// A window-sized mockup on the translucent ground over the stand-in
@@ -86,6 +87,7 @@ extension View {
         }
         .preferredColorScheme(scheme)
         .environment(\.colorScheme, scheme)
+        .tint(Palette.accent.color)
     }
 }
 
