@@ -1,5 +1,3 @@
-import datetime
-
 from django.db.models import Count
 from django_filters import rest_framework as filters
 from rest_framework import viewsets
@@ -18,6 +16,7 @@ from .serializers import (
     SemesterSerializer,
     StudyBlockSerializer,
 )
+from .services import class_occurrences
 
 
 class SemesterViewSet(viewsets.ModelViewSet):
@@ -147,39 +146,6 @@ class ClassOccurrenceView(APIView):
                 status=400,
             )
 
-        schedules = ClassSchedule.objects.filter(
-            discipline__semester__user=request.user,
-            is_active=True,
-        ).select_related("discipline")
-
-        occurrences = []
-        for schedule in schedules:
-            # Only generate occurrences within the semester's date range
-            semester = schedule.discipline.semester
-            effective_start = max(start, semester.start_date)
-            effective_end = min(end, semester.end_date)
-
-            if effective_start > effective_end:
-                continue
-
-            # Walk days in range, find matching day_of_week
-            current = effective_start
-            while current <= effective_end:
-                if current.weekday() == schedule.day_of_week:
-                    occurrences.append(
-                        {
-                            "id": f"{schedule.id}-{current.isoformat()}",
-                            "class_schedule_id": schedule.id,
-                            "discipline_name": schedule.discipline.name,
-                            "discipline_color": schedule.discipline.color,
-                            "class_type": schedule.class_type,
-                            "location": schedule.location,
-                            "date": current,
-                            "start_time": schedule.start_time,
-                            "end_time": schedule.end_time,
-                        }
-                    )
-                current += datetime.timedelta(days=1)
-
+        occurrences = class_occurrences(request.user, start, end)
         serializer = ClassOccurrenceSerializer(occurrences, many=True)
         return Response(serializer.data)
