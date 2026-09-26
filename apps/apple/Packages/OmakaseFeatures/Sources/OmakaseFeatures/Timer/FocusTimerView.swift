@@ -4,6 +4,10 @@ import SwiftUI
 /// the phase's colour, and its controls (docs/design-system-apple.md, Signals).
 /// Starting focus runs on `taskID`, the panel's task.
 public struct FocusTimerView: View {
+    /// The dial's track, drawn under the progress arc. A UI mark, so 3:1 over
+    /// the blurred ground: the hairline was 1.6:1 and an idle dial read as a
+    /// blank circle (#173).
+    static let track = Palette.inkMuted
     private let timer: TimerModel
     private let taskID: String?
 
@@ -22,7 +26,7 @@ public struct FocusTimerView: View {
     private var dial: some View {
         let tint = timer.state.phase.tint.color
         return ZStack {
-            Circle().stroke(Palette.hairline.color, lineWidth: 6)
+            Circle().stroke(Self.track.color, lineWidth: 6)
             Circle()
                 .trim(from: 0, to: timer.progress)
                 .stroke(tint, style: StrokeStyle(lineWidth: 6, lineCap: .round))
