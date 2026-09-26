@@ -189,7 +189,7 @@ class TimeBlockFilter(filters.FilterSet):
         fields = ["date", "task"]
 
 
-class TimeBlockViewSet(viewsets.ModelViewSet):
+class TimeBlockViewSet(IdempotentCreateMixin, viewsets.ModelViewSet):
     serializer_class = TimeBlockSerializer
     filterset_class = TimeBlockFilter
 

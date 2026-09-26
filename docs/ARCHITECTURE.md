@@ -178,8 +178,8 @@ import its mixin.
 - **Expiry.** Records live 7 days (`RECORD_TTL`). An expired record is
   deleted when its key is used again, and
   `manage.py purge_idempotency_records` deletes all of them; run it daily.
-- **Who opts in.** `POST tasks/`, `pomodoro/sessions/` and `stats/reviews/`,
-  by putting `IdempotentCreateMixin` first in their bases (invariant 9). A
+- **Who opts in.** `POST tasks/`, `timeblocks/` (#199), `pomodoro/sessions/`
+  and `stats/reviews/`, by putting `IdempotentCreateMixin` first in their bases (invariant 9). A
   PATCH may carry the header; it is ignored, because a PATCH is naturally
   idempotent.
 
@@ -197,10 +197,10 @@ and `auth/token/refresh/`.
 | `tasks/` | CRUD | plus `today/`, `carried-over/`, `reorder-bulk/` |
 | `tasks/<id>/subtasks/` | list, create | and `…/subtasks/<id>/` for detail |
 | `tags/` | CRUD | filter by `area` |
-| `timeblocks/` | CRUD | filter by date range |
+| `timeblocks/` | CRUD | filter by date range; create is idempotent |
 | `workspaces/` | CRUD | annotated `project_count` |
 | `projects/` | CRUD | filter by workspace and status; annotated `task_count` |
-| `pomodoro/sessions/` | create, list, patch | |
+| `pomodoro/sessions/` | create, list, patch | filter by `started_after` (inclusive) and `started_before` (exclusive), aware ISO-8601 instants, naive is a 400; and by `time_block`. Newest first, `id` breaks ties |
 | `stats/daily/` | GET | |
 | `stats/review/` | GET | `date` required |
 | `stats/reviews/` | CRUD | one per user and day |
