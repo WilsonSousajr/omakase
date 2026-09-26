@@ -5,7 +5,10 @@ import SwiftData
 ///
 ///     let container = try StoreSchema.container(inMemory: false)
 public enum StoreSchema {
-    public static let models: [any PersistentModel.Type] = [TaskRecord.self, OutboxEntry.self]
+    public static let models: [any PersistentModel.Type] = [
+        TaskRecord.self, OutboxEntry.self, SubtaskRecord.self, TimeBlockRecord.self, StudyBlockRecord.self,
+        DailyReviewRecord.self, ProfileRecord.self,
+    ]
 
     /// On disk, the store is `<Application Support>/dev.omakase.mac/Omakase.store`.
     /// A default configuration would write `default.store` into the shared

@@ -19,7 +19,7 @@ final class AppServices {
         api = OmakaseAPIClient(baseURL: Self.baseURL, transport: URLSessionTransport(), tokens: KeychainTokenStore())
         let writes = TaskWrites(context: container.mainContext)
         self.writes = writes
-        let sync = TodaySync(context: container.mainContext, api: api)
+        let sync = DaySync(context: container.mainContext, api: api)
         let worker = OutboxWorker(context: container.mainContext, api: api, onAccepted: writes.applyServerCopy)
         coordinator = SyncCoordinator(drain: { await worker.drain() }, refresh: { try await sync.refresh() })
     }

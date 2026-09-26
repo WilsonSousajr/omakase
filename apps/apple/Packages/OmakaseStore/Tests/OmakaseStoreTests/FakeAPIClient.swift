@@ -77,17 +77,65 @@ actor FakeAPIClient: APIClient {
 }
 
 extension TaskDTO {
-    /// A task as the server would send it, for tests.
+    /// A task as the server would send it, for tests. `subtasks` nil leaves the key out, as the plain list does.
     static func make(
-        id: UUID = UUID(), title: String = "Task", day: String? = "2026-03-07", completed: Bool = false
+        id: UUID = UUID(), title: String = "Task", day: String? = "2026-03-07", completed: Bool = false,
+        subtasks: [(String, Bool)]? = nil
     ) throws -> TaskDTO {
         let json = """
             {"id":"\(id)","title":"\(title)","description":"","priority":"medium","area":"work",
              "kanban_status":"todo","project":null,"discipline":null,"tags":[],
              "scheduled_date":\(day.map { "\"\($0)\"" } ?? "null"),"due_date":null,"estimated_minutes":null,
              "actual_minutes":0,"kanban_order":0,"is_completed":\(completed),"completed_at":null,
-             "created_at":"2026-03-07T12:00:00Z","updated_at":"2026-03-07T12:00:00Z"}
+             "created_at":"2026-03-07T12:00:00Z","updated_at":"2026-03-07T12:00:00Z"\(subtasksJSON(subtasks))}
             """
         return try OmakaseJSON.decoder.decode(TaskDTO.self, from: Data(json.utf8))
+    }
+
+    private static func subtasksJSON(_ subtasks: [(String, Bool)]?) -> String {
+        guard let subtasks else { return "" }
+        let items = subtasks.enumerated().map { index, item in
+            #"{"id":"\#(stableID(item.0))","title":"\#(item.0)","is_completed":\#(item.1),"order":\#(index)}"#
+        }
+        return #","subtasks":["# + items.joined(separator: ",") + "]"
+    }
+
+    /// The same title gives the same id within a test run, so a task re-sent with
+    /// fewer subtasks keeps the survivors' ids, as the server would.
+    private static func stableID(_ title: String) -> UUID {
+        UUID(
+            uuidString: String(
+                format: "00000000-0000-4000-8000-%012llx", UInt64(bitPattern: Int64(title.hashValue)) & 0xFFFF_FFFF_FFFF
+            ))!
+    }
+}
+
+extension TimeBlockDTO {
+    static func make(id: UUID = UUID(), day: String, task: UUID? = UUID()) throws -> TimeBlockDTO {
+        let json = """
+            {"id":"\(id)","task":\(task.map { "\"\($0)\"" } ?? "null"),"study_block":null,"date":"\(day)",
+             "start_time":"09:00:00","end_time":"10:00:00","notes":"","session_rating":null}
+            """
+        return try OmakaseJSON.decoder.decode(TimeBlockDTO.self, from: Data(json.utf8))
+    }
+}
+
+extension DailyReviewDTO {
+    static func make(day: String, energy: Int? = nil) throws -> DailyReviewDTO {
+        let json = """
+            {"id":"\(UUID())","date":"\(day)","productivity_rating":null,"win_of_the_day":"",
+             "energy":\(energy.map(String.init) ?? "null"),"is_shutdown":false,"shutdown_at":null}
+            """
+        return try OmakaseJSON.decoder.decode(DailyReviewDTO.self, from: Data(json.utf8))
+    }
+}
+
+extension ProfileDTO {
+    static func make() throws -> ProfileDTO {
+        let json = """
+            {"pomodoro_work_minutes":25,"pomodoro_short_break_minutes":5,"pomodoro_long_break_minutes":15,
+             "pomodoros_before_long_break":4,"daily_work_goal_hours":"8.0","daily_study_goal_hours":"4.0"}
+            """
+        return try OmakaseJSON.decoder.decode(ProfileDTO.self, from: Data(json.utf8))
     }
 }

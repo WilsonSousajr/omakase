@@ -12,11 +12,18 @@ public final class TaskRecord {
     public var isCompleted: Bool
     public var completedAt: Date?
     public var updatedAt: Date
+    // Defaulted so SwiftData migrates M1/M2 stores without a hand-written migration.
+    public var kanbanStatus: String = "todo"
+    public var dueDay: String?
+    public var estimatedMinutes: Int?
+    /// Scheduled before today and not done: shown apart in Focus (#129).
+    public var isCarriedOver: Bool = false
 
     public init(dto: TaskDTO) {
         id = dto.id.uuidString
         (title, priority, scheduledDay) = (dto.title, dto.priority, dto.scheduledDate?.string)
         (isCompleted, completedAt, updatedAt) = (dto.isCompleted, dto.completedAt, dto.updatedAt)
+        (kanbanStatus, dueDay, estimatedMinutes) = (dto.kanbanStatus, dto.dueDate?.string, dto.estimatedMinutes)
     }
 
     /// A record with no server copy yet: a local capture, a preview, a test.
@@ -30,6 +37,7 @@ public final class TaskRecord {
     public func apply(_ dto: TaskDTO) {
         (title, priority, scheduledDay) = (dto.title, dto.priority, dto.scheduledDate?.string)
         (isCompleted, completedAt, updatedAt) = (dto.isCompleted, dto.completedAt, dto.updatedAt)
+        (kanbanStatus, dueDay, estimatedMinutes) = (dto.kanbanStatus, dto.dueDate?.string, dto.estimatedMinutes)
     }
 }
 
