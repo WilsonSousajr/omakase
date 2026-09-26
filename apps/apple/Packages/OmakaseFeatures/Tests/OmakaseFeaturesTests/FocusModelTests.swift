@@ -11,7 +11,9 @@ final class RecordingFocusActions {
     var actions: FocusModel.Actions {
         FocusModel.Actions(
             toggle: { [unowned self] in calls.append("toggle \($0)") },
-            move: { [unowned self] in calls.append("move \($0) \($1)") })
+            move: { [unowned self] in calls.append("move \($0) \($1)") },
+            reschedule: { [unowned self] in calls.append("reschedule \($0) \($1 ?? "backlog")") },
+            toggleSubtask: { [unowned self] in calls.append("subtask \($0)") })
     }
 }
 
@@ -62,5 +64,29 @@ struct FocusModelTests {
         model.selectedID = "gone"
         model.keepSelection(in: FocusBoard(cards: []))
         #expect(model.selectedID == nil)
+    }
+
+    @Test func reschedulingSendsTheChosenDay() {
+        var utc = Calendar(identifier: .gregorian)
+        utc.timeZone = .gmt
+        let model = FocusModel(actions: recorder.actions, defaults: defaults, calendar: utc)
+        model.reschedule("t1", .tomorrow, today: "2026-03-07")
+        model.reschedule("t2", .backlog, today: "2026-03-07")
+        #expect(recorder.calls == ["reschedule t1 2026-03-08", "reschedule t2 backlog"])
+    }
+
+    @Test func checkingASubtaskCallsItsWrite() {
+        let model = FocusModel(actions: recorder.actions, defaults: defaults)
+        model.toggleSubtask("s1")
+        #expect(recorder.calls == ["subtask s1"])
+    }
+
+    @Test func theSelectedCardIsFoundOnTheBoard() {
+        let model = FocusModel(actions: recorder.actions, defaults: defaults)
+        let board = FocusBoard(cards: [card("a"), card("b")])
+        model.selectedID = "b"
+        #expect(model.selectedCard(in: board)?.id == "b")
+        model.selectedID = nil
+        #expect(model.selectedCard(in: board) == nil)
     }
 }

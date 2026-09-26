@@ -9,15 +9,19 @@ public struct TaskRowView: View {
     private let priority: String
     private let minutes: Int
     private let isCompleted: Bool
+    private let marks: [String]
     private let toggle: () -> Void
 
     public init(
-        title: String, priority: String, minutes: Int = 0, isCompleted: Bool, toggle: @escaping () -> Void = {}
+        title: String, priority: String, minutes: Int = 0, isCompleted: Bool, marks: [String] = [],
+        toggle: @escaping () -> Void = {}
     ) {
         self.title = title
         self.priority = priority
         self.minutes = minutes
         self.isCompleted = isCompleted
+        // Marks, when given, already carry the estimate (FocusMarks).
+        self.marks = marks.isEmpty && minutes > 0 ? ["\(minutes)m"] : marks
         self.toggle = toggle
     }
 
@@ -32,8 +36,9 @@ public struct TaskRowView: View {
             }
             .toggleStyle(.checkbox)
             Spacer(minLength: Spacing.small)
-            if minutes > 0 {
-                Text("\(minutes)m").font(TypeScale.caption).monospacedDigit().foregroundStyle(Palette.inkMuted.color)
+            if !marks.isEmpty {
+                Text(marks.joined(separator: " · "))
+                    .font(TypeScale.caption).monospacedDigit().foregroundStyle(Palette.inkMuted.color)
             }
             if !priority.isEmpty { PriorityBadgeView(priority: priority).opacity(isCompleted ? 0.5 : 1) }
         }

@@ -4,6 +4,7 @@ import SwiftUI
 /// checkbox completes the task, offline too.
 struct FocusBoardListView: View {
     let board: FocusBoard
+    let day: String
     let model: FocusModel
 
     var body: some View {
@@ -25,9 +26,10 @@ struct FocusBoardListView: View {
                 Text(title).sectionLabel()
                 ForEach(cards) { card in
                     TaskRowView(
-                        title: card.title, priority: card.priority, minutes: card.minutes ?? 0,
-                        isCompleted: card.isCompleted
+                        title: card.title, priority: card.priority, isCompleted: card.isCompleted,
+                        marks: FocusMarks.labels(for: card, day: day, calendar: model.calendar)
                     ) { model.toggle(card.id) }
+                    .contextMenu { FocusTaskMenuView(card: card, day: day, model: model) }
                     .padding(.horizontal, Spacing.small)
                     .background(
                         (model.selectedID == card.id ? Palette.surface.color : .clear),

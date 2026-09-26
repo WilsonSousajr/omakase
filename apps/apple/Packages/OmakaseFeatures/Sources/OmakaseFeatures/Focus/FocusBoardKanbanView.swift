@@ -4,12 +4,13 @@ import SwiftUI
 /// to another column moves it there, offline too; Done completes it.
 struct FocusBoardKanbanView: View {
     let board: FocusBoard
+    let day: String
     let model: FocusModel
 
     var body: some View {
         HStack(alignment: .top, spacing: Spacing.medium) {
             ForEach(board.columns) { column in
-                FocusBoardColumnView(column: column, model: model)
+                FocusBoardColumnView(column: column, day: day, model: model)
             }
         }
         .padding(Spacing.large)
@@ -18,6 +19,7 @@ struct FocusBoardKanbanView: View {
 
 struct FocusBoardColumnView: View {
     let column: FocusBoard.Column
+    let day: String
     let model: FocusModel
     @State private var isTargeted = false
 
@@ -26,9 +28,13 @@ struct FocusBoardColumnView: View {
             VStack(alignment: .leading, spacing: Spacing.small) {
                 Text("\(column.title) · \(column.cards.count)").sectionLabel()
                 ForEach(column.cards) { card in
-                    FocusBoardCardView(card: card, isSelected: model.selectedID == card.id)
-                        .onTapGesture { model.selectedID = card.id }
-                        .draggable(card.id)
+                    FocusBoardCardView(
+                        card: card, marks: FocusMarks.labels(for: card, day: day, calendar: model.calendar),
+                        isSelected: model.selectedID == card.id
+                    )
+                    .onTapGesture { model.selectedID = card.id }
+                    .draggable(card.id)
+                    .contextMenu { FocusTaskMenuView(card: card, day: day, model: model) }
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -44,9 +50,10 @@ struct FocusBoardColumnView: View {
     }
 }
 
-/// A Kanban card: the title, then its priority pill and estimate.
+/// A Kanban card: the title, then its priority pill and marks.
 struct FocusBoardCardView: View {
     let card: FocusCard
+    let marks: [String]
     let isSelected: Bool
 
     var body: some View {
@@ -57,8 +64,9 @@ struct FocusBoardCardView: View {
                 .foregroundStyle((card.isCompleted ? Palette.inkMuted : Palette.ink).color)
             HStack(spacing: Spacing.small) {
                 PriorityBadgeView(priority: card.priority)
-                if let minutes = card.minutes {
-                    Text("\(minutes)m").font(TypeScale.caption).foregroundStyle(Palette.inkMuted.color)
+                if !marks.isEmpty {
+                    Text(marks.joined(separator: " · "))
+                        .font(TypeScale.caption).foregroundStyle(Palette.inkMuted.color)
                 }
             }
         }

@@ -48,7 +48,16 @@ final class AppServices {
         FocusModel.Actions(
             toggle: { [self] id in perform(on: id, onOutcome) { try self.writes.toggleCompletion($0) } },
             move: { [self] id, status in perform(on: id, onOutcome) { try self.writes.setKanbanStatus($0, to: status) }
-            })
+            },
+            reschedule: { [self] id, day in perform(on: id, onOutcome) { try self.writes.reschedule($0, to: day) } },
+            toggleSubtask: { [self] id in toggleSubtask(id, onOutcome) })
+    }
+
+    private func toggleSubtask(_ id: String, _ onOutcome: @escaping @MainActor (SyncCoordinator.Outcome) -> Void) {
+        let descriptor = FetchDescriptor<SubtaskRecord>(predicate: #Predicate { $0.id == id })
+        guard let subtask = try? container.mainContext.fetch(descriptor).first else { return }
+        let (coordinator, writes) = (self.coordinator, SubtaskWrites(context: container.mainContext))
+        Task { onOutcome((try? await coordinator.write { try writes.toggle(subtask) }) ?? .synced) }
     }
 
     private func perform(
