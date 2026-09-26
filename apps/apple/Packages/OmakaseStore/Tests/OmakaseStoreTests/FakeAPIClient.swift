@@ -139,3 +139,10 @@ extension ProfileDTO {
         return try OmakaseJSON.decoder.decode(ProfileDTO.self, from: Data(json.utf8))
     }
 }
+
+extension SubtaskDTO {
+    static func make(id: UUID = UUID(), title: String, done: Bool = false) throws -> SubtaskDTO {
+        let json = #"{"id":"\#(id)","title":"\#(title)","is_completed":\#(done),"order":0}"#
+        return try OmakaseJSON.decoder.decode(SubtaskDTO.self, from: Data(json.utf8))
+    }
+}
