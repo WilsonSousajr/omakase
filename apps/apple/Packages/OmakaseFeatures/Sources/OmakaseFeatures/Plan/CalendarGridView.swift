@@ -65,6 +65,8 @@ struct CalendarDayHeadersView: View {
 
 /// "08:00" beside each hour line; each hour is a scroll anchor.
 struct CalendarTimeGutterView: View {
+    static let labelWidth = CalendarGridView.gutter - Spacing.small
+
     let layout: CalendarLayout
 
     var body: some View {
@@ -74,9 +76,7 @@ struct CalendarTimeGutterView: View {
                     .font(TypeScale.caption).monospacedDigit()
                     .foregroundStyle(Palette.inkMuted.color)
                     .offset(y: -6)
-                    .frame(
-                        width: CalendarGridView.gutter - Spacing.small, height: layout.hourHeight,
-                        alignment: .topTrailing)
+                    .frame(width: Self.labelWidth, height: layout.hourHeight, alignment: .topTrailing)
                     .padding(.trailing, Spacing.small)
                     .id(hour)
             }
