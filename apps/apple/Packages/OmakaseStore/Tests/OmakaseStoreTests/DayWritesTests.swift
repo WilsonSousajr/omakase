@@ -101,7 +101,8 @@ struct DayWritesTests {
 
     @Test func applyingASessionReplyChangesNothingLocal() throws {
         // Sessions are not cached until M3.3 shows history.
-        let entry = OutboxEntry(sequence: 1, method: "POST", path: "/x", body: nil, subjectID: nil, kind: "session.create")
+        let entry = OutboxEntry(
+            sequence: 1, method: "POST", path: "/x", body: nil, subjectID: nil, kind: "session.create")
         SessionHandler().apply(entry, body: Data("{}".utf8))
         #expect(try context.fetch(FetchDescriptor<TaskRecord>()).isEmpty)
     }
@@ -115,6 +116,14 @@ struct DayWritesTests {
         #expect(body(entry).contains(#""energy":2"#) && body(entry).contains(#""is_shutdown":true"#))
         let record = try #require(try context.fetch(FetchDescriptor<DailyReviewRecord>()).first)
         #expect(record.energy == 2 && record.isShutdown && record.win == "M3.1" && record.rating == 4)
+    }
+
+    @Test func clearingARatingSendsAnExplicitNull() throws {
+        // The PUT is partial: an omitted key keeps the server's value, so a
+        // cleared rating or energy must be sent as null to clear it there too.
+        try ReviewWrites(context: context).save(day: "2026-03-07", rating: nil, win: "", energy: nil, shutdown: false)
+        let sent = body(try #require(try entries().first))
+        #expect(sent.contains(#""productivity_rating":null"#) && sent.contains(#""energy":null"#))
     }
 
     @Test func savingAReviewTwiceUpdatesOneRecord() throws {
