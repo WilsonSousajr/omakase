@@ -1,4 +1,5 @@
-/// Omakase's colours: sumi (ink and paper neutrals) and one accent, shu.
+/// Omakase's colours: sumi (ink and paper neutrals), monochrome chrome, and
+/// shu as the one signal colour.
 /// The contrast each pair must meet is pinned in `PaletteTests`; the reasons
 /// are in docs/design-system-apple.md.
 ///
@@ -11,7 +12,11 @@ public enum Palette {
     public static let ink = DesignColor(dark: 0xEDE8DF, light: 0x1C1A17)
     public static let inkMuted = DesignColor(dark: 0x9A948A, light: 0x6F6A62)
     public static let hairline = DesignColor(dark: 0x2E2B28, light: 0xDDD7CC)
-    /// Vermilion: the accent, the focus phase, the prominent action.
+    /// The system accent (checkboxes, selection): grey, so the chrome is
+    /// fully monochrome, as the web client's was.
+    public static let accent = DesignColor(dark: 0x77726A, light: 0x6F6A62)
+    /// Vermilion: a signal only, the focus phase and the now line. Never a
+    /// button or accent colour.
     public static let shu = DesignColor(dark: 0xD0462C, light: 0xC8402A)
     /// Short break.
     public static let matcha = DesignColor(dark: 0x7FAF82, light: 0x5E8C61)
