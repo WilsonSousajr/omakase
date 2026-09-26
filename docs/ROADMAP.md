@@ -16,7 +16,7 @@ reasons for it.
 | M0 | Groundwork | **Done.** #63-#66 and #69, merged to `develop` 2026-09-25 as PRs #67-#71 and #79. |
 | M1 | Foundation | **Built, not yet smoke-tested.** Backend #76-#78 merged (PRs #80-#82). Apple #85-#91 as the stacked PRs #92-#98. The real-stack smoke run waits on the macOS OAuth client. |
 | M2 | Identity | Next. |
-| M7 | The Field | **In progress.** The research is #106-#118 (PRs #111-#120); this section and `docs/comparison.md` are #121. Runs alongside M2. |
+| M7 | The Field | **Done.** #106-#122 merged to `develop` 2026-09-26 as PRs #111-#133. Its decisions are M8 (#124-#126) and the M2, M3 and M5 additions (#127-#132). |
 | M3-M4 | The daily loop, Plan | Planned below, with what M7 added. |
 | M8 | Repeats and exceptions | Planned, after M4. From M7. |
 | M5-M6 | Parity, Production | Planned below. |
