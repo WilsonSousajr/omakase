@@ -10,9 +10,9 @@ from django.utils import timezone
 from rest_framework.test import APIClient
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from conftest import UserFactory
+from conftest import TaskFactory, UserFactory
 from idempotency.models import IdempotencyRecord
-from tasks.models import Task
+from tasks.models import Task, TimeBlock
 
 TASKS = "/api/v1/tasks/"
 
@@ -131,3 +131,42 @@ def test_concurrent_same_key_creates_once(user):
         thread.join()
     assert sorted(results) == [201, 201]
     assert Task.objects.filter(user=user).count() == 1
+
+
+TIMEBLOCKS = "/api/v1/timeblocks/"
+
+
+def _block_body(user) -> dict:
+    task = TaskFactory(user=user)
+    return {"task": str(task.pk), "date": "2026-03-07", "start_time": "09:00", "end_time": "10:00"}
+
+
+def _block_count(user) -> int:
+    return TimeBlock.objects.filter(task__user=user).count()
+
+
+@pytest.mark.django_db
+class TestIdempotentTimeBlockCreate:
+    # M4 moves block writes into the Mac outbox, which replays a create after
+    # a timeout; without the mixin the retry books the block twice (#199).
+    def test_same_key_twice_creates_one_block(self, authenticated_client, user):
+        key, body = str(uuid.uuid4()), _block_body(user)
+        first = _post(authenticated_client, key, body, url=TIMEBLOCKS)
+        second = _post(authenticated_client, key, body, url=TIMEBLOCKS)
+        assert first.status_code == second.status_code == 201, first.data
+        # The replay is the stored JSON, so compare JSON: .data holds UUID objects.
+        assert second["Idempotent-Replayed"] == "true" and second.json() == first.json()
+        assert _block_count(user) == 1
+
+    def test_different_keys_create_two_blocks(self, authenticated_client, user):
+        body = _block_body(user)
+        _post(authenticated_client, str(uuid.uuid4()), body, url=TIMEBLOCKS)
+        _post(authenticated_client, str(uuid.uuid4()), body, url=TIMEBLOCKS)
+        assert _block_count(user) == 2
+
+    def test_same_key_is_per_user(self, authenticated_client, user):
+        key, other = str(uuid.uuid4()), UserFactory()
+        _post(authenticated_client, key, _block_body(user), url=TIMEBLOCKS)
+        resp = _post(_client_for(other), key, _block_body(other), url=TIMEBLOCKS)
+        assert resp.status_code == 201 and "Idempotent-Replayed" not in resp
+        assert _block_count(user) == _block_count(other) == 1
