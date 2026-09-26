@@ -25,7 +25,7 @@ struct ReminderChoiceTests {
     }
 
     @Test func aPickedTimeIsItselfAndClearIsNone() {
-        #expect(ReminderChoice.at(noon + 42).date(from: noon, calendar: utc) == noon + 42)
+        #expect(ReminderChoice.picked(noon + 42).date(from: noon, calendar: utc) == noon + 42)
         #expect(ReminderChoice.clear.date(from: noon, calendar: utc) == nil)
     }
 
@@ -39,7 +39,7 @@ struct ReminderChoiceTests {
     }
 
     @Test func eachPresetHasItsMenuTitle() {
-        let titles = [ReminderChoice.inAnHour, .thisEvening, .tomorrowMorning, .at(noon), .clear].map(\.title)
+        let titles = [ReminderChoice.inAnHour, .thisEvening, .tomorrowMorning, .picked(noon), .clear].map(\.title)
         #expect(titles == ["In 1 hour", "This evening (18:00)", "Tomorrow morning (09:00)", "Pick a time…", "Clear"])
     }
 }

@@ -14,7 +14,9 @@ final class RecordingFocusActions {
             move: { [unowned self] in calls.append("move \($0) \($1)") },
             reschedule: { [unowned self] in calls.append("reschedule \($0) \($1 ?? "backlog")") },
             toggleSubtask: { [unowned self] in calls.append("subtask \($0)") },
-            remind: { [unowned self] in calls.append("remind \($0) \($1.map { "\($0.timeIntervalSince1970)" } ?? "clear")") })
+            remind: { [unowned self] id, date in
+                calls.append("remind \(id) \(date.map { "\($0.timeIntervalSince1970)" } ?? "clear")")
+            })
     }
 }
 

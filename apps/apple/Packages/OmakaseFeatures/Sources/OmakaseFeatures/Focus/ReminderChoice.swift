@@ -8,7 +8,7 @@ public enum ReminderChoice: Equatable, Sendable {
     case inAnHour
     case thisEvening
     case tomorrowMorning
-    case at(Date)
+    case picked(Date)
     case clear
 
     /// The presets on offer at `now`: "this evening" only before 18:00.
@@ -25,7 +25,7 @@ public enum ReminderChoice: Equatable, Sendable {
         case .tomorrowMorning:
             let tomorrow = calendar.date(byAdding: .day, value: 1, to: now) ?? now
             return calendar.date(bySettingHour: 9, minute: 0, second: 0, of: tomorrow)
-        case .at(let date): return date
+        case .picked(let date): return date
         case .clear: return nil
         }
     }
@@ -35,7 +35,7 @@ public enum ReminderChoice: Equatable, Sendable {
         case .inAnHour: "In 1 hour"
         case .thisEvening: "This evening (18:00)"
         case .tomorrowMorning: "Tomorrow morning (09:00)"
-        case .at: "Pick a time…"
+        case .picked: "Pick a time…"
         case .clear: "Clear"
         }
     }

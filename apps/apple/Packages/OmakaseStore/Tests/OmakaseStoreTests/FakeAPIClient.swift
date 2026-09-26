@@ -99,7 +99,8 @@ extension TaskDTO {
              "kanban_status":"todo","project":null,"discipline":null,"tags":[],
              "scheduled_date":\(day.map { "\"\($0)\"" } ?? "null"),"due_date":null,"estimated_minutes":null,
              "actual_minutes":0,"kanban_order":0,"is_completed":\(completed),"completed_at":null,
-             "remind_at":\(remindAt.map { "\"\($0)\"" } ?? "null"),"created_at":"2026-03-07T12:00:00Z","updated_at":"2026-03-07T12:00:00Z"\(subtasksJSON(subtasks))}
+             "remind_at":\(remindAt.map { "\"\($0)\"" } ?? "null"),
+             "created_at":"2026-03-07T12:00:00Z","updated_at":"2026-03-07T12:00:00Z"\(subtasksJSON(subtasks))}
             """
         return try OmakaseJSON.decoder.decode(TaskDTO.self, from: Data(json.utf8))
     }
