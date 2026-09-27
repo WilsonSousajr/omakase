@@ -12,6 +12,32 @@ for each milestone.
 
 ### Added
 
+- **Recurring tasks, computed on the server** (#124). A series is a
+  template task with a rule: `freq` (daily, weekly or monthly), `interval`
+  (1-30), `weekdays` (weekly only, 0=Mon..6=Sun; empty means the weekday of
+  `starts_on`), `starts_on` and an inclusive `until`. A monthly rule on day
+  N skips months without one. Occurrences are expanded on read for the
+  client's dates and never created by clients; only exceptions are rows,
+  unique per (series, date).
+  - Every task response gains `series`, `occurrence_date`, `is_skipped`,
+    `is_virtual` and `recurrence` (the series' rule, or null).
+  - `GET tasks/occurrences/?date_from=&date_to=` returns rows and computed
+    occurrences over at most 62 days, as a plain list. A missing, malformed,
+    backwards or longer range is a 400 naming the values.
+  - `PUT tasks/<id>/occurrences/<YYYY-MM-DD>/` materializes one occurrence
+    from the template (201, or 200 when it already was) and applies the body
+    (any task field, plus `is_skipped`) at once. Idempotent by (series,
+    date). A date the rule does not produce is a 400; another user's series
+    is a 404.
+  - `PUT tasks/<id>/recurrence/` sets the rule. On a task outside a series
+    it creates a hidden template copied from the task, and the task becomes
+    the first occurrence. On a template or an occurrence it replaces the
+    series' rule. The response is the task.
+  - `DELETE tasks/<id>/recurrence/?date=YYYY-MM-DD` ends the series the day
+    before the client's date (204). Stored occurrences stay.
+  - Templates are listed by `tasks/` with their rule, and hidden from
+    `today/`, `carried-over/` and `stats/workload/`.
+
 - **Holidays and cancelled classes** (#125). `study/holidays/` is CRUD for
   a semester's holidays (`semester`, `name`, `start_date`, `end_date`, both
   ends inclusive; filter by `?semester=`; an end before the start is a 400).
@@ -82,6 +108,16 @@ for each milestone.
   fixed release of each, found by `pip-audit`. (#64)
 
 ### Changed
+
+- **"Today" includes computed items, and "carried over" excludes lapsed
+  ones** (#124, invariant 2). `tasks/today/?date=` now returns, besides the
+  rows scheduled on the client's day, each series' occurrence on that day
+  that has no row: task-shaped, with `id: null` and `is_virtual: true`. A
+  client that requires `id` must skip or store these. `tasks/carried-over/`
+  returns rows only, so an untouched occurrence in the past lapses instead
+  of piling up; an unfinished stored occurrence still carries over, and
+  skipped occurrences and templates never do. `stats/workload/` counts the
+  day's computed occurrences.
 
 - **`tasks/today/` and `tasks/carried-over/` embed each task's `subtasks`**
   (#145), ordered, prefetched in one query. The plain `tasks/` list is
