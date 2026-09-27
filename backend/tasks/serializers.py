@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Project, Subtask, Tag, Task, TimeBlock, Workspace
+from .models import Project, RecurrenceFreqChoices, Subtask, Tag, Task, TaskRecurrence, TimeBlock, Workspace
 
 
 class WorkspaceSerializer(serializers.ModelSerializer):
@@ -78,12 +78,68 @@ class SubtaskSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "created_at"]
 
 
+class TaskRecurrenceSerializer(serializers.ModelSerializer):
+    """A series' rule (#124). A PUT replaces it whole, so it is validated whole.
+
+    >>> TaskRecurrenceSerializer(data={"freq": "weekly", "weekdays": [0, 2], "starts_on": "2026-03-02"})
+    """
+
+    interval = serializers.IntegerField(default=1)
+    weekdays = serializers.JSONField(default=list)
+
+    class Meta:
+        model = TaskRecurrence
+        fields = ["freq", "interval", "weekdays", "starts_on", "until"]
+        extra_kwargs = {
+            "freq": {
+                "error_messages": {"invalid_choice": '"{input}" is not a freq; expected daily, weekly or monthly.'}
+            }
+        }
+
+    def validate_interval(self, value: int) -> int:
+        if not 1 <= value <= 30:
+            raise serializers.ValidationError(
+                f"interval {value} is outside 1-30 (a whole number of days, weeks or months)."
+            )
+        return value
+
+    def validate_weekdays(self, value: object) -> list[int]:
+        if not isinstance(value, list) or not all(_is_weekday(day) for day in value):
+            raise serializers.ValidationError(
+                f"weekdays {value!r} must be a list of integers 0 (Monday) to 6 (Sunday)."
+            )
+        return sorted(set(value))
+
+    def validate(self, attrs: dict) -> dict:
+        weekdays, freq = attrs.get("weekdays", []), attrs["freq"]
+        if weekdays and freq != RecurrenceFreqChoices.WEEKLY:
+            raise serializers.ValidationError(
+                {"weekdays": f"weekdays {weekdays!r} apply only to freq 'weekly', not {freq!r}."}
+            )
+        until, starts_on = attrs.get("until"), attrs["starts_on"]
+        if until is not None and until < starts_on:
+            raise serializers.ValidationError(
+                {
+                    "until": f"until {until.isoformat()} is before starts_on {starts_on.isoformat()}; "
+                    "expected until >= starts_on."
+                }
+            )
+        return attrs
+
+
+def _is_weekday(value: object) -> bool:
+    # bool is an int in Python; True is not a Tuesday.
+    return isinstance(value, int) and not isinstance(value, bool) and 0 <= value <= 6
+
+
 class TaskListSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True, read_only=True)
     tag_ids = serializers.PrimaryKeyRelatedField(
         many=True, queryset=Tag.objects.all(), write_only=True, source="tags", required=False
     )
     actual_minutes = serializers.SerializerMethodField()
+    is_virtual = serializers.SerializerMethodField()
+    recurrence = serializers.SerializerMethodField()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -98,6 +154,14 @@ class TaskListSerializer(serializers.ModelSerializer):
             end = tb.end_time.hour * 60 + tb.end_time.minute
             total += max(0, end - start)
         return total
+
+    def get_is_virtual(self, obj: Task) -> bool:
+        # A row is concrete by definition; virtual occurrences are never rows (#124).
+        return False
+
+    def get_recurrence(self, obj: Task) -> dict | None:
+        rule = obj.series_rule
+        return TaskRecurrenceSerializer(rule).data if rule else None
 
     class Meta:
         model = Task
@@ -120,10 +184,25 @@ class TaskListSerializer(serializers.ModelSerializer):
             "kanban_order",
             "is_completed",
             "completed_at",
+            "series",
+            "occurrence_date",
+            "is_skipped",
+            "is_virtual",
+            "recurrence",
             "created_at",
             "updated_at",
         ]
-        read_only_fields = ["id", "completed_at", "created_at", "updated_at"]
+        # The series fields are written only by the occurrence and recurrence
+        # endpoints, which keep them consistent with the rule (#124).
+        read_only_fields = [
+            "id",
+            "completed_at",
+            "series",
+            "occurrence_date",
+            "is_skipped",
+            "created_at",
+            "updated_at",
+        ]
 
 
 class TaskDayListSerializer(TaskListSerializer):

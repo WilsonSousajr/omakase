@@ -3,23 +3,28 @@
     "actual_minutes": 0,
     "area": "work",
     "completed_at": null,
-    "created_at": "2026-09-26T13:53:24.227793Z",
+    "created_at": "2026-09-27T12:45:05.028716Z",
     "description": "",
     "discipline": null,
     "due_date": null,
     "estimated_minutes": null,
-    "id": "3dbd8395-8fe2-4790-a325-89ef648e18cb",
+    "id": "0b39a0d0-25f2-45d2-9b44-003ad669a2c4",
     "is_completed": false,
+    "is_skipped": false,
+    "is_virtual": false,
     "kanban_order": 0,
     "kanban_status": "todo",
+    "occurrence_date": null,
     "priority": "medium",
     "project": null,
+    "recurrence": null,
     "remind_at": null,
     "scheduled_date": "2026-03-06",
+    "series": null,
     "subtasks": [
       {
-        "created_at": "2026-09-26T13:53:24.229081Z",
-        "id": "5b20a2e9-6e9c-4786-af71-823b81325d2b",
+        "created_at": "2026-09-27T12:45:05.031873Z",
+        "id": "e1d0612a-f0e1-4628-8347-992cfc1e65e0",
         "is_completed": false,
         "order": 1,
         "title": "Outline"
@@ -27,6 +32,6 @@
     ],
     "tags": [],
     "title": "Task 2",
-    "updated_at": "2026-09-26T13:53:24.228363Z"
+    "updated_at": "2026-09-27T12:45:05.030862Z"
   }
 ]

@@ -41,7 +41,12 @@ class TaskViewSet(IdempotentCreateMixin, viewsets.ModelViewSet):
     DAY_ACTIONS = ("today", "carried_over")
 
     def get_queryset(self):
-        queryset = Task.objects.filter(user=self.request.user).prefetch_related("tags", "time_blocks")
+        # The series rule is embedded in every task (#124); joined, not queried per task.
+        queryset = (
+            Task.objects.filter(user=self.request.user)
+            .select_related("recurrence", "series__recurrence")
+            .prefetch_related("tags", "time_blocks")
+        )
         if self.action in self.DAY_ACTIONS:
             queryset = queryset.prefetch_related("subtasks")
         return queryset
