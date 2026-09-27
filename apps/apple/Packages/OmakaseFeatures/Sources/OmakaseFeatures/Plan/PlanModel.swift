@@ -28,6 +28,8 @@ public final class PlanModel {
     public private(set) var anchorDay: String
     /// A drop that overlaps a block, waiting on "Place anyway?".
     public internal(set) var pending: PlanPendingPlacement?
+    /// What the detail panel shows (#217); nil hides the panel.
+    public internal(set) var selection: PlanSelection?
     public let calendar: Calendar
     private let today: () -> String
     @ObservationIgnored let actions: Actions

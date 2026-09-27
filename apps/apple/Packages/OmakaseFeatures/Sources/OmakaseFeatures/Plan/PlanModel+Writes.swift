@@ -72,7 +72,11 @@ extension PlanModel {
 
     public func cancelPending() { pending = nil }
 
-    public func deleteBlock(_ id: String) { actions.delete(id) }
+    /// Deletes the block, and closes its panel if it is the one open (#217).
+    public func deleteBlock(_ id: String) {
+        if selection == .block(id) { selection = nil }
+        actions.delete(id)
+    }
 
     private func placement(
         of payload: PlanDragPayload, day: String, offset: CGFloat, items: [CalendarItem]
