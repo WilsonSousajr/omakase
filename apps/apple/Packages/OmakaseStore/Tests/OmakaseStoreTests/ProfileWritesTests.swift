@@ -64,7 +64,8 @@ struct ProfileWritesTests {
 
     @Test func aRefusalCarriesTheServersMessage() async throws {
         await api.script([.reply(400, #"{"block_reminder_minutes":["block_reminder_minutes 121 is outside 1-120."]}"#)])
-        await #expect(throws: DirectWrites.Failure.rejected("block_reminder_minutes: block_reminder_minutes 121 is outside 1-120.")) {
+        let message = "block_reminder_minutes: block_reminder_minutes 121 is outside 1-120."
+        await #expect(throws: DirectWrites.Failure.rejected(message)) {
             try await writes.save(ProfileChange(blockReminderMinutes: .set(121)))
         }
     }
