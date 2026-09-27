@@ -424,3 +424,27 @@ and `curl "…/projects/"` show what the server has.
 7. `docker-compose stop backend`, then create a workspace. Nothing
    appears, and the foot says "Needs a connection." Start the backend
    again.
+
+## M5 - Study
+
+Semesters, disciplines, class schedules and holidays, written online
+(#227). `curl "…/study/semesters/"` and the other lists show what the
+server has.
+
+1. Open Study. The semester today falls in is selected, or the next to
+   start, or the latest.
+2. New Semester…: name it "Fall", leave the dates, set Rotation to 2
+   weeks, and Save.
+   - `curl` has `"rotation_weeks": 2`.
+3. Try to save a semester that ends before it starts. The form stays
+   open and says so, and nothing is sent.
+4. New Discipline… "Calculus" with a colour. Select it, then New Class…:
+   Monday 10:00-11:40, Lecture, Week 1 only.
+   - `curl "…/study/classschedules/"` has `"rotation_weeks_on": [1]`.
+   - Plan shows the class on week-1 Mondays only
+     (`curl "…/study/class-occurrences/?date_from=…&date_to=…"`).
+5. New Holiday… covering a week-1 Monday. On Plan, that Monday has no
+   class.
+6. Delete the semester. The dialog says its disciplines, their classes
+   and its holidays go too. Confirm, and all of them are gone from the
+   screen and from `curl`.
