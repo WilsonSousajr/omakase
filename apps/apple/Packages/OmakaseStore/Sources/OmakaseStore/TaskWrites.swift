@@ -45,6 +45,21 @@ public final class TaskWrites {
         try patch(record, body: ["remind_at": date])
     }
 
+    /// The task editor's save (#218): the fields that changed, applied here
+    /// and sent as one PATCH. An empty edit queues nothing.
+    public func edit(_ record: TaskRecord, changes: TaskEdit) throws {
+        if let title = changes.title, title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            throw TaskEditError.blankTitle(title)
+        }
+        guard !changes.isEmpty else { return }
+        record.title = changes.title ?? record.title
+        record.notes = changes.notes ?? record.notes
+        record.priority = changes.priority ?? record.priority
+        if let estimate = changes.estimate { record.estimatedMinutes = estimate.value }
+        if let dueDay = changes.dueDay { record.dueDay = dueDay.value }
+        try patch(record, body: TaskEditBody(edit: changes))
+    }
+
     /// A task captured now, offline or not: shown at once under a `local-` id.
     public func capture(title: String, day: String?) throws -> TaskRecord {
         let record = TaskRecord(id: "local-\(UUID().uuidString)", title: title, scheduledDay: day)
