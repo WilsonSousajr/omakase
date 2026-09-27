@@ -1,0 +1,74 @@
+[
+  {
+    "actual_minutes": 0,
+    "area": "work",
+    "completed_at": null,
+    "created_at": "2026-09-27T13:00:29.794600Z",
+    "description": "",
+    "discipline": null,
+    "due_date": null,
+    "estimated_minutes": null,
+    "id": "88bcf84c-d2ca-4862-b18a-a793e3be7fb1",
+    "is_completed": false,
+    "is_skipped": false,
+    "is_virtual": false,
+    "kanban_order": 0,
+    "kanban_status": "todo",
+    "occurrence_date": "2026-03-02",
+    "priority": "medium",
+    "project": null,
+    "recurrence": {
+      "freq": "weekly",
+      "interval": 1,
+      "starts_on": "2026-03-02",
+      "until": null,
+      "weekdays": [
+        0,
+        2
+      ]
+    },
+    "remind_at": null,
+    "scheduled_date": "2026-03-02",
+    "series": "f2a5b6fd-8b76-412a-babe-a51381907d10",
+    "subtasks": [],
+    "tags": [],
+    "title": "Task 3",
+    "updated_at": "2026-09-27T13:00:29.800348Z"
+  },
+  {
+    "actual_minutes": 0,
+    "area": "work",
+    "completed_at": null,
+    "created_at": "2026-09-27T13:00:29.783671Z",
+    "description": "",
+    "discipline": null,
+    "due_date": null,
+    "estimated_minutes": 15,
+    "id": null,
+    "is_completed": false,
+    "is_skipped": false,
+    "is_virtual": true,
+    "kanban_order": 0,
+    "kanban_status": "todo",
+    "occurrence_date": "2026-03-04",
+    "priority": "medium",
+    "project": null,
+    "recurrence": {
+      "freq": "weekly",
+      "interval": 1,
+      "starts_on": "2026-03-02",
+      "until": null,
+      "weekdays": [
+        0,
+        2
+      ]
+    },
+    "remind_at": null,
+    "scheduled_date": "2026-03-04",
+    "series": "f2a5b6fd-8b76-412a-babe-a51381907d10",
+    "subtasks": [],
+    "tags": [],
+    "title": "Stand-up",
+    "updated_at": "2026-09-27T13:00:29.787676Z"
+  }
+]

@@ -116,7 +116,43 @@ import its mixin.
   with `select_for_update()`, so concurrent reorders serialize instead of
   interleaving.
 - `carried-over/?date=` returns incomplete tasks scheduled before that day.
-  It is what a morning-planning flow reads.
+  It is what a morning-planning flow reads. It returns rows only: series
+  templates and skipped occurrences are excluded, and a computed occurrence
+  in the past lapses instead of carrying over (#124).
+- **Recurring tasks are computed, not stored (#124, M8 design §2).** A
+  series is a template `Task` with a one-to-one `TaskRecurrence` (`freq`
+  daily/weekly/monthly, `interval` 1-30, `weekdays` for weekly with empty
+  meaning the weekday of `starts_on`, `starts_on`, inclusive `until`). The
+  template has no `scheduled_date` and is hidden from `today/`,
+  `carried-over/` and the workload, but listed by `tasks/` with
+  `recurrence` embedded. Weekly intervals count weeks from the Monday of
+  `starts_on`; monthly rules skip months without the day, as RFC 5545
+  does. The expansion is `tasks/services.py: occurrence_dates`.
+- **Only exceptions are rows.** An occurrence becomes a `Task` with
+  `series` and `occurrence_date` when something writes to it, through
+  `PUT tasks/<id>/occurrences/<date>/`, which gets or creates the row
+  under a lock on the template and applies the body in the same
+  transaction. `UniqueConstraint(series, occurrence_date)` means there can
+  never be two, so the materialize PUT is idempotent by its path and needs
+  no `Idempotency-Key`. `scheduled_date` is separate, so a moved occurrence
+  keeps its identity; `is_skipped` hides one. A `CheckConstraint` keeps
+  `series` and `occurrence_date` set together.
+- `tasks/services.py: day_items(user, start, end)` is what `today/`,
+  `occurrences/` and `stats/workload/` read: the rows scheduled in the
+  range (templates and skipped rows excluded), plus a `VirtualOccurrence`
+  for each rule date with no stored (series, date) row, ordered by date. It
+  runs nine queries however many series there are. A virtual item is
+  serialized from its template with `id: null`, `is_virtual: true`, the
+  date as `scheduled_date` and `occurrence_date`, and nothing of its own
+  (no subtasks, completion, due date or reminder).
+- `PUT tasks/<id>/recurrence/` on a task outside a series copies it into a
+  new template, attaches the rule there, and makes the task the first
+  occurrence (`occurrence_date` is its `scheduled_date`, or `starts_on`), so
+  its blocks, subtasks and completion stay put. On a template or an
+  occurrence it replaces the series' rule. `DELETE …/recurrence/?date=`
+  sets `until` to the day before the client's date, never later than it
+  was; before `starts_on` it leaves `until = starts_on - 1`, an empty
+  series, which is why the database allows `until >= starts_on - 1`.
 - Shared numbers live in `tasks/constants.py`.
 
 ### study
@@ -164,7 +200,8 @@ import its mixin.
   true.
 - `workload/?date=`: the day's planned minutes against the goal (#128),
   computed in `stats/services.py: day_workload`. It sums `estimated_minutes`
-  over the tasks and study blocks scheduled on the day (done or not; items
+  over the tasks (from `tasks.services.day_items`, so a series' computed
+  occurrence counts) and study blocks scheduled on the day (done or not; items
   carried over count only once rescheduled onto it), adds the minutes of the
   day's class occurrences from `study.services.class_occurrences`, and
   compares the total with `UserProfile`'s work plus study goal hours,
@@ -213,6 +250,9 @@ and `auth/token/refresh/`.
 | `auth/me/` | GET, PATCH | user and profile |
 | `auth/profile/` | GET, PATCH | preferences (`UserProfile`) |
 | `tasks/` | CRUD | plus `today/`, `carried-over/`, `reorder-bulk/` |
+| `tasks/occurrences/` | GET | `date_from` and `date_to` required, at most 62 days; rows plus computed occurrences, a plain list |
+| `tasks/<id>/occurrences/<date>/` | PUT | materialize one occurrence (201, 200 on replay), body applied at once; a non-occurrence date is a 400 |
+| `tasks/<id>/recurrence/` | PUT, DELETE | set the series' rule; DELETE `?date=` ends it the day before (204) |
 | `tasks/<id>/subtasks/` | list, create | and `…/subtasks/<id>/` for detail |
 | `tags/` | CRUD | filter by `area` |
 | `timeblocks/` | CRUD | filter by date range; create is idempotent |

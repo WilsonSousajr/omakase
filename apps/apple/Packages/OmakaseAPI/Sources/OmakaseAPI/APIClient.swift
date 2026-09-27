@@ -67,7 +67,9 @@ public actor OmakaseAPIClient: APIClient {
     }
 
     public func tasks(on day: APIDay) async throws -> [TaskDTO] {
-        try await allPages("/api/v1/tasks/today/?date=\(day.string)")
+        // Virtual occurrences (#124) are skipped until #206 stores them.
+        let items: [DayTaskItemDTO] = try await allPages("/api/v1/tasks/today/?date=\(day.string)")
+        return items.compactMap(\.task)
     }
 
     public func carriedOver(on day: APIDay) async throws -> [TaskDTO] {

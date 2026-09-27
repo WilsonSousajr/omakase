@@ -1,15 +1,17 @@
+import datetime
+
 from django.db import transaction
 from django.db.models import Count
 from django_filters import rest_framework as filters
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import ParseError, PermissionDenied
 from rest_framework.response import Response
 
 from idempotency.mixins import IdempotentCreateMixin
 from omakase.client_dates import parse_client_date
 
-from .constants import REORDER_BULK_MAX_ITEMS
+from .constants import MAX_OCCURRENCE_RANGE_DAYS, REORDER_BULK_MAX_ITEMS
 from .models import Project, Subtask, Tag, Task, TimeBlock, Workspace
 from .serializers import (
     ProjectSerializer,
@@ -17,11 +19,15 @@ from .serializers import (
     TagSerializer,
     TaskDayListSerializer,
     TaskListSerializer,
+    TaskOccurrenceSerializer,
+    TaskRecurrenceSerializer,
     TaskReorderSerializer,
     TaskSerializer,
     TimeBlockSerializer,
     WorkspaceSerializer,
+    day_items_data,
 )
+from .services import day_items, materialize_occurrence, series_template, set_recurrence, stop_recurrence
 
 
 class TaskFilter(filters.FilterSet):
@@ -33,6 +39,23 @@ class TaskFilter(filters.FilterSet):
         fields = ["priority", "area", "kanban_status", "scheduled_date", "is_completed"]
 
 
+def _occurrence_range(params) -> tuple[datetime.date, datetime.date]:
+    """The client's date_from..date_to, both required, forward and at most 62 days (#124)."""
+    start = parse_client_date(params.get("date_from"), name="date_from")
+    end = parse_client_date(params.get("date_to"), name="date_to")
+    days = (end - start).days + 1
+    if days < 1:
+        raise ParseError(
+            f"date_to {end.isoformat()} is before date_from {start.isoformat()}; expected date_from <= date_to."
+        )
+    if days > MAX_OCCURRENCE_RANGE_DAYS:
+        raise ParseError(
+            f"date_from {start.isoformat()} to date_to {end.isoformat()} spans {days} days; "
+            f"expected at most {MAX_OCCURRENCE_RANGE_DAYS}."
+        )
+    return start, end
+
+
 class TaskViewSet(IdempotentCreateMixin, viewsets.ModelViewSet):
     filterset_class = TaskFilter
     search_fields = ["title", "description"]
@@ -41,7 +64,12 @@ class TaskViewSet(IdempotentCreateMixin, viewsets.ModelViewSet):
     DAY_ACTIONS = ("today", "carried_over")
 
     def get_queryset(self):
-        queryset = Task.objects.filter(user=self.request.user).prefetch_related("tags", "time_blocks")
+        # The series rule is embedded in every task (#124); joined, not queried per task.
+        queryset = (
+            Task.objects.filter(user=self.request.user)
+            .select_related("recurrence", "series__recurrence")
+            .prefetch_related("tags", "time_blocks")
+        )
         if self.action in self.DAY_ACTIONS:
             queryset = queryset.prefetch_related("subtasks")
         return queryset
@@ -72,21 +100,59 @@ class TaskViewSet(IdempotentCreateMixin, viewsets.ModelViewSet):
     @action(detail=False, methods=["get"])
     def today(self, request):
         # The client's day, never the server's: the backend runs in UTC (#65).
+        # It includes each series' computed occurrence on the day (#124).
         target_date = parse_client_date(request.query_params.get("date"))
-        tasks = self.get_queryset().filter(scheduled_date=target_date)
-        page = self.paginate_queryset(tasks)
+        items = day_items(request.user, target_date, target_date)
+        page = self.paginate_queryset(items)
         if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-        serializer = self.get_serializer(tasks, many=True)
-        return Response(serializer.data)
+            return self.get_paginated_response(day_items_data(page, self.get_serializer_context()))
+        return Response(day_items_data(items, self.get_serializer_context()))
+
+    @action(detail=False, methods=["get"])
+    def occurrences(self, request):
+        # today/ over a range, for Plan (#124); a plain list, as class-occurrences/ is.
+        start, end = _occurrence_range(request.query_params)
+        return Response(day_items_data(day_items(request.user, start, end), self.get_serializer_context()))
+
+    @action(detail=True, methods=["put"], url_path=r"occurrences/(?P<day>[^/]+)")
+    def occurrence(self, request, pk=None, day=None):
+        # Materialize (#124): idempotent by (series, date), so the outbox
+        # replays it without an Idempotency-Key. The body applies in the same
+        # transaction, so a rejected body leaves no row behind.
+        target = parse_client_date(day)
+        template = series_template(self.get_object())
+        with transaction.atomic():
+            row, created = materialize_occurrence(template, target)
+            serializer = TaskOccurrenceSerializer(
+                row, data=request.data, partial=True, context=self.get_serializer_context()
+            )
+            serializer.is_valid(raise_exception=True)
+            self.perform_update(serializer)
+        code = status.HTTP_201_CREATED if created else status.HTTP_200_OK
+        return Response(serializer.data, status=code)
+
+    @action(detail=True, methods=["put", "delete"])
+    def recurrence(self, request, pk=None):
+        # Set the series' rule (PUT) or end it before the client's ?date= (DELETE) (#124).
+        task = self.get_object()
+        if request.method == "DELETE":
+            stop_recurrence(task, parse_client_date(request.query_params.get("date")))
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        rule = TaskRecurrenceSerializer(data=request.data)
+        rule.is_valid(raise_exception=True)
+        task = set_recurrence(task, rule.validated_data)
+        return Response(TaskDayListSerializer(task, context=self.get_serializer_context()).data)
 
     @action(detail=False, methods=["get"], url_path="carried-over")
     def carried_over(self, request):
         target_date = parse_client_date(request.query_params.get("date"))
+        # Rows only: an untouched occurrence in the past lapses, it does not
+        # pile up; templates and skipped occurrences are not work (#124).
         tasks = self.get_queryset().filter(
             scheduled_date__lt=target_date,
             is_completed=False,
+            recurrence__isnull=True,
+            is_skipped=False,
         )
         serializer = self.get_serializer(tasks, many=True)
         return Response(serializer.data)

@@ -100,3 +100,22 @@ public struct ClassOccurrenceDTO: Sendable, Codable, Equatable, Identifiable {
     public let startTime: String
     public let endTime: String
 }
+
+/// One entry of `tasks/today/`: a task row, or a series' computed occurrence
+/// (`id: null`, `is_virtual: true`, #124). The Mac has no record for a
+/// virtual occurrence until #206, so it decodes as `task == nil` and is
+/// skipped, rather than failing the whole page.
+public struct DayTaskItemDTO: Sendable, Codable, Equatable {
+    public let task: TaskDTO?
+
+    private enum CodingKeys: String, CodingKey { case isVirtual }
+
+    public init(from decoder: Decoder) throws {
+        let isVirtual = try decoder.container(keyedBy: CodingKeys.self).decodeIfPresent(Bool.self, forKey: .isVirtual)
+        task = isVirtual == true ? nil : try TaskDTO(from: decoder)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        try task?.encode(to: encoder)
+    }
+}

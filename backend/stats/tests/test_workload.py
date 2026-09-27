@@ -15,6 +15,7 @@ from conftest import (
     UserFactory,
 )
 from stats.services import day_workload
+from tasks.models import TaskRecurrence
 
 URL = "/api/v1/stats/workload/"
 MONDAY = datetime.date(2026, 3, 2)
@@ -160,3 +161,49 @@ class TestDayWorkload:
         UserProfile.objects.filter(user=user).delete()
         assert day_workload(user, MONDAY)["goal_minutes"] == (8 + 4) * 60
         assert UserProfile.objects.filter(user=user).exists()
+
+
+def _series(user, minutes, **rule):
+    template = TaskFactory(user=user, estimated_minutes=minutes)
+    TaskRecurrence.objects.create(task=template, **{"freq": "weekly", "starts_on": MONDAY, **rule})
+    return template
+
+
+@pytest.mark.django_db
+class TestDayWorkloadWithSeries:
+    """A series' occurrence on the day is planned time, stored or not (#124)."""
+
+    def test_a_virtual_occurrence_counts_its_estimate(self):
+        user = UserFactory()
+        _series(user, 30)
+        assert day_workload(user, MONDAY)["task_minutes"] == 30
+
+    def test_a_virtual_occurrence_without_an_estimate_is_counted_not_summed(self):
+        user = UserFactory()
+        _series(user, None)
+        workload = day_workload(user, MONDAY)
+        assert (workload["task_minutes"], workload["unestimated_count"]) == (0, 1)
+
+    def test_a_stored_occurrence_counts_once(self):
+        user = UserFactory()
+        template = _series(user, 30)
+        _task(user, 45, series=template, occurrence_date=MONDAY)
+        assert day_workload(user, MONDAY)["task_minutes"] == 45
+
+    def test_a_skipped_occurrence_does_not_count(self):
+        user = UserFactory()
+        template = _series(user, 30)
+        _task(user, 30, series=template, occurrence_date=MONDAY, is_skipped=True)
+        assert day_workload(user, MONDAY)["task_minutes"] == 0
+
+    def test_the_template_does_not_count(self):
+        user = UserFactory()
+        template = _series(user, 30, starts_on=MONDAY + datetime.timedelta(days=1))
+        template.scheduled_date = MONDAY
+        template.save()
+        assert day_workload(user, MONDAY)["task_minutes"] == 0
+
+    def test_another_users_series_does_not_count(self):
+        user = UserFactory()
+        _series(UserFactory(), 30)
+        assert day_workload(user, MONDAY)["task_minutes"] == 0

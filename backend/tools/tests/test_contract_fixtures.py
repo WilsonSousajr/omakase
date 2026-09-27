@@ -30,6 +30,7 @@ from conftest import (
     TaskFactory,
     TimeBlockFactory,
 )
+from tasks.models import TaskRecurrence
 
 REPO = Path(os.environ.get("REPO_ROOT", Path(__file__).resolve().parents[3]))
 FIXTURES = REPO / "apps" / "apple" / "Fixtures"
@@ -73,6 +74,12 @@ def _body(response) -> object:
     return json.loads(response.content)
 
 
+def _series(user, **rule):
+    template = TaskFactory(user=user, title="Stand-up", estimated_minutes=15, project=None, discipline=None)
+    TaskRecurrence.objects.create(task=template, **{"freq": "weekly", **rule})
+    return template
+
+
 @pytest.mark.django_db
 class TestContractFixtures:
     def test_auth_google(self, api_client, settings):
@@ -108,9 +115,46 @@ class TestContractFixtures:
         )
         task.tags.add(TagFactory(user=user))
         SubtaskFactory(task=task, title="Outline")
+        # A series' computed occurrence is task-shaped with id null (#124).
+        _series(user, starts_on=datetime.date(2026, 3, 7))
         resp = authenticated_client.get("/api/v1/tasks/today/?date=2026-03-07")
         assert resp.status_code == 200
         check_fixture("tasks_today", _body(resp))
+
+    def test_tasks_occurrences_range(self, authenticated_client, user):
+        # Plan reads a week of rows and computed occurrences (#124).
+        template = _series(user, starts_on=datetime.date(2026, 3, 2), weekdays=[0, 2])
+        TaskFactory(
+            user=user,
+            series=template,
+            occurrence_date=datetime.date(2026, 3, 2),
+            scheduled_date=datetime.date(2026, 3, 2),
+            project=None,
+            discipline=None,
+        )
+        resp = authenticated_client.get("/api/v1/tasks/occurrences/?date_from=2026-03-02&date_to=2026-03-08")
+        assert resp.status_code == 200
+        check_fixture("tasks_occurrences_range", _body(resp))
+
+    def test_task_occurrence(self, authenticated_client, user):
+        # The Mac's task.materialize outbox write (#124, #206).
+        template = _series(user, starts_on=datetime.date(2026, 3, 2), weekdays=[0, 2])
+        resp = authenticated_client.put(
+            f"/api/v1/tasks/{template.pk}/occurrences/2026-03-04/", {"is_completed": True}, format="json"
+        )
+        assert resp.status_code == 201, resp.content
+        check_fixture("task_occurrence", _body(resp))
+
+    def test_task_recurrence(self, authenticated_client, user):
+        # The Mac's task.recurrence outbox write (#124, #206): the task, now the series' first occurrence.
+        task = TaskFactory(user=user, scheduled_date=datetime.date(2026, 3, 2), project=None, discipline=None)
+        resp = authenticated_client.put(
+            f"/api/v1/tasks/{task.pk}/recurrence/",
+            {"freq": "weekly", "interval": 1, "weekdays": [0, 2], "starts_on": "2026-03-02", "until": "2026-06-30"},
+            format="json",
+        )
+        assert resp.status_code == 200, resp.content
+        check_fixture("task_recurrence", _body(resp))
 
     def test_task_patch(self, authenticated_client, user):
         task = TaskFactory(
