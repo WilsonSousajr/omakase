@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from .constants import MAX_ROTATION_WEEKS
-from .models import ClassSchedule, Discipline, Holiday, Semester, StudyBlock
+from .models import ClassCancellation, ClassSchedule, Discipline, Holiday, Semester, StudyBlock
 
 
 def _highest_week_in_use(semester: Semester) -> int:
@@ -180,3 +180,9 @@ class HolidaySerializer(serializers.ModelSerializer):
             )
         return data
 
+
+class ClassCancellationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ClassCancellation
+        fields = ["id", "class_schedule", "date", "created_at"]
+        read_only_fields = fields

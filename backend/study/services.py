@@ -6,6 +6,8 @@ from collections import defaultdict
 from collections.abc import Iterator
 from dataclasses import dataclass, field
 
+from rest_framework.exceptions import ValidationError
+
 from .models import ClassCancellation, ClassSchedule, Holiday, Semester
 
 
@@ -123,3 +125,37 @@ def class_occurrences(user, start: datetime.date, end: datetime.date) -> list[di
         occurrences.extend(_schedule_occurrences(schedule, start, end, exceptions))
     return occurrences
 
+
+def class_occurs_on(schedule: ClassSchedule, day: datetime.date) -> bool:
+    """Whether the schedule has a class on `day`: active, weekday, semester, rotation, no holiday.
+
+    >>> class_occurs_on(schedule, datetime.date(2026, 3, 9))
+    True
+    """
+    if not schedule.is_active:
+        return False
+    exceptions = _Exceptions(holidays=_holidays(day, day, semester=schedule.discipline.semester))
+    return bool(_schedule_occurrences(schedule, day, day, exceptions))
+
+
+def cancel_class(schedule: ClassSchedule, day: datetime.date) -> tuple[ClassCancellation, bool]:
+    """Cancel the schedule's class on `day`, idempotently; returns (cancellation, created).
+
+    A date that is not an occurrence is a 400: there is nothing to cancel.
+
+    >>> cancellation, created = cancel_class(schedule, datetime.date(2026, 3, 9))
+    """
+    if not class_occurs_on(schedule, day):
+        raise ValidationError(
+            f"{day.isoformat()} is not an occurrence of class schedule {schedule.id}: "
+            "expected its weekday, inside its semester, in one of its rotation weeks and outside a holiday."
+        )
+    return ClassCancellation.objects.get_or_create(class_schedule=schedule, date=day)
+
+
+def restore_class(schedule: ClassSchedule, day: datetime.date) -> None:
+    """Undo a cancellation; restoring a class that was not cancelled is a no-op.
+
+    >>> restore_class(schedule, datetime.date(2026, 3, 9))
+    """
+    ClassCancellation.objects.filter(class_schedule=schedule, date=day).delete()
