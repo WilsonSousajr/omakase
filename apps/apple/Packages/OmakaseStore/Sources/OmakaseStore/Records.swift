@@ -23,13 +23,24 @@ public final class TaskRecord {
     /// The server's `description`, edited in the task editor (#218). Not
     /// `description`, which reads as CustomStringConvertible's.
     public var notes: String = ""
+    /// The series this task is an occurrence of (#206), or nil for a one-off task.
+    public var seriesID: String?
+    /// The rule date the occurrence stands for, apart from where it is scheduled.
+    public var occurrenceDay: String?
+    /// Computed by the server and never stored there: the first write
+    /// materializes it (`TaskWrites`), and until then its id is `occ-…`.
+    public var isVirtual: Bool = false
+
+    /// Part of a repeating series: Focus and Plan mark it with a repeat glyph.
+    public var isRepeating: Bool { seriesID != nil }
 
     public init(dto: TaskDTO) {
-        id = dto.id.uuidString
+        id = dto.recordID
         (title, priority, scheduledDay) = (dto.title, dto.priority, dto.scheduledDate?.string)
         (isCompleted, completedAt, updatedAt) = (dto.isCompleted, dto.completedAt, dto.updatedAt)
         (kanbanStatus, dueDay, estimatedMinutes) = (dto.kanbanStatus, dto.dueDate?.string, dto.estimatedMinutes)
         (remindAt, notes) = (dto.remindAt, dto.description)
+        (seriesID, occurrenceDay, isVirtual) = (dto.series?.uuidString, dto.occurrenceDate?.string, dto.isVirtual)
     }
 
     /// A record with no server copy yet: a local capture, a preview, a test.
@@ -45,6 +56,7 @@ public final class TaskRecord {
         (isCompleted, completedAt, updatedAt) = (dto.isCompleted, dto.completedAt, dto.updatedAt)
         (kanbanStatus, dueDay, estimatedMinutes) = (dto.kanbanStatus, dto.dueDate?.string, dto.estimatedMinutes)
         (remindAt, notes) = (dto.remindAt, dto.description)
+        (seriesID, occurrenceDay, isVirtual) = (dto.series?.uuidString, dto.occurrenceDate?.string, dto.isVirtual)
     }
 }
 

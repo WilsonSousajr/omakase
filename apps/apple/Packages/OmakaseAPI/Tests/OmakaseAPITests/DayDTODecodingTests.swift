@@ -5,25 +5,9 @@ import Testing
 
 struct DayDTODecodingTests {
     @Test func todaysTasksCarryTheirSubtasks() throws {
-        let page = try OmakaseJSON.decoder.decode(Page<DayTaskItemDTO>.self, from: Fixture.data("tasks_today"))
-        let subtask = try #require(page.results.first?.task?.subtasks?.first)
+        let page = try OmakaseJSON.decoder.decode(Page<TaskDTO>.self, from: Fixture.data("tasks_today"))
+        let subtask = try #require(page.results.first?.subtasks?.first)
         #expect(subtask.title == "Outline" && !subtask.isCompleted)
-    }
-
-    @Test func aSeriesComputedOccurrenceDecodesAsNoTask() throws {
-        // #124: today/ adds each series' virtual occurrence with `id: null`.
-        // The Mac skips it until #206 gives it somewhere to live.
-        let page = try OmakaseJSON.decoder.decode(Page<DayTaskItemDTO>.self, from: Fixture.data("tasks_today"))
-        #expect(page.results.count == 2)
-        #expect(page.results.last?.task == nil)
-    }
-
-    @Test func aDayItemEncodesAsItsTask() throws {
-        let page = try OmakaseJSON.decoder.decode(Page<DayTaskItemDTO>.self, from: Fixture.data("tasks_today"))
-        let item = try #require(page.results.first)
-        let again = try OmakaseJSON.decoder.decode(
-            DayTaskItemDTO.self, from: try OmakaseJSON.encoder.encode(item))
-        #expect(again == item)
     }
 
     @Test func aTaskWithoutEmbeddedSubtasksDecodesAsNil() throws {

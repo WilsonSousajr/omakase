@@ -70,6 +70,7 @@ struct FocusBoardCardView: View {
                     Text(marks.joined(separator: " · "))
                         .font(TypeScale.caption).foregroundStyle(Palette.inkMuted.color)
                 }
+                if card.isRepeating { RepeatGlyphView() }
                 if card.hasReminder { ReminderBellView() }
             }
         }

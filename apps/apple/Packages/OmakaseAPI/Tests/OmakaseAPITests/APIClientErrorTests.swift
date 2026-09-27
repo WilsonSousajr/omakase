@@ -35,7 +35,7 @@ struct APIClientErrorTests {
             .success(.init(status: 200, body: page)),
         ])
         let (api, _) = client(transport)
-        #expect(try await api.tasks(on: APIDay(string: "2026-03-07")!).count == 2)
+        #expect(try await api.tasks(on: APIDay(string: "2026-03-07")!).count == 4)
         #expect(await transport.sent.last?.url?.query() == "date=2026-03-07&page=2")
     }
 

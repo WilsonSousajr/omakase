@@ -105,8 +105,8 @@ struct BlockWritesTests {
         await drain()
         let sent = await api.sentRequests
         #expect(sent.map(\.path) == ["/api/v1/tasks/", "/api/v1/timeblocks/"])
-        #expect(String(bytes: sent[1].body ?? Data(), encoding: .utf8)?.contains(serverTask.id.uuidString) == true)
-        #expect(block.id == serverBlock.id.uuidString && block.taskID == serverTask.id.uuidString)
+        #expect(String(bytes: sent[1].body ?? Data(), encoding: .utf8)?.contains(serverTask.recordID) == true)
+        #expect(block.id == serverBlock.id.uuidString && block.taskID == serverTask.recordID)
         #expect(try entries().isEmpty)
     }
 
@@ -119,7 +119,7 @@ struct BlockWritesTests {
         let serverBlock = try TimeBlockDTO.make(day: "2026-03-07", task: serverTask.id)
         await api.script([.reply(201, try json(serverTask)), .reply(201, try json(serverBlock)), .offline])
         await drain()
-        #expect(block.id == serverBlock.id.uuidString && block.taskID == serverTask.id.uuidString)
+        #expect(block.id == serverBlock.id.uuidString && block.taskID == serverTask.recordID)
         #expect(block.startTime == "11:00:00")
         #expect(try entries().map(\.path) == ["/api/v1/timeblocks/\(serverBlock.id.uuidString)/"])
     }

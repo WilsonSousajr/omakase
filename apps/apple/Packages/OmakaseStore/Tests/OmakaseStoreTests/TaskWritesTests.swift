@@ -90,7 +90,7 @@ struct TaskWritesTests {
             sequence: 1, method: "POST", path: "/api/v1/tasks/", body: nil, subjectID: "local-7",
             createsLocalID: "local-7")
         TaskHandler(context: context).apply(entry, body: try OmakaseJSON.encoder.encode(server))
-        #expect(local.id == server.id.uuidString && local.title == "Captured")
+        #expect(local.id == server.recordID && local.title == "Captured")
     }
 
     @Test func aBodyThatIsNotATaskChangesNothing() throws {

@@ -100,7 +100,7 @@ struct DayWritesTests {
         await drain()
         let sent = await api.sentRequests
         let sessionBody = String(bytes: try #require(sent.last?.body), encoding: .utf8)!
-        #expect(sent.count == 2 && sessionBody.contains(server.id.uuidString) && !sessionBody.contains("local-"))
+        #expect(sent.count == 2 && sessionBody.contains(server.recordID) && !sessionBody.contains("local-"))
     }
 
     @Test func aSessionRecordedAfterItsCaptureWasAcceptedSendsTheServerID() async throws {
@@ -117,7 +117,7 @@ struct DayWritesTests {
                 endedAt: .now, completed: true),
             task: task)
         let sent = body(try #require(try entries().first))
-        #expect(sent.contains(server.id.uuidString) && !sent.contains("local-"))
+        #expect(sent.contains(server.recordID) && !sent.contains("local-"))
     }
 
     @Test func applyingASessionReplyChangesNothingLocal() throws {

@@ -318,3 +318,34 @@ M4 on today's weekday (a semester, a discipline, a schedule through
    reconnecting: the toolbar shows nothing pending, because the two
    writes cancel out. Reconnect: `curl` has `"is_cancelled": false` and
    the count in 5 is 0.
+
+## M8 - Recurring tasks
+
+Focus, with one task "Gym" scheduled today and no other series. `D` is
+today, `D+7` the same weekday next week.
+
+1. Select "Gym". The panel's third row has a "Repeat" menu in ink. Choose
+   "Weekly on <today's weekday>". A repeat glyph appears on its row or card.
+   - `curl "…/tasks/<id>/"` has `"series": "<template id>"`,
+     `"occurrence_date": "D"` and `"recurrence": {"freq": "weekly",
+     "interval": 1, "weekdays": [<today>], "starts_on": "D", "until": null}`.
+2. Next week's occurrence is computed, not stored.
+   - `curl "…/tasks/today/?date=D+7"` has one item with `"id": null`,
+     `"is_virtual": true` and `"series": "<template id>"`.
+   - `curl "…/tasks/occurrences/?date_from=D&date_to=D+7"` lists the row
+     on D and the virtual item on D+7; Plan reads the same for its week.
+3. On D+7 (or with the Mac's clock set to it), complete the virtual "Gym"
+   in Focus. It shows done at once, offline too.
+   - `curl "…/tasks/today/?date=D+7"` has one item for it, now with an
+     `id`, `"is_virtual": false`, `"occurrence_date": "D+7"` and
+     `"is_completed": true`: one concrete row, not two.
+   - Completing it again (Reopen) patches that row; no second row appears.
+4. Choose Repeat > "Stop repeating". Future virtual occurrences leave the
+   store at once.
+   - `curl "…/tasks/<id>/"` has `"recurrence": {…, "until": "<D+7 - 1>"}`
+     (the day before the Mac's today), and
+     `curl "…/tasks/today/?date=D+14"` has no "Gym".
+5. Offline, complete a virtual occurrence, then go online: the failed
+   writes sheet stays empty. Had the server refused it, the sheet would say
+   "Save repeating task", and Discard brings the occurrence back as it was
+   on the next refresh.

@@ -70,7 +70,13 @@ final class AppServices {
             reschedule: { [self] id, day in perform(on: id, onOutcome) { try self.writes.reschedule($0, to: day) } },
             toggleSubtask: { [self] id in toggleSubtask(id, onOutcome) },
             remind: { [self] id, date in perform(on: id, onOutcome) { try self.writes.setReminder($0, at: date) } },
-            edit: { [self] id, changes in perform(on: id, onOutcome) { try self.writes.edit($0, changes: changes) } })
+            edit: { [self] id, changes in perform(on: id, onOutcome) { try self.writes.edit($0, changes: changes) } },
+            setRepeat: { [self] id, rule in
+                perform(on: id, onOutcome) { try self.writes.setRecurrence($0, rule: rule) }
+            },
+            stopRepeat: { [self] id, today in
+                perform(on: id, onOutcome) { try self.writes.stopRecurrence($0, today: today) }
+            })
     }
 
     /// Replaces the pending reminders with the store's plan (#187): after
@@ -225,7 +231,8 @@ final class AppServices {
     private static func handlers(_ context: ModelContext) -> OutboxHandlers {
         OutboxHandlers([
             TaskHandler(context: context), SubtaskHandler(context: context), BlockHandler(context: context),
-            SessionHandler(), ReviewHandler(context: context), ClassHandler(),
+            SessionHandler(), ReviewHandler(context: context), RecurrenceHandler(context: context),
+            ClassHandler(),
         ])
     }
 
