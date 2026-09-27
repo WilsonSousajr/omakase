@@ -18,6 +18,23 @@ public struct OutboxResponse: Sendable, Equatable {
     public init(status: Int, body: Data) { (self.status, self.body) = (status, body) }
 }
 
+/// Which place's open tasks to list (spec §5): a project or discipline id,
+/// or Life's wire value `personal`.
+public enum PlaceTasksQuery: Sendable, Equatable {
+    case project(UUID)
+    case discipline(UUID)
+    case area(String)
+
+    /// The filter this query sends: `project=<id>`, `discipline=<id>` or `area=personal`.
+    var filterItem: String {
+        switch self {
+        case .project(let id): "project=\(id.uuidString)"
+        case .discipline(let id): "discipline=\(id.uuidString)"
+        case .area(let value): "area=\(value)"
+        }
+    }
+}
+
 public protocol APIClient: Sendable {
     func signIn(googleIDToken: String) async throws -> UserDTO
     func me() async throws -> UserDTO
@@ -47,6 +64,10 @@ public protocol APIClient: Sendable {
     func holidays() async throws -> [HolidayDTO]
     /// The Inbox: tasks with no date (#223).
     func unscheduledTasks() async throws -> [TaskDTO]
+    /// A place's open tasks (spec §5): every page, `is_completed=false`. The
+    /// plain list also holds series templates and skipped rows, which the
+    /// caller drops.
+    func openTasks(_ query: PlaceTasksQuery) async throws -> [TaskDTO]
     /// Any HTTP status is a response; only a missing answer throws.
     func send(_ request: OutboxRequest) async throws -> OutboxResponse
     /// Revokes the refresh token on the server when it can, then forgets both.
@@ -167,6 +188,10 @@ public actor OmakaseAPIClient: APIClient {
 
     public func unscheduledTasks() async throws -> [TaskDTO] {
         try await allPages("/api/v1/tasks/?unscheduled=true")
+    }
+
+    public func openTasks(_ query: PlaceTasksQuery) async throws -> [TaskDTO] {
+        try await allPages("/api/v1/tasks/?\(query.filterItem)&is_completed=false")
     }
 
     /// Best effort: offline, or with the token already gone, the Keychain is
