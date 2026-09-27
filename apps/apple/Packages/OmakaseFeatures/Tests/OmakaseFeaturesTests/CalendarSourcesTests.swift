@@ -57,7 +57,15 @@ struct CalendarSourcesTests {
             item
                 == CalendarItem(
                     id: "c1-2026-09-28", day: "2026-09-28", start: 480, end: 570, title: "Linear algebra",
-                    kind: .classOccurrence, tint: DesignColor(both: 0x4F46E5)))
+                    kind: .classOccurrence, tint: DesignColor(both: 0x4F46E5), symbol: "book"))
+    }
+
+    /// A class keeps its own glyph and dashed outline (spec §9): it is
+    /// fixed by the timetable, not a kind a task or study block wears.
+    @Test func aClassOccurrenceKeepsBookAndDashedIssue263() throws {
+        let item = try #require(CalendarItem.classOccurrence(try occurrence()))
+        #expect(item.symbol == "book")
+        #expect(item.kind == .classOccurrence)
     }
 
     @Test func aCancelledClassIsACancelledItemIssue207() throws {

@@ -9,7 +9,9 @@ extension CalendarItem {
     static let focusSessionType = "focus"
 
     /// A class in its discipline's colour, or accent grey when that colour
-    /// isn't "#RRGGBB"; nil when its times don't parse or don't run forwards.
+    /// isn't "#RRGGBB"; nil when its times don't parse or don't run
+    /// forwards. Its glyph is always `book` (spec §9): a class is fixed by
+    /// the timetable, not filed under a kind.
     @MainActor
     public static func classOccurrence(_ record: ClassOccurrenceRecord) -> CalendarItem? {
         guard let start = minutes(fromClock: record.startTime), let end = minutes(fromClock: record.endTime),
@@ -17,7 +19,8 @@ extension CalendarItem {
         else { return nil }
         return CalendarItem(
             id: record.id, day: record.day, start: start, end: end, title: record.disciplineName,
-            kind: .classOccurrence, tint: DesignColor(hex: record.disciplineColor), isCancelled: record.isCancelled)
+            kind: .classOccurrence, tint: DesignColor(hex: record.disciplineColor), isCancelled: record.isCancelled,
+            symbol: "book")
     }
 
     /// A focus session at its real times in `calendar`'s zone. One still
