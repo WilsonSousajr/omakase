@@ -8,7 +8,7 @@ import Testing
 /// follow with theirs.
 struct SidebarItemTests {
     @Test func onlyScreensThatExistAreListed() {
-        #expect(SidebarItem.allCases == [.plan, .focus, .review, .inbox])
+        #expect(SidebarItem.allCases == [.plan, .focus, .review, .inbox, .projects])
     }
 
     @Test func focusFollowsTheWebClientsNaming() {
@@ -31,5 +31,10 @@ struct SidebarItemTests {
     @Test func theInboxHoldsWhatHasNoDay() {
         #expect(SidebarItem.inbox.title == "Inbox")
         #expect(SidebarItem.inbox.symbol == "tray")
+    }
+
+    @Test func projectsFollowTheWebClientsNaming() {
+        #expect(SidebarItem.projects.title == "Projects")
+        #expect(SidebarItem.projects.symbol == "folder")
     }
 }

@@ -401,3 +401,26 @@ last one. `curl "…/auth/profile/"` shows what the server has.
    the window returns to sign-in.
    - `curl -X POST …/auth/token/refresh/` with the old refresh token is
      a 401: it was revoked.
+
+## M5 - Projects
+
+Workspaces and projects, written online (#226). `curl "…/workspaces/"`
+and `curl "…/projects/"` show what the server has.
+
+1. Open Projects. The list shows All, then your workspaces; the grid shows
+   every project.
+2. New Workspace…, then "Clients". It appears, and `curl` lists it with a
+   colour.
+3. Select it, then New Project…, then "Site". The card shows "Active · 0
+   tasks" and a colour bar.
+   - `curl "…/projects/?workspace=<id>"` has it, with `"status": "active"`.
+4. Right-click the card, then Status, then Paused. The card says Paused,
+   and so does `curl`.
+5. Right-click the card, then Rename…, then "Website". Both show the new
+   name.
+6. Right-click the workspace, then Delete…. The dialog says its projects
+   go too and their tasks stay. Confirm, and both are gone from the
+   screen and from `curl`.
+7. `docker-compose stop backend`, then create a workspace. Nothing
+   appears, and the foot says "Needs a connection." Start the backend
+   again.
