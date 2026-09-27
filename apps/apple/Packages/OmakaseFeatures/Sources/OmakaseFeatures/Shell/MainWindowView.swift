@@ -2,12 +2,12 @@ import OmakaseStore
 import SwiftData
 import SwiftUI
 
-/// The main window: the sidebar of screens (places, spec §6, join it from
-/// S7) and the detail each one shows. Moved out of the app target (#256) so
-/// later M9 slices can grow and test it without `OmakaseMac`. No visible
-/// change from the window `OmakaseMacApp` used to build inline (spec §3).
-/// It publishes where a new task would go, for ⌘N, and its toolbar's ＋
-/// opens capture with the same context (spec §4, #257).
+/// The main window: the sidebar of screens and places (spec §6; the
+/// "Places" section below is a plain, temporary stand-in until S7 gives the
+/// sidebar its real layout) and the detail each one shows. Moved out of the
+/// app target (#256) so later M9 slices can grow and test it without
+/// `OmakaseMac`. It publishes where a new task would go, for ⌘N, and its
+/// toolbar's ＋ opens capture with the same context (spec §4, #257).
 ///
 ///     MainWindowView(day: FocusDay().today, models: screenModels, openCapture: { capture?.show(context: $0) })
 public struct MainWindowView: View {
@@ -19,8 +19,10 @@ public struct MainWindowView: View {
     @State private var placeDirectory = PlaceDirectory.empty
     // Observed only to know when to reload the place directory (spec §8);
     // read through `librarySnapshot` below, so a redraw for any other
-    // reason - a selection change, a future timer-driven row - never
-    // triggers a fresh set of SwiftData fetches (#262 review).
+    // reason - a selection change, the running timer's tick - never
+    // triggers a fresh set of SwiftData fetches (#262 review). The
+    // sidebar's Places section and `selection`'s fall-back to Focus both
+    // read the cached `placeDirectory` this reloads (spec §5, #259).
     @Query private var libraryProjects: [ProjectRecord]
     @Query private var libraryDisciplines: [DisciplineRecord]
 
@@ -30,10 +32,7 @@ public struct MainWindowView: View {
 
     public var body: some View {
         NavigationSplitView {
-            List(SidebarItem.allCases, selection: itemSelection) { item in
-                SidebarRowView(item: item).listItemTint(.fixed(AppTint.sidebarIcons.color))
-            }
-            .scrollContentBackground(.hidden)
+            sidebar
         } detail: {
             detail
         }
@@ -52,6 +51,27 @@ public struct MainWindowView: View {
         .onChange(of: librarySnapshot, initial: true) { _, _ in reloadPlaces() }
     }
 
+    private var sidebar: some View {
+        List(selection: sidebarSelection) {
+            ForEach(SidebarItem.allCases) { item in
+                SidebarRowView(item: item).tag(SidebarSelection.item(item))
+                    .listItemTint(.fixed(AppTint.sidebarIcons.color))
+            }
+            Section("Places") {
+                ForEach(placeDirectory.places(for: .work)) { entry in placeRow(entry, symbol: TaskArea.work.symbol) }
+                ForEach(placeDirectory.places(for: .study)) { entry in
+                    placeRow(entry, symbol: TaskArea.study.symbol)
+                }
+                Label("Life", systemImage: TaskArea.life.symbol).tag(SidebarSelection.place(.life))
+            }
+        }
+        .scrollContentBackground(.hidden)
+    }
+
+    private func placeRow(_ entry: PlaceEntry, symbol: String) -> some View {
+        Label(entry.title, systemImage: symbol).tag(SidebarSelection.place(PlaceDirectory.place(for: entry.parent)))
+    }
+
     /// Where ⌘N and ＋ file a new task from the screen shown (spec §4's
     /// table); reading Plan's anchor day follows it as Plan pages.
     private var captureContext: CaptureContext {
@@ -62,8 +82,11 @@ public struct MainWindowView: View {
         PlaceLibrarySnapshot(today: day, projects: libraryProjects, disciplines: libraryDisciplines)
     }
 
-    /// Every row's kind mark reads `placeDirectory` (spec §8); reloaded only
-    /// when `librarySnapshot` changes, never on a redraw for some other reason.
+    /// Every row's kind mark, the sidebar's Places section and a place
+    /// selection's validity all read `placeDirectory` (spec §5, §8);
+    /// reloaded only when `librarySnapshot` changes, never on a redraw for
+    /// some other reason - an archived project still reaches this on the
+    /// next catch-up, since that changes a `ProjectRecord`'s `status`.
     private func reloadPlaces() {
         placeDirectory = PlaceDirectory.load(from: modelContext, today: day)
     }
@@ -80,27 +103,24 @@ public struct MainWindowView: View {
         case .item(.inbox): if let inbox = models.inbox { InboxView(day: day, model: inbox) }
         case .item(.projects): if let projects = models.projects { ProjectsView(model: projects) }
         case .item(.study): if let study = models.study { StudyView(day: day, model: study) }
-        // No place is ever selected yet (S7 lists them); a saved one falls
-        // back to Focus below, but the switch must still cover it.
-        case .item(.focus), .place:
+        case .item(.focus):
             if let focus = models.focus, let timer = models.timer { FocusView(day: day, model: focus, timer: timer) }
+        // A place's own list (spec §5): the same triage actions the Inbox uses.
+        case .place(let place):
+            if let places = models.places, let triage = models.inbox {
+                PlaceTasksView(place: place, day: day, model: places, triage: triage)
+            }
         }
     }
 
-    /// The persisted selection (spec §3), a place missing from the sidebar's
-    /// known places falling back to Focus — every place, in this slice,
-    /// since none are listed yet.
+    /// The persisted selection (spec §3): a place missing from the
+    /// directory's known places — deleted or archived since it was saved —
+    /// falls back to Focus.
     private var selection: SidebarSelection {
-        (SidebarSelection(rawValue: selectionRaw) ?? .item(.focus)).valid(knownPlaces: [])
+        (SidebarSelection(rawValue: selectionRaw) ?? .item(.focus)).valid(knownPlaces: placeDirectory.knownPlaces)
     }
 
-    private var itemSelection: Binding<SidebarItem?> {
-        Binding(
-            get: {
-                guard case .item(let item) = selection else { return nil }
-                return item
-            },
-            set: { selectionRaw = SidebarSelection.item($0 ?? .focus).rawValue }
-        )
+    private var sidebarSelection: Binding<SidebarSelection?> {
+        Binding(get: { selection }, set: { selectionRaw = ($0 ?? .item(.focus)).rawValue })
     }
 }
