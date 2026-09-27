@@ -12,3 +12,8 @@ custom_rules:
     regex: '\bprint\('
     message: "Logging only (AGENTS.md Logging): use Logger, never print"
     severity: warning
+  raw_animation:
+    regex: 'withAnimation\(|\.animation\('
+    excluded: ".*Design/Motion\\.swift"
+    message: "Only Design/Motion.swift may animate directly, so Reduce Motion (spec §2/§10) is never bypassed - route through Motion.resolved/.perform/.motion(...)."
+    severity: warning
