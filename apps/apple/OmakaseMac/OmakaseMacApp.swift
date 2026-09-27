@@ -12,6 +12,7 @@ struct OmakaseMacApp: App {
     @State private var focus: FocusModel?
     @State private var review: ReviewModel?
     @State private var plan: PlanModel?
+    @State private var inbox: InboxModel?
     @State private var calendarOverlay: CalendarOverlayModel?
     @State private var timer: TimerModel?
     @State private var failedWrites: FailedWritesModel?
@@ -77,7 +78,7 @@ struct OmakaseMacApp: App {
         if signedIn {
             NavigationSplitView {
                 List(SidebarItem.allCases, selection: $section) { item in
-                    Label(item.title, systemImage: item.symbol).listItemTint(.fixed(AppTint.sidebarIcons.color))
+                    SidebarRowView(item: item).listItemTint(.fixed(AppTint.sidebarIcons.color))
                 }
                 .scrollContentBackground(.hidden)
             } detail: {
@@ -106,6 +107,7 @@ struct OmakaseMacApp: App {
                 PlanScreenView(day: day, model: plan, focus: focus, overlay: calendarOverlay)
             }
         case .review: if let review { ReviewView(day: day, model: review) }
+        case .inbox: if let inbox { InboxView(day: day, model: inbox) }
         case .focus, nil: if let focus, let timer { FocusView(day: day, model: focus, timer: timer) }
         }
     }
@@ -119,6 +121,7 @@ struct OmakaseMacApp: App {
         // still shows (final review C1). The server says otherwise via handle().
         focus = FocusModel(actions: services.focusActions { handle($0) })
         review = ReviewModel(actions: services.reviewActions { handle($0) })
+        inbox = InboxModel(actions: services.inboxActions { handle($0) }) { FocusDay().today }
         plan = PlanModel(actions: services.planActions { handle($0) }) { FocusDay().today }
         calendarOverlay = services.makeCalendarOverlay()
         let timer = services.makeTimer { handle($0) }
