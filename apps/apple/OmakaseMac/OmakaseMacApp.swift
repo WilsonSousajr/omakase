@@ -99,7 +99,7 @@ struct OmakaseMacApp: App {
         // still shows (final review C1). The server says otherwise via handle().
         focus = FocusModel(actions: services.focusActions { handle($0) })
         review = ReviewModel(actions: services.reviewActions { handle($0) })
-        plan = PlanModel { FocusDay().today }
+        plan = PlanModel(actions: services.planActions { handle($0) }) { FocusDay().today }
         let timer = services.makeTimer { handle($0) }
         self.timer = timer
         services.startTicking(timer)
@@ -121,9 +121,11 @@ struct OmakaseMacApp: App {
     }
 
     /// Only a definite sign-out leaves Today; an offline failure keeps the cache (review I3).
+    /// Plan, while it shows, reads its visible days again (#203).
     private func handle(_ outcome: SyncCoordinator.Outcome) {
         if outcome == .signedOut { signedIn = false }
         services.replanReminders()
+        plan?.caughtUp()
     }
 
     /// The store and API are the app's foundation; without them there is no app to show.
