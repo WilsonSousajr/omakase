@@ -349,3 +349,28 @@ today, `D+7` the same weekday next week.
    writes sheet stays empty. Had the server refused it, the sheet would say
    "Save repeating task", and Discard brings the occurrence back as it was
    on the next refresh.
+
+## M5 - Inbox
+
+The Inbox is every open task with no day (#225). Capture two tasks with
+⌥⌘N, then ⌘⏎, so they land here, and note one task's `<id>` from
+`curl "…/tasks/?unscheduled=true"`.
+
+1. The sidebar shows Inbox with a badge of 2, and the screen lists both,
+   newest first.
+2. On one, press Today. It leaves the Inbox, and the badge drops to 1.
+   It is in Focus's list.
+   - `curl "…/tasks/<id>/"` has `"scheduled_date": "<today>"`.
+3. On the other, use the ⋯ menu's Pick a date…, choose next Friday,
+   and press Move. It leaves the Inbox.
+   - `curl` has that date.
+4. Capture a third to the Inbox. Double-click it, change the title, and
+   save. The row shows the new title.
+   - `curl` has it.
+5. Right-click it, then Delete…. The dialog asks first. Confirm, and it
+   is gone.
+   - `curl "…/tasks/<id>/"` is a 404.
+6. Offline (`docker-compose stop backend`), capture one to the Inbox and
+   delete it before reconnecting. The toolbar shows nothing pending,
+   because the unsent capture was withdrawn. Reconnect, and the server
+   never had it.

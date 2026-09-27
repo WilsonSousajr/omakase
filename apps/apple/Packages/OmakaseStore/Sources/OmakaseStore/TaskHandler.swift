@@ -4,10 +4,10 @@ import SwiftData
 
 /// A task write was accepted: the server's copy replaces the local one, and a
 /// create's `local-` record, or a materialized occurrence's `occ-` one (#206),
-/// takes the server's id.
+/// takes the server's id. A delete's reply is empty, so nothing applies (#225).
 @MainActor
 public final class TaskHandler: OutboxHandler {
-    public let kinds = ["task.patch", "task.create", "task.materialize"]
+    public let kinds = ["task.patch", "task.create", "task.materialize", "task.delete"]
     private let context: ModelContext
 
     public init(context: ModelContext) { self.context = context }
