@@ -8,8 +8,12 @@ extension AppServices {
     /// Each write goes through the outbox in one `coordinator.write` and
     /// catches up at once, as Focus's do (#91); `onOutcome` sees the result.
     /// A failed range read shows nothing more: the toolbar's sync item
-    /// already says the app is offline.
-    func planActions(onOutcome: @escaping @MainActor (SyncCoordinator.Outcome) -> Void) -> PlanModel.Actions {
+    /// already says the app is offline. A slot drawn on the grid opens
+    /// capture through `openCapture`, as ⌘N and ＋ do (spec §9, #264).
+    func planActions(
+        openCapture: @escaping (CaptureContext) -> Void,
+        onOutcome: @escaping @MainActor (SyncCoordinator.Outcome) -> Void
+    ) -> PlanModel.Actions {
         let blocks = BlockWrites(context: container.mainContext)
         let classes = ClassWrites(context: container.mainContext)
         return PlanModel.Actions(
@@ -28,7 +32,8 @@ extension AppServices {
             },
             delete: { [self] id in onBlock(id, onOutcome) { try blocks.delete($0) } },
             cancelClass: { [self] id in onClass(id, onOutcome) { try classes.cancel($0) } },
-            restoreClass: { [self] id in onClass(id, onOutcome) { try classes.restore($0) } })
+            restoreClass: { [self] id in onClass(id, onOutcome) { try classes.restore($0) } },
+            capture: { openCapture(CaptureContext(slot: $0)) })
     }
 
     /// The Calendar.app overlay (#229), its toggle kept in UserDefaults.

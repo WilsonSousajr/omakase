@@ -29,17 +29,23 @@ extension AppServices {
     }
 
     /// A capture saved through the store: Today takes the user's local day,
-    /// Plan's day or slot that day, the Inbox none. The write then catches up
-    /// at once, as Focus's writes do (#91).
+    /// Plan's day or slot that day, the Inbox none. A drawn slot's block
+    /// joins the same write (spec §9, #264): queued after the task and naming
+    /// its `local-` id, which `OutboxWorker` rewrites once the task is
+    /// accepted; a parked task parks it too. The write then catches up at
+    /// once, as Focus's writes do (#91).
     private func capture(
         _ request: CaptureRequest, onOutcome: @escaping @MainActor (SyncCoordinator.Outcome) -> Void
     ) {
-        // S11 (#264) adds the slot's block in the same write; until then a slot saves its day.
         let day = request.destination.scheduledDay(today: FocusDay().today)
         let (coordinator, writes) = (self.coordinator, self.writes)
+        let blocks = BlockWrites(context: container.mainContext)
         Task {
             let outcome = try? await coordinator.write {
-                _ = try writes.capture(title: request.title, day: day, filing: request.filing)
+                let record = try writes.capture(title: request.title, day: day, filing: request.filing)
+                guard case .slot(let slot) = request.destination else { return }
+                _ = try blocks.create(
+                    taskID: record.id, studyBlockID: nil, day: slot.day, start: slot.startTime, end: slot.endTime)
             }
             onOutcome(outcome ?? .synced)
         }
