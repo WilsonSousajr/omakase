@@ -236,6 +236,40 @@ struct CaptureModelTests {
         #expect(CaptureDestination.day("28-09-2026").title(calendar: Self.utc) == "28-09-2026")
     }
 
+    // MARK: Opened again while open (S4's review, #264)
+
+    @Test func reopeningWithASlotTakesItAndKeepsTheDraft() {
+        let model = model(CaptureContext(day: "2026-09-30"))
+        model.draft = "Read chapter 4"
+        model.reseed(context: CaptureContext(slot: Self.slot), directory: Self.directory)
+        #expect(model.enterDestination == .slot(Self.slot))
+        #expect(model.hint == "⌘1–3 kind · ⏎ Mon 28, 14:00 · ⌘⏎ Inbox · ⎋ dismiss")
+        #expect(model.draft == "Read chapter 4")
+    }
+
+    @Test func reopeningWithAFilingTakesItsKindAndParent() {
+        let model = model()
+        model.choose(.life)
+        model.reseed(
+            context: CaptureContext(filing: TaskFiling(area: .study, parent: .discipline("d1"))),
+            directory: Self.directory)
+        #expect(model.filing == TaskFiling(area: .study, parent: .discipline("d1")))
+    }
+
+    @Test func reopeningWithNoFilingKeepsTheKindAndParentChosen() {
+        let model = model()
+        model.choose(parent: .discipline("d1"))
+        model.reseed(context: CaptureContext(slot: Self.slot), directory: Self.directory)
+        #expect(model.filing == TaskFiling(area: .study, parent: .discipline("d1")))
+    }
+
+    @Test func reopeningReadsThePlacesAgain() {
+        let model = model(directory: .empty)
+        #expect(!model.showsParentChip)
+        model.reseed(context: CaptureContext(), directory: Self.directory)
+        #expect(model.parentChoices == [Self.thesis])
+    }
+
     // MARK: The day a save is scheduled on
 
     @Test(

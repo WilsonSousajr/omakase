@@ -91,8 +91,10 @@ public final class CaptureModel {
     /// Set with `choose(parent:)`, which derives the area from it.
     public private(set) var parent: TaskParent?
 
-    @ObservationIgnored private let context: CaptureContext
-    @ObservationIgnored private let directory: PlaceDirectory
+    /// Observed, not fixed: `reseed` replaces both while the panel is open,
+    /// and the hint and the parent chip redraw from them.
+    private var context: CaptureContext
+    private var directory: PlaceDirectory
     @ObservationIgnored private let calendar: Calendar
     @ObservationIgnored private let actions: Actions
 
@@ -120,6 +122,23 @@ public final class CaptureModel {
     public func choose(parent: TaskParent?) {
         let filing = TaskFiling(area: area, parent: parent)
         (area, self.parent) = (filing.area, filing.parent)
+    }
+}
+
+// MARK: - Opened again while open
+
+extension CaptureModel {
+    /// The panel was asked for again while open, say by a slot drawn on Plan
+    /// (spec §9, #264): the new context's destination wins, and its filing
+    /// when it names one; the draft being typed, and a kind chosen when the
+    /// context names none, stay. `directory` is read again, as a new panel
+    /// would read it.
+    ///
+    ///     model.reseed(context: CaptureContext(slot: slot), directory: services.capturePlaces())
+    public func reseed(context: CaptureContext, directory: PlaceDirectory) {
+        (self.context, self.directory) = (context, directory)
+        guard let filing = context.filing else { return }
+        (area, parent) = (filing.area, filing.parent)
     }
 }
 
