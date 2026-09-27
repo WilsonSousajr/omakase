@@ -1,6 +1,16 @@
 from rest_framework import serializers
 
-from .models import Project, RecurrenceFreqChoices, Subtask, Tag, Task, TaskRecurrence, TimeBlock, Workspace
+from .models import (
+    KanbanStatusChoices,
+    Project,
+    RecurrenceFreqChoices,
+    Subtask,
+    Tag,
+    Task,
+    TaskRecurrence,
+    TimeBlock,
+    Workspace,
+)
 
 
 class WorkspaceSerializer(serializers.ModelSerializer):
@@ -212,6 +222,50 @@ class TaskDayListSerializer(TaskListSerializer):
 
     class Meta(TaskListSerializer.Meta):
         fields = TaskListSerializer.Meta.fields + ["subtasks"]
+
+
+class VirtualOccurrenceSerializer(serializers.BaseSerializer):
+    """A computed occurrence, shaped as TaskDayListSerializer shapes a row (#124, M8 design §2).
+
+    It has no id until something writes to it (PUT tasks/<series>/occurrences/<date>/),
+    and nothing of its own: no subtasks, blocks, completion or reminder yet.
+
+    >>> VirtualOccurrenceSerializer(VirtualOccurrence(template, day)).data["id"] is None
+    True
+    """
+
+    def to_representation(self, instance) -> dict:
+        data = TaskDayListSerializer(instance.template, context=self.context).data
+        day = instance.day.isoformat()
+        data.update(
+            {
+                "id": None,
+                "series": instance.template.pk,
+                "occurrence_date": day,
+                "scheduled_date": day,
+                "is_virtual": True,
+                "subtasks": [],
+                "actual_minutes": 0,
+                "is_completed": False,
+                "completed_at": None,
+                "kanban_status": KanbanStatusChoices.TODO,
+                "due_date": None,
+                "remind_at": None,
+                "is_skipped": False,
+            }
+        )
+        return data
+
+
+def day_items_data(items: list, context: dict) -> list[dict]:
+    """Serialize tasks.services.day_items: rows as TaskDayListSerializer, the rest as virtual.
+
+    >>> day_items_data(day_items(user, day, day), {"request": request})
+    """
+    return [
+        (TaskDayListSerializer if isinstance(item, Task) else VirtualOccurrenceSerializer)(item, context=context).data
+        for item in items
+    ]
 
 
 class TaskSerializer(TaskListSerializer):

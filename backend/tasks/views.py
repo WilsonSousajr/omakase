@@ -1,15 +1,17 @@
+import datetime
+
 from django.db import transaction
 from django.db.models import Count
 from django_filters import rest_framework as filters
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import ParseError, PermissionDenied
 from rest_framework.response import Response
 
 from idempotency.mixins import IdempotentCreateMixin
 from omakase.client_dates import parse_client_date
 
-from .constants import REORDER_BULK_MAX_ITEMS
+from .constants import MAX_OCCURRENCE_RANGE_DAYS, REORDER_BULK_MAX_ITEMS
 from .models import Project, Subtask, Tag, Task, TimeBlock, Workspace
 from .serializers import (
     ProjectSerializer,
@@ -21,7 +23,9 @@ from .serializers import (
     TaskSerializer,
     TimeBlockSerializer,
     WorkspaceSerializer,
+    day_items_data,
 )
+from .services import day_items
 
 
 class TaskFilter(filters.FilterSet):
@@ -31,6 +35,23 @@ class TaskFilter(filters.FilterSet):
     class Meta:
         model = Task
         fields = ["priority", "area", "kanban_status", "scheduled_date", "is_completed"]
+
+
+def _occurrence_range(params) -> tuple[datetime.date, datetime.date]:
+    """The client's date_from..date_to, both required, forward and at most 62 days (#124)."""
+    start = parse_client_date(params.get("date_from"), name="date_from")
+    end = parse_client_date(params.get("date_to"), name="date_to")
+    days = (end - start).days + 1
+    if days < 1:
+        raise ParseError(
+            f"date_to {end.isoformat()} is before date_from {start.isoformat()}; expected date_from <= date_to."
+        )
+    if days > MAX_OCCURRENCE_RANGE_DAYS:
+        raise ParseError(
+            f"date_from {start.isoformat()} to date_to {end.isoformat()} spans {days} days; "
+            f"expected at most {MAX_OCCURRENCE_RANGE_DAYS}."
+        )
+    return start, end
 
 
 class TaskViewSet(IdempotentCreateMixin, viewsets.ModelViewSet):
@@ -77,21 +98,30 @@ class TaskViewSet(IdempotentCreateMixin, viewsets.ModelViewSet):
     @action(detail=False, methods=["get"])
     def today(self, request):
         # The client's day, never the server's: the backend runs in UTC (#65).
+        # It includes each series' computed occurrence on the day (#124).
         target_date = parse_client_date(request.query_params.get("date"))
-        tasks = self.get_queryset().filter(scheduled_date=target_date)
-        page = self.paginate_queryset(tasks)
+        items = day_items(request.user, target_date, target_date)
+        page = self.paginate_queryset(items)
         if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-        serializer = self.get_serializer(tasks, many=True)
-        return Response(serializer.data)
+            return self.get_paginated_response(day_items_data(page, self.get_serializer_context()))
+        return Response(day_items_data(items, self.get_serializer_context()))
+
+    @action(detail=False, methods=["get"])
+    def occurrences(self, request):
+        # today/ over a range, for Plan (#124); a plain list, as class-occurrences/ is.
+        start, end = _occurrence_range(request.query_params)
+        return Response(day_items_data(day_items(request.user, start, end), self.get_serializer_context()))
 
     @action(detail=False, methods=["get"], url_path="carried-over")
     def carried_over(self, request):
         target_date = parse_client_date(request.query_params.get("date"))
+        # Rows only: an untouched occurrence in the past lapses, it does not
+        # pile up; templates and skipped occurrences are not work (#124).
         tasks = self.get_queryset().filter(
             scheduled_date__lt=target_date,
             is_completed=False,
+            recurrence__isnull=True,
+            is_skipped=False,
         )
         serializer = self.get_serializer(tasks, many=True)
         return Response(serializer.data)
