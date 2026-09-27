@@ -34,6 +34,13 @@ struct DTODecodingTests {
         #expect(task.isCompleted && task.completedAt != nil)
     }
 
+    @Test func decodesATasksAreaAndDiscipline() throws {
+        // Spec §1: a create with area "study" and a discipline (#254).
+        let task = try OmakaseJSON.decoder.decode(TaskDTO.self, from: Fixture.data("task_create"))
+        #expect(task.area == "study" && task.project == nil)
+        #expect(task.discipline != nil)
+    }
+
     @Test func decodesATaskReminderAsAUTCInstant() throws {
         // #187: remind_at is an ISO-8601 datetime in UTC with a "Z".
         let reminded = try OmakaseJSON.decoder.decode(TaskDTO.self, from: Fixture.data("task_patch"))
