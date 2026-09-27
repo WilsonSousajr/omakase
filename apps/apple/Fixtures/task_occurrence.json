@@ -1,0 +1,36 @@
+{
+  "actual_minutes": 0,
+  "area": "work",
+  "completed_at": "2026-09-27T13:00:31.053978Z",
+  "created_at": "2026-09-27T13:00:31.030088Z",
+  "description": "",
+  "discipline": null,
+  "due_date": null,
+  "estimated_minutes": 15,
+  "id": "2519508c-a403-41be-9470-b5167ed2ad86",
+  "is_completed": true,
+  "is_skipped": false,
+  "is_virtual": false,
+  "kanban_order": 0,
+  "kanban_status": "done",
+  "occurrence_date": "2026-03-04",
+  "priority": "medium",
+  "project": null,
+  "recurrence": {
+    "freq": "weekly",
+    "interval": 1,
+    "starts_on": "2026-03-02",
+    "until": null,
+    "weekdays": [
+      0,
+      2
+    ]
+  },
+  "remind_at": null,
+  "scheduled_date": "2026-03-04",
+  "series": "2cd72afb-6178-48b7-ad34-17bbe8be9428",
+  "subtasks": [],
+  "tags": [],
+  "title": "Stand-up",
+  "updated_at": "2026-09-27T13:00:31.054114Z"
+}
