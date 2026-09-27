@@ -14,6 +14,7 @@ struct OmakaseMacApp: App {
     @State private var plan: PlanModel?
     @State private var inbox: InboxModel?
     @State private var projects: ProjectsModel?
+    @State private var study: StudyModel?
     @State private var calendarOverlay: CalendarOverlayModel?
     @State private var timer: TimerModel?
     @State private var failedWrites: FailedWritesModel?
@@ -109,6 +110,7 @@ struct OmakaseMacApp: App {
         case .review: if let review { ReviewView(day: day, model: review) }
         case .inbox: if let inbox { InboxView(day: day, model: inbox) }
         case .projects: if let projects { ProjectsView(model: projects) }
+        case .study: if let study { StudyView(day: day, model: study) }
         case .focus, nil: if let focus, let timer { FocusView(day: day, model: focus, timer: timer) }
         }
     }
@@ -120,13 +122,7 @@ struct OmakaseMacApp: App {
             signIn: { try await api.signIn(googleIDToken: $0).email })
         // Stored tokens decide, not a network call: offline, the cached Today
         // still shows (final review C1). The server says otherwise via handle().
-        focus = FocusModel(actions: services.focusActions { handle($0) })
-        review = ReviewModel(actions: services.reviewActions { handle($0) })
-        settings = SettingsModel(actions: services.settingsActions())
-        inbox = InboxModel(actions: services.inboxActions { handle($0) }) { FocusDay().today }
-        projects = ProjectsModel(actions: services.projectsActions())
-        plan = PlanModel(actions: services.planActions { handle($0) }) { FocusDay().today }
-        calendarOverlay = services.makeCalendarOverlay()
+        makeScreenModels()
         let timer = services.makeTimer { handle($0) }
         self.timer = timer
         services.startTicking(timer)
@@ -136,6 +132,18 @@ struct OmakaseMacApp: App {
         }
         signedIn = await api.hasStoredSession()
         services.startBackgroundCatchUp(onPathChange: { failedWrites?.setPathOnline($0) }, onOutcome: { handle($0) })
+    }
+
+    /// One model per screen, each acting through the services' writes.
+    private func makeScreenModels() {
+        focus = FocusModel(actions: services.focusActions { handle($0) })
+        review = ReviewModel(actions: services.reviewActions { handle($0) })
+        settings = SettingsModel(actions: services.settingsActions())
+        inbox = InboxModel(actions: services.inboxActions { handle($0) }) { FocusDay().today }
+        projects = ProjectsModel(actions: services.projectsActions())
+        study = StudyModel(actions: services.studyActions())
+        plan = PlanModel(actions: services.planActions { handle($0) }) { FocusDay().today }
+        calendarOverlay = services.makeCalendarOverlay()
     }
 
     /// The toolbar's sync item follows every catch-up, the backoff wake's
