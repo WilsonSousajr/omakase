@@ -36,8 +36,18 @@ public protocol APIClient: Sendable {
     func profile() async throws -> ProfileDTO
     /// The day's planned minutes against the goal, summed on the server (#128).
     func workload(on day: APIDay) async throws -> WorkloadDTO
+    /// The library (#224): every page, scoped to the user on the server.
+    func workspaces() async throws -> [WorkspaceDTO]
+    func projects() async throws -> [ProjectDTO]
+    func semesters() async throws -> [SemesterDTO]
+    func disciplines() async throws -> [DisciplineDTO]
+    func classSchedules() async throws -> [ClassScheduleDTO]
+    func holidays() async throws -> [HolidayDTO]
+    /// The Inbox: tasks with no date (#223).
+    func unscheduledTasks() async throws -> [TaskDTO]
     /// Any HTTP status is a response; only a missing answer throws.
     func send(_ request: OutboxRequest) async throws -> OutboxResponse
+    /// Revokes the refresh token on the server when it can, then forgets both.
     func signOut() async
     /// Whether tokens are stored - answerable offline, unlike `me()`.
     func hasStoredSession() async -> Bool
@@ -134,7 +144,34 @@ public actor OmakaseAPIClient: APIClient {
         return OutboxResponse(status: reply.status, body: reply.data)
     }
 
-    public func signOut() async { await tokens.clear() }
+    public func workspaces() async throws -> [WorkspaceDTO] { try await allPages("/api/v1/workspaces/") }
+
+    public func projects() async throws -> [ProjectDTO] { try await allPages("/api/v1/projects/") }
+
+    public func semesters() async throws -> [SemesterDTO] { try await allPages("/api/v1/study/semesters/") }
+
+    public func disciplines() async throws -> [DisciplineDTO] { try await allPages("/api/v1/study/disciplines/") }
+
+    public func classSchedules() async throws -> [ClassScheduleDTO] {
+        try await allPages("/api/v1/study/classschedules/")
+    }
+
+    public func holidays() async throws -> [HolidayDTO] { try await allPages("/api/v1/study/holidays/") }
+
+    public func unscheduledTasks() async throws -> [TaskDTO] {
+        try await allPages("/api/v1/tasks/?unscheduled=true")
+    }
+
+    /// Best effort: offline, or with the token already gone, the Keychain is
+    /// still cleared, and a stolen copy expires within 7 days (#223).
+    public func signOut() async {
+        if let refresh = await tokens.load()?.refresh,
+            let body = try? OmakaseJSON.encoder.encode(["refresh": refresh])
+        {
+            _ = try? await authorized("POST", "/api/v1/auth/logout/", body: body)
+        }
+        await tokens.clear()
+    }
 
     public func hasStoredSession() async -> Bool { await tokens.load() != nil }
 

@@ -30,6 +30,10 @@ actor FakeAPIClient: APIClient {
     private(set) var requestedRanges: [String] = []
     /// Runs while `timeBlocks(from:to:)` is "on the network".
     private var duringRangeFetch: (@Sendable () async -> Void)?
+    /// The library's lists (#224), and whether reading them fails as offline.
+    private var library = FakeLibrary()
+    private var libraryOffline = false
+    private(set) var signOutCount = 0
 
     func setTasks(_ tasks: [TaskDTO], on day: String) { tasksByDay[day] = tasks }
     func script(_ outcomes: [SendOutcome]) { self.outcomes = outcomes }
@@ -43,10 +47,25 @@ actor FakeAPIClient: APIClient {
     func setOccurrences(_ list: [ClassOccurrenceDTO]) { occurrences = list }
     func setSessions(_ list: [PomodoroSessionDTO]) { sessionList = list }
     func setDuringRangeFetch(_ hook: @escaping @Sendable () async -> Void) { duringRangeFetch = hook }
+    func setLibrary(_ lists: FakeLibrary) { library = lists }
+    func setLibraryOffline(_ offline: Bool) { libraryOffline = offline }
 
     func signIn(googleIDToken: String) async throws -> UserDTO { throw APIError.signedOut }
     func me() async throws -> UserDTO { throw APIError.signedOut }
-    func signOut() async {}
+    func signOut() async { signOutCount += 1 }
+
+    func workspaces() async throws -> [WorkspaceDTO] { try libraryRead(library.workspaces) }
+    func projects() async throws -> [ProjectDTO] { try libraryRead(library.projects) }
+    func semesters() async throws -> [SemesterDTO] { try libraryRead(library.semesters) }
+    func disciplines() async throws -> [DisciplineDTO] { try libraryRead(library.disciplines) }
+    func classSchedules() async throws -> [ClassScheduleDTO] { try libraryRead(library.schedules) }
+    func holidays() async throws -> [HolidayDTO] { try libraryRead(library.holidays) }
+    func unscheduledTasks() async throws -> [TaskDTO] { try libraryRead(library.inbox) }
+
+    private func libraryRead<Item>(_ items: [Item]) throws -> [Item] {
+        if libraryOffline { throw APIError.transport("offline") }
+        return items
+    }
     func hasStoredSession() async -> Bool { true }
 
     func tasks(on day: APIDay) async throws -> [TaskDTO] {
@@ -221,4 +240,15 @@ extension WorkloadDTO {
             """
         return try OmakaseJSON.decoder.decode(WorkloadDTO.self, from: Data(json.utf8))
     }
+}
+
+/// The lists `FakeAPIClient` serves for the library (#224).
+struct FakeLibrary: Sendable {
+    var workspaces: [WorkspaceDTO] = []
+    var projects: [ProjectDTO] = []
+    var semesters: [SemesterDTO] = []
+    var disciplines: [DisciplineDTO] = []
+    var schedules: [ClassScheduleDTO] = []
+    var holidays: [HolidayDTO] = []
+    var inbox: [TaskDTO] = []
 }
