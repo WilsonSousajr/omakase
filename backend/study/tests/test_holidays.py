@@ -149,6 +149,14 @@ class TestHolidayViewSet:
         holiday.refresh_from_db()
         assert holiday.semester.user == user
 
+    def test_rename_a_holiday(self, authenticated_client, user):
+        holiday = HolidayFactory(semester__user=user)
+
+        resp = authenticated_client.patch(f"{HOLIDAYS_URL}{holiday.pk}/", {"name": "Carnaval"}, format="json")
+
+        assert resp.status_code == status.HTTP_200_OK
+        assert resp.data["name"] == "Carnaval"
+
     def test_delete_a_holiday(self, authenticated_client, user):
         holiday = HolidayFactory(semester__user=user)
 
