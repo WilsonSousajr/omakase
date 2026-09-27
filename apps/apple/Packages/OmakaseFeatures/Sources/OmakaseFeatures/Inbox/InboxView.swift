@@ -6,13 +6,13 @@ import SwiftUI
 /// given a day, done, edited or deleted; nothing here is scheduled for you.
 public struct InboxView: View {
     private let day: String
-    @Bindable private var model: InboxModel
+    @Bindable private var model: TriageModel
     @Query(
         filter: #Predicate<TaskRecord> { $0.scheduledDay == nil && !$0.isCompleted },
         sort: \TaskRecord.updatedAt, order: .reverse)
     private var tasks: [TaskRecord]
 
-    public init(day: String, model: InboxModel) { (self.day, self.model) = (day, model) }
+    public init(day: String, model: TriageModel) { (self.day, self.model) = (day, model) }
 
     public var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -34,7 +34,7 @@ public struct InboxView: View {
     private var list: some View {
         ScrollView {
             LazyVStack(spacing: Spacing.small) {
-                ForEach(tasks) { task in InboxRowView(card: FocusCard(record: task), model: model) }
+                ForEach(tasks) { task in TriageRowView(card: FocusCard(record: task), model: model) }
             }
             .padding(Spacing.large)
         }
@@ -46,9 +46,11 @@ public struct InboxView: View {
 }
 
 /// One task: the row itself, a "Today" shortcut, and the rest in a menu.
-struct InboxRowView: View {
+/// Shared by the Inbox and a place's list (spec §5), so both triage a task
+/// the same way.
+struct TriageRowView: View {
     let card: FocusCard
-    let model: InboxModel
+    let model: TriageModel
     @State private var picking = false
     @State private var picked = Date.now
 
@@ -57,7 +59,7 @@ struct InboxRowView: View {
             PlanTaskRowView(card: card)
             Button("Today") { model.schedule(card.id, .today) }.buttonStyle(.glass)
             Menu {
-                InboxActionItems(card: card, model: model) { picking = true }
+                TriageActionItems(card: card, model: model) { picking = true }
             } label: {
                 Image(systemName: "ellipsis").foregroundStyle(Palette.ink.color)
             }
@@ -68,7 +70,7 @@ struct InboxRowView: View {
         }
         .contentShape(.rect)
         .onTapGesture(count: 2) { model.beginEditing(card.id) }
-        .contextMenu { InboxActionItems(card: card, model: model) { picking = true } }
+        .contextMenu { TriageActionItems(card: card, model: model) { picking = true } }
     }
 
     private var datePicker: some View {
@@ -85,9 +87,9 @@ struct InboxRowView: View {
 }
 
 /// The row's menu and context menu: the same choices in the same order.
-struct InboxActionItems: View {
+struct TriageActionItems: View {
     let card: FocusCard
-    let model: InboxModel
+    let model: TriageModel
     let pickDate: () -> Void
 
     var body: some View {

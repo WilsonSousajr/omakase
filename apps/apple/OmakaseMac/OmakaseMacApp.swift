@@ -11,7 +11,7 @@ struct OmakaseMacApp: App {
     @State private var focus: FocusModel?
     @State private var review: ReviewModel?
     @State private var plan: PlanModel?
-    @State private var inbox: InboxModel?
+    @State private var inbox: TriageModel?
     @State private var projects: ProjectsModel?
     @State private var study: StudyModel?
     @State private var calendarOverlay: CalendarOverlayModel?
@@ -118,7 +118,7 @@ struct OmakaseMacApp: App {
         focus = FocusModel(actions: services.focusActions { handle($0) })
         review = ReviewModel(actions: services.reviewActions { handle($0) })
         settings = SettingsModel(actions: services.settingsActions())
-        inbox = InboxModel(actions: services.inboxActions { handle($0) }) { FocusDay().today }
+        inbox = TriageModel(actions: services.inboxActions { handle($0) }) { FocusDay().today }
         projects = ProjectsModel(actions: services.projectsActions())
         study = StudyModel(actions: services.studyActions())
         // A drawn slot opens the same panel as ⌘N (#264); `capture` is read when it fires.

@@ -8,7 +8,7 @@ public struct ScreenModels {
     public let focus: FocusModel?
     public let review: ReviewModel?
     public let plan: PlanModel?
-    public let inbox: InboxModel?
+    public let inbox: TriageModel?
     public let projects: ProjectsModel?
     public let study: StudyModel?
     public let calendarOverlay: CalendarOverlayModel?
@@ -16,7 +16,7 @@ public struct ScreenModels {
     public let failedWrites: FailedWritesModel?
 
     public init(
-        focus: FocusModel? = nil, review: ReviewModel? = nil, plan: PlanModel? = nil, inbox: InboxModel? = nil,
+        focus: FocusModel? = nil, review: ReviewModel? = nil, plan: PlanModel? = nil, inbox: TriageModel? = nil,
         projects: ProjectsModel? = nil, study: StudyModel? = nil, calendarOverlay: CalendarOverlayModel? = nil,
         timer: TimerModel? = nil, failedWrites: FailedWritesModel? = nil
     ) {
