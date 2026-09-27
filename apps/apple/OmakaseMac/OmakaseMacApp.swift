@@ -37,7 +37,8 @@ struct OmakaseMacApp: App {
                 .onChange(of: timer?.lastFinished) { _, finished in prompt = services.prompt(for: finished) }
                 .sheet(
                     item: $prompt, onDismiss: { timer?.dismissFinished() },
-                    content: { prompt in SessionPromptView(prompt: prompt) { services.apply($0) { handle($0) } } })
+                    content: { prompt in SessionPromptView(prompt: prompt) { services.apply($0) { handle($0) } } }
+                )
                 .alert(SignOutWarning.title, isPresented: $confirmingSignOut) {
                     Button(SignOutWarning.confirm, role: .destructive) { Task { await signOut() } }
                     Button("Cancel", role: .cancel) {}
