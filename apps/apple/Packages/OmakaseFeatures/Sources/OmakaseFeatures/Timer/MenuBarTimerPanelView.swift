@@ -8,11 +8,17 @@ import SwiftUI
 public struct MenuBarTimerPanelView: View {
     private let timer: TimerModel
     private let select: (String) -> Void
+    private let today: String
     @Query private var tasks: [TaskRecord]
     @Query private var blocks: [TimeBlockRecord]
+    // Observed only to recompute the place directory when the library cache
+    // changes (spec §8); the fetched arrays themselves go unused.
+    @Query private var libraryProjects: [ProjectRecord]
+    @Query private var libraryDisciplines: [DisciplineRecord]
+    @Environment(\.modelContext) private var modelContext
 
     public init(day: String, timer: TimerModel, select: @escaping (String) -> Void) {
-        (self.timer, self.select) = (timer, select)
+        (self.timer, self.select, today) = (timer, select, day)
         let target: String? = day
         _tasks = Query(filter: #Predicate<TaskRecord> { $0.scheduledDay == target || $0.isCarriedOver })
         _blocks = Query(filter: #Predicate<TimeBlockRecord> { $0.day == day })
@@ -34,6 +40,13 @@ public struct MenuBarTimerPanelView: View {
         }
         .padding(Spacing.large)
         .frame(width: 320)
+        // Its own root, apart from the main window's environment (spec §4, #214).
+        .environment(\.placeDirectory, placeDirectory)
+    }
+
+    private var placeDirectory: PlaceDirectory {
+        _ = (libraryProjects, libraryDisciplines)
+        return PlaceDirectory.load(from: modelContext, today: today)
     }
 
     private var slots: [SessionBlock.Slot] {

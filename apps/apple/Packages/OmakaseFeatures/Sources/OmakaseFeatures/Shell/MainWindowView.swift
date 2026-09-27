@@ -1,4 +1,5 @@
 import OmakaseStore
+import SwiftData
 import SwiftUI
 
 /// The main window: the sidebar of screens (places, spec §6, join it from
@@ -14,6 +15,11 @@ public struct MainWindowView: View {
     private let models: ScreenModels
     private let openCapture: (CaptureContext) -> Void
     @SceneStorage("omakase.sidebar") private var selectionRaw = SidebarSelection.item(.focus).rawValue
+    @Environment(\.modelContext) private var modelContext
+    // Observed only to recompute the place directory when the library cache
+    // changes (spec §8); the fetched arrays themselves go unused.
+    @Query private var libraryProjects: [ProjectRecord]
+    @Query private var libraryDisciplines: [DisciplineRecord]
 
     public init(day: String, models: ScreenModels, openCapture: @escaping (CaptureContext) -> Void) {
         (self.day, self.models, self.openCapture) = (day, models, openCapture)
@@ -39,12 +45,20 @@ public struct MainWindowView: View {
             }
         }
         .focusedSceneValue(\.newTaskContext, captureContext)
+        .environment(\.placeDirectory, placeDirectory)
     }
 
     /// Where ⌘N and ＋ file a new task from the screen shown (spec §4's
     /// table); reading Plan's anchor day follows it as Plan pages.
     private var captureContext: CaptureContext {
         .forSelection(selection, planDay: models.plan?.anchorDay)
+    }
+
+    /// Every row's kind mark reads this (spec §8); cheap to rebuild on a
+    /// library change, and this view never observes the timer's tick.
+    private var placeDirectory: PlaceDirectory {
+        _ = (libraryProjects, libraryDisciplines)
+        return PlaceDirectory.load(from: modelContext, today: day)
     }
 
     @ViewBuilder private var detail: some View {
