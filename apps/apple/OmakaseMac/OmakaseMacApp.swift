@@ -17,6 +17,7 @@ struct OmakaseMacApp: App {
     @State private var failedWrites: FailedWritesModel?
     @State private var prompt: SessionPrompt?
     @State private var capture: GlobalCapture?
+    @State private var confirmingSignOut = false
     /// Recomputed when the app becomes active: a window left open overnight
     /// moves to the new day (M1's known limitation).
     @State private var day = FocusDay().today
@@ -36,10 +37,20 @@ struct OmakaseMacApp: App {
                 .onChange(of: timer?.lastFinished) { _, finished in prompt = services.prompt(for: finished) }
                 .sheet(
                     item: $prompt, onDismiss: { timer?.dismissFinished() },
-                    content: { prompt in SessionPromptView(prompt: prompt) { services.apply($0) { handle($0) } } })
+                    content: { prompt in SessionPromptView(prompt: prompt) { services.apply($0) { handle($0) } } }
+                )
+                .alert(SignOutWarning.title, isPresented: $confirmingSignOut) {
+                    Button(SignOutWarning.confirm, role: .destructive) { Task { await signOut() } }
+                    Button("Cancel", role: .cancel) {}
+                } message: {
+                    Text(SignOutWarning.message(unsent: services.unsentCount()))
+                }
         }
         .modelContainer(services.container)
-        .commands { CaptureCommands(capture: capture, isEnabled: signedIn) }
+        .commands {
+            CaptureCommands(capture: capture, isEnabled: signedIn)
+            AccountCommands(isEnabled: signedIn) { confirmingSignOut = true }
+        }
 
         // The running timer from anywhere (spec, Menu bar): its countdown is
         // the status item's label while a phase is on.
@@ -134,10 +145,18 @@ struct OmakaseMacApp: App {
     /// Plan, while it shows, reads its visible days again (#203), Calendar.app's included (#229).
     private func handle(_ outcome: SyncCoordinator.Outcome) {
         if outcome == .signedOut { signedIn = false }
+        if outcome == .synced { Task { await services.refreshLibrary() } }
         services.replanReminders()
         plan?.caughtUp()
         guard section == .plan, let plan, let calendarOverlay else { return }
         Task { await calendarOverlay.refresh(days: plan.visibleDays) }
+    }
+
+    /// Signed out, the next account starts clean: nothing of this one stays (#224).
+    private func signOut() async {
+        await services.signOut()
+        signedIn = false
+        failedWrites?.refresh()
     }
 
     /// The store and API are the app's foundation; without them there is no app to show.

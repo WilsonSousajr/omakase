@@ -14,6 +14,7 @@ final class AppServices {
     let writes: TaskWrites
     let coordinator: SyncCoordinator
     let rangeSync: RangeSync
+    let librarySync: LibrarySync
     private let reachability = Reachability()
     private let notifier = PhaseNotifier()
     private let reminders = ReminderScheduler()
@@ -27,6 +28,7 @@ final class AppServices {
         self.writes = writes
         let sync = DaySync(context: container.mainContext, api: api)
         rangeSync = RangeSync(api: api, context: container.mainContext)
+        librarySync = LibrarySync(api: api, context: container.mainContext)
         let worker = OutboxWorker(
             context: container.mainContext, api: api,
             handlers: Self.handlers(container.mainContext))
@@ -35,6 +37,19 @@ final class AppServices {
 
     /// Plan's visible days: their blocks, classes and sessions (#200).
     func refreshRange(days: [String]) async throws { try await rangeSync.refresh(days: days) }
+
+    /// The library and the Inbox (#224). Offline it keeps the last copy.
+    func refreshLibrary() async { try? await librarySync.refresh() }
+
+    /// Writes the server hasn't taken, which signing out would lose.
+    func unsentCount() -> Int { (try? SessionReset(context: container.mainContext).unsentCount()) ?? 0 }
+
+    /// Revokes the refresh token when it can, forgets both tokens, and erases
+    /// the store and the outbox (#224; parent spec L149-151).
+    func signOut() async {
+        await api.signOut()
+        try? SessionReset(context: container.mainContext).erase()
+    }
 
     var googleClientID: String { Bundle.main.object(forInfoDictionaryKey: "OmakaseGoogleClientID") as? String ?? "" }
 

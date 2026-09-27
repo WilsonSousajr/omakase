@@ -69,6 +69,11 @@ public struct ProfileDTO: Sendable, Codable, Equatable {
     public let blockReminderMinutes: Int?
     /// The server's "HH:MM:SS" wall-clock time, nil for no shutdown reminder.
     public let shutdownReminderTime: String?
+    /// The profile's IANA zone. Shown in Settings; the Mac dates with its own
+    /// clock (invariant 2).
+    public let timezone: String
+    /// "monday" or "sunday": the first day of Plan's week.
+    public let weekStartsOn: String
 
     public var workGoalHours: Double { Double(dailyWorkGoalHours) ?? 0 }
     public var studyGoalHours: Double { Double(dailyStudyGoalHours) ?? 0 }

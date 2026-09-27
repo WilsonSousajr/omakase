@@ -117,6 +117,11 @@ public final class ProfileRecord {
     public var blockReminderMinutes: Int? = 5
     /// "HH:MM:SS" in the user's day, nil for no shutdown reminder.
     public var shutdownReminderTime: String?
+    /// The profile's IANA zone, shown in Settings; defaulted so older stores
+    /// migrate (#224).
+    public var timezone = "UTC"
+    /// "monday" or "sunday": the first day of Plan's week.
+    public var weekStartsOn = "monday"
 
     public init(dto: ProfileDTO) {
         (workMinutes, shortBreakMinutes, longBreakMinutes, beforeLongBreak) = (0, 0, 0, 0)
@@ -129,6 +134,7 @@ public final class ProfileRecord {
         (longBreakMinutes, beforeLongBreak) = (dto.pomodoroLongBreakMinutes, dto.pomodorosBeforeLongBreak)
         (workGoalHours, studyGoalHours) = (dto.workGoalHours, dto.studyGoalHours)
         (blockReminderMinutes, shutdownReminderTime) = (dto.blockReminderMinutes, dto.shutdownReminderTime)
+        (timezone, weekStartsOn) = (dto.timezone, dto.weekStartsOn)
     }
 }
 
