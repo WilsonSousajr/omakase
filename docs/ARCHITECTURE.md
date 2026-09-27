@@ -42,6 +42,8 @@ client ── ?date=YYYY-MM-DD (its own local day) ──▶ day-shaped endpoint
   | Project | `workspace.user` |
   | Discipline | `semester.user` |
   | StudyBlock, ClassSchedule | `discipline.semester.user` |
+  | Holiday | `semester.user` |
+  | ClassCancellation | `class_schedule.discipline.semester.user` |
   | TimeBlock | `task.user` **or** `study_block.discipline.semester.user` |
 
 - **"Today" is the client's day.** The backend runs in Docker in UTC. An
@@ -133,11 +135,20 @@ import its mixin.
   empty means every week. The week of a date is
   `((monday(date) - monday(anchor)).days // 7) % rotation_weeks + 1`
   (`study/services.py: rotation_week`), so the anchor's whole week is week 1.
+- **Exceptions to the weekly rule are stored; occurrences never are (#125).**
+  A `Holiday` is an inclusive date range on a semester, and the expansion
+  omits every date inside it. A `ClassCancellation` is unique per
+  (schedule, date), and the expansion keeps a cancelled occurrence with
+  `is_cancelled: true`, because the calendar shows it struck through. The
+  cancel PUT and restore DELETE are idempotent by their path, and a cancel
+  on a date the expansion would not produce is a 400. The expansion runs
+  three queries whatever the number of schedules: schedules, holidays,
+  cancellations.
 - **Class occurrences are computed, not stored.** `class-occurrences/`
   expands schedules over `date_from..date_to` (both required, at most 90 days),
   inside each semester's dates. Occurrences have composite ids
   `{schedule_id}-{date}` because they are not database rows, and carry the
-  rotation `week` they fall in. The expansion
+  rotation `week` they fall in and `is_cancelled`. The expansion
   is `study/services.py: class_occurrences(user, start, end)`, which the
   view and `stats/workload/` both call (#176).
 
@@ -216,7 +227,9 @@ and `auth/token/refresh/`.
 | `study/disciplines/` | CRUD | filter by semester and status; annotated `study_block_count` |
 | `study/studyblocks/` | CRUD | plus `carried-over/`; filter by discipline, type and status |
 | `study/classschedules/` | CRUD | filter by discipline, class type and `is_active`; `rotation_weeks_on` within the semester's rotation |
-| `study/class-occurrences/` | GET | `date_from` and `date_to` required, at most 90 days; each has its rotation `week` |
+| `study/classschedules/<id>/cancellations/<date>/` | PUT, DELETE | cancel (201, 200 on replay) or restore (204) one occurrence; a non-occurrence date is a 400 |
+| `study/holidays/` | CRUD | filter by semester; `end_date >= start_date` |
+| `study/class-occurrences/` | GET | `date_from` and `date_to` required, at most 90 days; each has its rotation `week` and `is_cancelled`; holidays omitted |
 
 ## Configuration and security
 
