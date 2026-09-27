@@ -171,6 +171,9 @@ struct DaySyncTests {
         #expect(try context.fetch(FetchDescriptor<DailyReviewRecord>()).first?.energy == 2)
         #expect(try context.fetch(FetchDescriptor<ProfileRecord>()).first?.workMinutes == 25)
         #expect(try context.fetch(FetchDescriptor<ProfileRecord>()).first?.workGoalHours == 8)
+        // Settings shows the zone; Plan's week follows the week start (#224).
+        #expect(try context.fetch(FetchDescriptor<ProfileRecord>()).first?.timezone == "UTC")
+        #expect(try context.fetch(FetchDescriptor<ProfileRecord>()).first?.weekStartsOn == "monday")
     }
 
     @Test func reminderFieldsAreCached() async throws {
