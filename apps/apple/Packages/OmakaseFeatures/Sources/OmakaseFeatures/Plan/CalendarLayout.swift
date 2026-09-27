@@ -36,6 +36,7 @@ public struct CalendarLayout: Equatable, Sendable {
     public static let minimumHeight: CGFloat = 18
     public static let sessionLaneWidth: CGFloat = 6
     public static let laneGap: CGFloat = 2
+    public static let openingHour = 8
 
     public let firstHour: Int
     public let lastHour: Int
@@ -60,6 +61,17 @@ public struct CalendarLayout: Equatable, Sendable {
         let quarters = (offset / hourHeight * 60 / CGFloat(Self.snapMinutes)).rounded()
         let snapped = firstMinute + Int(quarters) * Self.snapMinutes
         return min(max(snapped, firstMinute), lastMinute)
+    }
+
+    /// Where the grid opens (spec M4, Grid): 08:00, or an hour before now
+    /// when `day` is today and it is past 09:00, no lower than the last hour's
+    /// row, so something is always in view (#215).
+    ///
+    ///     layout.initialMinutes(day: "2026-09-27", today: "2026-09-27", nowMinutes: 840)   // 780
+    public func initialMinutes(day: String, today: String, nowMinutes: Int) -> Int {
+        let opening = Self.openingHour * 60
+        guard day == today, nowMinutes > opening + 60 else { return opening }
+        return min(max(nowMinutes - 60, firstMinute), lastMinute - 60)
     }
 
     /// The item's visible part down the column, at least `minimumHeight`

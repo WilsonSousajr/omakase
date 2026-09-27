@@ -128,7 +128,7 @@ struct CalendarLayoutTests {
         #expect(layout.initialMinutes(day: "d", today: "d", nowMinutes: 14 * 60 + 20) == 13 * 60 + 20)
     }
 
-    @Test func aLateNowIsClampedToTheLastHour() {
-        #expect(layout.initialMinutes(day: "d", today: "d", nowMinutes: 23 * 60 + 50) == 23 * 60)
+    @Test func aLateNowOpensNoLowerThanTheLastHoursRow() {
+        #expect(layout.initialMinutes(day: "d", today: "d", nowMinutes: 23 * 60 + 50) == 22 * 60)
     }
 }
