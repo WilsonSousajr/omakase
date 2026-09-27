@@ -7,9 +7,11 @@ import SwiftUI
 /// the day's open tasks. The visible days are read when Plan shows, when
 /// they change, and after each catch-up while it shows (M4 spec, Decisions).
 ///
-///     PlanScreenView(day: "2026-09-26", model: plan)
+///     PlanScreenView(day: "2026-09-26", model: plan, focus: focus)
 public struct PlanScreenView: View {
     private let model: PlanModel
+    private let day: String
+    private let focus: FocusModel
     /// Calendar.app's events (#229), read for the visible days.
     private let overlay: CalendarOverlayModel?
     @Query private var tasks: [TaskRecord]
@@ -21,8 +23,9 @@ public struct PlanScreenView: View {
     @Query private var classes: [ClassOccurrenceRecord]
     @Query private var sessions: [SessionRecord]
 
-    public init(day: String, model: PlanModel, overlay: CalendarOverlayModel? = nil) {
-        (self.model, self.overlay) = (model, overlay)
+    /// `focus` completes, reschedules, reminds and saves edits from the panel (#217).
+    public init(day: String, model: PlanModel, focus: FocusModel, overlay: CalendarOverlayModel? = nil) {
+        (self.day, self.model, self.focus, self.overlay) = (day, model, focus, overlay)
         let target: String? = day
         _tasks = Query(filter: #Predicate<TaskRecord> { $0.scheduledDay == target || $0.isCarriedOver })
     }
@@ -30,12 +33,18 @@ public struct PlanScreenView: View {
     public var body: some View {
         PlanView(
             model: model, items: blockItems + classItems + sessionItems + (overlay?.items ?? []),
-            tasks: tasks.map { FocusCard(record: $0) }, overlay: overlay
+            tasks: columnCards, context: context, overlay: overlay
         )
         .onAppear { model.show() }
         .onDisappear { model.hide() }
         .onChange(of: model.visibleDays) { model.refreshRange() }
         .task(id: model.visibleDays) { await overlay?.refresh(days: model.visibleDays) }
+    }
+
+    private var columnCards: [FocusCard] { tasks.map { FocusCard(record: $0) } }
+
+    private var context: PlanTaskContext {
+        PlanTaskContext(focus: focus, day: day, cards: parentTasks.map { FocusCard(record: $0) })
     }
 
     private var blockItems: [CalendarItem] {

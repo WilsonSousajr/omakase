@@ -29,16 +29,25 @@ public struct CalendarItem: Identifiable, Equatable, Sendable {
     public let kind: Kind
     /// The source's colour when one is cached (a discipline's), else nil.
     public let tint: DesignColor?
+    /// A block's parent task, which its panel opens (#217); nil for a study
+    /// block's, a class and a session.
+    public let taskID: String?
 
     public init(
-        id: String, day: String, start: Int, end: Int, title: String, kind: Kind, tint: DesignColor? = nil
+        id: String, day: String, start: Int, end: Int, title: String, kind: Kind, tint: DesignColor? = nil,
+        taskID: String? = nil
     ) {
         (self.id, self.day, self.start, self.end) = (id, day, start, end)
-        (self.title, self.kind, self.tint) = (title, kind, tint)
+        (self.title, self.kind, self.tint, self.taskID) = (title, kind, tint, taskID)
     }
 
     /// Without a source colour an item is accent grey (spec M4, Grid).
     public var color: DesignColor { tint ?? Palette.accent }
+
+    /// "09:00 – 10:30", as the block panel shows it (#217).
+    public var timeRange: String { "\(Self.clock(start)) – \(Self.clock(end))" }
+
+    static func clock(_ minutes: Int) -> String { String(format: "%02d:%02d", minutes / 60, minutes % 60) }
 
     /// "HH:MM:SS" or "HH:MM", as the server sends block times, in minutes
     /// since midnight; nil for anything else.
@@ -52,12 +61,12 @@ public struct CalendarItem: Identifiable, Equatable, Sendable {
     /// A block from its record's fields; nil when its times don't parse or
     /// don't run forwards, which the server's constraint already forbids.
     public static func block(
-        id: String, day: String, startTime: String, endTime: String, title: String
+        id: String, day: String, startTime: String, endTime: String, title: String, taskID: String? = nil
     ) -> CalendarItem? {
         guard let start = minutes(fromClock: startTime), let end = minutes(fromClock: endTime), end > start else {
             return nil
         }
-        return CalendarItem(id: id, day: day, start: start, end: end, title: title, kind: .block)
+        return CalendarItem(id: id, day: day, start: start, end: end, title: title, kind: .block, taskID: taskID)
     }
 
     /// A block shows its parent's title; a parent the store doesn't hold
@@ -71,6 +80,7 @@ public struct CalendarItem: Identifiable, Equatable, Sendable {
     public static func block(_ record: TimeBlockRecord, titles: [String: String]) -> CalendarItem? {
         let title = blockTitle(taskID: record.taskID, studyBlockID: record.studyBlockID, titles: titles)
         return block(
-            id: record.id, day: record.day, startTime: record.startTime, endTime: record.endTime, title: title)
+            id: record.id, day: record.day, startTime: record.startTime, endTime: record.endTime, title: title,
+            taskID: record.taskID)
     }
 }

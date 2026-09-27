@@ -117,7 +117,10 @@ struct CalendarDayColumnView: View {
         GeometryReader { geometry in
             let width = geometry.size.width
             ZStack(alignment: .topLeading) {
+                // The empty grid under everything: a click there closes the panel (#217).
                 CalendarHourLinesView(layout: layout)
+                    .contentShape(.rect)
+                    .onTapGesture { model.select(nil) }
                 ForEach(ofKind(.externalEvent)) { item in
                     placed(item, CalendarLayout.blockSpan(lane: nil, width: width)) {
                         CalendarExternalEventView(item: item)

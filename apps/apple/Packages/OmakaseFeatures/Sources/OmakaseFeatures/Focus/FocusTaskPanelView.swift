@@ -79,6 +79,9 @@ struct FocusPanelActionsView: View {
     let card: FocusCard
     let day: String
     let model: FocusModel
+    /// Where Edit… goes instead of Focus's own editor: Plan opens the
+    /// editor from its model (#217). Nil in Focus.
+    var edit: ((String) -> Void)?
     @State private var picking = false
     @State private var picked = Date.now
 
@@ -99,7 +102,7 @@ struct FocusPanelActionsView: View {
     /// Return opens it too (#218): the panel shows only while a task is selected.
     private var editButton: some View {
         Button {
-            model.beginEditing(card.id)
+            if let edit { edit(card.id) } else { model.beginEditing(card.id) }
         } label: {
             Text("Edit…").foregroundStyle(Self.menuLabel.color)
         }
