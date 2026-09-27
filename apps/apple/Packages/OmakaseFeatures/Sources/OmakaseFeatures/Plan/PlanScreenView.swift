@@ -12,7 +12,6 @@ public struct PlanScreenView: View {
     private let model: PlanModel
     private let day: String
     private let focus: FocusModel
-    private let onEdit: ((String) -> Void)?
     @Query private var tasks: [TaskRecord]
     /// Every cached task, for titles: a block moved to another day keeps its
     /// parent's name although the column only lists today's tasks (#203).
@@ -22,16 +21,17 @@ public struct PlanScreenView: View {
     @Query private var classes: [ClassOccurrenceRecord]
     @Query private var sessions: [SessionRecord]
 
-    /// `focus` completes, reschedules and reminds from the panel; `onEdit`
-    /// is the task editor's hook, nil until it lands (#217, #218).
-    public init(day: String, model: PlanModel, focus: FocusModel, onEdit: ((String) -> Void)? = nil) {
-        (self.day, self.model, self.focus, self.onEdit) = (day, model, focus, onEdit)
+    /// `focus` completes, reschedules, reminds and saves edits from the panel (#217).
+    public init(day: String, model: PlanModel, focus: FocusModel) {
+        (self.day, self.model, self.focus) = (day, model, focus)
         let target: String? = day
         _tasks = Query(filter: #Predicate<TaskRecord> { $0.scheduledDay == target || $0.isCarriedOver })
     }
 
     public var body: some View {
-        PlanView(model: model, items: blockItems + classItems + sessionItems, tasks: columnCards, context: context)
+        PlanView(
+            model: model, items: blockItems + classItems + sessionItems, tasks: columnCards, context: context
+        )
         .onAppear { model.show() }
         .onDisappear { model.hide() }
         .onChange(of: model.visibleDays) { model.refreshRange() }
@@ -40,7 +40,7 @@ public struct PlanScreenView: View {
     private var columnCards: [FocusCard] { tasks.map { FocusCard(record: $0) } }
 
     private var context: PlanTaskContext {
-        PlanTaskContext(focus: focus, day: day, cards: parentTasks.map { FocusCard(record: $0) }, onEdit: onEdit)
+        PlanTaskContext(focus: focus, day: day, cards: parentTasks.map { FocusCard(record: $0) })
     }
 
     private var blockItems: [CalendarItem] {

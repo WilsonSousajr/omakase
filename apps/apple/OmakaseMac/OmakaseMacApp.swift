@@ -87,9 +87,8 @@ struct OmakaseMacApp: App {
 
     @ViewBuilder private var detail: some View {
         switch section {
-        // Plan's panel acts through Focus's model, so its Complete, Reschedule
-        // and Remind me queue exactly as Focus's do (#217). No onEdit until
-        // the task editor lands (#218).
+        // Plan's panel acts through Focus's model, so its Complete, Reschedule,
+        // Remind me and the editor's Save queue exactly as Focus's do (#217, #218).
         case .plan: if let plan, let focus { PlanScreenView(day: day, model: plan, focus: focus) }
         case .review: if let review { ReviewView(day: day, model: review) }
         case .focus, nil: if let focus, let timer { FocusView(day: day, model: focus, timer: timer) }

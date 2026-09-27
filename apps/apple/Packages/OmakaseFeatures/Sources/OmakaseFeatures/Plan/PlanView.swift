@@ -9,7 +9,7 @@ import SwiftUI
 public struct PlanView: View {
     static let panelWidth: CGFloat = 340
 
-    private let model: PlanModel
+    @Bindable private var model: PlanModel
     private let items: [CalendarItem]
     private let tasks: [FocusCard]
     private let context: PlanTaskContext
@@ -20,13 +20,12 @@ public struct PlanView: View {
 
     public var body: some View {
         HStack(spacing: 0) {
-            PlanTasksColumnView(board: FocusBoard(cards: tasks), model: model, onEdit: context.onEdit)
-                .frame(width: 380)
+            PlanTasksColumnView(board: FocusBoard(cards: tasks), model: model).frame(width: 380)
             Divider().overlay(Palette.hairline.color)
             VStack(spacing: 0) {
                 PlanHeaderView(model: model)
                 Divider().overlay(Palette.hairline.color)
-                CalendarGridView(model: model, items: items, onEdit: context.onEdit)
+                CalendarGridView(model: model, items: items)
             }
             if model.selection != nil {
                 Divider().overlay(Palette.hairline.color)
@@ -36,6 +35,11 @@ public struct PlanView: View {
         }
         .onChange(of: items, initial: true) { keepSelection() }
         .onChange(of: known) { keepSelection() }
+        // Plan's own editor state, saved through Focus's edit action so the
+        // write queues as Focus's does (#218).
+        .taskEditorSheet(taskID: $model.editingID, today: context.day) { id, changes in
+            context.focus.saveEdit(id, changes)
+        }
         .navigationTitle("Plan")
         .confirmationDialog(model.pending?.question ?? "", isPresented: isAsking, titleVisibility: .visible) {
             Button("Place anyway") { model.confirmPending() }
@@ -82,11 +86,10 @@ struct PlanHeaderView: View {
 }
 
 /// The open tasks the store holds: carried over, in progress, to do. A
-/// click selects one; a double-click asks to edit it (#217).
+/// click selects one; a double-click opens it in the editor (#217, #218).
 struct PlanTasksColumnView: View {
     let board: FocusBoard
     let model: PlanModel
-    let onEdit: ((String) -> Void)?
 
     private var open: [FocusCard] { board.carriedOver + board.inProgress + board.toDo }
 
@@ -99,17 +102,19 @@ struct PlanTasksColumnView: View {
             } else {
                 ScrollView {
                     VStack(alignment: .leading, spacing: Spacing.small) {
-                        ForEach(open) { card in
-                            PlanTaskRowView(card: card, isSelected: model.selection == .task(card.id))
-                                .planSelectable(select: { model.select(.task(card.id)) }, edit: { onEdit?(card.id) })
-                                .draggable(PlanDragPayload.task(card.id).text)
-                        }
+                        ForEach(open) { card in row(card) }
                     }
                     .padding(Spacing.large)
                 }
             }
         }
         .frame(maxHeight: .infinity, alignment: .top)
+    }
+
+    private func row(_ card: FocusCard) -> some View {
+        PlanTaskRowView(card: card, isSelected: model.selection == .task(card.id))
+            .planSelectable(select: { model.select(.task(card.id)) }, edit: { model.beginEditing(card.id) })
+            .draggable(PlanDragPayload.task(card.id).text)
     }
 }
 
