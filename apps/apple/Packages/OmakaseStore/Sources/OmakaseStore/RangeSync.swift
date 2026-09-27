@@ -39,8 +39,8 @@ struct RangeWindow {
     }
 }
 
-/// Refreshes the visible range for Plan: its blocks, class occurrences and
-/// sessions (M4 spec §2 L). The server's copy replaces the range's rows,
+/// Refreshes the visible range for Plan: its blocks, class occurrences,
+/// sessions (M4 spec §2 L), and its tasks with each series' occurrences (#206). The server's copy replaces the range's rows,
 /// except blocks with queued writes and `local-` placeholders, as in DaySync.
 ///
 ///     try await RangeSync(api: api, context: container.mainContext).refresh(days: week)
@@ -60,13 +60,15 @@ public final class RangeSync {
         async let blocks = api.timeBlocks(from: window.first, to: window.last)
         async let classes = api.classOccurrences(from: window.first, to: window.last)
         async let sessions = api.sessions(startedAfter: window.start, startedBefore: window.end)
+        async let tasks = api.occurrences(from: window.first, to: window.last)
         let queuedBefore = try pendingSubjects()
-        let fetched = try await (blocks, classes, sessions)
+        let fetched = try await (blocks, classes, sessions, tasks)
         // Read again after the network: a write made meanwhile keeps its block (as DaySync does).
         let apply = RangeApply(context: context, pending: queuedBefore.union(try pendingSubjects()), window: window)
         try apply.blocks(fetched.0)
         try apply.classes(fetched.1)
         try apply.sessions(fetched.2)
+        try apply.tasks(fetched.3)
         try context.save()
     }
 

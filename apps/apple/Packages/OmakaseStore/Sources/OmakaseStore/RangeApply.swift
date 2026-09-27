@@ -56,4 +56,23 @@ struct RangeApply {
             FetchDescriptor<SessionRecord>(predicate: #Predicate { $0.startedAt >= start && $0.startedAt < end }))
         for record in inRange where !keep.contains(record.id) { context.delete(record) }
     }
+
+    /// The range's tasks, computed occurrences included (#206). Only a computed
+    /// occurrence is removed for being missing: DaySync owns the rows, and a
+    /// row outside today may simply not be scheduled in the range any more.
+    func tasks(_ dtos: [TaskDTO]) throws {
+        for dto in dtos where !pending.contains(dto.recordID) {
+            let id = dto.recordID
+            let found = try context.fetch(FetchDescriptor<TaskRecord>(predicate: #Predicate { $0.id == id }))
+            if let existing = found.first { existing.apply(dto) } else { context.insert(TaskRecord(dto: dto)) }
+        }
+        let keep = Set(dtos.map(\.recordID)).union(pending)
+        let prefix = OccurrenceID.prefix
+        let computed = try context.fetch(
+            FetchDescriptor<TaskRecord>(predicate: #Predicate { $0.id.starts(with: prefix) }))
+        let days = Set(window.days)
+        for record in computed where !keep.contains(record.id) && days.contains(record.scheduledDay ?? "") {
+            context.delete(record)
+        }
+    }
 }
