@@ -22,6 +22,20 @@ public enum CaptureDestination: Equatable, Sendable {
         }
     }
 
+    /// The day the task is scheduled on: `today` (the client's day,
+    /// invariant 2), Plan's day, a slot's day, so adding its block queues no
+    /// reschedule (spec §9), or nil for the Inbox.
+    ///
+    ///     CaptureDestination.today.scheduledDay(today: FocusDay().today)
+    public func scheduledDay(today: String) -> String? {
+        switch self {
+        case .today: today
+        case .day(let day): day
+        case .slot(let slot): slot.day
+        case .inbox: nil
+        }
+    }
+
     private static func short(_ day: String, _ calendar: Calendar) -> String {
         DayString.short(day, calendar: calendar) ?? day
     }

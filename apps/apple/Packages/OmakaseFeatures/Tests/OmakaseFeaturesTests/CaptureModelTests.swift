@@ -235,6 +235,18 @@ struct CaptureModelTests {
     @Test func aDayThatDoesNotParseIsShownAsItIs() {
         #expect(CaptureDestination.day("28-09-2026").title(calendar: Self.utc) == "28-09-2026")
     }
+
+    // MARK: The day a save is scheduled on
+
+    @Test(
+        arguments: [
+            (CaptureDestination.today, "2026-09-27"), (.day("2026-09-30"), "2026-09-30"),
+            (.slot(PlanPlacement(day: "2026-09-28", start: 840, end: 900)), "2026-09-28"), (.inbox, nil),
+        ] as [(CaptureDestination, String?)])
+    func eachDestinationSchedulesItsDay(destination: CaptureDestination, day: String?) {
+        // Today is the client's day, passed in (invariant 2); the Inbox is undated.
+        #expect(destination.scheduledDay(today: "2026-09-27") == day)
+    }
 }
 
 /// The last kind a capture used, as UserDefaults keeps it (spec §4,
