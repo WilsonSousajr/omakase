@@ -160,3 +160,4 @@ class ClassOccurrenceSerializer(serializers.Serializer):
     date = serializers.DateField()
     start_time = serializers.TimeField()
     end_time = serializers.TimeField()
+    week = serializers.IntegerField()
