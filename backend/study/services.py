@@ -147,8 +147,10 @@ def cancel_class(schedule: ClassSchedule, day: datetime.date) -> tuple[ClassCanc
     """
     if not class_occurs_on(schedule, day):
         raise ValidationError(
-            f"{day.isoformat()} is not an occurrence of class schedule {schedule.id}: "
-            "expected its weekday, inside its semester, in one of its rotation weeks and outside a holiday."
+            {
+                "date": f"{day.isoformat()} is not an occurrence of class schedule {schedule.id}: "
+                "expected its weekday, inside its semester, in one of its rotation weeks and outside a holiday."
+            }
         )
     return ClassCancellation.objects.get_or_create(class_schedule=schedule, date=day)
 
