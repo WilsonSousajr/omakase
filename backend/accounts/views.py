@@ -12,10 +12,12 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from accounts.models import UserProfile
 from accounts.serializers import (
     GoogleLoginSerializer,
+    LogoutSerializer,
     UpdateProfileSerializer,
     UserProfileSerializer,
     UserSerializer,
 )
+from accounts.services import revoke_refresh_token
 
 logger = logging.getLogger(__name__)
 
@@ -94,6 +96,23 @@ class GoogleLoginView(generics.GenericAPIView):
             username = f"{base}{counter}"
             counter += 1
         return username
+
+
+class LogoutView(generics.GenericAPIView):
+    """Revoke the refresh token on sign-out (#223); 205 whether or not it was still live.
+
+    Authenticated, not AllowAny: only a signed-in caller revokes, and only its
+    own token. The access token stays valid until it expires (60 minutes).
+    """
+
+    serializer_class = LogoutSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        revoke_refresh_token(request.user, serializer.validated_data["refresh"])
+        return Response(status=status.HTTP_205_RESET_CONTENT)
 
 
 class MeView(generics.RetrieveUpdateAPIView):

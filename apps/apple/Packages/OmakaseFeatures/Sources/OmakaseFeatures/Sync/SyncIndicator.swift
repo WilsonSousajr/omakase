@@ -54,6 +54,7 @@ extension ParkedWrite {
         "session.create": "Record focus session", "review.put": "Save review",
         "task.materialize": "Save repeating task", "task.recurrence": "Set repeat",
         "task.recurrence.stop": "Stop repeat",
+        "class.cancel": "Cancel class", "class.restore": "Restore class",
     ]
 
     /// What the write was doing, in the user's words; an unknown kind shows as itself.

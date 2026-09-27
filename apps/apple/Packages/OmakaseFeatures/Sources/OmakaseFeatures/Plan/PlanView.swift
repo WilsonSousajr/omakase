@@ -1,30 +1,49 @@
 import SwiftUI
 
 /// Plan (spec M4, N1): the tasks to plan from on the left, then the day or
-/// week as a calendar. It draws values, not records. A task dragged onto a
-/// slot makes a block, and a drop that overlaps asks first (#203).
+/// week as a calendar, then, while something is selected, its panel (#217).
+/// It draws values, not records. A task dragged onto a slot makes a block,
+/// and a drop that overlaps asks first (#203).
 ///
-///     PlanView(model: plan, items: blocks + classes + sessions, tasks: cards)
+///     PlanView(model: plan, items: blocks + classes + sessions, tasks: cards, context: context)
 public struct PlanView: View {
-    private let model: PlanModel
+    static let panelWidth: CGFloat = 340
+
+    @Bindable private var model: PlanModel
     private let items: [CalendarItem]
     private let tasks: [FocusCard]
+    private let context: PlanTaskContext
     /// Calendar.app's events behind the grid (#229); nil hides the toggle.
     private let overlay: CalendarOverlayModel?
 
-    public init(model: PlanModel, items: [CalendarItem], tasks: [FocusCard], overlay: CalendarOverlayModel? = nil) {
-        (self.model, self.items, self.tasks, self.overlay) = (model, items, tasks, overlay)
+    public init(
+        model: PlanModel, items: [CalendarItem], tasks: [FocusCard], context: PlanTaskContext,
+        overlay: CalendarOverlayModel? = nil
+    ) {
+        (self.model, self.items, self.tasks, self.context, self.overlay) = (model, items, tasks, context, overlay)
     }
 
     public var body: some View {
         HStack(spacing: 0) {
-            PlanTasksColumnView(board: FocusBoard(cards: tasks)).frame(width: 380)
+            PlanTasksColumnView(board: FocusBoard(cards: tasks), model: model).frame(width: 380)
             Divider().overlay(Palette.hairline.color)
             VStack(spacing: 0) {
                 PlanHeaderView(model: model, overlay: overlay)
                 Divider().overlay(Palette.hairline.color)
                 CalendarGridView(model: model, items: items)
             }
+            if model.selection != nil {
+                Divider().overlay(Palette.hairline.color)
+                PlanDetailPanelView(model: model, items: items, cards: known, context: context)
+                    .frame(width: Self.panelWidth)
+            }
+        }
+        .onChange(of: items, initial: true) { keepSelection() }
+        .onChange(of: known) { keepSelection() }
+        // Plan's own editor state, saved through Focus's edit action so the
+        // write queues as Focus's does (#218).
+        .taskEditorSheet(taskID: $model.editingID, today: context.day) { id, changes in
+            context.focus.saveEdit(id, changes)
         }
         .navigationTitle("Plan")
         .confirmationDialog(model.pending?.question ?? "", isPresented: isAsking, titleVisibility: .visible) {
@@ -32,6 +51,11 @@ public struct PlanView: View {
             Button("Cancel", role: .cancel) { model.cancelPending() }
         }
     }
+
+    /// Every task the panel can show: the column's and the other cached ones.
+    private var known: [FocusCard] { tasks + context.cards }
+
+    private func keepSelection() { model.keepSelection(taskIDs: Set(known.map(\.id)), items: items) }
 
     /// Up while an overlapping drop waits; dismissing it cancels the drop.
     private var isAsking: Binding<Bool> {
@@ -68,9 +92,11 @@ struct PlanHeaderView: View {
     }
 }
 
-/// The open tasks the store holds: carried over, in progress, to do.
+/// The open tasks the store holds: carried over, in progress, to do. A
+/// click selects one; a double-click opens it in the editor (#217, #218).
 struct PlanTasksColumnView: View {
     let board: FocusBoard
+    let model: PlanModel
 
     private var open: [FocusCard] { board.carriedOver + board.inProgress + board.toDo }
 
@@ -83,9 +109,7 @@ struct PlanTasksColumnView: View {
             } else {
                 ScrollView {
                     VStack(alignment: .leading, spacing: Spacing.small) {
-                        ForEach(open) { card in
-                            PlanTaskRowView(card: card).draggable(PlanDragPayload.task(card.id).text)
-                        }
+                        ForEach(open) { card in row(card) }
                     }
                     .padding(Spacing.large)
                 }
@@ -93,12 +117,20 @@ struct PlanTasksColumnView: View {
         }
         .frame(maxHeight: .infinity, alignment: .top)
     }
+
+    private func row(_ card: FocusCard) -> some View {
+        PlanTaskRowView(card: card, isSelected: model.selection == .task(card.id))
+            .planSelectable(select: { model.select(.task(card.id)) }, edit: { model.beginEditing(card.id) })
+            .draggable(PlanDragPayload.task(card.id).text)
+    }
 }
 
 /// A task to plan: its title, estimate and priority, on an opaque row. No
-/// checkbox, because completing belongs to Focus.
+/// checkbox, because completing belongs to Focus. Selected, it has the
+/// Kanban card's 2-pt accent border (#217).
 struct PlanTaskRowView: View {
     let card: FocusCard
+    var isSelected = false
 
     var body: some View {
         HStack(spacing: Spacing.small) {
@@ -113,6 +145,7 @@ struct PlanTaskRowView: View {
         .padding(.horizontal, Spacing.medium)
         .padding(.vertical, Spacing.small)
         .background(Palette.surface.color, in: .rect(cornerRadius: Radius.medium))
+        .overlay { PlanSelectionBorderView(isSelected: isSelected, radius: Radius.medium) }
     }
 }
 
@@ -126,7 +159,12 @@ private let previewItems = [
 ]
 
 #Preview("Plan, dark") {
-    PlanView(model: PlanModel { "2026-09-26" }, items: previewItems, tasks: [])
+    let focus = FocusModel(
+        actions: .init(
+            toggle: { _ in }, move: { _, _ in }, reschedule: { _, _ in }, toggleSubtask: { _ in },
+            remind: { _, _ in }, edit: { _, _ in }))
+    let context = PlanTaskContext(focus: focus, day: "2026-09-26")
+    PlanView(model: PlanModel { "2026-09-26" }, items: previewItems, tasks: [], context: context)
         .frame(width: 1120, height: 680)
         .preferredColorScheme(.dark)
 }

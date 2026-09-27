@@ -178,11 +178,13 @@ extension TimeBlockDTO {
 }
 
 extension ClassOccurrenceDTO {
-    static func make(schedule: UUID = UUID(), day: String, name: String = "Calculus") throws -> ClassOccurrenceDTO {
+    static func make(
+        schedule: UUID = UUID(), day: String, name: String = "Calculus", cancelled: Bool = false
+    ) throws -> ClassOccurrenceDTO {
         let json = """
             {"id":"\(schedule)-\(day)","class_schedule_id":"\(schedule)","discipline_name":"\(name)",
              "discipline_color":"#3B82F6","class_type":"lecture","location":"Room 101","date":"\(day)",
-             "start_time":"08:00:00","end_time":"09:40:00"}
+             "start_time":"08:00:00","end_time":"09:40:00","week":2,"is_cancelled":\(cancelled)}
             """
         return try OmakaseJSON.decoder.decode(ClassOccurrenceDTO.self, from: Data(json.utf8))
     }

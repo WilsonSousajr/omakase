@@ -2,9 +2,9 @@ import Foundation
 import OmakaseAPI
 import SwiftData
 
-/// Applies a range's fetched copy to the store. A block in `pending` keeps its
-/// local state and is never deleted for being missing, and neither is a
-/// `local-` placeholder the server has not seen yet.
+/// Applies a range's fetched copy to the store. A block or a class in
+/// `pending` keeps its local state and is never deleted for being missing,
+/// and neither is a `local-` placeholder the server has not seen yet.
 @MainActor
 struct RangeApply {
     let context: ModelContext
@@ -27,7 +27,7 @@ struct RangeApply {
     }
 
     func classes(_ dtos: [ClassOccurrenceDTO]) throws {
-        for dto in dtos {
+        for dto in dtos where !pending.contains(dto.id) {
             let id = dto.id
             let found = try context.fetch(
                 FetchDescriptor<ClassOccurrenceRecord>(predicate: #Predicate { $0.id == id }))
@@ -37,7 +37,7 @@ struct RangeApply {
                 context.insert(ClassOccurrenceRecord(dto: dto))
             }
         }
-        let keep = Set(dtos.map(\.id))
+        let keep = Set(dtos.map(\.id)).union(pending)
         let days = window.days
         let inRange = try context.fetch(
             FetchDescriptor<ClassOccurrenceRecord>(predicate: #Predicate { days.contains($0.day) }))

@@ -153,4 +153,25 @@ struct RangeSyncTests {
         try await sync().refresh(days: week)
         #expect(try blocks().map(\.id) == ["local-block"])
     }
+
+    @Test func aCancelledClassIsStoredCancelledWithItsWeekIssue207() async throws {
+        await api.setOccurrences([try .make(day: "2026-09-23", cancelled: true)])
+        try await sync().refresh(days: week)
+        let occurrence = try #require(try classes().first)
+        #expect(occurrence.isCancelled && occurrence.week == 2)
+    }
+
+    @Test func aClassWithAPendingWriteKeepsItsLocalCancellationIssue207() async throws {
+        let occurrence = try ClassOccurrenceDTO.make(day: "2026-09-23")
+        await api.setOccurrences([occurrence])
+        let range = sync()
+        try await range.refresh(days: week)
+        try classes().first?.isCancelled = true
+        queueWrite(for: occurrence.id)
+        try await range.refresh(days: week)
+        #expect(try classes().map(\.isCancelled) == [true])
+        await api.setOccurrences([])
+        try await range.refresh(days: week)
+        #expect(try classes().count == 1)
+    }
 }

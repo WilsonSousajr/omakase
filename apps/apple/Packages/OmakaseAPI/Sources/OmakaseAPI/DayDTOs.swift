@@ -89,6 +89,8 @@ public struct WorkloadDTO: Sendable, Codable, Equatable {
 
 /// `ClassOccurrenceSerializer`: a weekly class on one date, computed by the
 /// server and never written. `id` is "<class_schedule_id>-<date>", not a UUID.
+/// A cancelled class is returned with `isCancelled`, not omitted (#125), and
+/// `week` is its week of the semester's rotation, 1-based (#126).
 public struct ClassOccurrenceDTO: Sendable, Codable, Equatable, Identifiable {
     public let id: String
     public let classScheduleId: UUID
@@ -99,4 +101,6 @@ public struct ClassOccurrenceDTO: Sendable, Codable, Equatable, Identifiable {
     public let date: APIDay
     public let startTime: String
     public let endTime: String
+    public let week: Int
+    public let isCancelled: Bool
 }

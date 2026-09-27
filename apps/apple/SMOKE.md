@@ -235,6 +235,25 @@ localhost:8000/api/v1`. Seed first:
 9. Select "Essay" in Focus and run a focus session to the end (or shorten
    the profile's pomodoro to 1 minute). Back in Plan, a thin grey lane is
    drawn beside the block at the times it ran. Breaks are not drawn.
+10. Click "Reply to Ana" in the task column: it gets a 2-pt grey border
+    (never red) and a panel opens on the right with its title, marks and
+    Complete, Reschedule and Remind me, as in Focus but without the timer.
+    Dragging the row onto the grid still makes a block. Reschedule to
+    Tomorrow: the row leaves the column, the panel stays, and `curl
+    "…/tasks/<id>/"` has `"scheduled_date": "<tomorrow>"`.
+11. Click the "Essay" block: the border moves to it and the panel shows
+    "Essay", its day and times, Open task and Delete block. Drag the block
+    by its body and resize it by its bottom edge: both still work.
+    Open task: the panel shows the Essay task. Complete it: the button
+    reads Reopen and `curl` has `"is_completed": true`. Reopen it.
+12. Select the block again and Delete block: the block and the panel go
+    at once. Click another block, then an empty slot, or press Escape:
+    the panel closes.
+13. Double-click "Reply to Ana" in the column: the task editor (#218)
+    opens on it. Change its title and Save: the row, the panel and any of
+    its blocks show the new title. Double-click one of its blocks, or
+    select the block and press Return: the editor opens on its task.
+    Escape closes it and nothing is sent. Focus's selection is unchanged.
 
 ### Edit a task (#218)
 
@@ -272,6 +291,33 @@ permission: `tccutil reset Calendar dev.omakase.mac` and
 7. Deny: `tccutil reset Calendar dev.omakase.mac`, turn it on, choose
    Don't Allow. The toggle stays off and a popover says "Omakase needs
    access in System Settings > Privacy > Calendars".
+
+## M8 - Cancelled classes
+
+Plan, against the same stack, with `curl …` as in M4. Seed the class of
+M4 on today's weekday (a semester, a discipline, a schedule through
+`…/study/classschedules/`), and note the schedule's `<id>`.
+
+1. Plan shows the class at 08:00-09:30, dashed, in its colour.
+2. Right-click it: the menu offers "Cancel this class". Choose it. The
+   class stays where it is, dimmed, its title struck through, behind any
+   block.
+   - `curl "…/study/class-occurrences/?date_from=<today>&date_to=<today>"`
+     has it with `"is_cancelled": true`.
+3. Right-click it again: the menu offers "Restore class". Choose it. The
+   class is drawn as before, and `curl` has `"is_cancelled": false`.
+4. Cancel it, then press ›, then Today: it is still struck through.
+5. Restore it. `docker-compose stop backend`. Cancel it: it is struck
+   through at once and the toolbar says a write is pending.
+   `docker-compose start backend`; after the catch-up it is still struck
+   through, `curl` has `"is_cancelled": true`, and the database has one
+   cancellation for the date:
+   `docker-compose exec db psql -U omakase -c "select count(*) from study_classcancellation where class_schedule_id = '<id>'"`
+   is 1.
+6. Restore it online. Offline again, cancel it and restore it before
+   reconnecting: the toolbar shows nothing pending, because the two
+   writes cancel out. Reconnect: `curl` has `"is_cancelled": false` and
+   the count in 5 is 0.
 
 ## M8 - Recurring tasks
 

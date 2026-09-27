@@ -88,7 +88,12 @@ struct OmakaseMacApp: App {
 
     @ViewBuilder private var detail: some View {
         switch section {
-        case .plan: if let plan { PlanScreenView(day: day, model: plan, overlay: calendarOverlay) }
+        // Plan's panel acts through Focus's model, so its Complete, Reschedule,
+        // Remind me and the editor's Save queue exactly as Focus's do (#217, #218).
+        case .plan:
+            if let plan, let focus {
+                PlanScreenView(day: day, model: plan, focus: focus, overlay: calendarOverlay)
+            }
         case .review: if let review { ReviewView(day: day, model: review) }
         case .focus, nil: if let focus, let timer { FocusView(day: day, model: focus, timer: timer) }
         }

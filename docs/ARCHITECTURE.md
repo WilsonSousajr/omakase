@@ -81,6 +81,13 @@ import its mixin.
   null for off; default 5, and a check constraint backs the serializer's
   400), and `shutdown_reminder_time`, a time of day in the user's local time
   (null for off).
+- `LogoutView` (`POST auth/logout/`, #223) blacklists the caller's refresh
+  token through simplejwt's `token_blacklist` app, via
+  `accounts/services.revoke_refresh_token`. It answers 205 for a repeated,
+  invalid or foreign token too, so a retried sign-out never fails and the
+  reply does not say which it was. Refresh rotation is off, so the refresh
+  token lives its full 7 days unless it is revoked here; the access token
+  still lives out its 60 minutes.
 - `MeView` is a `RetrieveUpdateAPIView`. GET returns `UserSerializer`; PATCH
   uses `UpdateProfileSerializer`, a plain `Serializer` because it writes two
   models, `User` and `Profile`, inside `transaction.atomic()`.
@@ -115,6 +122,11 @@ import its mixin.
 - `reorder-bulk/` takes at most 100 items and runs in `transaction.atomic()`
   with `select_for_update()`, so concurrent reorders serialize instead of
   interleaving.
+- `tasks/` filters by `project`, `workspace` (through the project) and
+  `discipline` with `UUIDFilter`, not `ModelChoiceFilter`: the queryset is
+  already the caller's, so a foreign id matches nothing, where a choice
+  filter would validate it against every row (#223). `unscheduled=true` is
+  the Inbox: no `scheduled_date`, no series template, no skipped occurrence.
 - `carried-over/?date=` returns incomplete tasks scheduled before that day.
   It is what a morning-planning flow reads. It returns rows only: series
   templates and skipped occurrences are excluded, and a computed occurrence
@@ -187,6 +199,12 @@ import its mixin.
   rotation `week` they fall in and `is_cancelled`. The expansion
   is `study/services.py: class_occurrences(user, start, end)`, which the
   view and `stats/workload/` both call (#176).
+- **Occurrences are wall-clock, so DST cannot move them (#132).** A class
+  is a weekday and two naive `TimeField`s, expanded by `date` arithmetic,
+  and returned as a date plus an offset-free time. No instant or offset is
+  computed, so neither the server's zone nor a clock change enters. The
+  client places the time on its own clock for that date. Checked across
+  both of London's 2026 changes by `study/tests/test_dst.py`.
 
 ### stats
 
@@ -246,10 +264,11 @@ and `auth/token/refresh/`.
 | Route | Methods | Notes |
 |---|---|---|
 | `auth/google/` | POST | Google ID token in, JWT pair and user out |
-| `auth/token/refresh/` | POST | simplejwt refresh |
+| `auth/token/refresh/` | POST | simplejwt refresh; 401 for a revoked token |
+| `auth/logout/` | POST | `{refresh}` blacklisted; 205, also when already revoked or invalid |
 | `auth/me/` | GET, PATCH | user and profile |
 | `auth/profile/` | GET, PATCH | preferences (`UserProfile`) |
-| `tasks/` | CRUD | plus `today/`, `carried-over/`, `reorder-bulk/` |
+| `tasks/` | CRUD | plus `today/`, `carried-over/`, `reorder-bulk/`; filter by `project`, `workspace`, `discipline`, `unscheduled` |
 | `tasks/occurrences/` | GET | `date_from` and `date_to` required, at most 62 days; rows plus computed occurrences, a plain list |
 | `tasks/<id>/occurrences/<date>/` | PUT | materialize one occurrence (201, 200 on replay), body applied at once; a non-occurrence date is a 400 |
 | `tasks/<id>/recurrence/` | PUT, DELETE | set the series' rule; DELETE `?date=` ends it the day before (204) |

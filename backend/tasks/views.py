@@ -1,7 +1,7 @@
 import datetime
 
 from django.db import transaction
-from django.db.models import Count
+from django.db.models import Count, QuerySet
 from django_filters import rest_framework as filters
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
@@ -33,10 +33,26 @@ from .services import day_items, materialize_occurrence, series_template, set_re
 class TaskFilter(filters.FilterSet):
     scheduled_date = filters.DateFilter()
     is_completed = filters.BooleanFilter()
+    # UUIDFilter, not ModelChoiceFilter: the queryset is already the caller's,
+    # so a foreign or unknown id matches nothing instead of a 400 that would
+    # say whether the id exists (#223).
+    project = filters.UUIDFilter(field_name="project")
+    workspace = filters.UUIDFilter(field_name="project__workspace")
+    discipline = filters.UUIDFilter(field_name="discipline")
+    unscheduled = filters.BooleanFilter(method="filter_unscheduled")
 
     class Meta:
         model = Task
         fields = ["priority", "area", "kanban_status", "scheduled_date", "is_completed"]
+
+    def filter_unscheduled(self, queryset: QuerySet[Task], name: str, value: bool) -> QuerySet[Task]:
+        """The Inbox: tasks with no date, without series templates or skipped rows (#124, #223).
+
+        >>> TaskFilter({"unscheduled": "true"}, queryset=Task.objects.filter(user=user)).qs
+        """
+        if not value:
+            return queryset
+        return queryset.filter(scheduled_date__isnull=True, recurrence__isnull=True, is_skipped=False)
 
 
 def _occurrence_range(params) -> tuple[datetime.date, datetime.date]:

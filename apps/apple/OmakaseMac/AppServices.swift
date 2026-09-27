@@ -232,6 +232,7 @@ final class AppServices {
         OutboxHandlers([
             TaskHandler(context: context), SubtaskHandler(context: context), BlockHandler(context: context),
             SessionHandler(), ReviewHandler(context: context), RecurrenceHandler(context: context),
+            ClassHandler(),
         ])
     }
 
