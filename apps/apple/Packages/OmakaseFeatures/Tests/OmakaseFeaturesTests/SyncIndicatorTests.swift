@@ -58,6 +58,8 @@ struct SyncIndicatorTests {
         ("task.create", "Create task"), ("task.patch", "Update task"), ("subtask.patch", "Update subtask"),
         ("block.patch", "Update block"), ("block.create", "Create block"), ("block.delete", "Delete block"),
         ("session.create", "Record focus session"), ("review.put", "Save review"),
+        ("task.materialize", "Save repeating task"), ("task.recurrence", "Set repeat"),
+        ("task.recurrence.stop", "Stop repeat"),
     ])
     func eachKnownKindReadsAsAnAction(kind: String, expected: String) {
         #expect(Self.parked(kind).actionTitle == expected)
