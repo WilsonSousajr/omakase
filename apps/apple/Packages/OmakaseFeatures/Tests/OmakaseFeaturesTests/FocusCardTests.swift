@@ -1,4 +1,5 @@
 import Foundation
+import OmakaseStore
 import Testing
 
 @testable import OmakaseFeatures
@@ -53,5 +54,13 @@ struct FocusCardTests {
         #expect(
             FocusMarks.labels(for: marked, day: "2026-03-07", calendar: utc) == ["from Mon 2", "Due Fri 13", "45m"])
         #expect(FocusMarks.labels(for: card(), day: "2026-03-07", calendar: utc).isEmpty)
+    }
+
+    @MainActor
+    @Test func aTaskInASeriesIsRepeating() {
+        let record = TaskRecord(id: "t1", title: "Gym")
+        #expect(!FocusCard(record: record).isRepeating)
+        record.seriesID = "series"
+        #expect(FocusCard(record: record).isRepeating)
     }
 }

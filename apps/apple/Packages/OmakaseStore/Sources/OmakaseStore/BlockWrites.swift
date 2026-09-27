@@ -35,6 +35,7 @@ public final class BlockWrites {
         guard (taskID == nil) != (studyBlockID == nil) else {
             throw Failure.parentCount(taskID: taskID, studyBlockID: studyBlockID)
         }
+        if let taskID { try TaskWrites(context: context).materializeIfComputed(taskID: taskID) }
         let block = TimeBlockRecord(
             id: "local-\(UUID().uuidString)", day: day, startTime: start, endTime: end, taskID: taskID,
             studyBlockID: studyBlockID)

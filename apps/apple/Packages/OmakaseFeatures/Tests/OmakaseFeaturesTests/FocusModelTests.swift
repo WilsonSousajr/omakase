@@ -18,7 +18,9 @@ final class RecordingFocusActions {
             remind: { [unowned self] id, date in
                 calls.append("remind \(id) \(date.map { "\($0.timeIntervalSince1970)" } ?? "clear")")
             },
-            edit: { [unowned self] id, changes in calls.append("edit \(id) \(changes.title ?? "-")") })
+            edit: { [unowned self] id, changes in calls.append("edit \(id) \(changes.title ?? "-")") },
+            setRepeat: { [unowned self] id, rule in calls.append("repeat \(id) \(rule.freq) \(rule.startsOn)") },
+            stopRepeat: { [unowned self] id, today in calls.append("stop \(id) \(today)") })
     }
 }
 
@@ -125,5 +127,26 @@ struct FocusModelTests {
         model.beginEditing("t1")
         model.saveEdit("t1", TaskEdit(title: "Renamed"))
         #expect(recorder.calls == ["edit t1 Renamed"] && model.editingID == nil)
+    }
+
+    @Test func aRepeatChoiceSetsTheRuleFromTheTasksDay() {
+        let model = FocusModel(actions: recorder.actions, defaults: defaults)
+        model.setRepeat(card("t1"), .daily, today: "2026-03-05")
+        #expect(recorder.calls == ["repeat t1 daily 2026-03-07"])
+    }
+
+    @Test func aBacklogTaskRepeatsFromToday() {
+        let model = FocusModel(actions: recorder.actions, defaults: defaults)
+        let backlog = FocusCard(
+            id: "t2", title: "t2", priority: "medium", minutes: nil, isCompleted: false, kanbanStatus: "todo",
+            scheduledDay: nil, dueDay: nil, isCarriedOver: false)
+        model.setRepeat(backlog, .weekdays, today: "2026-03-05")
+        #expect(recorder.calls == ["repeat t2 weekly 2026-03-05"])
+    }
+
+    @Test func stopRepeatingEndsTheSeriesFromToday() {
+        let model = FocusModel(actions: recorder.actions, defaults: defaults)
+        model.setRepeat(card("t1"), .stop, today: "2026-03-05")
+        #expect(recorder.calls == ["stop t1 2026-03-05"])
     }
 }

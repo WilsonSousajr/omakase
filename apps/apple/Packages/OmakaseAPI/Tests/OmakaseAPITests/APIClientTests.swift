@@ -28,7 +28,7 @@ struct APIClientTests {
         let transport = FakeHTTPTransport([.success(.init(status: 200, body: try Fixture.data("tasks_today")))])
         let (api, _) = client(transport)
         let tasks = try await api.tasks(on: APIDay(string: "2026-03-07")!)
-        #expect(tasks.count == 1)
+        #expect(tasks.count == 2)  // the row and the virtual occurrence (#206)
         let request = try #require(await transport.sent.first)
         #expect(request.url?.query() == "date=2026-03-07")
         #expect(request.value(forHTTPHeaderField: "Authorization") == "Bearer a1")

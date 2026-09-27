@@ -11,11 +11,12 @@ public struct TaskRowView: View {
     private let isCompleted: Bool
     private let marks: [String]
     private let hasReminder: Bool
+    private let isRepeating: Bool
     private let toggle: () -> Void
 
     public init(
         title: String, priority: String, minutes: Int = 0, isCompleted: Bool, marks: [String] = [],
-        hasReminder: Bool = false, toggle: @escaping () -> Void = {}
+        hasReminder: Bool = false, isRepeating: Bool = false, toggle: @escaping () -> Void = {}
     ) {
         self.title = title
         self.priority = priority
@@ -23,7 +24,7 @@ public struct TaskRowView: View {
         self.isCompleted = isCompleted
         // Marks, when given, already carry the estimate (FocusMarks).
         self.marks = marks.isEmpty && minutes > 0 ? ["\(minutes)m"] : marks
-        self.hasReminder = hasReminder
+        (self.hasReminder, self.isRepeating) = (hasReminder, isRepeating)
         self.toggle = toggle
     }
 
@@ -42,6 +43,7 @@ public struct TaskRowView: View {
                 Text(marks.joined(separator: " · "))
                     .font(TypeScale.caption).monospacedDigit().foregroundStyle(Palette.inkMuted.color)
             }
+            if isRepeating { RepeatGlyphView() }
             if hasReminder { ReminderBellView() }
             if !priority.isEmpty { PriorityBadgeView(priority: priority).opacity(isCompleted ? 0.5 : 1) }
         }
@@ -75,5 +77,15 @@ struct ReminderBellView: View {
             .font(TypeScale.caption)
             .foregroundStyle(Palette.inkMuted.color)
             .accessibilityLabel("Reminder set")
+    }
+}
+
+/// The small mark on a task in a repeating series (#206).
+struct RepeatGlyphView: View {
+    var body: some View {
+        Image(systemName: "repeat")
+            .font(TypeScale.caption)
+            .foregroundStyle(Palette.inkMuted.color)
+            .accessibilityLabel("Repeats")
     }
 }

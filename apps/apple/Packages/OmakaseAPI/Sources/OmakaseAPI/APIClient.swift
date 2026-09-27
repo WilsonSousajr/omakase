@@ -23,6 +23,8 @@ public protocol APIClient: Sendable {
     func me() async throws -> UserDTO
     func tasks(on day: APIDay) async throws -> [TaskDTO]
     func carriedOver(on day: APIDay) async throws -> [TaskDTO]
+    /// The tasks on `from` through `to` with each series' computed occurrences (#124); at most 62 days.
+    func occurrences(from first: APIDay, to last: APIDay) async throws -> [TaskDTO]
     func timeBlocks(on day: APIDay) async throws -> [TimeBlockDTO]
     func studyBlocks(on day: APIDay) async throws -> [StudyBlockDTO]
     /// Every block dated `from` through `to`, both inclusive (#200).
@@ -76,15 +78,20 @@ public actor OmakaseAPIClient: APIClient {
         try decode(try await authorized("GET", "/api/v1/auth/me/"))
     }
 
+    /// The day's rows and its computed occurrences (`isVirtual`, `id` nil, #206).
     public func tasks(on day: APIDay) async throws -> [TaskDTO] {
-        // Virtual occurrences (#124) are skipped until #206 stores them.
-        let items: [DayTaskItemDTO] = try await allPages("/api/v1/tasks/today/?date=\(day.string)")
-        return items.compactMap(\.task)
+        try await allPages("/api/v1/tasks/today/?date=\(day.string)")
     }
 
     public func carriedOver(on day: APIDay) async throws -> [TaskDTO] {
         // Not paginated: the action returns a plain list (backend/tasks/views.py).
         try decode(try await authorized("GET", "/api/v1/tasks/carried-over/?date=\(day.string)"))
+    }
+
+    public func occurrences(from first: APIDay, to last: APIDay) async throws -> [TaskDTO] {
+        // Not paginated: a plain list, as class-occurrences/ is (backend/tasks/views.py).
+        let path = "/api/v1/tasks/occurrences/?date_from=\(first.string)&date_to=\(last.string)"
+        return try decode(try await authorized("GET", path))
     }
 
     public func timeBlocks(on day: APIDay) async throws -> [TimeBlockDTO] {

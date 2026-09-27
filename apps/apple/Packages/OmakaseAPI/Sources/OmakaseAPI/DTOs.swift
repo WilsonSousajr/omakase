@@ -9,8 +9,10 @@ public struct Page<Item: Sendable & Codable & Equatable>: Sendable, Codable, Equ
 }
 
 /// `TaskListSerializer` (backend/tasks/serializers.py); `tag_ids` is write-only.
+/// `id` is nil only for a series' computed occurrence (`isVirtual`, #124),
+/// which is known by its `series` and `occurrenceDate` instead.
 public struct TaskDTO: Sendable, Codable, Equatable, Identifiable {
-    public let id: UUID
+    public let id: UUID?
     public let title: String
     public let description: String
     public let priority: String
@@ -32,6 +34,31 @@ public struct TaskDTO: Sendable, Codable, Equatable, Identifiable {
     public let updatedAt: Date
     /// Embedded by today and carried-over only; nil elsewhere, and then sync leaves local subtasks alone.
     public let subtasks: [SubtaskDTO]?
+    /// The series template this task is an occurrence of, or nil.
+    public let series: UUID?
+    /// The rule date this occurrence stands for; its `scheduledDate` may differ once moved.
+    public let occurrenceDate: APIDay?
+    public let isSkipped: Bool
+    /// Computed by the server and not stored: `id` is nil until it is materialized.
+    public let isVirtual: Bool
+    /// The series' rule, or nil outside a series.
+    public let recurrence: RecurrenceDTO?
+}
+
+/// `TaskRecurrenceSerializer`: `weekdays` are 0 (Monday) to 6, for a weekly
+/// rule only; empty means the weekday of `startsOn`. `until` is inclusive.
+public struct RecurrenceDTO: Sendable, Codable, Equatable {
+    public let freq: String
+    public let interval: Int
+    public let weekdays: [Int]
+    public let startsOn: APIDay
+    public let until: APIDay?
+
+    public init(freq: String, interval: Int, weekdays: [Int], startsOn: APIDay, until: APIDay?) {
+        (self.freq, self.interval, self.weekdays, self.startsOn, self.until) = (
+            freq, interval, weekdays, startsOn, until
+        )
+    }
 }
 
 public struct TagDTO: Sendable, Codable, Equatable, Identifiable {

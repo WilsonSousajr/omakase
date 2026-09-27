@@ -22,8 +22,8 @@ struct DTODecodingTests {
     }
 
     @Test func decodesTodaysPage() throws {
-        let page = try OmakaseJSON.decoder.decode(Page<DayTaskItemDTO>.self, from: Fixture.data("tasks_today"))
-        let task = try #require(page.results.first?.task)
+        let page = try OmakaseJSON.decoder.decode(Page<TaskDTO>.self, from: Fixture.data("tasks_today"))
+        let task = try #require(page.results.first)
         #expect(page.count == 2)
         #expect(task.scheduledDate?.string == "2026-03-07")
         #expect(task.tags.count == 1 && task.isCompleted == false && task.completedAt == nil)
@@ -38,8 +38,8 @@ struct DTODecodingTests {
         // #187: remind_at is an ISO-8601 datetime in UTC with a "Z".
         let reminded = try OmakaseJSON.decoder.decode(TaskDTO.self, from: Fixture.data("task_patch"))
         #expect(reminded.remindAt?.timeIntervalSince1970 == 1_772_884_800)
-        let page = try OmakaseJSON.decoder.decode(Page<DayTaskItemDTO>.self, from: Fixture.data("tasks_today"))
-        #expect(page.results.first?.task?.remindAt == nil)
+        let page = try OmakaseJSON.decoder.decode(Page<TaskDTO>.self, from: Fixture.data("tasks_today"))
+        #expect(page.results.first?.remindAt == nil)
     }
 
     @Test func decodesMicrosecondAndWholeSecondDatetimes() throws {

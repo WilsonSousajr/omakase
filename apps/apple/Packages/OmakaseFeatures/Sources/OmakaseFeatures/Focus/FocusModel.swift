@@ -24,14 +24,20 @@ public final class FocusModel {
         let remind: (String, Date?) -> Void
         /// The task editor's save: only the fields that changed (#218).
         let edit: (String, TaskEdit) -> Void
+        /// The Repeat menu (#206): a rule for the task's series, or its end from the client's day.
+        let setRepeat: (String, RepeatRule) -> Void
+        let stopRepeat: (String, String) -> Void
 
         public init(
             toggle: @escaping (String) -> Void, move: @escaping (String, String) -> Void,
             reschedule: @escaping (String, String?) -> Void, toggleSubtask: @escaping (String) -> Void,
-            remind: @escaping (String, Date?) -> Void, edit: @escaping (String, TaskEdit) -> Void
+            remind: @escaping (String, Date?) -> Void, edit: @escaping (String, TaskEdit) -> Void,
+            setRepeat: @escaping (String, RepeatRule) -> Void = { _, _ in },
+            stopRepeat: @escaping (String, String) -> Void = { _, _ in }
         ) {
             (self.toggle, self.move) = (toggle, move)
             (self.reschedule, self.toggleSubtask, self.remind, self.edit) = (reschedule, toggleSubtask, remind, edit)
+            (self.setRepeat, self.stopRepeat) = (setRepeat, stopRepeat)
         }
     }
 
@@ -68,6 +74,15 @@ public final class FocusModel {
     /// Sets the task's reminder to `choice`, counted from `now`; `.clear` removes it.
     public func remind(_ id: String, _ choice: ReminderChoice, now: Date = .now) {
         actions.remind(id, choice.date(from: now, calendar: calendar))
+    }
+
+    /// Repeats the task by `choice`, counted from its day (or `today` for a
+    /// backlog task); Stop repeating ends the series before `today`.
+    public func setRepeat(_ card: FocusCard, _ choice: RepeatChoice, today: String) {
+        guard let rule = choice.rule(startsOn: card.scheduledDay ?? today) else {
+            return actions.stopRepeat(card.id, today)
+        }
+        actions.setRepeat(card.id, rule)
     }
 
     /// Opens the editor on a task (double-click, the Edit button), selecting it too.

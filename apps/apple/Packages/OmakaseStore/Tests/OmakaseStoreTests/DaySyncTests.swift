@@ -62,8 +62,8 @@ struct DaySyncTests {
         record.isCompleted = true
         container.mainContext.insert(
             OutboxEntry(
-                sequence: 1, method: "PATCH", path: "/api/v1/tasks/\(task.id)/", body: nil,
-                subjectID: task.id.uuidString))
+                sequence: 1, method: "PATCH", path: "/api/v1/tasks/\(task.recordID)/", body: nil,
+                subjectID: task.recordID))
         try await today.refresh()
         #expect(try records().first?.isCompleted == true)
     }
