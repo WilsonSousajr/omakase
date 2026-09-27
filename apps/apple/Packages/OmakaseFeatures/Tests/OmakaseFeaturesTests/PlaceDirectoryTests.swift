@@ -161,4 +161,23 @@ struct PlaceDirectoryTests {
         #expect(directory.disciplines.map(\.title) == ["Calculus"])
         #expect(directory.semesterTitle == "Fall")
     }
+
+    /// The snapshot a view watches to know when to reload the directory
+    /// (spec §8): equal for the same day and library rows, so a redraw the
+    /// timer's tick causes does not trigger one.
+    @MainActor
+    @Test func theSnapshotChangesOnlyWhenTheDayOrALibraryRowChanges() throws {
+        let container = try StoreSchema.container(inMemory: true)
+        let context = container.mainContext
+        try insertSampleLibrary(into: context)
+        let projects = try context.fetch(FetchDescriptor<ProjectRecord>())
+        let disciplines = try context.fetch(FetchDescriptor<DisciplineRecord>())
+        let snapshot = PlaceLibrarySnapshot(today: "2026-09-27", projects: projects, disciplines: disciplines)
+
+        #expect(snapshot == PlaceLibrarySnapshot(today: "2026-09-27", projects: projects, disciplines: disciplines))
+        #expect(snapshot != PlaceLibrarySnapshot(today: "2026-09-28", projects: projects, disciplines: disciplines))
+
+        projects.first?.name = "Renamed"
+        #expect(snapshot != PlaceLibrarySnapshot(today: "2026-09-27", projects: projects, disciplines: disciplines))
+    }
 }
