@@ -30,6 +30,7 @@ public struct FocusView: View {
                 .frame(width: 340)
         }
         .onChange(of: board, initial: true) { _, board in model.keepSelection(in: board) }
+        .taskEditorSheet(taskID: $model.editingID, today: day) { id, changes in model.saveEdit(id, changes) }
         .navigationTitle("Focus")
     }
 
