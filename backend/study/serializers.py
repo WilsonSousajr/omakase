@@ -161,3 +161,5 @@ class ClassOccurrenceSerializer(serializers.Serializer):
     start_time = serializers.TimeField()
     end_time = serializers.TimeField()
     week = serializers.IntegerField()
+    is_cancelled = serializers.BooleanField()
+
