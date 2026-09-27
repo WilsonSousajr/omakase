@@ -19,13 +19,15 @@ from .serializers import (
     TagSerializer,
     TaskDayListSerializer,
     TaskListSerializer,
+    TaskOccurrenceSerializer,
+    TaskRecurrenceSerializer,
     TaskReorderSerializer,
     TaskSerializer,
     TimeBlockSerializer,
     WorkspaceSerializer,
     day_items_data,
 )
-from .services import day_items
+from .services import day_items, materialize_occurrence, series_template, set_recurrence, stop_recurrence
 
 
 class TaskFilter(filters.FilterSet):
@@ -111,6 +113,35 @@ class TaskViewSet(IdempotentCreateMixin, viewsets.ModelViewSet):
         # today/ over a range, for Plan (#124); a plain list, as class-occurrences/ is.
         start, end = _occurrence_range(request.query_params)
         return Response(day_items_data(day_items(request.user, start, end), self.get_serializer_context()))
+
+    @action(detail=True, methods=["put"], url_path=r"occurrences/(?P<day>[^/]+)")
+    def occurrence(self, request, pk=None, day=None):
+        # Materialize (#124): idempotent by (series, date), so the outbox
+        # replays it without an Idempotency-Key. The body applies in the same
+        # transaction, so a rejected body leaves no row behind.
+        target = parse_client_date(day)
+        template = series_template(self.get_object())
+        with transaction.atomic():
+            row, created = materialize_occurrence(template, target)
+            serializer = TaskOccurrenceSerializer(
+                row, data=request.data, partial=True, context=self.get_serializer_context()
+            )
+            serializer.is_valid(raise_exception=True)
+            self.perform_update(serializer)
+        code = status.HTTP_201_CREATED if created else status.HTTP_200_OK
+        return Response(serializer.data, status=code)
+
+    @action(detail=True, methods=["put", "delete"])
+    def recurrence(self, request, pk=None):
+        # Set the series' rule (PUT) or end it before the client's ?date= (DELETE) (#124).
+        task = self.get_object()
+        if request.method == "DELETE":
+            stop_recurrence(task, parse_client_date(request.query_params.get("date")))
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        rule = TaskRecurrenceSerializer(data=request.data)
+        rule.is_valid(raise_exception=True)
+        task = set_recurrence(task, rule.validated_data)
+        return Response(TaskDayListSerializer(task, context=self.get_serializer_context()).data)
 
     @action(detail=False, methods=["get"], url_path="carried-over")
     def carried_over(self, request):

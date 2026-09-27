@@ -9,7 +9,9 @@ import datetime
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass
 
+from django.db import transaction
 from django.db.models import Q, QuerySet
+from rest_framework.exceptions import ValidationError
 
 from .models import RecurrenceFreqChoices, Task, TaskRecurrence
 
@@ -143,3 +145,107 @@ def day_items(user, start: datetime.date, end: datetime.date) -> list[DayItem]:
     items: list[DayItem] = [*rows, *_virtual_occurrences(user, start, end)]
     # sorted() is stable: rows keep the model ordering within a day.
     return sorted(items, key=lambda item: item.scheduled_date)
+
+
+# What an occurrence, or a new template, takes from the task it is made from.
+# Completion, dates, reminders, subtasks and blocks stay with each row (M8 §2).
+_COPIED_FIELDS = (
+    "user_id",
+    "title",
+    "description",
+    "notes",
+    "priority",
+    "area",
+    "project_id",
+    "discipline_id",
+    "estimated_minutes",
+    "kanban_order",
+)
+
+
+def _copy_task(source: Task, **fields: object) -> Task:
+    copy = Task.objects.create(**{name: getattr(source, name) for name in _COPIED_FIELDS}, **fields)
+    copy.tags.set(source.tags.all())
+    return copy
+
+
+def series_template(task: Task) -> Task:
+    """The template of the series `task` belongs to or templates; a 400 when it is in none.
+
+    >>> series_template(occurrence) == occurrence.series
+    True
+    """
+    if task.series is not None:
+        return task.series
+    if hasattr(task, "recurrence"):
+        return task
+    raise ValidationError(
+        {"series": f"task {task.pk} is not in a series; expected a series template or one of its occurrences."}
+    )
+
+
+def materialize_occurrence(template: Task, day: datetime.date) -> tuple[Task, bool]:
+    """Get or create the row for (template, day), copied from the template; returns (row, created).
+
+    Idempotent by that natural key, so the outbox replays it (#124). A stored
+    row is returned even if the rule has since changed; a new one needs `day`
+    to be a rule date, or it is a 400.
+
+    >>> row, created = materialize_occurrence(template, datetime.date(2026, 3, 4))
+    """
+    with transaction.atomic():
+        # Locking the template serializes two first writes to one occurrence.
+        template = Task.objects.select_for_update(of=("self",)).select_related("recurrence").get(pk=template.pk)
+        existing = Task.objects.filter(series=template, occurrence_date=day).first()
+        if existing is not None:
+            return existing, False
+        rule = template.recurrence
+        if not occurs_on(rule, day):
+            raise ValidationError(
+                {
+                    "date": f"{day.isoformat()} is not an occurrence of series {template.pk}: expected a date its "
+                    f"{rule.freq} rule produces from {rule.starts_on.isoformat()} to {rule.until or 'no end'}."
+                }
+            )
+        return _copy_task(template, series=template, occurrence_date=day, scheduled_date=day), True
+
+
+def _template_for_rule(task: Task, starts_on: datetime.date) -> Task:
+    """The series template for `task`, splitting a plain task into template plus first occurrence."""
+    if task.series is not None:
+        return task.series
+    if hasattr(task, "recurrence"):
+        return task
+    template = _copy_task(task)
+    # The task stays the first occurrence: its blocks, subtasks and completion stay put (M8 §2).
+    task.series, task.occurrence_date = template, task.scheduled_date or starts_on
+    task.save(update_fields=["series", "occurrence_date", "updated_at"])
+    return template
+
+
+def set_recurrence(task: Task, rule_values: dict) -> Task:
+    """Set the rule of `task`'s series, making one if `task` is in none; returns `task` reloaded.
+
+    >>> set_recurrence(task, {"freq": "daily", "interval": 1, "weekdays": [], "starts_on": day, "until": None})
+    """
+    with transaction.atomic():
+        # Two concurrent PUTs on a plain task must not make two templates.
+        locked = Task.objects.select_for_update().get(pk=task.pk)
+        template = _template_for_rule(locked, rule_values["starts_on"])
+        TaskRecurrence.objects.update_or_create(task=template, defaults=rule_values)
+    return _owned_tasks(task.user).get(pk=task.pk)
+
+
+def stop_recurrence(task: Task, day: datetime.date) -> None:
+    """End `task`'s series before the client's `day`; rows already stored are history and stay.
+
+    until becomes day - 1, never later than it was, and never before
+    starts_on - 1, which is an empty series.
+
+    >>> stop_recurrence(task, datetime.date(2026, 3, 9))
+    """
+    rule = series_template(task).recurrence
+    last = day - datetime.timedelta(days=1)
+    earliest = rule.starts_on - datetime.timedelta(days=1)
+    rule.until = max(earliest, min(last, rule.until or last))
+    rule.save(update_fields=["until", "updated_at"])

@@ -224,6 +224,13 @@ class TaskDayListSerializer(TaskListSerializer):
         fields = TaskListSerializer.Meta.fields + ["subtasks"]
 
 
+class TaskOccurrenceSerializer(TaskDayListSerializer):
+    """The materialize PUT's body (#124): any task field, plus is_skipped, which only an occurrence has."""
+
+    class Meta(TaskDayListSerializer.Meta):
+        read_only_fields = [name for name in TaskListSerializer.Meta.read_only_fields if name != "is_skipped"]
+
+
 class VirtualOccurrenceSerializer(serializers.BaseSerializer):
     """A computed occurrence, shaped as TaskDayListSerializer shapes a row (#124, M8 design §2).
 
