@@ -71,10 +71,10 @@ public final class ProjectsModel {
     }
 
     /// Source colours for calendar blocks (design-system-apple, Signals).
-    public static let palette = [
+    public nonisolated static let palette = [
         "#6b7280", "#3b82f6", "#22c55e", "#f59e0b", "#ef4444", "#14b8a6", "#ec4899", "#f97316",
     ]
-    public static let statuses = ["active", "paused", "completed", "archived"]
+    public nonisolated static let statuses = ["active", "paused", "completed", "archived"]
 
     /// nil is All.
     public var selectedWorkspaceID: String?
