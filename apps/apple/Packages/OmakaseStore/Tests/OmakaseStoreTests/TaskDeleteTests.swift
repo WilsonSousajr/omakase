@@ -38,6 +38,20 @@ struct TaskDeleteTests {
         #expect(try entries().isEmpty)
     }
 
+    @Test func deletingAnUnsentCaptureTakesItsBlocksWithItIssue275() throws {
+        // #275: a slot drawn on Plan (#264) captures a task and its block together;
+        // deleting that capture before it is sent must not leave the block.
+        let writes = TaskWrites(context: context)
+        let captured = try writes.capture(
+            title: "Typo", day: "2026-03-07", filing: TaskFiling(area: .study, parent: nil))
+        _ = try BlockWrites(context: context).create(
+            taskID: captured.id, studyBlockID: nil, day: "2026-03-07", start: "14:00:00", end: "15:00:00")
+        try writes.delete(captured)
+        let blocks = try context.fetch(FetchDescriptor<TimeBlockRecord>())
+        #expect(blocks.map(\.taskID).isEmpty)
+        #expect(try entries().isEmpty)
+    }
+
     @Test func theTaskHandlerTakesTheDeletesEmptyReply() {
         let handler = TaskHandler(context: context)
         #expect(handler.kinds.contains("task.delete"))

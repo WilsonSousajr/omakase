@@ -82,18 +82,27 @@ public final class TaskWrites {
     }
 
     /// Deletes the task (#225). A capture whose create was never sent is
-    /// withdrawn with everything queued on it; otherwise the DELETE is queued,
-    /// and a 404 on it counts as done (#201).
+    /// withdrawn with everything queued on it, and its local blocks (#275);
+    /// otherwise the DELETE is queued, and a 404 on it counts as done (#201).
     public func delete(_ record: TaskRecord) throws {
         let id = record.id
         context.delete(record)
         if let create = queue.unsentCreate(of: id) {
             queue.withdraw(create)
+            try deleteUnsentBlocks(of: id)
         } else {
             try queue.enqueue(
                 kind: "task.delete", method: "DELETE", path: "/api/v1/tasks/\(id)/", body: nil, subjectID: id)
         }
         try context.save()
+    }
+
+    /// An unsent capture's blocks were never sent either: `withdraw` took
+    /// their creates with the task's, so their records go too, or Plan keeps
+    /// an orphan no sync will ever remove (#275).
+    private func deleteUnsentBlocks(of taskID: String) throws {
+        let blocks = FetchDescriptor<TimeBlockRecord>(predicate: #Predicate { $0.taskID == taskID })
+        for block in try context.fetch(blocks) { context.delete(block) }
     }
 
     private func patch(_ record: TaskRecord, body: some Encodable) throws {
