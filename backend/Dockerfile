@@ -25,7 +25,8 @@ RUN addgroup --system --gid 1001 django && \
     adduser --system --uid 1001 --gid 1001 django
 
 RUN python manage.py collectstatic --noinput 2>/dev/null || true
-RUN chown -R django:django /app
+RUN chown -R django:django /app && chmod +x /app/docker-entrypoint.sh
 
 USER django
-CMD ["gunicorn", "omakase.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3"]
+# Migrations, then gunicorn: Coolify runs no separate migrate step (#243).
+CMD ["/app/docker-entrypoint.sh"]
