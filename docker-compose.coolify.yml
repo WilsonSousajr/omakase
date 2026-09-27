@@ -1,0 +1,46 @@
+# Production on Coolify (#243; docs/deploy-coolify.md). Coolify's "Docker
+# Compose" build pack builds this file, terminates TLS in its own proxy and
+# routes the API's domain to backend:8000, so no port is published here.
+# Every ${VAR} is set in Coolify's environment variables. None has a
+# default: Django refuses to start without DJANGO_SECRET_KEY or
+# DATABASE_URL (invariant 7), and Postgres without POSTGRES_PASSWORD.
+services:
+  backend:
+    build:
+      context: ./backend
+      target: prod
+    environment:
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY}
+      # localhost: the health probe below calls the container by that name.
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS},localhost
+      # The whole URL, set in Coolify; its host is this file's "db" service.
+      DATABASE_URL: ${DATABASE_URL}
+      GOOGLE_CLIENT_IDS: ${GOOGLE_CLIENT_IDS}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-}
+      GUNICORN_WORKERS: ${GUNICORN_WORKERS:-3}
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health/')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-omakase}
+      POSTGRES_USER: ${POSTGRES_USER:-omakase}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-omakase}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:

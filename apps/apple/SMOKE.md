@@ -15,6 +15,14 @@ the milestone's closing PR.
 3. `cd apps/apple && ./install-tools.sh && .tools/bin/xcodegen generate`,
    then open `Omakase.xcodeproj` and Run.
 
+### Against production
+
+Release builds read `OMAKASE_API_BASE_URL` from `Config/Release.xcconfig`
+(#245). Set it to the Coolify domain (`docs/deploy-coolify.md`) before
+building one; left as `https://api.example.invalid`, the app can't connect,
+by design. Debug builds keep `http://localhost:8000`, and the runs below use
+the local stack.
+
 ## M1
 
 1. Sign in with Google. Today shows today's tasks. If there are none, create

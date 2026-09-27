@@ -21,7 +21,7 @@ targets:
     sources: [OmakaseMac]
     configFiles:
       Debug: Config/App.xcconfig
-      Release: Config/App.xcconfig
+      Release: Config/Release.xcconfig
     info:
       path: OmakaseMac/Info.plist
       properties:

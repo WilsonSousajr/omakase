@@ -104,17 +104,25 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# CORS
-CORS_ALLOWED_ORIGINS = os.environ.get(
-    "CORS_ALLOWED_ORIGINS",
-    "http://localhost:3000,http://localhost:3001",
-).split(",")
+
+# CORS: the native clients send no Origin and the web client is gone, so
+# no origin is allowed unless the environment names one (#243).
+def cors_allowed_origins(environ: Mapping[str, str]) -> list[str]:
+    """Comma-separated CORS_ALLOWED_ORIGINS; blanks dropped. Usage: ``cors_allowed_origins(os.environ)``."""
+    return [origin.strip() for origin in environ.get("CORS_ALLOWED_ORIGINS", "").split(",") if origin.strip()]
+
+
+CORS_ALLOWED_ORIGINS = cors_allowed_origins(os.environ)
 
 # CSRF trusted origins (required when behind reverse proxy with HTTPS)
 CSRF_TRUSTED_ORIGINS = os.environ.get(
     "CSRF_TRUSTED_ORIGINS",
     "http://localhost:3000,http://localhost:8000",
 ).split(",")
+
+# The container's health probe is plain HTTP inside the network, so it is
+# never redirected to HTTPS (#243); harmless while the redirect is off.
+SECURE_REDIRECT_EXEMPT = [r"^api/health/$"]
 
 # Production security (only when DEBUG=False)
 if not DEBUG:
