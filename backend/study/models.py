@@ -225,3 +225,49 @@ class ClassSchedule(models.Model):
     def __str__(self):
         day_name = dict(self.DAY_OF_WEEK_CHOICES).get(self.day_of_week, "")
         return f"{self.discipline} — {day_name} {self.start_time:%H:%M}"
+
+
+class Holiday(models.Model):
+    """A date range with no classes in its semester (#125). Both ends are inclusive."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    semester = models.ForeignKey(Semester, on_delete=models.CASCADE, related_name="holidays")
+    name = models.CharField(max_length=200)
+    start_date = models.DateField()
+    end_date = models.DateField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["start_date"]
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(end_date__gte=models.F("start_date")),
+                name="holiday_end_not_before_start",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.name} ({self.start_date} - {self.end_date})"
+
+
+class ClassCancellation(models.Model):
+    """One occurrence of a class schedule that does not happen (#125).
+
+    An exception to the weekly rule, keyed by (schedule, date): the M8
+    principle stores exceptions, never occurrences.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    class_schedule = models.ForeignKey(ClassSchedule, on_delete=models.CASCADE, related_name="cancellations")
+    date = models.DateField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["date"]
+        constraints = [
+            models.UniqueConstraint(fields=["class_schedule", "date"], name="class_cancellation_one_per_date"),
+        ]
+
+    def __str__(self):
+        return f"{self.class_schedule} cancelled on {self.date}"
