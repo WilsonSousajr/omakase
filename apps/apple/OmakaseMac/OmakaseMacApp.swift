@@ -12,6 +12,7 @@ struct OmakaseMacApp: App {
     @State private var focus: FocusModel?
     @State private var review: ReviewModel?
     @State private var plan: PlanModel?
+    @State private var calendarOverlay: CalendarOverlayModel?
     @State private var timer: TimerModel?
     @State private var failedWrites: FailedWritesModel?
     @State private var prompt: SessionPrompt?
@@ -87,7 +88,7 @@ struct OmakaseMacApp: App {
 
     @ViewBuilder private var detail: some View {
         switch section {
-        case .plan: if let plan { PlanScreenView(day: day, model: plan) }
+        case .plan: if let plan { PlanScreenView(day: day, model: plan, overlay: calendarOverlay) }
         case .review: if let review { ReviewView(day: day, model: review) }
         case .focus, nil: if let focus, let timer { FocusView(day: day, model: focus, timer: timer) }
         }
@@ -103,6 +104,7 @@ struct OmakaseMacApp: App {
         focus = FocusModel(actions: services.focusActions { handle($0) })
         review = ReviewModel(actions: services.reviewActions { handle($0) })
         plan = PlanModel(actions: services.planActions { handle($0) }) { FocusDay().today }
+        calendarOverlay = services.makeCalendarOverlay()
         let timer = services.makeTimer { handle($0) }
         self.timer = timer
         services.startTicking(timer)
@@ -124,11 +126,13 @@ struct OmakaseMacApp: App {
     }
 
     /// Only a definite sign-out leaves Today; an offline failure keeps the cache (review I3).
-    /// Plan, while it shows, reads its visible days again (#203).
+    /// Plan, while it shows, reads its visible days again (#203), Calendar.app's included (#229).
     private func handle(_ outcome: SyncCoordinator.Outcome) {
         if outcome == .signedOut { signedIn = false }
         services.replanReminders()
         plan?.caughtUp()
+        guard section == .plan, let plan, let calendarOverlay else { return }
+        Task { await calendarOverlay.refresh(days: plan.visibleDays) }
     }
 
     /// The store and API are the app's foundation; without them there is no app to show.
