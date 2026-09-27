@@ -259,7 +259,9 @@ import its mixin.
 ## API surface
 
 All under `/api/v1/`. Every route needs a Bearer token except `auth/google/`
-and `auth/token/refresh/`.
+and `auth/token/refresh/`. Outside it, `GET /api/health/` answers the
+platform's health check (#243): 200 when the database answers, 503 when not,
+with no token, and it is exempt from the HTTPS redirect.
 
 | Route | Methods | Notes |
 |---|---|---|

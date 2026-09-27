@@ -12,6 +12,15 @@ for each milestone.
 
 ### Added
 
+- **`GET /api/health/`** (#243), outside `api/v1`: 200 `{"status": "ok"}`
+  when the database answers `SELECT 1`, 503 `{"status": "unavailable"}`
+  otherwise. No authentication, and it says nothing else. It is exempt from
+  the HTTPS redirect, because the container's probe is plain HTTP.
+
+- **Deploying on Coolify** (#243). The prod image migrates at start
+  (`backend/docker-entrypoint.sh`), and `docker-compose.coolify.yml`
+  builds it with no published port.
+
 - **Task filters for Projects and the Inbox** (#223). `tasks/` takes
   `?project=`, `?workspace=` (through the task's project), `?discipline=`
   (all UUIDs) and `?unscheduled=true` (no `scheduled_date`, series templates
@@ -126,6 +135,10 @@ for each milestone.
   fixed release of each, found by `pip-audit`. (#64)
 
 ### Changed
+
+- **CORS allows no origin unless `CORS_ALLOWED_ORIGINS` names one** (#243).
+  The default was the web client's `localhost:3000` and `localhost:3001`.
+  The native clients send no `Origin`, and the web client is gone.
 
 - **"Today" includes computed items, and "carried over" excludes lapsed
   ones** (#124, invariant 2). `tasks/today/?date=` now returns, besides the
