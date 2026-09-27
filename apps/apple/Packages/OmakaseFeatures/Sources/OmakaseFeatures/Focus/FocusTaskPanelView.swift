@@ -70,7 +70,8 @@ struct FocusSubtasksView: View {
     }
 }
 
-/// Complete (the one primary action), Reschedule and Remind me.
+/// Complete (the one primary action) and Edit…, then Reschedule and Remind me.
+/// Two rows: four buttons overflow the 340-point panel.
 struct FocusPanelActionsView: View {
     /// The Reschedule menu's label: ink, like the other glass buttons. Left to
     /// itself a `.menuStyle(.button)` menu draws it dim, as if disabled (#172).
@@ -82,21 +83,41 @@ struct FocusPanelActionsView: View {
     @State private var picked = Date.now
 
     var body: some View {
-        HStack(spacing: Spacing.medium) {
-            Button(card.isCompleted ? "Reopen" : "Complete") { model.toggle(card.id) }
-                .buttonStyle(.primary)
-            Menu {
-                FocusRescheduleItems(card: card, day: day, model: model)
-                Button("Pick a date…") { picking = true }
-            } label: {
-                Text("Reschedule").foregroundStyle(Self.menuLabel.color)
+        VStack(alignment: .leading, spacing: Spacing.medium) {
+            HStack(spacing: Spacing.medium) {
+                Button(card.isCompleted ? "Reopen" : "Complete") { model.toggle(card.id) }
+                    .buttonStyle(.primary)
+                editButton
             }
-            .menuStyle(.button)
-            .buttonStyle(.glass)
-            .fixedSize()
-            .popover(isPresented: $picking) { datePicker }
-            FocusRemindMenuView(card: card, model: model)
+            HStack(spacing: Spacing.medium) {
+                rescheduleMenu
+                FocusRemindMenuView(card: card, model: model)
+            }
         }
+    }
+
+    /// Return opens it too (#218): the panel shows only while a task is selected.
+    private var editButton: some View {
+        Button {
+            model.beginEditing(card.id)
+        } label: {
+            Text("Edit…").foregroundStyle(Self.menuLabel.color)
+        }
+        .buttonStyle(.glass)
+        .keyboardShortcut(.return, modifiers: [])
+    }
+
+    private var rescheduleMenu: some View {
+        Menu {
+            FocusRescheduleItems(card: card, day: day, model: model)
+            Button("Pick a date…") { picking = true }
+        } label: {
+            Text("Reschedule").foregroundStyle(Self.menuLabel.color)
+        }
+        .menuStyle(.button)
+        .buttonStyle(.glass)
+        .fixedSize()
+        .popover(isPresented: $picking) { datePicker }
     }
 
     private var datePicker: some View {
@@ -171,6 +192,7 @@ struct FocusTaskMenuView: View {
 
     var body: some View {
         Button(card.isCompleted ? "Reopen" : "Complete") { model.toggle(card.id) }
+        Button("Edit…") { model.beginEditing(card.id) }
         Divider()
         FocusRescheduleItems(card: card, day: day, model: model)
     }

@@ -118,10 +118,10 @@ extension TaskDTO {
     /// A task as the server would send it, for tests. `subtasks` nil leaves the key out, as the plain list does.
     static func make(
         id: UUID = UUID(), title: String = "Task", day: String? = "2026-03-07", completed: Bool = false,
-        subtasks: [(String, Bool)]? = nil, remindAt: String? = nil
+        subtasks: [(String, Bool)]? = nil, remindAt: String? = nil, description: String = ""
     ) throws -> TaskDTO {
         let json = """
-            {"id":"\(id)","title":"\(title)","description":"","priority":"medium","area":"work",
+            {"id":"\(id)","title":"\(title)","description":"\(description)","priority":"medium","area":"work",
              "kanban_status":"todo","project":null,"discipline":null,"tags":[],
              "scheduled_date":\(day.map { "\"\($0)\"" } ?? "null"),"due_date":null,"estimated_minutes":null,
              "actual_minutes":0,"kanban_order":0,"is_completed":\(completed),"completed_at":null,

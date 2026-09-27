@@ -24,7 +24,9 @@ final class CapturePanelController {
         }
         let onCapture = self.onCapture
         let model = CaptureModel(actions: .init(capture: { onCapture($0, $1) }))
-        let panel = CapturePanel(content: CaptureView(model: model, onClose: { [weak self] in self?.close() }))
+        let content = CaptureView(model: model, onClose: { [weak self] in self?.close() })
+        // The hosting view is its own root, so the window's .tint never reaches it (#214).
+        let panel = CapturePanel(content: content.tint(AppTint.capturePanel.color))
         panel.center(onTopThirdOf: NSScreen.withMouse ?? NSScreen.main)
         previousApp = NSWorkspace.shared.frontmostApplication
         self.panel = panel
