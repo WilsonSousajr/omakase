@@ -3,8 +3,9 @@ import SwiftData
 import SwiftUI
 
 /// Plan over the store: the cached blocks, titled by their parent task or
-/// study block, and the day's open tasks. Classes and focus sessions join
-/// `items` here once #200 caches them.
+/// study block, the classes and focus sessions RangeSync caches (#200), and
+/// the day's open tasks. The visible days are read when Plan shows, when
+/// they change, and after each catch-up while it shows (M4 spec, Decisions).
 ///
 ///     PlanScreenView(day: "2026-09-26", model: plan)
 public struct PlanScreenView: View {
@@ -12,6 +13,8 @@ public struct PlanScreenView: View {
     @Query private var tasks: [TaskRecord]
     @Query private var blocks: [TimeBlockRecord]
     @Query private var studies: [StudyBlockRecord]
+    @Query private var classes: [ClassOccurrenceRecord]
+    @Query private var sessions: [SessionRecord]
 
     public init(day: String, model: PlanModel) {
         self.model = model
@@ -20,12 +23,23 @@ public struct PlanScreenView: View {
     }
 
     public var body: some View {
-        PlanView(model: model, items: blockItems, tasks: tasks.map { FocusCard(record: $0) })
+        PlanView(
+            model: model, items: blockItems + classItems + sessionItems, tasks: tasks.map { FocusCard(record: $0) }
+        )
+        .onAppear { model.show() }
+        .onDisappear { model.hide() }
+        .onChange(of: model.visibleDays) { model.refreshRange() }
     }
 
     private var blockItems: [CalendarItem] {
         let parents = tasks.map { ($0.id, $0.title) } + studies.map { ($0.id, $0.title) }
         let titles = Dictionary(parents) { first, _ in first }
         return blocks.compactMap { CalendarItem.block($0, titles: titles) }
+    }
+
+    private var classItems: [CalendarItem] { classes.compactMap { CalendarItem.classOccurrence($0) } }
+
+    private var sessionItems: [CalendarItem] {
+        sessions.compactMap { CalendarItem.focusSession($0, calendar: model.calendar) }
     }
 }
