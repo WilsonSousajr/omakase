@@ -11,6 +11,9 @@ import SwiftUI
 public struct PlanScreenView: View {
     private let model: PlanModel
     @Query private var tasks: [TaskRecord]
+    /// Every cached task, for titles: a block moved to another day keeps its
+    /// parent's name although the column only lists today's tasks (#203).
+    @Query private var parentTasks: [TaskRecord]
     @Query private var blocks: [TimeBlockRecord]
     @Query private var studies: [StudyBlockRecord]
     @Query private var classes: [ClassOccurrenceRecord]
@@ -32,7 +35,7 @@ public struct PlanScreenView: View {
     }
 
     private var blockItems: [CalendarItem] {
-        let parents = tasks.map { ($0.id, $0.title) } + studies.map { ($0.id, $0.title) }
+        let parents = parentTasks.map { ($0.id, $0.title) } + studies.map { ($0.id, $0.title) }
         let titles = Dictionary(parents) { first, _ in first }
         return blocks.compactMap { CalendarItem.block($0, titles: titles) }
     }
