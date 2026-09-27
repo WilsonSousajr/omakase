@@ -235,6 +235,25 @@ localhost:8000/api/v1`. Seed first:
 9. Select "Essay" in Focus and run a focus session to the end (or shorten
    the profile's pomodoro to 1 minute). Back in Plan, a thin grey lane is
    drawn beside the block at the times it ran. Breaks are not drawn.
+10. Click "Reply to Ana" in the task column: it gets a 2-pt grey border
+    (never red) and a panel opens on the right with its title, marks and
+    Complete, Reschedule and Remind me, as in Focus but without the timer.
+    Dragging the row onto the grid still makes a block. Reschedule to
+    Tomorrow: the row leaves the column, the panel stays, and `curl
+    "…/tasks/<id>/"` has `"scheduled_date": "<tomorrow>"`.
+11. Click the "Essay" block: the border moves to it and the panel shows
+    "Essay", its day and times, Open task and Delete block. Drag the block
+    by its body and resize it by its bottom edge: both still work.
+    Open task: the panel shows the Essay task. Complete it: the button
+    reads Reopen and `curl` has `"is_completed": true`. Reopen it.
+12. Select the block again and Delete block: the block and the panel go
+    at once. Click another block, then an empty slot, or press Escape:
+    the panel closes.
+13. Double-click "Reply to Ana" in the column: the task editor (#218)
+    opens on it. Change its title and Save: the row, the panel and any of
+    its blocks show the new title. Double-click one of its blocks, or
+    select the block and press Return: the editor opens on its task.
+    Escape closes it and nothing is sent. Focus's selection is unchanged.
 
 ### Edit a task (#218)
 
