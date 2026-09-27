@@ -18,6 +18,7 @@ import pytest
 
 from accounts.tests.fakes import FakeGoogleVerifier
 from conftest import (
+    ClassScheduleFactory,
     DailyReviewFactory,
     DisciplineFactory,
     PomodoroSessionFactory,
@@ -219,6 +220,14 @@ class TestContractFixtures:
         resp = authenticated_client.get("/api/v1/study/studyblocks/?scheduled_date=2026-03-07")
         assert resp.status_code == 200
         check_fixture("studyblocks_day", _body(resp))
+
+    def test_study_class_occurrences(self, authenticated_client, user):
+        # Plan draws classes from this; the Mac decodes it (#126).
+        semester = SemesterFactory(user=user, rotation_weeks=2, rotation_anchor=datetime.date(2026, 3, 2))
+        ClassScheduleFactory(discipline=DisciplineFactory(semester=semester), day_of_week=0, rotation_weeks_on=[1])
+        resp = authenticated_client.get("/api/v1/study/class-occurrences/?date_from=2026-03-02&date_to=2026-03-08")
+        assert resp.status_code == 200
+        check_fixture("study_class_occurrences", _body(resp))
 
     def test_stats_workload(self, authenticated_client, user):
         TaskFactory(user=user, scheduled_date=datetime.date(2026, 3, 2), estimated_minutes=50, project=None)
