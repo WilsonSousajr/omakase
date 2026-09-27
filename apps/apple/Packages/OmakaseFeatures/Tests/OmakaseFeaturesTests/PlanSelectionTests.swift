@@ -95,4 +95,43 @@ struct PlanSelectionTests {
         plan.deleteBlock("b1")
         #expect(plan.selection == .task("t1"))
     }
+
+    // MARK: Opening the task editor (#218)
+
+    @Test func theEditorIsClosedAtFirst() {
+        #expect(model().editingID == nil)
+    }
+
+    @Test func beginEditingSelectsTheTaskAndOpensTheEditor() {
+        let plan = model()
+        plan.select(.block("b1"))
+        plan.beginEditing("t1")
+        #expect(plan.editingID == "t1")
+        #expect(plan.selection == .task("t1"))
+    }
+
+    @Test func returnOnASelectedTaskEditsIt() {
+        let plan = model()
+        plan.select(.task("t1"))
+        plan.editSelected(in: [])
+        #expect(plan.editingID == "t1")
+    }
+
+    @Test func returnOnASelectedBlockEditsItsTask() {
+        let plan = model()
+        plan.select(.block("b1"))
+        plan.editSelected(in: [essay])
+        #expect(plan.editingID == "t1")
+        #expect(plan.selection == .task("t1"))
+    }
+
+    @Test func returnWithNothingToEditDoesNothing() {
+        let plan = model()
+        plan.editSelected(in: [essay])
+        #expect(plan.editingID == nil)
+        plan.select(.block("b2"))
+        plan.editSelected(in: [study])
+        #expect(plan.editingID == nil)
+        #expect(plan.selection == .block("b2"))
+    }
 }
