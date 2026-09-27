@@ -104,6 +104,7 @@ struct PlanTaskRowView: View {
         HStack(spacing: Spacing.small) {
             Text(card.title).font(TypeScale.body).foregroundStyle(Palette.ink.color).lineLimit(1)
             Spacer(minLength: Spacing.small)
+            if card.isRepeating { RepeatGlyphView() }
             if let minutes = card.minutes, minutes > 0 {
                 Text("\(minutes)m").font(TypeScale.caption).monospacedDigit().foregroundStyle(Palette.inkMuted.color)
             }

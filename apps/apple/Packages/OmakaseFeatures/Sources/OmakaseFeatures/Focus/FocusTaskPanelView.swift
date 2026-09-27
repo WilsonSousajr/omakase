@@ -70,8 +70,8 @@ struct FocusSubtasksView: View {
     }
 }
 
-/// Complete (the one primary action) and Edit…, then Reschedule and Remind me.
-/// Two rows: four buttons overflow the 340-point panel.
+/// Complete (the one primary action) and Edit…, then Reschedule and Remind
+/// me, then Repeat (#206). Rows of two: more overflow the 340-point panel.
 struct FocusPanelActionsView: View {
     /// The Reschedule menu's label: ink, like the other glass buttons. Left to
     /// itself a `.menuStyle(.button)` menu draws it dim, as if disabled (#172).
@@ -93,6 +93,7 @@ struct FocusPanelActionsView: View {
                 rescheduleMenu
                 FocusRemindMenuView(card: card, model: model)
             }
+            FocusRepeatMenuView(card: card, day: day, model: model)
         }
     }
 
@@ -168,6 +169,29 @@ struct FocusRemindMenuView: View {
             .buttonStyle(.primary)
         }
         .padding(Spacing.large)
+    }
+}
+
+/// "Repeat" (#206): a rule from the task's day, or Stop repeating for a task
+/// in a series. Its label is ink, as Reschedule's is (#172).
+struct FocusRepeatMenuView: View {
+    let card: FocusCard
+    let day: String
+    let model: FocusModel
+
+    var body: some View {
+        Menu {
+            let choices = RepeatChoice.choices(
+                for: card.scheduledDay ?? day, isRepeating: card.isRepeating, calendar: model.calendar)
+            ForEach(choices, id: \.self) { choice in
+                Button(choice.title(calendar: model.calendar)) { model.setRepeat(card, choice, today: day) }
+            }
+        } label: {
+            Label("Repeat", systemImage: "repeat").foregroundStyle(FocusPanelActionsView.menuLabel.color)
+        }
+        .menuStyle(.button)
+        .buttonStyle(.glass)
+        .fixedSize()
     }
 }
 
