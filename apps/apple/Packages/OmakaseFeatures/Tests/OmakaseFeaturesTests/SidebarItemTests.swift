@@ -4,10 +4,11 @@ import Testing
 
 /// The sidebar lists only screens that exist. M1's Today list is Focus's
 /// list view; Review arrives with its screen in M3.4 (#178), Plan with its
-/// calendar in M4 (#202), and Projects and Study follow with theirs.
+/// calendar in M4 (#202), the Inbox in M5 (#225), and Projects and Study
+/// follow with theirs.
 struct SidebarItemTests {
     @Test func onlyScreensThatExistAreListed() {
-        #expect(SidebarItem.allCases == [.plan, .focus, .review])
+        #expect(SidebarItem.allCases == [.plan, .focus, .review, .inbox])
     }
 
     @Test func focusFollowsTheWebClientsNaming() {
@@ -25,5 +26,10 @@ struct SidebarItemTests {
         #expect(SidebarItem.allCases.first == .plan)
         #expect(SidebarItem.plan.title == "Plan")
         #expect(SidebarItem.plan.symbol == "calendar")
+    }
+
+    @Test func theInboxHoldsWhatHasNoDay() {
+        #expect(SidebarItem.inbox.title == "Inbox")
+        #expect(SidebarItem.inbox.symbol == "tray")
     }
 }
