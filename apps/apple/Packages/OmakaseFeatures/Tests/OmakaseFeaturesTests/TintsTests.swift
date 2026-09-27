@@ -44,12 +44,13 @@ struct TintsTests {
         let fonts = [TypeScale.display, TypeScale.title, TypeScale.headline, TypeScale.body, TypeScale.caption]
         #expect(Set(fonts).count == fonts.count)
         #expect(TypeScale.sectionLabel != TypeScale.caption)
-        #expect(TypeScale.displayTracking > TypeScale.sectionLabelTracking)
     }
 
-    @Test @MainActor func sectionLabelIsUppercasedAndMuted() {
+    /// Sentence case, not the web's tracked all-caps (M9 spec §8, decided
+    /// with the user #262): no uppercase transform, still muted.
+    @Test @MainActor func sectionLabelIsSentenceCaseAndMuted() {
         let label = String(describing: Text("Today").sectionLabel())
-        #expect(label.contains("uppercase"))
+        #expect(!label.contains("uppercase"))
         #expect(label.contains("customDynamic"))
     }
 }

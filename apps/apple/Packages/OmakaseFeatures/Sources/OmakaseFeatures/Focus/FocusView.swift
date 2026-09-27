@@ -36,7 +36,9 @@ public struct FocusView: View {
 
     private func boardColumn(_ board: FocusBoard) -> some View {
         VStack(alignment: .leading, spacing: 0) {
-            FocusHeaderView(day: day, workload: WorkloadWarning(record: workloads.first), layout: $model.layout)
+            FocusHeaderView(
+                day: day, workload: WorkloadWarning(record: workloads.first), layout: $model.layout,
+                calendar: model.calendar)
             Divider().overlay(Palette.hairline.color)
             content(board).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             if !studies.isEmpty {
@@ -62,10 +64,12 @@ struct FocusHeaderView: View {
     let day: String
     let workload: WorkloadWarning
     @Binding var layout: FocusModel.Layout
+    let calendar: Calendar
 
     var body: some View {
         HStack {
-            Text(day).sectionLabel()
+            // "Mon 2", not the raw ISO day the sentence-case label would otherwise show.
+            Text(DayString.short(day, calendar: calendar) ?? day).sectionLabel()
             WorkloadBannerView(warning: workload)
             Spacer()
             Picker("Layout", selection: $layout) {

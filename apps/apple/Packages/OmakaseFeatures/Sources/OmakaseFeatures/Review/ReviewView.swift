@@ -56,7 +56,8 @@ struct ReviewHeaderView: View {
 
     var body: some View {
         HStack {
-            Text(day).sectionLabel()
+            // "Mon 2", not the raw ISO day the sentence-case label would otherwise show.
+            Text(DayString.short(day, calendar: .current) ?? day).sectionLabel()
             Spacer()
         }
         .padding(Spacing.large)
