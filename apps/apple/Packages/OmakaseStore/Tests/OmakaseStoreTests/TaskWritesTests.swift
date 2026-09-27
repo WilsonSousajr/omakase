@@ -115,6 +115,26 @@ struct TaskWritesTests {
         #expect(local.id == server.recordID && local.title == "Captured")
     }
 
+    @Test func anAcceptedCreateRepointsTheTasksBlocksAndSubtasksIssue274() throws {
+        // #274: a block drawn on a capture (#264) and a subtask cached under the
+        // placeholder must follow the task to its server id at once, not
+        // only when the block's own create is accepted later.
+        let local = try seeded()
+        local.id = "local-7"
+        let block = TimeBlockRecord(
+            id: "local-b", day: "2026-03-07", startTime: "09:00:00", endTime: "10:00:00", taskID: "local-7")
+        let subtask = SubtaskRecord(dto: try .make(title: "Outline"), taskID: "local-7")
+        context.insert(block)
+        context.insert(subtask)
+        let server = try TaskDTO.make(title: "Captured")
+        let entry = OutboxEntry(
+            sequence: 1, method: "POST", path: "/api/v1/tasks/", body: nil, subjectID: "local-7",
+            createsLocalID: "local-7")
+        TaskHandler(context: context).apply(entry, body: try OmakaseJSON.encoder.encode(server))
+        #expect(block.taskID == server.recordID)
+        #expect(subtask.taskID == server.recordID)
+    }
+
     @Test func aBodyThatIsNotATaskChangesNothing() throws {
         let record = try seeded()
         let entry = OutboxEntry(sequence: 1, method: "PATCH", path: "/x/", body: nil, subjectID: record.id)
