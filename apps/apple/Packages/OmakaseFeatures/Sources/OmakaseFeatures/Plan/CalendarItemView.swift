@@ -3,11 +3,13 @@ import SwiftUI
 /// A block or a class on the grid (design-system-apple, Signals): a block
 /// is its source colour as a 3-pt bar and a faint fill on an opaque
 /// surface; a class is dashed with a book glyph, because it is fixed, not
-/// planned.
+/// planned. A cancelled class stays, struck through and dimmed (#207): it
+/// is information, not absence.
 struct CalendarItemView: View {
     let item: CalendarItem
 
     private var isClass: Bool { item.kind == .classOccurrence }
+    private var isCancelled: Bool { isClass && item.isCancelled }
 
     var body: some View {
         let tint = item.color.color
@@ -18,6 +20,7 @@ struct CalendarItemView: View {
                 Capsule().fill(tint).frame(width: 3)
             }
             Text(item.title).font(TypeScale.caption.weight(.medium)).foregroundStyle(Palette.ink.color)
+                .strikethrough(isCancelled)
             Spacer(minLength: 0)
         }
         .padding(Spacing.tiny)
@@ -28,7 +31,8 @@ struct CalendarItemView: View {
         .background(Palette.surface.color, in: .rect(cornerRadius: Radius.small))
         .overlay { if isClass { dashedBorder(tint) } }
         .clipShape(.rect(cornerRadius: Radius.small))
-        .help(item.title)
+        .opacity(isCancelled ? 0.45 : 1)
+        .help(isCancelled ? "\(item.title), cancelled" : item.title)
     }
 
     private func dashedBorder(_ tint: Color) -> some View {

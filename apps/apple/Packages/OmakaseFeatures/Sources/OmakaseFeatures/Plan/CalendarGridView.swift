@@ -124,7 +124,7 @@ struct CalendarDayColumnView: View {
                     }
                 }
                 ForEach(ofKind(.classOccurrence)) { item in
-                    placed(item, CalendarLayout.blockSpan(lane: nil, width: width)) { CalendarItemView(item: item) }
+                    placed(item, CalendarLayout.blockSpan(lane: nil, width: width)) { classView(item) }
                 }
                 blocks(width: width)
                 ForEach(ofKind(.focusSession)) { item in
@@ -153,6 +153,16 @@ struct CalendarDayColumnView: View {
                 PlanBlockView(item: item, model: model, items: items, layout: layout, resizing: $resizing)
             }
         }
+    }
+
+    /// A class is cancelled on its date, or restored, from its menu (#207).
+    private func classView(_ item: CalendarItem) -> some View {
+        CalendarItemView(item: item)
+            .contextMenu {
+                Button(item.cancellationMenuTitle, systemImage: item.isCancelled ? "arrow.uturn.backward" : "xmark") {
+                    model.toggleCancellation(item)
+                }
+            }
     }
 
     private func ofKind(_ kind: CalendarItem.Kind) -> [CalendarItem] {
