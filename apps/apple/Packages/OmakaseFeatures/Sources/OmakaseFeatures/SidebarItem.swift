@@ -13,6 +13,8 @@ public enum SidebarItem: String, CaseIterable, Identifiable, Sendable {
     case inbox
     /// Workspaces and their projects (M5, #226).
     case projects
+    /// Semesters, disciplines, class schedules and holidays (M5, #227).
+    case study
 
     public var id: Self { self }
 
@@ -23,6 +25,7 @@ public enum SidebarItem: String, CaseIterable, Identifiable, Sendable {
         case .review: "Review"
         case .inbox: "Inbox"
         case .projects: "Projects"
+        case .study: "Study"
         }
     }
 
@@ -33,6 +36,7 @@ public enum SidebarItem: String, CaseIterable, Identifiable, Sendable {
         case .review: "moon.stars"
         case .inbox: "tray"
         case .projects: "folder"
+        case .study: "graduationcap"
         }
     }
 }
