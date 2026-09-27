@@ -125,22 +125,26 @@ struct PlanTasksColumnView: View {
     }
 }
 
-/// A task to plan: its title, estimate and priority, on an opaque row. No
-/// checkbox, because completing belongs to Focus. Selected, it has the
-/// Kanban card's 2-pt accent border (#217).
+/// A task to plan: its kind mark, title, estimate and priority, on an
+/// opaque row. No checkbox, because completing belongs to Focus. Selected,
+/// it has the Kanban card's 2-pt accent border (#217). Shared with the
+/// Inbox; a place's own list (S6) hides the mark, which would repeat the title.
 struct PlanTaskRowView: View {
     let card: FocusCard
     var isSelected = false
+    var showsKindMark = true
+    @Environment(\.placeDirectory) private var directory
 
     var body: some View {
         HStack(spacing: Spacing.small) {
+            if showsKindMark { KindMarkView(mark: directory.mark(for: card.filing)) }
             Text(card.title).font(TypeScale.body).foregroundStyle(Palette.ink.color).lineLimit(1)
             Spacer(minLength: Spacing.small)
             if card.isRepeating { RepeatGlyphView() }
             if let minutes = card.minutes, minutes > 0 {
                 Text("\(minutes)m").font(TypeScale.caption).monospacedDigit().foregroundStyle(Palette.inkMuted.color)
             }
-            PriorityBadgeView(priority: card.priority)
+            if PriorityMark.showsInRow(card.priority) { PriorityBadgeView(priority: card.priority) }
         }
         .padding(.horizontal, Spacing.medium)
         .padding(.vertical, Spacing.small)

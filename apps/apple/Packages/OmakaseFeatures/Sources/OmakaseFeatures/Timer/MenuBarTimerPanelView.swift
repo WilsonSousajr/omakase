@@ -94,6 +94,7 @@ struct TimerBarLineView: View {
 struct TimerBarLeftTodayView: View {
     let cards: [FocusCard]
     let select: (String) -> Void
+    @Environment(\.placeDirectory) private var directory
 
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.small) {
@@ -103,9 +104,10 @@ struct TimerBarLeftTodayView: View {
                     select(card.id)
                 } label: {
                     HStack {
+                        KindMarkView(mark: directory.mark(for: card.filing))
                         Text(card.title).font(TypeScale.body).foregroundStyle(Palette.ink.color).lineLimit(1)
                         Spacer()
-                        PriorityBadgeView(priority: card.priority)
+                        if PriorityMark.showsInRow(card.priority) { PriorityBadgeView(priority: card.priority) }
                     }
                 }
                 .buttonStyle(.plain)

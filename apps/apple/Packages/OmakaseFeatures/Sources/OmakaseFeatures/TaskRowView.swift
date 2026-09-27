@@ -1,9 +1,11 @@
+import OmakaseStore
 import SwiftUI
 
-/// One task in a list: a checkbox, the title, and trailing its estimate and
-/// priority badge, as the web client drew them.
+/// One task in a list: a checkbox, its kind mark, the title, and trailing
+/// its estimate and priority badge, as the web client drew them (kind mark
+/// added spec §8).
 ///
-///     TaskRowView(title: "Write the essay", priority: "high", minutes: 45, isCompleted: false) { … }
+///     TaskRowView(title: "Write the essay", priority: "high", minutes: 45, isCompleted: false, filing: filing) { … }
 public struct TaskRowView: View {
     private let title: String
     private let priority: String
@@ -12,11 +14,15 @@ public struct TaskRowView: View {
     private let marks: [String]
     private let hasReminder: Bool
     private let isRepeating: Bool
+    private let filing: TaskFiling
+    private let showsKindMark: Bool
     private let toggle: () -> Void
+    @Environment(\.placeDirectory) private var directory
 
     public init(
         title: String, priority: String, minutes: Int = 0, isCompleted: Bool, marks: [String] = [],
-        hasReminder: Bool = false, isRepeating: Bool = false, toggle: @escaping () -> Void = {}
+        hasReminder: Bool = false, isRepeating: Bool = false, filing: TaskFiling = TaskFiling(area: .work, parent: nil),
+        showsKindMark: Bool = true, toggle: @escaping () -> Void = {}
     ) {
         self.title = title
         self.priority = priority
@@ -25,6 +31,7 @@ public struct TaskRowView: View {
         // Marks, when given, already carry the estimate (FocusMarks).
         self.marks = marks.isEmpty && minutes > 0 ? ["\(minutes)m"] : marks
         (self.hasReminder, self.isRepeating) = (hasReminder, isRepeating)
+        (self.filing, self.showsKindMark) = (filing, showsKindMark)
         self.toggle = toggle
     }
 
@@ -38,6 +45,8 @@ public struct TaskRowView: View {
                     .lineLimit(1)
             }
             .toggleStyle(.checkbox)
+            // Hidden on a place's own list (S6), which would only repeat the title.
+            if showsKindMark { KindMarkView(mark: directory.mark(for: filing)) }
             Spacer(minLength: Spacing.small)
             if !marks.isEmpty {
                 Text(marks.joined(separator: " · "))
@@ -45,7 +54,9 @@ public struct TaskRowView: View {
             }
             if isRepeating { RepeatGlyphView() }
             if hasReminder { ReminderBellView() }
-            if !priority.isEmpty { PriorityBadgeView(priority: priority).opacity(isCompleted ? 0.5 : 1) }
+            if PriorityMark.showsInRow(priority) {
+                PriorityBadgeView(priority: priority).opacity(isCompleted ? 0.5 : 1)
+            }
         }
         .padding(.vertical, Spacing.tiny)
     }

@@ -61,7 +61,11 @@ struct FocusSubtasksView: View {
             VStack(alignment: .leading, spacing: Spacing.small) {
                 Text("Subtasks").sectionLabel()
                 ForEach(subtasks) { subtask in
-                    TaskRowView(title: subtask.title, priority: "", isCompleted: subtask.isCompleted) {
+                    // A subtask has no filing of its own; its parent's kind mark
+                    // already shows above (#187's panel), so this row skips it.
+                    TaskRowView(
+                        title: subtask.title, priority: "", isCompleted: subtask.isCompleted, showsKindMark: false
+                    ) {
                         model.toggleSubtask(subtask.id)
                     }
                 }

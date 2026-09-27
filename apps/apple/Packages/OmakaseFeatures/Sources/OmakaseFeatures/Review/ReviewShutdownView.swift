@@ -30,7 +30,7 @@ struct ReviewRolloverRowView: View {
             if let carried = card.carriedFromLabel(calendar: calendar) {
                 Text(carried).font(TypeScale.caption).foregroundStyle(Palette.inkMuted.color)
             }
-            PriorityBadgeView(priority: card.priority)
+            if PriorityMark.showsInRow(card.priority) { PriorityBadgeView(priority: card.priority) }
             menu
         }
         .padding(.vertical, Spacing.tiny)

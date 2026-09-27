@@ -33,7 +33,7 @@ struct FocusBoardListView: View {
         TaskRowView(
             title: card.title, priority: card.priority, isCompleted: card.isCompleted,
             marks: FocusMarks.labels(for: card, day: day, calendar: model.calendar),
-            hasReminder: card.hasReminder, isRepeating: card.isRepeating
+            hasReminder: card.hasReminder, isRepeating: card.isRepeating, filing: card.filing
         ) { model.toggle(card.id) }
         .contextMenu { FocusTaskMenuView(card: card, day: day, model: model) }
         .padding(.horizontal, Spacing.small)
