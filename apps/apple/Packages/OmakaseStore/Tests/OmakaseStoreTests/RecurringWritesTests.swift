@@ -172,4 +172,16 @@ struct RecurringWritesTests {
         #expect(await worker().drain() == .empty)
         #expect(try entries().isEmpty && record.title == "Gym")
     }
+
+    @Test func aSessionOnAComputedOccurrenceMaterializesItFirstIssue206() throws {
+        // A session posting `task: "occ-…"` would be parked: the server
+        // knows no such task. Materializing first gives the rewrite an id.
+        let record = computed()
+        let session = FinishedSession(
+            timeBlockID: nil, type: "focus", minutes: 25, startedAt: .now, endedAt: .now, completed: true)
+        try SessionWrites(context: context).record(session, task: record)
+        let queued = try entries()
+        #expect(queued.map(\.kind) == ["task.materialize", "session.create"])
+        #expect(OutboxRules.dependents(of: queued[0], among: queued).map(\.kind) == ["session.create"])
+    }
 }
