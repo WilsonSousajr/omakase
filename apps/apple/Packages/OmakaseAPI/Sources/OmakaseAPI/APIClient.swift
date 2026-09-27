@@ -165,12 +165,14 @@ public actor OmakaseAPIClient: APIClient {
     /// Best effort: offline, or with the token already gone, the Keychain is
     /// still cleared, and a stolen copy expires within 7 days (#223).
     public func signOut() async {
-        if let refresh = await tokens.load()?.refresh,
-            let body = try? OmakaseJSON.encoder.encode(["refresh": refresh])
-        {
-            _ = try? await authorized("POST", "/api/v1/auth/logout/", body: body)
-        }
+        await revokeRefreshToken()
         await tokens.clear()
+    }
+
+    private func revokeRefreshToken() async {
+        guard let refresh = await tokens.load()?.refresh else { return }
+        guard let body = try? OmakaseJSON.encoder.encode(["refresh": refresh]) else { return }
+        _ = try? await authorized("POST", "/api/v1/auth/logout/", body: body)
     }
 
     public func hasStoredSession() async -> Bool { await tokens.load() != nil }
