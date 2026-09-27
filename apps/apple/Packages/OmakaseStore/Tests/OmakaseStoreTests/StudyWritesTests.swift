@@ -56,7 +56,8 @@ struct StudyWritesTests {
     @Test func aDisciplineAndItsScheduleArePostedUnderTheirParents() async throws {
         context.insert(SemesterRecord(dto: try LibrarySample.semester()))
         await api.script([
-            .reply(201, try Self.json(LibrarySample.discipline())), .reply(201, try Self.json(LibrarySample.schedule())),
+            .reply(201, try Self.json(LibrarySample.discipline())),
+            .reply(201, try Self.json(LibrarySample.schedule())),
         ])
         let discipline = try await writes.save(
             DisciplineForm(semesterID: semesterID, name: "Calculus", code: "MAT1", professor: "", color: "#3b82f6"),
@@ -68,7 +69,8 @@ struct StudyWritesTests {
                 classType: "lecture", location: "Room 1", rotationWeeksOn: [1]),
             existing: nil)
         let body = try await lastBody()
-        #expect(body["discipline"] as? String == disciplineID.lowercased() && body["rotation_weeks_on"] as? [Int] == [1])
+        #expect(
+            body["discipline"] as? String == disciplineID.lowercased() && body["rotation_weeks_on"] as? [Int] == [1])
         #expect(await api.sentRequests.last?.path == "/api/v1/study/classschedules/")
     }
 
@@ -94,6 +96,21 @@ struct StudyWritesTests {
         await api.script([.reply(204, "")])
         try await writes.delete(try #require(try context.fetch(FetchDescriptor<DisciplineRecord>()).first))
         #expect(try context.fetchCount(FetchDescriptor<ClassScheduleRecord>()) == 0)
+    }
+
+    @Test func aScheduleAndAHolidayAreDeletedByTheirOwnPaths() async throws {
+        context.insert(ClassScheduleRecord(dto: try LibrarySample.schedule()))
+        context.insert(HolidayRecord(dto: try LibrarySample.holiday()))
+        try context.save()
+        await api.script([.reply(204, ""), .reply(204, "")])
+        try await writes.delete(try #require(try context.fetch(FetchDescriptor<ClassScheduleRecord>()).first))
+        try await writes.delete(try #require(try context.fetch(FetchDescriptor<HolidayRecord>()).first))
+        let paths = await api.sentRequests.map(\.path)
+        #expect(
+            paths == [
+                "/api/v1/study/classschedules/55555555-5555-5555-5555-555555555555/",
+                "/api/v1/study/holidays/66666666-6666-6666-6666-666666666666/",
+            ])
     }
 
     @Test func aHolidayIsPostedWithItsRange() async throws {
