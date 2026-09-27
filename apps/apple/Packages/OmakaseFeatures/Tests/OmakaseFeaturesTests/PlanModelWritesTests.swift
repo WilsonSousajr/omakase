@@ -15,7 +15,9 @@ final class PlanActionsRecorder {
             refresh: { self.calls.append("refresh \($0.joined(separator: ","))") },
             create: { self.calls.append("create \($0) \(Self.line($1))") },
             move: { self.calls.append("move \($0) \(Self.line($1))") },
-            delete: { self.calls.append("delete \($0)") })
+            delete: { self.calls.append("delete \($0)") },
+            cancelClass: { self.calls.append("cancel class \($0)") },
+            restoreClass: { self.calls.append("restore class \($0)") })
     }
 
     static func line(_ placement: PlanPlacement) -> String {

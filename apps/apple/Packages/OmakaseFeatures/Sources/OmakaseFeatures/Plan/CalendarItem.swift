@@ -32,14 +32,20 @@ public struct CalendarItem: Identifiable, Equatable, Sendable {
     /// A block's parent task, which its panel opens (#217); nil for a study
     /// block's, a class and a session.
     public let taskID: String?
+    /// A class cancelled on this date (#207): still drawn, struck through.
+    public let isCancelled: Bool
 
     public init(
         id: String, day: String, start: Int, end: Int, title: String, kind: Kind, tint: DesignColor? = nil,
-        taskID: String? = nil
+        taskID: String? = nil, isCancelled: Bool = false
     ) {
         (self.id, self.day, self.start, self.end) = (id, day, start, end)
-        (self.title, self.kind, self.tint, self.taskID) = (title, kind, tint, taskID)
+        (self.title, self.kind, self.tint) = (title, kind, tint)
+        (self.taskID, self.isCancelled) = (taskID, isCancelled)
     }
+
+    /// A class's context-menu item: whichever of cancel and restore applies.
+    public var cancellationMenuTitle: String { isCancelled ? "Restore class" : "Cancel this class" }
 
     /// Without a source colour an item is accent grey (spec M4, Grid).
     public var color: DesignColor { tint ?? Palette.accent }

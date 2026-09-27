@@ -11,19 +11,24 @@ public struct PlanPendingPlacement: Equatable, Sendable {
 }
 
 extension PlanModel {
-    /// What Plan asks the app for: the visible days read (#200), and block
-    /// writes through the outbox (#201), by task or block id.
+    /// What Plan asks the app for: the visible days read (#200), block
+    /// writes through the outbox (#201), by task or block id, and a class
+    /// cancelled or restored on its date (#207), by occurrence id.
     public struct Actions {
         let refresh: ([String]) -> Void
         let create: (String, PlanPlacement) -> Void
         let move: (String, PlanPlacement) -> Void
         let delete: (String) -> Void
+        let cancelClass: (String) -> Void
+        let restoreClass: (String) -> Void
 
         public init(
             refresh: @escaping ([String]) -> Void, create: @escaping (String, PlanPlacement) -> Void,
-            move: @escaping (String, PlanPlacement) -> Void, delete: @escaping (String) -> Void
+            move: @escaping (String, PlanPlacement) -> Void, delete: @escaping (String) -> Void,
+            cancelClass: @escaping (String) -> Void = { _ in }, restoreClass: @escaping (String) -> Void = { _ in }
         ) {
             (self.refresh, self.create, self.move, self.delete) = (refresh, create, move, delete)
+            (self.cancelClass, self.restoreClass) = (cancelClass, restoreClass)
         }
 
         /// No reads and no writes: previews, and a model built before the app wires one.
@@ -76,6 +81,13 @@ extension PlanModel {
     public func deleteBlock(_ id: String) {
         if selection == .block(id) { selection = nil }
         actions.delete(id)
+    }
+
+    /// Cancels a class on its date, or restores a cancelled one; anything
+    /// but a class is left alone.
+    public func toggleCancellation(_ item: CalendarItem) {
+        guard item.kind == .classOccurrence else { return }
+        if item.isCancelled { actions.restoreClass(item.id) } else { actions.cancelClass(item.id) }
     }
 
     private func placement(
