@@ -96,7 +96,9 @@ struct CalendarTimeGutterView: View {
 }
 
 /// One day: hour lines, then its items placed by `CalendarLayout`. A drop
-/// lands at its y, snapped by `PlanDrop` (#203).
+/// lands at its y, snapped by `PlanDrop` (#203). Dragging across the empty
+/// grid draws a slot, previewed as a dashed ghost, that opens capture on
+/// release (spec §9, #264).
 struct CalendarDayColumnView: View {
     /// The column's own space, so a drop's and a resize's y are grid offsets.
     static let space = "plan.column"
@@ -111,6 +113,8 @@ struct CalendarDayColumnView: View {
     let now: CalendarNow?
     /// The block whose bottom edge is being dragged, at its previewed end.
     @State private var resizing: CalendarItem?
+    /// The slot being drawn on the empty grid, snapped as it will be saved.
+    @State private var drawing: PlanPlacement?
     @State private var isTargeted = false
 
     /// Today's own column is lifted with a faint fill (spec §9); `now` is
@@ -121,10 +125,14 @@ struct CalendarDayColumnView: View {
         GeometryReader { geometry in
             let width = geometry.size.width
             ZStack(alignment: .topLeading) {
-                // The empty grid under everything: a click there closes the panel (#217).
+                // The empty grid under everything: a click there closes the panel
+                // (#217), and a drag draws a slot (spec §9). The drag's 4-pt minimum
+                // leaves the click to the tap; drops are not gestures, so
+                // `.dropDestination` below still takes them.
                 CalendarHourLinesView(layout: layout)
                     .contentShape(.rect)
                     .onTapGesture { model.select(nil) }
+                    .gesture(slotDrawing)
                 ForEach(ofKind(.externalEvent)) { item in
                     placed(item, CalendarLayout.blockSpan(lane: nil, width: width)) {
                         CalendarExternalEventView(item: item)
@@ -134,6 +142,7 @@ struct CalendarDayColumnView: View {
                     placed(item, CalendarLayout.blockSpan(lane: nil, width: width)) { classView(item) }
                 }
                 blocks(width: width)
+                slotGhost(width: width)
                 ForEach(ofKind(.focusSession)) { item in
                     placed(item, CalendarLayout.sessionSpan(width: width)) { CalendarSessionView(item: item) }
                 }
@@ -159,6 +168,28 @@ struct CalendarDayColumnView: View {
             ) {
                 PlanBlockView(item: item, model: model, items: items, layout: layout, resizing: $resizing)
             }
+        }
+    }
+
+    /// A drag on the empty grid: the ghost follows the pointer, snapped by
+    /// `PlanDrop.slot`, and the release hands the slot to the model.
+    private var slotDrawing: some Gesture {
+        DragGesture(minimumDistance: PlanDrop.slotMinimumDrag, coordinateSpace: .named(Self.space))
+            .onChanged { drag in
+                drawing = PlanDrop.slot(day: day, from: drag.startLocation.y, to: drag.location.y, layout: layout)
+            }
+            .onEnded { drag in
+                drawing = nil
+                model.drawSlot(day: day, from: drag.startLocation.y, to: drag.location.y)
+            }
+    }
+
+    @ViewBuilder
+    private func slotGhost(width: CGFloat) -> some View {
+        if let drawing {
+            let item = CalendarItem(
+                id: "plan.slot", day: day, start: drawing.start, end: drawing.end, title: "", kind: .block)
+            placed(item, CalendarLayout.blockSpan(lane: nil, width: width)) { CalendarSlotGhostView(item: item) }
         }
     }
 

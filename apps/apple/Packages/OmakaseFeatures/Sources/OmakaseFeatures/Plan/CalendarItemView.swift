@@ -64,6 +64,28 @@ struct CalendarItemView: View {
     }
 }
 
+/// A slot being drawn on the empty grid (spec §9, #264): dashed in the
+/// accent, like a plan not yet made, with the times it would take. It
+/// follows the pointer live and never takes a click itself.
+struct CalendarSlotGhostView: View {
+    let item: CalendarItem
+
+    var body: some View {
+        Text(item.timeRange)
+            .font(TypeScale.caption).monospacedDigit()
+            .foregroundStyle(Palette.ink.color)
+            .padding(Spacing.tiny)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .background(Palette.accent.color.opacity(0.12), in: .rect(cornerRadius: Radius.small))
+            .overlay {
+                RoundedRectangle(cornerRadius: Radius.small)
+                    .strokeBorder(Palette.accent.color, style: .init(lineWidth: 1, dash: [4, 3]))
+            }
+            .allowsHitTesting(false)
+            .accessibilityLabel("New slot, \(item.timeRange)")
+    }
+}
+
 /// A focus session that ran: a thin rounded lane at the column's trailing
 /// edge, in ink, because what happened is not a signal (R8).
 struct CalendarSessionView: View {

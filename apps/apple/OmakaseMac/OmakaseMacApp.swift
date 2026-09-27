@@ -121,7 +121,9 @@ struct OmakaseMacApp: App {
         inbox = InboxModel(actions: services.inboxActions { handle($0) }) { FocusDay().today }
         projects = ProjectsModel(actions: services.projectsActions())
         study = StudyModel(actions: services.studyActions())
-        plan = PlanModel(actions: services.planActions { handle($0) }) { FocusDay().today }
+        // A drawn slot opens the same panel as ⌘N (#264); `capture` is read when it fires.
+        let planActions = services.planActions(openCapture: { capture?.show(context: $0) }, onOutcome: { handle($0) })
+        plan = PlanModel(actions: planActions) { FocusDay().today }
         calendarOverlay = services.makeCalendarOverlay()
     }
 

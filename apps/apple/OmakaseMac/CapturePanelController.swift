@@ -5,8 +5,9 @@ import SwiftUI
 
 /// Opens and closes the capture panel (M3.5 spec, Decisions). Each opening
 /// is a new panel over a new `CaptureModel`: the panel is closed, never
-/// hidden, so there is no stale draft. Closing gives focus back to the app
-/// that had it when the panel opened.
+/// hidden, so there is no stale draft. Asked for while open, it re-seeds the
+/// open model instead (#264). Closing gives focus back to the app that had
+/// it when the panel opened.
 ///
 ///     let panel = CapturePanelController(actions: services.captureActions { handle($0) })
 ///     panel.show(context: CaptureContext(), directory: services.capturePlaces(), lastArea: .work)
@@ -14,18 +15,24 @@ import SwiftUI
 final class CapturePanelController {
     private let actions: CaptureModel.Actions
     private var panel: CapturePanel?
+    /// The open panel's model, re-seeded when the panel is asked for again.
+    private var model: CaptureModel?
     private var previousApp: NSRunningApplication?
 
     init(actions: CaptureModel.Actions) { self.actions = actions }
 
     /// A new panel seeded with `context` (spec §4), offering `directory`'s
-    /// places; one already open is only brought forward, keeping its draft.
+    /// places. One already open takes the new context and places and is
+    /// brought forward, keeping its draft: a slot drawn on Plan while it is
+    /// open must not be dropped (S4's review, #264).
     func show(context: CaptureContext, directory: PlaceDirectory, lastArea: TaskArea) {
-        if let panel {
+        if let panel, let model {
+            model.reseed(context: context, directory: directory)
             panel.makeKeyAndOrderFront(nil)
             return
         }
         let model = CaptureModel(context: context, directory: directory, lastArea: lastArea, actions: actions)
+        self.model = model
         let content = CaptureView(model: model, onClose: { [weak self] in self?.close() })
         // The hosting view is its own root, so the window's .tint never reaches it (#214).
         let panel = CapturePanel(content: content.tint(AppTint.capturePanel.color))
@@ -39,7 +46,7 @@ final class CapturePanelController {
     func close() {
         guard let panel else { return }
         panel.close()
-        self.panel = nil
+        (self.panel, model) = (nil, nil)
         guard let previousApp, previousApp != NSRunningApplication.current else { return }
         previousApp.activate()
     }
