@@ -12,6 +12,17 @@ for each milestone.
 
 ### Added
 
+- **Task filters for Projects and the Inbox** (#223). `tasks/` takes
+  `?project=`, `?workspace=` (through the task's project), `?discipline=`
+  (all UUIDs) and `?unscheduled=true` (no `scheduled_date`, series templates
+  and skipped occurrences left out; `false` applies no filter). A foreign or
+  unknown id returns an empty page; a malformed one is a 400 naming the
+  parameter.
+
+- **Contract fixtures for the library** (#223): workspaces, projects,
+  semesters, disciplines, class schedules, holidays, the unscheduled task
+  list, and the profile and `me` PATCH replies.
+
 - **Recurring tasks, computed on the server** (#124). A series is a
   template task with a rule: `freq` (daily, weekly or monthly), `interval`
   (1-30), `weekdays` (weekly only, 0=Mon..6=Sun; empty means the weekday of
@@ -102,6 +113,13 @@ for each milestone.
   expired records. (#77)
 
 ### Security
+
+- **Sign-out revokes the refresh token** (#223). `POST auth/logout/`
+  (authenticated) takes `{"refresh": "<token>"}`, blacklists it and returns
+  205; `auth/token/refresh/` then answers 401 for it. A repeated, invalid or
+  another user's token is also 205 and revokes nothing, so a retried
+  sign-out never fails. A missing `refresh` is a 400. The access token stays
+  valid until it expires (60 minutes).
 
 - **Dependencies past eight known vulnerabilities.** Django 5.2 → 5.2.17,
   Django REST Framework 3.16.0 → 3.17.2, simplejwt 5.4.0 → 5.5.1 - the first
