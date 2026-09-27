@@ -11,19 +11,17 @@ public enum TypeScale {
     public static let headline = Font.headline
     public static let body = Font.body
     public static let caption = Font.caption
-    /// Carried over from the web record: small, semibold, uppercase, tracked.
+    /// Sentence case, not the web's tracked all-caps (M9 spec §8, decided
+    /// with the user #262): small, semibold, muted, untracked.
     public static let sectionLabel = Font.system(.caption, weight: .semibold)
 
     public static let displayTracking: CGFloat = 6
-    public static let sectionLabelTracking: CGFloat = 1.5
 }
 
 extension Text {
     /// The section label: `Text("Today").sectionLabel()`.
     public func sectionLabel() -> some View {
         font(TypeScale.sectionLabel)
-            .tracking(TypeScale.sectionLabelTracking)
-            .textCase(.uppercase)
             .foregroundStyle(Palette.inkMuted.color)
     }
 }

@@ -63,4 +63,13 @@ struct FocusCardTests {
         record.seriesID = "series"
         #expect(FocusCard(record: record).isRepeating)
     }
+
+    /// The row's kind mark reads the card's filing, not the record directly
+    /// (spec §8), so the card must carry it from `TaskRecord.filing`.
+    @MainActor
+    @Test func theFilingReachesTheCardFromItsRecord() {
+        let filing = TaskFiling(area: .study, parent: .discipline("d1"))
+        let record = TaskRecord(id: "t1", title: "Read Axler", filing: filing)
+        #expect(FocusCard(record: record).filing == filing)
+    }
 }

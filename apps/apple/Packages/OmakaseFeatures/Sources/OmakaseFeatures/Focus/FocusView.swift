@@ -36,7 +36,9 @@ public struct FocusView: View {
 
     private func boardColumn(_ board: FocusBoard) -> some View {
         VStack(alignment: .leading, spacing: 0) {
-            FocusHeaderView(day: day, workload: WorkloadWarning(record: workloads.first), layout: $model.layout)
+            FocusHeaderView(
+                day: day, workload: WorkloadWarning(record: workloads.first), layout: $model.layout,
+                calendar: model.calendar)
             Divider().overlay(Palette.hairline.color)
             content(board).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             if !studies.isEmpty {
@@ -62,10 +64,12 @@ struct FocusHeaderView: View {
     let day: String
     let workload: WorkloadWarning
     @Binding var layout: FocusModel.Layout
+    let calendar: Calendar
 
     var body: some View {
         HStack {
-            Text(day).sectionLabel()
+            // "Mon 2", not the raw ISO day the sentence-case label would otherwise show.
+            Text(DayString.short(day, calendar: calendar) ?? day).sectionLabel()
             WorkloadBannerView(warning: workload)
             Spacer()
             Picker("Layout", selection: $layout) {
@@ -83,17 +87,21 @@ struct FocusHeaderView: View {
 /// Today's study blocks, under the board as on the web.
 struct FocusStudyBlocksView: View {
     let studies: [StudyBlockRecord]
+    @Environment(\.placeDirectory) private var directory
 
     var body: some View {
         HStack(spacing: Spacing.small) {
             Text("Study today").sectionLabel()
             ForEach(studies) { study in
+                // Study, not the long-break indigo it borrowed before (spec §8):
+                // the discipline's own colour when known, else the kind's token.
+                let tint = directory.mark(for: TaskFiling(area: .study, parent: .discipline(study.disciplineID))).color
                 Label(label(study), systemImage: "book")
                     .font(TypeScale.caption)
                     .foregroundStyle(Palette.ink.color)
                     .padding(.horizontal, Spacing.small)
                     .padding(.vertical, Spacing.tiny)
-                    .background(Palette.indigo.color.opacity(0.12), in: .capsule)
+                    .background(tint.color.opacity(0.12), in: .capsule)
             }
             Spacer()
         }

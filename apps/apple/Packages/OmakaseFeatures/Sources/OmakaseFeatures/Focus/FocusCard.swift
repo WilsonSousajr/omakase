@@ -18,15 +18,19 @@ public struct FocusCard: Identifiable, Equatable, Sendable {
     public let remindAt: Date?
     /// In a repeating series (#206): marked with a repeat glyph.
     public let isRepeating: Bool
+    /// What the task is for (spec §8): the row's kind mark resolves this
+    /// through the `placeDirectory` environment value.
+    public let filing: TaskFiling
 
     public init(
         id: String, title: String, priority: String, minutes: Int?, isCompleted: Bool, kanbanStatus: String,
-        scheduledDay: String?, dueDay: String?, isCarriedOver: Bool, remindAt: Date? = nil, isRepeating: Bool = false
+        scheduledDay: String?, dueDay: String?, isCarriedOver: Bool, remindAt: Date? = nil, isRepeating: Bool = false,
+        filing: TaskFiling = TaskFiling(area: .work, parent: nil)
     ) {
         (self.id, self.title, self.priority, self.minutes) = (id, title, priority, minutes)
         (self.isCompleted, self.kanbanStatus, self.remindAt) = (isCompleted, kanbanStatus, remindAt)
         (self.scheduledDay, self.dueDay, self.isCarriedOver) = (scheduledDay, dueDay, isCarriedOver)
-        self.isRepeating = isRepeating
+        (self.isRepeating, self.filing) = (isRepeating, filing)
     }
 
     /// A reminder is set: the card and row show a bell (#187).
@@ -38,7 +42,7 @@ public struct FocusCard: Identifiable, Equatable, Sendable {
             id: record.id, title: record.title, priority: record.priority, minutes: record.estimatedMinutes,
             isCompleted: record.isCompleted, kanbanStatus: record.kanbanStatus, scheduledDay: record.scheduledDay,
             dueDay: record.dueDay, isCarriedOver: record.isCarriedOver, remindAt: record.remindAt,
-            isRepeating: record.isRepeating)
+            isRepeating: record.isRepeating, filing: record.filing)
     }
 
     /// "from Mon 2" for a carried-over card (#129); nil otherwise.

@@ -530,6 +530,34 @@ optional project or discipline (spec §4, #257). The library must be cached
    is still enabled, and ⌘N opens the panel with the last kind and ⏎ Today.
 9. Quit and relaunch. ⌥⌘N opens with the kind last saved (step 6's).
 
+## M9 S9 - Calmer task rows
+
+Every row now says what the task is for, the default Medium pill is gone,
+section labels read as sentence case, and Study today wears the Study
+colour instead of the long-break indigo (spec §8, #262).
+
+1. On Focus (List layout), a task filed under a project or discipline
+   (from S4's capture) shows a coloured mark and that project's or
+   discipline's name to the left of its title, for example a verdigris bar
+   and "Omakase". A task with no parent shows its kind's name instead,
+   for example "Life".
+2. Capture three tasks with different priorities: Low, Medium (the
+   default) and High. On Focus, the Low and High rows show their pill;
+   the Medium row shows none.
+3. Switch Focus to Kanban. Each card shows the same kind mark above its
+   title, and the same priority rule (no pill on a Medium card).
+4. Switch to Plan. The task list on the left shows the same kind mark on
+   each row, and the same priority rule.
+5. Open the menu bar's timer panel (the clock icon). "Left today" shows a
+   kind mark on each row.
+6. Section labels ("To do", "In progress", "Done", "Left today", the day
+   header) read in sentence case - not `ALL CAPS` - still small, semibold
+   and muted.
+7. Schedule a study task for today (under a discipline). Focus shows a
+   "Study today" capsule under the board, tinted wisteria (Study's
+   colour), not the indigo long-break colour.
+8. Open the Inbox. Its rows show the same kind marks as Plan's task list.
+
 ## M9 S10 - Calendar blocks wear their kind
 
 Plan's blocks were all the same accent grey (#263); now a block wears its

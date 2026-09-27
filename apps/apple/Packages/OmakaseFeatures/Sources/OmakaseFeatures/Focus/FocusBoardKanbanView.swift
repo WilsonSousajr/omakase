@@ -52,20 +52,22 @@ struct FocusBoardColumnView: View {
     }
 }
 
-/// A Kanban card: the title, then its priority pill and marks.
+/// A Kanban card: its kind mark, the title, then its priority pill and marks.
 struct FocusBoardCardView: View {
     let card: FocusCard
     let marks: [String]
     let isSelected: Bool
+    @Environment(\.placeDirectory) private var directory
 
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.small) {
+            KindMarkView(mark: directory.mark(for: card.filing))
             Text(card.title)
                 .font(TypeScale.body)
                 .strikethrough(card.isCompleted)
                 .foregroundStyle((card.isCompleted ? Palette.inkMuted : Palette.ink).color)
             HStack(spacing: Spacing.small) {
-                PriorityBadgeView(priority: card.priority)
+                if PriorityMark.showsInRow(card.priority) { PriorityBadgeView(priority: card.priority) }
                 if !marks.isEmpty {
                     Text(marks.joined(separator: " · "))
                         .font(TypeScale.caption).foregroundStyle(Palette.inkMuted.color)

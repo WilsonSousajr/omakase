@@ -8,11 +8,19 @@ import SwiftUI
 public struct MenuBarTimerPanelView: View {
     private let timer: TimerModel
     private let select: (String) -> Void
+    private let today: String
     @Query private var tasks: [TaskRecord]
     @Query private var blocks: [TimeBlockRecord]
+    @State private var placeDirectory = PlaceDirectory.empty
+    // Observed only to know when to reload the place directory (spec §8);
+    // read through `librarySnapshot` below, so this panel's body - which
+    // redraws every second while `timer.now` ticks - never refetches it.
+    @Query private var libraryProjects: [ProjectRecord]
+    @Query private var libraryDisciplines: [DisciplineRecord]
+    @Environment(\.modelContext) private var modelContext
 
     public init(day: String, timer: TimerModel, select: @escaping (String) -> Void) {
-        (self.timer, self.select) = (timer, select)
+        (self.timer, self.select, today) = (timer, select, day)
         let target: String? = day
         _tasks = Query(filter: #Predicate<TaskRecord> { $0.scheduledDay == target || $0.isCarriedOver })
         _blocks = Query(filter: #Predicate<TimeBlockRecord> { $0.day == day })
@@ -34,6 +42,18 @@ public struct MenuBarTimerPanelView: View {
         }
         .padding(Spacing.large)
         .frame(width: 320)
+        // Its own root, apart from the main window's environment (spec §4, #214).
+        .environment(\.placeDirectory, placeDirectory)
+        .onChange(of: librarySnapshot, initial: true) { _, _ in reloadPlaces() }
+    }
+
+    private var librarySnapshot: PlaceLibrarySnapshot {
+        PlaceLibrarySnapshot(today: today, projects: libraryProjects, disciplines: libraryDisciplines)
+    }
+
+    /// Reloaded only when `librarySnapshot` changes, never on the timer's tick.
+    private func reloadPlaces() {
+        placeDirectory = PlaceDirectory.load(from: modelContext, today: today)
     }
 
     private var slots: [SessionBlock.Slot] {
@@ -81,6 +101,7 @@ struct TimerBarLineView: View {
 struct TimerBarLeftTodayView: View {
     let cards: [FocusCard]
     let select: (String) -> Void
+    @Environment(\.placeDirectory) private var directory
 
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.small) {
@@ -90,9 +111,10 @@ struct TimerBarLeftTodayView: View {
                     select(card.id)
                 } label: {
                     HStack {
+                        KindMarkView(mark: directory.mark(for: card.filing))
                         Text(card.title).font(TypeScale.body).foregroundStyle(Palette.ink.color).lineLimit(1)
                         Spacer()
-                        PriorityBadgeView(priority: card.priority)
+                        if PriorityMark.showsInRow(card.priority) { PriorityBadgeView(priority: card.priority) }
                     }
                 }
                 .buttonStyle(.plain)

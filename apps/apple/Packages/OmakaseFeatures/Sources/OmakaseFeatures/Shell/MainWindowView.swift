@@ -1,4 +1,5 @@
 import OmakaseStore
+import SwiftData
 import SwiftUI
 
 /// The main window: the sidebar of screens (places, spec §6, join it from
@@ -14,6 +15,14 @@ public struct MainWindowView: View {
     private let models: ScreenModels
     private let openCapture: (CaptureContext) -> Void
     @SceneStorage("omakase.sidebar") private var selectionRaw = SidebarSelection.item(.focus).rawValue
+    @Environment(\.modelContext) private var modelContext
+    @State private var placeDirectory = PlaceDirectory.empty
+    // Observed only to know when to reload the place directory (spec §8);
+    // read through `librarySnapshot` below, so a redraw for any other
+    // reason - a selection change, a future timer-driven row - never
+    // triggers a fresh set of SwiftData fetches (#262 review).
+    @Query private var libraryProjects: [ProjectRecord]
+    @Query private var libraryDisciplines: [DisciplineRecord]
 
     public init(day: String, models: ScreenModels, openCapture: @escaping (CaptureContext) -> Void) {
         (self.day, self.models, self.openCapture) = (day, models, openCapture)
@@ -39,12 +48,24 @@ public struct MainWindowView: View {
             }
         }
         .focusedSceneValue(\.newTaskContext, captureContext)
+        .environment(\.placeDirectory, placeDirectory)
+        .onChange(of: librarySnapshot, initial: true) { _, _ in reloadPlaces() }
     }
 
     /// Where ⌘N and ＋ file a new task from the screen shown (spec §4's
     /// table); reading Plan's anchor day follows it as Plan pages.
     private var captureContext: CaptureContext {
         .forSelection(selection, planDay: models.plan?.anchorDay)
+    }
+
+    private var librarySnapshot: PlaceLibrarySnapshot {
+        PlaceLibrarySnapshot(today: day, projects: libraryProjects, disciplines: libraryDisciplines)
+    }
+
+    /// Every row's kind mark reads `placeDirectory` (spec §8); reloaded only
+    /// when `librarySnapshot` changes, never on a redraw for some other reason.
+    private func reloadPlaces() {
+        placeDirectory = PlaceDirectory.load(from: modelContext, today: day)
     }
 
     @ViewBuilder private var detail: some View {

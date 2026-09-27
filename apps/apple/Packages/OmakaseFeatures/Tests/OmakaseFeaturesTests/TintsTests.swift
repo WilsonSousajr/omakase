@@ -22,6 +22,17 @@ struct TintsTests {
         #expect(PriorityMark.color(for: "someday") == Palette.inkMuted)
     }
 
+    /// Only a priority that says something beyond the default shows its pill
+    /// (spec §8): Medium, unknown and absent priorities carry none.
+    @Test func showsInRowIsTrueOnlyForLowHighAndUrgent() {
+        #expect(PriorityMark.showsInRow("low"))
+        #expect(PriorityMark.showsInRow("high"))
+        #expect(PriorityMark.showsInRow("urgent"))
+        #expect(!PriorityMark.showsInRow("medium"))
+        #expect(!PriorityMark.showsInRow(""))
+        #expect(!PriorityMark.showsInRow("someday"))
+    }
+
     @Test func scalesAreOnTheFourPointGrid() {
         let steps = [Spacing.tiny, Spacing.small, Spacing.medium, Spacing.large, Spacing.xLarge, Spacing.xxLarge]
         #expect(steps == [4, 8, 12, 16, 24, 32])
@@ -33,12 +44,13 @@ struct TintsTests {
         let fonts = [TypeScale.display, TypeScale.title, TypeScale.headline, TypeScale.body, TypeScale.caption]
         #expect(Set(fonts).count == fonts.count)
         #expect(TypeScale.sectionLabel != TypeScale.caption)
-        #expect(TypeScale.displayTracking > TypeScale.sectionLabelTracking)
     }
 
-    @Test @MainActor func sectionLabelIsUppercasedAndMuted() {
+    /// Sentence case, not the web's tracked all-caps (M9 spec §8, decided
+    /// with the user #262): no uppercase transform, still muted.
+    @Test @MainActor func sectionLabelIsSentenceCaseAndMuted() {
         let label = String(describing: Text("Today").sectionLabel())
-        #expect(label.contains("uppercase"))
+        #expect(!label.contains("uppercase"))
         #expect(label.contains("customDynamic"))
     }
 }

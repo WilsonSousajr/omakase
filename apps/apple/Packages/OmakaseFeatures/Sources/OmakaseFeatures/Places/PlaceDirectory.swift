@@ -84,6 +84,25 @@ extension DisciplineSpan {
     }
 }
 
+/// What `PlaceDirectory.load` depends on (spec §8): cheap to compare, so a
+/// window can reload the directory only when this actually changes, never
+/// on every redraw - the running timer's tick, above all, must not trigger
+/// a fresh set of SwiftData fetches every second.
+///
+///     .onChange(of: PlaceLibrarySnapshot(today: day, projects: libraryProjects, disciplines: libraryDisciplines))
+struct PlaceLibrarySnapshot: Equatable {
+    private let today: String
+    private let projects: [ProjectSpan]
+    private let disciplines: [DisciplineSpan]
+
+    @MainActor
+    init(today: String, projects: [ProjectRecord], disciplines: [DisciplineRecord]) {
+        self.today = today
+        self.projects = projects.map(ProjectSpan.init)
+        self.disciplines = disciplines.map(DisciplineSpan.init)
+    }
+}
+
 /// Answers "what is this task's place called, and what colour does it
 /// show?" (spec §2): active projects grouped by workspace, and the current
 /// semester's active disciplines, from the library cache.
