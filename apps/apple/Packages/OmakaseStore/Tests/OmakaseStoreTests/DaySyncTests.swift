@@ -54,6 +54,26 @@ struct DaySyncTests {
         #expect(record.filing == TaskFiling(area: .study, parent: .discipline(disciplineID.uuidString)))
     }
 
+    @Test func aSecondRefreshMovesAFilingFromAProjectToADiscipline() async throws {
+        // Spec §1: apply(_:), not only init(dto:), must carry area/project/
+        // discipline - a second refresh is an update, not an insert.
+        await api.setProfile(try .make())
+        let id = UUID()
+        let projectID = UUID()
+        await api.setTasks([try .make(id: id, title: "Draft essay", project: projectID)], on: "2026-03-07")
+        let today = sync()
+        try await today.refresh()
+        let moved = try #require(try records().first)
+        #expect(moved.area == "work" && moved.projectID == projectID.uuidString)
+        let disciplineID = UUID()
+        await api.setTasks(
+            [try .make(id: id, title: "Draft essay", area: "study", discipline: disciplineID)], on: "2026-03-07")
+        try await today.refresh()
+        let record = try #require(try records().first)
+        #expect(record.area == "study" && record.disciplineID == disciplineID.uuidString)
+        #expect(record.projectID == nil)
+    }
+
     @Test func aTaskGoneFromTheServerIsRemoved() async throws {
         await api.setProfile(try .make())
         await api.setTasks([try .make(title: "Old")], on: "2026-03-07")
