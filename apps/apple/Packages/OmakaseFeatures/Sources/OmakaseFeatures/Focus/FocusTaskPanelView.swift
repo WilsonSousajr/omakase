@@ -98,7 +98,9 @@ struct FocusPanelActionsView: View {
 
     /// Return opens it too (#218): the panel shows only while a task is selected.
     private var editButton: some View {
-        Button { model.beginEditing(card.id) } label: {
+        Button {
+            model.beginEditing(card.id)
+        } label: {
             Text("Edit…").foregroundStyle(Self.menuLabel.color)
         }
         .buttonStyle(.glass)
@@ -107,15 +109,15 @@ struct FocusPanelActionsView: View {
 
     private var rescheduleMenu: some View {
         Menu {
-                FocusRescheduleItems(card: card, day: day, model: model)
-                Button("Pick a date…") { picking = true }
-            } label: {
-                Text("Reschedule").foregroundStyle(Self.menuLabel.color)
-            }
-            .menuStyle(.button)
-            .buttonStyle(.glass)
-            .fixedSize()
-            .popover(isPresented: $picking) { datePicker }
+            FocusRescheduleItems(card: card, day: day, model: model)
+            Button("Pick a date…") { picking = true }
+        } label: {
+            Text("Reschedule").foregroundStyle(Self.menuLabel.color)
+        }
+        .menuStyle(.button)
+        .buttonStyle(.glass)
+        .fixedSize()
+        .popover(isPresented: $picking) { datePicker }
     }
 
     private var datePicker: some View {

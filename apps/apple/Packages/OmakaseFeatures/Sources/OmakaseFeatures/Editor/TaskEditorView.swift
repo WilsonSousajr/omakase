@@ -65,9 +65,13 @@ struct TaskEditorPriorityView: View {
             Text("Priority").sectionLabel()
             HStack(spacing: Spacing.small) {
                 ForEach(TaskDraft.priorities, id: \.self) { name in
-                    Button { priority = name } label: { pill(name) }
-                        .buttonStyle(.plain)
-                        .accessibilityAddTraits(priority == name ? .isSelected : [])
+                    Button {
+                        priority = name
+                    } label: {
+                        pill(name)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityAddTraits(priority == name ? .isSelected : [])
                 }
             }
         }
