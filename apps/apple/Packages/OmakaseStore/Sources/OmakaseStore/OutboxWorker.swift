@@ -53,7 +53,7 @@ public final class OutboxWorker {
     }
 
     private func attempt(_ entry: OutboxEntry) async -> DrainResult? {
-        switch OutboxRules.classify(await send(entry)) {
+        switch OutboxRules.classify(await send(entry), method: entry.method) {
         case .accepted(let body): accept(entry, body: body)
         case .park(let reason): park(entry, reason: reason)
         case .retry(let reason): return scheduleRetry(entry, reason: reason)
