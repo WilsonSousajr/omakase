@@ -119,6 +119,10 @@ CSRF_TRUSTED_ORIGINS = os.environ.get(
     "http://localhost:3000,http://localhost:8000",
 ).split(",")
 
+# The container's health probe is plain HTTP inside the network, so it is
+# never redirected to HTTPS (#243); harmless while the redirect is off.
+SECURE_REDIRECT_EXEMPT = [r"^api/health/$"]
+
 # Production security (only when DEBUG=False)
 if not DEBUG:
     SECURE_SSL_REDIRECT = True
