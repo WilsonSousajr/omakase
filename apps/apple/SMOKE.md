@@ -249,8 +249,11 @@ localhost:8000/api/v1`. Seed first:
 12. Select the block again and Delete block: the block and the panel go
     at once. Click another block, then an empty slot, or press Escape:
     the panel closes.
-13. Double-click a row or a block: nothing happens until the task
-    editor (#218) connects `onEdit`.
+13. Double-click "Reply to Ana" in the column: the task editor (#218)
+    opens on it. Change its title and Save: the row, the panel and any of
+    its blocks show the new title. Double-click one of its blocks, or
+    select the block and press Return: the editor opens on its task.
+    Escape closes it and nothing is sent. Focus's selection is unchanged.
 
 ### Edit a task (#218)
 
