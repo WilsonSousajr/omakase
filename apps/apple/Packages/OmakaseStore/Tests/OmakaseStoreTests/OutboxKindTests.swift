@@ -88,15 +88,17 @@ struct OutboxKindTests {
     }
 
     @Test func captureQueuesACreateWithALocalID() throws {
-        let record = try TaskWrites(context: context).capture(title: "Call the lab", day: "2026-03-07")
+        let record = try TaskWrites(context: context).capture(
+            title: "Call the lab", day: "2026-03-07", filing: TaskFiling(area: .work, parent: nil))
         let entry = try #require(try entries().first)
         #expect(record.id.hasPrefix("local-"))
         #expect(entry.kind == "task.create" && entry.method == "POST" && entry.createsLocalID == record.id)
-        #expect(body(entry) == #"{"scheduled_date":"2026-03-07","title":"Call the lab"}"#)
+        #expect(body(entry) == #"{"area":"work","scheduled_date":"2026-03-07","title":"Call the lab"}"#)
     }
 
     @Test func anAcceptedCaptureTakesTheServerID() async throws {
-        let record = try TaskWrites(context: context).capture(title: "Call the lab", day: "2026-03-07")
+        let record = try TaskWrites(context: context).capture(
+            title: "Call the lab", day: "2026-03-07", filing: TaskFiling(area: .work, parent: nil))
         let server = try TaskDTO.make(title: "Call the lab")
         let reply = String(bytes: try OmakaseJSON.encoder.encode(server), encoding: .utf8)!
         await api.script([.reply(201, reply)])

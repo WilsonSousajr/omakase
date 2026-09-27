@@ -88,7 +88,8 @@ struct DayWritesTests {
 
     @Test func aSessionOnACapturedTaskSendsTheServerID() async throws {
         // Review Focus 3: the capture's local id is rewritten before the session is sent.
-        let task = try TaskWrites(context: context).capture(title: "New", day: "2026-03-07")
+        let task = try TaskWrites(context: context).capture(
+            title: "New", day: "2026-03-07", filing: TaskFiling(area: .work, parent: nil))
         try SessionWrites(context: context).record(
             FinishedSession(
                 timeBlockID: nil, type: "focus", minutes: 25, startedAt: .now.addingTimeInterval(-1500),
@@ -107,7 +108,8 @@ struct DayWritesTests {
         // Final review, Important 2: the capture is accepted during the
         // pomodoro, so no queued session exists to rewrite; the session must
         // still name the server's id, or it parks and the focus time is lost.
-        let task = try TaskWrites(context: context).capture(title: "New", day: "2026-03-07")
+        let task = try TaskWrites(context: context).capture(
+            title: "New", day: "2026-03-07", filing: TaskFiling(area: .work, parent: nil))
         let server = try TaskDTO.make(title: "New")
         await api.script([.reply(201, String(bytes: try OmakaseJSON.encoder.encode(server), encoding: .utf8)!)])
         await drain()

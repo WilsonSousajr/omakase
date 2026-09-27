@@ -457,6 +457,20 @@ server has.
    and its holidays go too. Confirm, and all of them are gone from the
    screen and from `curl`.
 
+## M9 S1 - A task's kind and parent in the store
+
+`TaskRecord` gains `area`, `projectID` and `disciplineID` (spec §1, #254).
+The panel does not choose a kind yet (S4), so every capture is still Work
+with no parent; this checks the store itself, over real on-disk data.
+
+1. Build this branch over an existing store (the app's current data, from
+   before M9). It opens with no crash, and every task you had still shows
+   in the Inbox, Focus and Plan.
+2. Capture a task, "Smoke test M9 S1".
+   - `curl ".../api/v1/tasks/?search=Smoke%20test"` shows it with
+     `"area": "work"`, `"project": null` and `"discipline": null`.
+3. Quit and relaunch. The task is still there, still Work.
+
 ## M9 S3 - The main window moves into Features
 
 A behaviour-preserving refactor (#256): no visible change, but the window

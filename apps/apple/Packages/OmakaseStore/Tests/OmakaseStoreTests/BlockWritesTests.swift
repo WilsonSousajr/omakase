@@ -96,7 +96,8 @@ struct BlockWritesTests {
     }
 
     @Test func aBlockOnACapturedTaskIsSentWithTheTasksServerID() async throws {
-        let task = try TaskWrites(context: context).capture(title: "Offline", day: "2026-03-07")
+        let task = try TaskWrites(context: context).capture(
+            title: "Offline", day: "2026-03-07", filing: TaskFiling(area: .work, parent: nil))
         let block = try writes.create(
             taskID: task.id, studyBlockID: nil, day: "2026-03-07", start: "09:00:00", end: "10:00:00")
         let serverTask = try TaskDTO.make(title: "Offline")
@@ -111,7 +112,8 @@ struct BlockWritesTests {
     }
 
     @Test func anAcceptedCreateKeepsALaterMoveButTakesTheServersIDs() async throws {
-        let task = try TaskWrites(context: context).capture(title: "Offline", day: "2026-03-07")
+        let task = try TaskWrites(context: context).capture(
+            title: "Offline", day: "2026-03-07", filing: TaskFiling(area: .work, parent: nil))
         let block = try writes.create(
             taskID: task.id, studyBlockID: nil, day: "2026-03-07", start: "09:00:00", end: "10:00:00")
         try writes.move(block, day: "2026-03-07", start: "11:00:00", end: "12:00:00")

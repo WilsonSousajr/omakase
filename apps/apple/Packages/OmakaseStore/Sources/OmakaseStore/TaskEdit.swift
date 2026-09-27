@@ -21,13 +21,16 @@ public struct TaskEdit: Equatable, Sendable {
     public var priority: String?
     public var estimate: Clearable<Int>?
     public var dueDay: Clearable<String>?
+    /// Set moves the task to this kind and parent, sending all three keys
+    /// (spec §1); nil leaves the filing as it is.
+    public var filing: TaskFiling?
 
     public init(
         title: String? = nil, notes: String? = nil, priority: String? = nil, estimate: Clearable<Int>? = nil,
-        dueDay: Clearable<String>? = nil
+        dueDay: Clearable<String>? = nil, filing: TaskFiling? = nil
     ) {
         (self.title, self.notes, self.priority) = (title, notes, priority)
-        (self.estimate, self.dueDay) = (estimate, dueDay)
+        (self.estimate, self.dueDay, self.filing) = (estimate, dueDay, filing)
     }
 
     public var isEmpty: Bool { self == TaskEdit() }
@@ -50,7 +53,7 @@ struct TaskEditBody: Encodable {
     let edit: TaskEdit
 
     enum CodingKeys: String, CodingKey {
-        case title, description, priority, estimatedMinutes, dueDate
+        case title, description, priority, estimatedMinutes, dueDate, area, project, discipline
     }
 
     func encode(to encoder: Encoder) throws {
@@ -60,5 +63,10 @@ struct TaskEditBody: Encodable {
         try container.encodeIfPresent(edit.priority, forKey: .priority)
         if let estimate = edit.estimate { try container.encode(estimate.value, forKey: .estimatedMinutes) }
         if let dueDay = edit.dueDay { try container.encode(dueDay.value, forKey: .dueDate) }
+        if let filing = edit.filing {
+            try container.encode(filing.area.rawValue, forKey: .area)
+            try container.encode(filing.parent?.projectID, forKey: .project)
+            try container.encode(filing.parent?.disciplineID, forKey: .discipline)
+        }
     }
 }

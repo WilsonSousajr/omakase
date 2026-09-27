@@ -175,6 +175,18 @@ class TestContractFixtures:
         assert resp.status_code == 200
         check_fixture("task_patch", _body(resp))
 
+    def test_task_create(self, authenticated_client, user):
+        # The Mac's task.create outbox write (#254): area and a discipline the user owns.
+        discipline = DisciplineFactory(semester=SemesterFactory(user=user))
+        resp = authenticated_client.post(
+            "/api/v1/tasks/",
+            {"title": "Read chapter 4", "area": "study", "discipline": str(discipline.pk)},
+            format="json",
+            HTTP_IDEMPOTENCY_KEY="7c9e6679-7425-40de-944b-e07fc1f90ae7",
+        )
+        assert resp.status_code == 201, resp.content
+        check_fixture("task_create", _body(resp))
+
     def test_stats_review_list(self, authenticated_client, user):
         DailyReviewFactory(user=user, date=datetime.date(2026, 3, 7), productivity_rating=4, energy=2)
         resp = authenticated_client.get("/api/v1/stats/reviews/?date=2026-03-07")

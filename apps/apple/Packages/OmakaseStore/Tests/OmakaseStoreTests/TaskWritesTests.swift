@@ -51,6 +51,28 @@ struct TaskWritesTests {
         #expect(String(bytes: entry.body ?? Data(), encoding: .utf8) == #"{"remind_at":null}"#)
     }
 
+    @Test func captureSendsTheFilingsAreaAndDiscipline() throws {
+        // Spec §1: a project's or discipline's id comes from the library
+        // cache, never a `local-` id, unlike the id the capture itself creates.
+        let disciplineID = UUID().uuidString
+        let record = try TaskWrites(context: context).capture(
+            title: "Read chapter 4", day: "2026-03-07",
+            filing: TaskFiling(area: .work, parent: .discipline(disciplineID)))
+        let entry = try #require(try outbox().first)
+        let expected =
+            #"{"area":"study","discipline":"\#(disciplineID)","scheduled_date":"2026-03-07","title":"Read chapter 4"}"#
+        #expect(String(bytes: entry.body ?? Data(), encoding: .utf8) == expected)
+        #expect(record.disciplineID == disciplineID && record.projectID == nil)
+    }
+
+    @Test func captureWithNoParentOmitsProjectAndDiscipline() throws {
+        let record = try TaskWrites(context: context).capture(
+            title: "Buy milk", day: nil, filing: TaskFiling(area: .life, parent: nil))
+        let entry = try #require(try outbox().first)
+        #expect(String(bytes: entry.body ?? Data(), encoding: .utf8) == #"{"area":"personal","title":"Buy milk"}"#)
+        #expect(record.filing == TaskFiling(area: .life, parent: nil))
+    }
+
     @Test func twoTogglesReplayInOrder() async throws {
         // Review Focus 5: complete, then undo, both offline.
         let record = try seeded()
