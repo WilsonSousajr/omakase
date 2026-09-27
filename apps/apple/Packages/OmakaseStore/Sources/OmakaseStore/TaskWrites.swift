@@ -57,6 +57,10 @@ public final class TaskWrites {
         record.priority = changes.priority ?? record.priority
         if let estimate = changes.estimate { record.estimatedMinutes = estimate.value }
         if let dueDay = changes.dueDay { record.dueDay = dueDay.value }
+        if let filing = changes.filing {
+            (record.area, record.projectID, record.disciplineID) =
+                (filing.area.rawValue, filing.parent?.projectID, filing.parent?.disciplineID)
+        }
         try patch(record, body: TaskEditBody(edit: changes))
     }
 

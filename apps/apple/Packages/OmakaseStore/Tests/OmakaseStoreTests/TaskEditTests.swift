@@ -68,6 +68,32 @@ struct TaskEditTests {
         #expect(message.contains(#"" ""#) && message.contains("non-blank"))
     }
 
+    @Test func movingToADisciplineSendsAllThreeKeysWithAnExplicitNullProject() throws {
+        // Spec §1: a move from a project to a discipline is one consistent
+        // write, so an omitted project key here would leave the old one set.
+        let record = try seeded()
+        record.projectID = "p1"
+        let changes = TaskEdit(filing: TaskFiling(area: .work, parent: .discipline("d1")))
+        try TaskWrites(context: context).edit(record, changes: changes)
+        #expect(try bodies() == [#"{"area":"study","discipline":"d1","project":null}"#])
+        #expect(record.filing == TaskFiling(area: .work, parent: .discipline("d1")))
+        #expect(record.projectID == nil && record.disciplineID == "d1")
+    }
+
+    @Test func clearingTheParentSendsExplicitNullsForBoth() throws {
+        let record = try seeded()
+        record.disciplineID = "d1"
+        try TaskWrites(context: context).edit(record, changes: TaskEdit(filing: TaskFiling(area: .life, parent: nil)))
+        #expect(try bodies() == [#"{"area":"personal","discipline":null,"project":null}"#])
+        #expect(record.filing == TaskFiling(area: .life, parent: nil))
+    }
+
+    @Test func aFilingLeftUnsetSendsNoneOfTheThreeKeys() throws {
+        let record = try seeded()
+        try TaskWrites(context: context).edit(record, changes: TaskEdit(title: "Final essay"))
+        #expect(try bodies() == [#"{"title":"Final essay"}"#])
+    }
+
     @Test func anEditThatChangesNothingQueuesNothing() throws {
         let record = try seeded()
         let changes = TaskEdit()
