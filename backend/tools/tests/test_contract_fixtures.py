@@ -18,6 +18,7 @@ import pytest
 
 from accounts.tests.fakes import FakeGoogleVerifier
 from conftest import (
+    ClassCancellationFactory,
     ClassScheduleFactory,
     DailyReviewFactory,
     DisciplineFactory,
@@ -224,10 +225,23 @@ class TestContractFixtures:
     def test_study_class_occurrences(self, authenticated_client, user):
         # Plan draws classes from this; the Mac decodes it (#126).
         semester = SemesterFactory(user=user, rotation_weeks=2, rotation_anchor=datetime.date(2026, 3, 2))
-        ClassScheduleFactory(discipline=DisciplineFactory(semester=semester), day_of_week=0, rotation_weeks_on=[1])
+        schedule = ClassScheduleFactory(
+            discipline=DisciplineFactory(semester=semester), day_of_week=0, rotation_weeks_on=[1]
+        )
+        # A cancelled class is returned marked, not omitted (#125).
+        ClassCancellationFactory(class_schedule=schedule, date=datetime.date(2026, 3, 2))
         resp = authenticated_client.get("/api/v1/study/class-occurrences/?date_from=2026-03-02&date_to=2026-03-08")
         assert resp.status_code == 200
         check_fixture("study_class_occurrences", _body(resp))
+
+    def test_study_class_cancellation(self, authenticated_client, user):
+        # The Mac's class.cancel outbox write (#125).
+        schedule = ClassScheduleFactory(
+            discipline=DisciplineFactory(semester=SemesterFactory(user=user)), day_of_week=0
+        )
+        resp = authenticated_client.put(f"/api/v1/study/classschedules/{schedule.pk}/cancellations/2026-03-09/")
+        assert resp.status_code == 201, resp.content
+        check_fixture("study_class_cancellation", _body(resp))
 
     def test_stats_workload(self, authenticated_client, user):
         TaskFactory(user=user, scheduled_date=datetime.date(2026, 3, 2), estimated_minutes=50, project=None)
