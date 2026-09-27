@@ -6,6 +6,7 @@ from rest_framework import status
 
 from accounts.models import UserProfile
 from conftest import (
+    ClassCancellationFactory,
     ClassScheduleFactory,
     DisciplineFactory,
     SemesterFactory,
@@ -123,6 +124,13 @@ class TestDayWorkload:
         _class(user, (14, 0), (15, 30))
         _class(user, (8, 0), (9, 0), day_of_week=1)
         assert day_workload(user, MONDAY)["class_minutes"] == 100 + 90
+
+    def test_a_cancelled_class_does_not_count(self):
+        # A cancelled class is shown struck through, not planned time (#125).
+        user = UserFactory()
+        ClassCancellationFactory(class_schedule=_class(user, (10, 0), (11, 40)), date=MONDAY)
+        _class(user, (14, 0), (15, 30))
+        assert day_workload(user, MONDAY)["class_minutes"] == 90
 
     def test_a_class_outside_its_semester_does_not_count(self):
         user = UserFactory()
