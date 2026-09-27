@@ -7,8 +7,11 @@ only exceptions are rows. Clients never create instances.
 
 import datetime
 from collections.abc import Callable, Iterator
+from dataclasses import dataclass
 
-from .models import RecurrenceFreqChoices, TaskRecurrence
+from django.db.models import Q, QuerySet
+
+from .models import RecurrenceFreqChoices, Task, TaskRecurrence
 
 
 def _days(first: datetime.date, last: datetime.date) -> Iterator[datetime.date]:
@@ -72,3 +75,71 @@ def occurrence_dates(rule: TaskRecurrence, start: datetime.date, end: datetime.d
     first, last = _bounds(rule, start, end)
     matches = _MATCHERS[rule.freq]
     return [day for day in _days(first, last) if matches(rule, day)]
+
+
+@dataclass(frozen=True)
+class VirtualOccurrence:
+    """A series' occurrence on `day` that nothing has written to, so it is not a row.
+
+    The client sees it task-shaped, with `id: null` (M8 design §2).
+    """
+
+    template: Task
+    day: datetime.date
+
+    @property
+    def scheduled_date(self) -> datetime.date:
+        return self.day
+
+    @property
+    def estimated_minutes(self) -> int | None:
+        return self.template.estimated_minutes
+
+
+DayItem = Task | VirtualOccurrence
+
+
+def _owned_tasks(user) -> QuerySet[Task]:
+    """`user`'s tasks, joined and prefetched for TaskDayListSerializer (invariant 1)."""
+    return (
+        Task.objects.filter(user=user)
+        .select_related("recurrence", "series__recurrence")
+        .prefetch_related("tags", "time_blocks", "subtasks")
+    )
+
+
+def _live_templates(user, start: datetime.date, end: datetime.date) -> list[Task]:
+    """`user`'s series templates whose rule overlaps `start`..`end`."""
+    overlaps = Q(recurrence__until__isnull=True) | Q(recurrence__until__gte=start)
+    return list(_owned_tasks(user).filter(recurrence__starts_on__lte=end).filter(overlaps))
+
+
+def _virtual_occurrences(user, start: datetime.date, end: datetime.date) -> list[VirtualOccurrence]:
+    """Each rule date in `start`..`end` that has no stored row, in one query for the rows."""
+    stored = set(
+        Task.objects.filter(user=user, series__isnull=False, occurrence_date__range=(start, end)).values_list(
+            "series_id", "occurrence_date"
+        )
+    )
+    return [
+        VirtualOccurrence(template=template, day=day)
+        for template in _live_templates(user, start, end)
+        for day in occurrence_dates(template.recurrence, start, end)
+        if (template.pk, day) not in stored
+    ]
+
+
+def day_items(user, start: datetime.date, end: datetime.date) -> list[DayItem]:
+    """`user`'s tasks for `start`..`end` (inclusive): rows scheduled there, plus computed occurrences.
+
+    Rows exclude series templates and skipped occurrences. A rule date with
+    no stored (series, date) row is a VirtualOccurrence; a stored row, moved
+    or skipped, replaces it. Ordered by date, rows before virtual items on a
+    day. Nine queries, however many series (#124).
+
+    >>> day_items(request.user, datetime.date(2026, 3, 2), datetime.date(2026, 3, 2))
+    """
+    rows = _owned_tasks(user).filter(scheduled_date__range=(start, end), recurrence__isnull=True, is_skipped=False)
+    items: list[DayItem] = [*rows, *_virtual_occurrences(user, start, end)]
+    # sorted() is stable: rows keep the model ordering within a day.
+    return sorted(items, key=lambda item: item.scheduled_date)
