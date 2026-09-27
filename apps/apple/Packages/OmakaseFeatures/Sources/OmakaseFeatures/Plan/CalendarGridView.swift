@@ -113,6 +113,10 @@ struct CalendarDayColumnView: View {
     @State private var resizing: CalendarItem?
     @State private var isTargeted = false
 
+    /// Today's own column is lifted with a faint fill (spec §9); `now` is
+    /// only ever set on the column that is today (`CalendarGridView.body`).
+    private var isToday: Bool { now != nil }
+
     var body: some View {
         GeometryReader { geometry in
             let width = geometry.size.width
@@ -138,7 +142,7 @@ struct CalendarDayColumnView: View {
         }
         .coordinateSpace(.named(Self.space))
         .frame(height: layout.totalHeight)
-        .background(Palette.surface.color.opacity(isTargeted ? 0.35 : 0))
+        .background(Palette.surface.color.opacity(isTargeted ? 0.35 : (isToday ? 0.06 : 0)))
         .dropDestination(for: String.self) { texts, location in
             texts.first.map { model.drop($0, day: day, offset: location.y, items: items) } ?? false
         } isTargeted: {

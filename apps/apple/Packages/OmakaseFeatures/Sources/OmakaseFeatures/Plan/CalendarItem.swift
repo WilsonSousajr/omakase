@@ -27,22 +27,36 @@ public struct CalendarItem: Identifiable, Equatable, Sendable {
     public let end: Int
     public let title: String
     public let kind: Kind
-    /// The source's colour when one is cached (a discipline's), else nil.
+    /// The source's colour when one is cached (a project's, a
+    /// discipline's, or the kind's own token), else nil (spec §9).
     public let tint: DesignColor?
     /// A block's parent task, which its panel opens (#217); nil for a study
     /// block's, a class and a session.
     public let taskID: String?
     /// A class cancelled on this date (#207): still drawn, struck through.
     public let isCancelled: Bool
+    /// The kind's SF Symbol beside the title (spec §9): a class keeps
+    /// `book`; a block's own kind glyph when its parent is cached; nil
+    /// otherwise, and for a session or an external event.
+    public let symbol: String?
 
     public init(
         id: String, day: String, start: Int, end: Int, title: String, kind: Kind, tint: DesignColor? = nil,
-        taskID: String? = nil, isCancelled: Bool = false
+        taskID: String? = nil, isCancelled: Bool = false, symbol: String? = nil
     ) {
         (self.id, self.day, self.start, self.end) = (id, day, start, end)
         (self.title, self.kind, self.tint) = (title, kind, tint)
-        (self.taskID, self.isCancelled) = (taskID, isCancelled)
+        (self.taskID, self.isCancelled, self.symbol) = (taskID, isCancelled, symbol)
     }
+
+    /// A block is tall enough for a second line under its title (spec §9):
+    /// at `CalendarLayout.standard`'s scale that is a block of at least
+    /// `timeRangeMinMinutes`, which reads about 40 pt tall - room for the
+    /// title and the time below it. Classes keep only their title.
+    public static let timeRangeMinMinutes = 45
+
+    /// Whether this item shows its time range under the title (spec §9).
+    public var showsTimeRange: Bool { kind == .block && end - start >= Self.timeRangeMinMinutes }
 
     /// A class's context-menu item: whichever of cancel and restore applies.
     public var cancellationMenuTitle: String { isCancelled ? "Restore class" : "Cancel this class" }
@@ -67,12 +81,15 @@ public struct CalendarItem: Identifiable, Equatable, Sendable {
     /// A block from its record's fields; nil when its times don't parse or
     /// don't run forwards, which the server's constraint already forbids.
     public static func block(
-        id: String, day: String, startTime: String, endTime: String, title: String, taskID: String? = nil
+        id: String, day: String, startTime: String, endTime: String, title: String, taskID: String? = nil,
+        tint: DesignColor? = nil, symbol: String? = nil
     ) -> CalendarItem? {
         guard let start = minutes(fromClock: startTime), let end = minutes(fromClock: endTime), end > start else {
             return nil
         }
-        return CalendarItem(id: id, day: day, start: start, end: end, title: title, kind: .block, taskID: taskID)
+        return CalendarItem(
+            id: id, day: day, start: start, end: end, title: title, kind: .block, tint: tint, taskID: taskID,
+            symbol: symbol)
     }
 
     /// A block shows its parent's title; a parent the store doesn't hold
@@ -81,12 +98,43 @@ public struct CalendarItem: Identifiable, Equatable, Sendable {
         taskID.flatMap { titles[$0] } ?? studyBlockID.flatMap { titles[$0] } ?? "Time block"
     }
 
-    /// The grid's block for a cached record; `titles` maps a parent's id to its title.
+    /// The grid's block for a cached record (spec §9): `titles` maps a
+    /// parent's id to its title, `marks` to its colour and `symbols` to its
+    /// kind glyph, all keyed by the block's task id, else its study block's.
     @MainActor
-    public static func block(_ record: TimeBlockRecord, titles: [String: String]) -> CalendarItem? {
+    public static func block(
+        _ record: TimeBlockRecord, titles: [String: String], marks: [String: DesignColor] = [:],
+        symbols: [String: String] = [:]
+    ) -> CalendarItem? {
         let title = blockTitle(taskID: record.taskID, studyBlockID: record.studyBlockID, titles: titles)
+        let parentID = record.taskID ?? record.studyBlockID
         return block(
             id: record.id, day: record.day, startTime: record.startTime, endTime: record.endTime, title: title,
-            taskID: record.taskID)
+            taskID: record.taskID, tint: parentID.flatMap { marks[$0] }, symbol: parentID.flatMap { symbols[$0] })
+    }
+
+    /// Every visible block's tint (spec §9): a task's through its own
+    /// filing, a study block's through its discipline - both
+    /// `directory.mark(for:).color` - keyed by whichever id the block will
+    /// look itself up by.
+    @MainActor
+    public static func marks(
+        tasks: [TaskRecord], studies: [StudyBlockRecord], directory: PlaceDirectory
+    ) -> [String: DesignColor] {
+        var marks = Dictionary(uniqueKeysWithValues: tasks.map { ($0.id, directory.mark(for: $0.filing).color) })
+        for study in studies {
+            let filing = TaskFiling(area: .study, parent: .discipline(study.disciplineID))
+            marks[study.id] = directory.mark(for: filing).color
+        }
+        return marks
+    }
+
+    /// Every visible block's kind glyph (spec §9): a task's own kind, a
+    /// study block's always Study's - that is what a study block is.
+    @MainActor
+    public static func symbols(tasks: [TaskRecord], studies: [StudyBlockRecord]) -> [String: String] {
+        var symbols = Dictionary(uniqueKeysWithValues: tasks.map { ($0.id, $0.filing.area.symbol) })
+        for study in studies { symbols[study.id] = TaskArea.study.symbol }
+        return symbols
     }
 }

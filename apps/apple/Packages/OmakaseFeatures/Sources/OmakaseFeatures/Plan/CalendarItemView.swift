@@ -1,10 +1,11 @@
 import SwiftUI
 
-/// A block or a class on the grid (design-system-apple, Signals): a block
-/// is its source colour as a 3-pt bar and a faint fill on an opaque
-/// surface; a class is dashed with a book glyph, because it is fixed, not
-/// planned. A cancelled class stays, struck through and dimmed (#207): it
-/// is information, not absence.
+/// A block or a class on the grid (design-system-apple, Signals; spec §9): a
+/// block wears its source's colour as a 3-pt bar, a faint fill on an opaque
+/// surface, and its kind's glyph beside the title, with the time range
+/// under it once it is tall enough; a class is dashed with a book glyph
+/// instead of a bar, because it is fixed, not planned. A cancelled class
+/// stays, struck through and dimmed (#207): it is information, not absence.
 struct CalendarItemView: View {
     let item: CalendarItem
 
@@ -14,13 +15,8 @@ struct CalendarItemView: View {
     var body: some View {
         let tint = item.color.color
         HStack(alignment: .top, spacing: Spacing.tiny) {
-            if isClass {
-                Image(systemName: "book").font(TypeScale.caption).foregroundStyle(tint)
-            } else {
-                Capsule().fill(tint).frame(width: 3)
-            }
-            Text(item.title).font(TypeScale.caption.weight(.medium)).foregroundStyle(Palette.ink.color)
-                .strikethrough(isCancelled)
+            mark(tint)
+            content(tint)
             Spacer(minLength: 0)
         }
         .padding(Spacing.tiny)
@@ -33,6 +29,34 @@ struct CalendarItemView: View {
         .clipShape(.rect(cornerRadius: Radius.small))
         .opacity(isCancelled ? 0.45 : 1)
         .help(isCancelled ? "\(item.title), cancelled" : item.title)
+    }
+
+    /// The leading edge: a class's book instead of a bar, since it has no
+    /// colour of its own to wear (#207); a block's 3-pt colour bar otherwise.
+    @ViewBuilder
+    private func mark(_ tint: Color) -> some View {
+        if isClass {
+            Image(systemName: item.symbol ?? "book").font(TypeScale.caption).foregroundStyle(tint)
+        } else {
+            Capsule().fill(tint).frame(width: 3)
+        }
+    }
+
+    /// The title with a block's own kind glyph beside it, and its time
+    /// range under it once `item.showsTimeRange` says there is room.
+    private func content(_ tint: Color) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            HStack(spacing: Spacing.tiny) {
+                if !isClass, let symbol = item.symbol {
+                    Image(systemName: symbol).font(TypeScale.caption).foregroundStyle(tint)
+                }
+                Text(item.title).font(TypeScale.caption.weight(.medium)).foregroundStyle(Palette.ink.color)
+                    .strikethrough(isCancelled)
+            }
+            if item.showsTimeRange {
+                Text(item.timeRange).font(TypeScale.caption).foregroundStyle(Palette.inkMuted.color)
+            }
+        }
     }
 
     private func dashedBorder(_ tint: Color) -> some View {

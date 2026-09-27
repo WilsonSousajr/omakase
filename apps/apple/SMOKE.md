@@ -529,3 +529,24 @@ optional project or discipline (spec §4, #257). The library must be cached
 8. Close the main window (⌘W) with the app still running. File › New Task
    is still enabled, and ⌘N opens the panel with the last kind and ⏎ Today.
 9. Quit and relaunch. ⌥⌘N opens with the kind last saved (step 6's).
+
+## M9 S10 - Calendar blocks wear their kind
+
+Plan's blocks were all the same accent grey (#263); now a block wears its
+project's or discipline's colour, or its kind's own token when there is
+none cached, plus a time line on tall blocks and a kind glyph. Today's
+column is lifted.
+
+1. Plan › Week. A block filed under a project shows that project's colour
+   (or Work's verdigris with no project); a study block shows its
+   discipline's colour (or Study's wisteria); a Life task's block shows
+   Life's dusty rose.
+2. Each block shows its kind's glyph beside the title: briefcase for Work,
+   graduationcap for Study, leaf for Life. A class occurrence keeps its
+   own book glyph and dashed outline, unchanged from before this slice.
+3. A block of 45 minutes or longer also shows its time range ("14:00 –
+   14:45") under the title; a shorter block shows only the title.
+4. Today's column has a faint fill behind it, and its header date is
+   semibold ink against the other days' muted grey.
+5. Toggle light and dark (System Settings › Appearance). Every colour
+   above still reads clearly in both.

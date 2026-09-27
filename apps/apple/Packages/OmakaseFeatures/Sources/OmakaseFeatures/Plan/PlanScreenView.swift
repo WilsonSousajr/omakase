@@ -14,6 +14,9 @@ public struct PlanScreenView: View {
     private let focus: FocusModel
     /// Calendar.app's events (#229), read for the visible days.
     private let overlay: CalendarOverlayModel?
+    /// Colours and glyphs blocks wear from their parent's place (spec §9);
+    /// `.empty` until a screen loads one from the library cache (S9).
+    @Environment(\.placeDirectory) private var placeDirectory
     @Query private var tasks: [TaskRecord]
     /// Every cached task, for titles: a block moved to another day keeps its
     /// parent's name although the column only lists today's tasks (#203).
@@ -50,7 +53,9 @@ public struct PlanScreenView: View {
     private var blockItems: [CalendarItem] {
         let parents = parentTasks.map { ($0.id, $0.title) } + studies.map { ($0.id, $0.title) }
         let titles = Dictionary(parents) { first, _ in first }
-        return blocks.compactMap { CalendarItem.block($0, titles: titles) }
+        let marks = CalendarItem.marks(tasks: parentTasks, studies: studies, directory: placeDirectory)
+        let symbols = CalendarItem.symbols(tasks: parentTasks, studies: studies)
+        return blocks.compactMap { CalendarItem.block($0, titles: titles, marks: marks, symbols: symbols) }
     }
 
     private var classItems: [CalendarItem] { classes.compactMap { CalendarItem.classOccurrence($0) } }
