@@ -127,14 +127,26 @@ public struct PlaceDirectory: Equatable, Sendable {
     /// active disciplines.
     @MainActor
     public static func load(from context: ModelContext, today: String) -> PlaceDirectory {
-        let workspaces = (try? context.fetch(FetchDescriptor<WorkspaceRecord>())) ?? []
+        make(
+            workspaces: (try? context.fetch(FetchDescriptor<WorkspaceRecord>())) ?? [],
+            projects: (try? context.fetch(FetchDescriptor<ProjectRecord>())) ?? [],
+            semesters: (try? context.fetch(FetchDescriptor<SemesterRecord>())) ?? [],
+            disciplines: (try? context.fetch(FetchDescriptor<DisciplineRecord>())) ?? [], today: today)
+    }
+
+    /// Builds the directory from records a screen already holds reactively
+    /// (`@Query`), so the sidebar (spec §6, S6 #259) updates on every
+    /// catch-up without `load(from:today:)`'s own fetch.
+    @MainActor
+    static func make(
+        workspaces: [WorkspaceRecord], projects: [ProjectRecord], semesters: [SemesterRecord],
+        disciplines: [DisciplineRecord], today: String
+    ) -> PlaceDirectory {
         let names = Dictionary(uniqueKeysWithValues: workspaces.map { ($0.id, $0.name) })
-        let projectSpans = ((try? context.fetch(FetchDescriptor<ProjectRecord>())) ?? []).map(ProjectSpan.init)
-        let semesterSpans = ((try? context.fetch(FetchDescriptor<SemesterRecord>())) ?? []).map(SemesterSpan.init)
-        let disciplineSpans = ((try? context.fetch(FetchDescriptor<DisciplineRecord>())) ?? []).map(DisciplineSpan.init)
-        let semester = currentSemester(semesterSpans, today: today)
+        let semester = currentSemester(semesters.map(SemesterSpan.init), today: today)
+        let disciplineSpans = disciplines.map(DisciplineSpan.init)
         return PlaceDirectory(
-            projects: projectEntries(projectSpans, workspaceNames: names),
+            projects: projectEntries(projects.map(ProjectSpan.init), workspaceNames: names),
             disciplines: semester.map { disciplineEntries(disciplineSpans, semesterID: $0.id) } ?? [],
             semesterTitle: semester?.name)
     }
@@ -164,7 +176,9 @@ public struct PlaceDirectory: Equatable, Sendable {
         return places
     }
 
-    private static func place(for parent: TaskParent) -> TaskPlace {
+    /// The place a filing's parent names; shared with the sidebar's
+    /// temporary Places section (S6, #259), which lists the same entries.
+    static func place(for parent: TaskParent) -> TaskPlace {
         switch parent {
         case .project(let id): .project(id)
         case .discipline(let id): .discipline(id)

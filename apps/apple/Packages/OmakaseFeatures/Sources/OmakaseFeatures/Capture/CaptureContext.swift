@@ -27,17 +27,7 @@ public struct CaptureContext: Equatable, Sendable {
         switch selection {
         case .item(.plan): CaptureContext(day: planDay)
         case .item: CaptureContext()
-        case .place(let place): CaptureContext(filing: filing(for: place))
-        }
-    }
-
-    /// A place's filing. S6 may give `TaskPlace` its own; this stays private
-    /// so the two never meet as an ambiguous member.
-    private static func filing(for place: TaskPlace) -> TaskFiling {
-        switch place {
-        case .project(let id): TaskFiling(area: .work, parent: .project(id))
-        case .discipline(let id): TaskFiling(area: .study, parent: .discipline(id))
-        case .life: TaskFiling(area: .life, parent: nil)
+        case .place(let place): CaptureContext(filing: place.filing)
         }
     }
 }
