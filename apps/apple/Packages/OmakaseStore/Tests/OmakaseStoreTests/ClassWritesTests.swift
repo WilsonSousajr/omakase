@@ -29,7 +29,7 @@ struct ClassWritesTests {
     }
 
     func drain() async -> OutboxWorker.DrainResult {
-        let handlers = OutboxHandlers([ClassHandler(context: context)])
+        let handlers = OutboxHandlers([ClassHandler()])
         return await OutboxWorker(context: context, api: api, handlers: handlers).drain()
     }
 
@@ -84,7 +84,8 @@ struct ClassWritesTests {
         let reply = #"{"id":"\#(UUID())","class_schedule":"\#(schedule)","date":"2026-09-23","created_at":"x"}"#
         await api.script([.reply(201, reply)])
         #expect(await drain() == .empty)
-        #expect(occurrence.isCancelled && (try entries().isEmpty))
+        #expect(occurrence.isCancelled)
+        #expect(try entries().isEmpty)
         #expect(await api.sentRequests.map(\.method) == ["PUT"])
     }
 
@@ -93,7 +94,8 @@ struct ClassWritesTests {
         try writes.restore(occurrence)
         await api.script([.reply(204, "")])
         #expect(await drain() == .empty)
-        #expect(!occurrence.isCancelled && (try entries().isEmpty))
+        #expect(!occurrence.isCancelled)
+        #expect(try entries().isEmpty)
         #expect(await api.sentRequests.map(\.path) == [path])
     }
 }
