@@ -10,7 +10,8 @@ enum ClassOccurrenceSample {
     static let json = """
         {"id":"\(id)","class_schedule_id":"2b1f0c7e-9d4a-4c31-8a55-0e6f3d2c1b90",
          "discipline_name":"Calculus","discipline_color":"#3B82F6","class_type":"lecture",
-         "location":"Room 101","date":"2026-09-22","start_time":"08:00:00","end_time":"09:40:00","week":1,"is_cancelled":false}
+         "location":"Room 101","date":"2026-09-22","start_time":"08:00:00","end_time":"09:40:00",
+         "week":1,"is_cancelled":false}
         """
 }
 
