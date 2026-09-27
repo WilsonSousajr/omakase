@@ -29,13 +29,19 @@ public struct CalendarItem: Identifiable, Equatable, Sendable {
     public let kind: Kind
     /// The source's colour when one is cached (a discipline's), else nil.
     public let tint: DesignColor?
+    /// A class cancelled on this date (#207): still drawn, struck through.
+    public let isCancelled: Bool
 
     public init(
-        id: String, day: String, start: Int, end: Int, title: String, kind: Kind, tint: DesignColor? = nil
+        id: String, day: String, start: Int, end: Int, title: String, kind: Kind, tint: DesignColor? = nil,
+        isCancelled: Bool = false
     ) {
         (self.id, self.day, self.start, self.end) = (id, day, start, end)
-        (self.title, self.kind, self.tint) = (title, kind, tint)
+        (self.title, self.kind, self.tint, self.isCancelled) = (title, kind, tint, isCancelled)
     }
+
+    /// A class's context-menu item: whichever of cancel and restore applies.
+    public var cancellationMenuTitle: String { isCancelled ? "Restore class" : "Cancel this class" }
 
     /// Without a source colour an item is accent grey (spec M4, Grid).
     public var color: DesignColor { tint ?? Palette.accent }

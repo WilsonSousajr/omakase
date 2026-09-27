@@ -1,8 +1,9 @@
 import Foundation
 import OmakaseStore
 
-/// The cached classes and focus sessions (#200) as grid items (#203). Both are
-/// read-only: a class is fixed by the timetable, and a session is what ran.
+/// The cached classes and focus sessions (#200) as grid items (#203). Neither
+/// moves: a class is fixed by the timetable (only cancelled on a date, #207),
+/// and a session is what ran.
 extension CalendarItem {
     /// Only focus is drawn; breaks are not planned work (M4 spec, Decisions).
     static let focusSessionType = "focus"
@@ -16,7 +17,7 @@ extension CalendarItem {
         else { return nil }
         return CalendarItem(
             id: record.id, day: record.day, start: start, end: end, title: record.disciplineName,
-            kind: .classOccurrence, tint: DesignColor(hex: record.disciplineColor))
+            kind: .classOccurrence, tint: DesignColor(hex: record.disciplineColor), isCancelled: record.isCancelled)
     }
 
     /// A focus session at its real times in `calendar`'s zone. One still
