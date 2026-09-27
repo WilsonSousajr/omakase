@@ -269,3 +269,25 @@ localhost:8000/api/v1`. Seed first:
      `"due_date": null`.
 4. Open it, blank the title: Save stays disabled. Escape closes the editor
    and nothing is sent.
+
+## M5 - Calendar.app overlay
+
+Plan, with Calendar.app holding an event today at 11:00-12:00 ("Dentist")
+and one crossing midnight tonight (23:00-01:00). Start from a clean
+permission: `tccutil reset Calendar dev.omakase.mac` and
+`defaults delete dev.omakase.mac omakase.calendarOverlay`.
+
+1. Plan's header shows a "Calendar" toggle, off. The grid has no events.
+2. Turn it on: the system asks for calendar access with "Omakase shows
+   your calendar's events behind your plan. It never changes them."
+   Allow. "Dentist" appears at 11:00-12:00, dashed and muted, behind any
+   block there, in its calendar's colour on the stroke only.
+3. Drop a task onto 11:00: the block sits over the event and no
+   "Overlaps" dialog appears. The event can't be dragged or resized.
+4. Week view: the late event shows 23:00-24:00 tonight and 00:00-01:00
+   tomorrow. An all-day event is not drawn.
+5. Quit and relaunch: the toggle is still on and the events are back.
+6. Turn it off: the events go. Relaunch: still off.
+7. Deny: `tccutil reset Calendar dev.omakase.mac`, turn it on, choose
+   Don't Allow. The toggle stays off and a popover says "Omakase needs
+   access in System Settings > Privacy > Calendars".

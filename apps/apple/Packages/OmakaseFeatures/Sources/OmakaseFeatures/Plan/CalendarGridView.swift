@@ -1,10 +1,11 @@
 import SwiftUI
 
 /// The hours as a grid: a time gutter, then a column per visible day, each
-/// with its hour lines, classes behind, blocks in lanes, sessions at the
-/// trailing edge, and the now line on today's column. Opens at
-/// `CalendarLayout.initialMinutes`, on appear and whenever the range moves
-/// (spec M4, Grid). Each column takes drops (#203).
+/// with its hour lines, Calendar.app's events and classes behind (#229),
+/// blocks in lanes, sessions at the trailing edge, and the now line on
+/// today's column. Opens at `CalendarLayout.initialMinutes`, on appear and
+/// whenever the range moves (spec M4, Grid; #215). Each column takes drops
+/// (#203).
 struct CalendarGridView: View {
     static let gutter: CGFloat = 56
 
@@ -120,6 +121,11 @@ struct CalendarDayColumnView: View {
                 CalendarHourLinesView(layout: layout)
                     .contentShape(.rect)
                     .onTapGesture { model.select(nil) }
+                ForEach(ofKind(.externalEvent)) { item in
+                    placed(item, CalendarLayout.blockSpan(lane: nil, width: width)) {
+                        CalendarExternalEventView(item: item)
+                    }
+                }
                 ForEach(ofKind(.classOccurrence)) { item in
                     placed(item, CalendarLayout.blockSpan(lane: nil, width: width)) { CalendarItemView(item: item) }
                 }

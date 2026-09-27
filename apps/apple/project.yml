@@ -29,6 +29,8 @@ targets:
         LSApplicationCategoryType: public.app-category.productivity
         OmakaseAPIBaseURL: $(OMAKASE_API_BASE_URL)
         OmakaseGoogleClientID: $(OMAKASE_GOOGLE_CLIENT_ID)
+        # Plan's Calendar.app overlay reads events (#229); it needs full access.
+        NSCalendarsFullAccessUsageDescription: "Omakase shows your calendar's events behind your plan. It never changes them."
         NSAppTransportSecurity:
           NSAllowsLocalNetworking: true
     dependencies:

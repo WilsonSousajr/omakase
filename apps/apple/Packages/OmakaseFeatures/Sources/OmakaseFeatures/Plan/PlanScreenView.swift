@@ -12,6 +12,8 @@ public struct PlanScreenView: View {
     private let model: PlanModel
     private let day: String
     private let focus: FocusModel
+    /// Calendar.app's events (#229), read for the visible days.
+    private let overlay: CalendarOverlayModel?
     @Query private var tasks: [TaskRecord]
     /// Every cached task, for titles: a block moved to another day keeps its
     /// parent's name although the column only lists today's tasks (#203).
@@ -22,19 +24,21 @@ public struct PlanScreenView: View {
     @Query private var sessions: [SessionRecord]
 
     /// `focus` completes, reschedules, reminds and saves edits from the panel (#217).
-    public init(day: String, model: PlanModel, focus: FocusModel) {
-        (self.day, self.model, self.focus) = (day, model, focus)
+    public init(day: String, model: PlanModel, focus: FocusModel, overlay: CalendarOverlayModel? = nil) {
+        (self.day, self.model, self.focus, self.overlay) = (day, model, focus, overlay)
         let target: String? = day
         _tasks = Query(filter: #Predicate<TaskRecord> { $0.scheduledDay == target || $0.isCarriedOver })
     }
 
     public var body: some View {
         PlanView(
-            model: model, items: blockItems + classItems + sessionItems, tasks: columnCards, context: context
+            model: model, items: blockItems + classItems + sessionItems + (overlay?.items ?? []),
+            tasks: columnCards, context: context, overlay: overlay
         )
         .onAppear { model.show() }
         .onDisappear { model.hide() }
         .onChange(of: model.visibleDays) { model.refreshRange() }
+        .task(id: model.visibleDays) { await overlay?.refresh(days: model.visibleDays) }
     }
 
     private var columnCards: [FocusCard] { tasks.map { FocusCard(record: $0) } }

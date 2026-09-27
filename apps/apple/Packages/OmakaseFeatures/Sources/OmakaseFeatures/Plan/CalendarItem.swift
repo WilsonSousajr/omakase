@@ -14,6 +14,9 @@ public struct CalendarItem: Identifiable, Equatable, Sendable {
         case classOccurrence
         /// What ran (R8): a thin lane at the column's trailing edge.
         case focusSession
+        /// Read from Calendar.app (#229): dashed and muted behind the
+        /// blocks, never laned with them and never draggable.
+        case externalEvent
     }
 
     public let id: String
