@@ -46,3 +46,13 @@ struct LibraryDTOTests {
         #expect(holiday.endDate.string == "2026-04-10")
     }
 }
+
+/// Settings shows the profile's timezone and Plan's week follows its week
+/// start (M5 spec, Decisions).
+struct ProfileWeekTests {
+    @Test func decodesTheTimezoneAndTheWeekStart() throws {
+        let profile = try OmakaseJSON.decoder.decode(ProfileDTO.self, from: Fixture.data("profile_patch"))
+        #expect(profile.timezone == "UTC" && profile.weekStartsOn == "sunday")
+        #expect(profile.blockReminderMinutes == 10 && profile.shutdownReminderTime == "18:30:00")
+    }
+}
