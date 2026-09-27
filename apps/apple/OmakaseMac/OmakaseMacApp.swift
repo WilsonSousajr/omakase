@@ -13,6 +13,7 @@ struct OmakaseMacApp: App {
     @State private var review: ReviewModel?
     @State private var plan: PlanModel?
     @State private var inbox: InboxModel?
+    @State private var projects: ProjectsModel?
     @State private var calendarOverlay: CalendarOverlayModel?
     @State private var timer: TimerModel?
     @State private var failedWrites: FailedWritesModel?
@@ -107,6 +108,7 @@ struct OmakaseMacApp: App {
             }
         case .review: if let review { ReviewView(day: day, model: review) }
         case .inbox: if let inbox { InboxView(day: day, model: inbox) }
+        case .projects: if let projects { ProjectsView(model: projects) }
         case .focus, nil: if let focus, let timer { FocusView(day: day, model: focus, timer: timer) }
         }
     }
@@ -122,6 +124,7 @@ struct OmakaseMacApp: App {
         review = ReviewModel(actions: services.reviewActions { handle($0) })
         settings = SettingsModel(actions: services.settingsActions())
         inbox = InboxModel(actions: services.inboxActions { handle($0) }) { FocusDay().today }
+        projects = ProjectsModel(actions: services.projectsActions())
         plan = PlanModel(actions: services.planActions { handle($0) }) { FocusDay().today }
         calendarOverlay = services.makeCalendarOverlay()
         let timer = services.makeTimer { handle($0) }
