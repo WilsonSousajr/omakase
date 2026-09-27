@@ -22,20 +22,23 @@ extension TaskPlace {
 
     /// This place's cached open tasks (spec §5): `PlaceSync`'s prune step and
     /// `PlaceTasksView`'s `@Query` share this one definition, so a task never
-    /// reads as open in one and missing from the other.
+    /// reads as open in one and missing from the other. Excludes a virtual
+    /// occurrence: "Repeating tasks appear through their materialized rows
+    /// only. Virtual occurrences are the calendar's" (spec §5) — RangeSync
+    /// caches those for Plan's visible days with the same filing.
     ///
     ///     let predicate = TaskPlace.discipline("d1").openTasksPredicate
     public var openTasksPredicate: Predicate<TaskRecord> {
         switch self {
         case .project(let id):
             let target: String? = id
-            return #Predicate<TaskRecord> { $0.projectID == target && !$0.isCompleted }
+            return #Predicate<TaskRecord> { $0.projectID == target && !$0.isCompleted && !$0.isVirtual }
         case .discipline(let id):
             let target: String? = id
-            return #Predicate<TaskRecord> { $0.disciplineID == target && !$0.isCompleted }
+            return #Predicate<TaskRecord> { $0.disciplineID == target && !$0.isCompleted && !$0.isVirtual }
         case .life:
             let target = TaskArea.life.rawValue
-            return #Predicate<TaskRecord> { $0.area == target && !$0.isCompleted }
+            return #Predicate<TaskRecord> { $0.area == target && !$0.isCompleted && !$0.isVirtual }
         }
     }
 }

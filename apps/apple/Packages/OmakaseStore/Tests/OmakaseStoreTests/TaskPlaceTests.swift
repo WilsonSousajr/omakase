@@ -47,6 +47,33 @@ struct TaskPlaceTests {
         #expect(try open(TaskPlace.project("p1")).isEmpty)
     }
 
+    /// RangeSync caches a series' virtual occurrences for Plan's visible
+    /// days, and `TaskRecord(dto:)` sets their filing and `isVirtual` (#206).
+    /// A place's list shows only materialized rows (spec §5): "Repeating
+    /// tasks appear through their materialized rows only. Virtual
+    /// occurrences are the calendar's."
+    @Test func aVirtualOccurrenceIsNotOpenForAProject() throws {
+        let record = try makeTask(id: "occ-s1-2026-09-27", filing: TaskFiling(area: .work, parent: .project("p1")))
+        record.isVirtual = true
+        try context.save()
+        #expect(try open(TaskPlace.project("p1")).isEmpty)
+    }
+
+    @Test func aVirtualOccurrenceIsNotOpenForADiscipline() throws {
+        let record = try makeTask(
+            id: "occ-s2-2026-09-27", filing: TaskFiling(area: .study, parent: .discipline("d1")))
+        record.isVirtual = true
+        try context.save()
+        #expect(try open(TaskPlace.discipline("d1")).isEmpty)
+    }
+
+    @Test func aVirtualOccurrenceIsNotOpenForLife() throws {
+        let record = try makeTask(id: "occ-s3-2026-09-27", filing: TaskFiling(area: .life, parent: nil))
+        record.isVirtual = true
+        try context.save()
+        #expect(try open(TaskPlace.life).isEmpty)
+    }
+
     private func makeTask(id: String, filing: TaskFiling, isCompleted: Bool = false) throws -> TaskRecord {
         let record = TaskRecord(id: id, title: id, isCompleted: isCompleted, filing: filing)
         context.insert(record)
