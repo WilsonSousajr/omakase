@@ -374,3 +374,30 @@ The Inbox is every open task with no day (#225). Capture two tasks with
    delete it before reconnecting. The toolbar shows nothing pending,
    because the unsent capture was withdrawn. Reconnect, and the server
    never had it.
+
+## M5 - Settings
+
+Settings is the ⌘, window (#228). Each change saves a moment after the
+last one. `curl "…/auth/profile/"` shows what the server has.
+
+1. The Account tab shows "Signed in as <your email>".
+2. General: set Week starts on to Sunday.
+   - `curl` has `"week_starts_on": "sunday"`.
+3. Focus: set Focus to 50 min, and Work to 6h 30m.
+   - `curl` has `"pomodoro_work_minutes": 50` and
+     `"daily_work_goal_hours": "6.5"`.
+   - Start a focus session: the timer counts down from 50:00.
+4. Reminders: turn Heads-up off.
+   - `curl` has `"block_reminder_minutes": null`.
+   Turn it on and set 10 minutes: `curl` has `10`.
+5. Reminders: turn on the shutdown reminder and set 21:30.
+   - `curl` has `"shutdown_reminder_time": "21:30:00"`.
+6. `docker-compose stop backend`, then change Focus to 45. Within a
+   moment it goes back to 50, and the foot says "Needs a connection."
+   Start the backend again.
+7. General: turn on Open at login. It appears in System Settings >
+   General > Login Items. Turn it off, and it goes.
+8. Account: Sign Out…. The dialog names any unsent changes. Confirm, and
+   the window returns to sign-in.
+   - `curl -X POST …/auth/token/refresh/` with the old refresh token is
+     a 401: it was revoked.

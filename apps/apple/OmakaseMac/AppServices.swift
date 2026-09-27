@@ -41,6 +41,16 @@ final class AppServices {
     /// The library and the Inbox (#224). Offline it keeps the last copy.
     func refreshLibrary() async { try? await librarySync.refresh() }
 
+    /// Settings' writes (#228): the profile online, launch at login through
+    /// the system, and the signed-in email read online.
+    func settingsActions() -> SettingsModel.Actions {
+        let (api, context) = (self.api, container.mainContext)
+        return SettingsModel.Actions(
+            save: { change in try await ProfileWrites(api: api, context: context).save(change) },
+            loginItemEnabled: { LoginItem.isEnabled }, setLoginItem: { try LoginItem.setEnabled($0) },
+            account: { try? await api.me().email })
+    }
+
     /// Writes the server hasn't taken, which signing out would lose.
     func unsentCount() -> Int { (try? SessionReset(context: container.mainContext).unsentCount()) ?? 0 }
 
