@@ -9,9 +9,11 @@ public struct PlanView: View {
     private let model: PlanModel
     private let items: [CalendarItem]
     private let tasks: [FocusCard]
+    /// Calendar.app's events behind the grid (#229); nil hides the toggle.
+    private let overlay: CalendarOverlayModel?
 
-    public init(model: PlanModel, items: [CalendarItem], tasks: [FocusCard]) {
-        (self.model, self.items, self.tasks) = (model, items, tasks)
+    public init(model: PlanModel, items: [CalendarItem], tasks: [FocusCard], overlay: CalendarOverlayModel? = nil) {
+        (self.model, self.items, self.tasks, self.overlay) = (model, items, tasks, overlay)
     }
 
     public var body: some View {
@@ -19,7 +21,7 @@ public struct PlanView: View {
             PlanTasksColumnView(board: FocusBoard(cards: tasks)).frame(width: 380)
             Divider().overlay(Palette.hairline.color)
             VStack(spacing: 0) {
-                PlanHeaderView(model: model)
+                PlanHeaderView(model: model, overlay: overlay)
                 Divider().overlay(Palette.hairline.color)
                 CalendarGridView(model: model, items: items)
             }
@@ -37,14 +39,16 @@ public struct PlanView: View {
     }
 }
 
-/// The title, Today, ‹ ›, and the Day/Week switch.
+/// The title, the Calendar.app toggle, Today, ‹ ›, and the Day/Week switch.
 struct PlanHeaderView: View {
     @Bindable var model: PlanModel
+    var overlay: CalendarOverlayModel?
 
     var body: some View {
         HStack(spacing: Spacing.medium) {
             Text(model.title).font(TypeScale.title).foregroundStyle(Palette.ink.color)
             Spacer()
+            if let overlay { CalendarOverlayToggleView(overlay: overlay) }
             Button("Today") { model.goToday() }.buttonStyle(.glass)
             HStack(spacing: Spacing.tiny) {
                 Button("Previous", systemImage: "chevron.left") { model.previous() }
