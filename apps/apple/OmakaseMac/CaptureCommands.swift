@@ -1,3 +1,4 @@
+import OmakaseFeatures
 import SwiftUI
 
 /// "Capture Task…" in the File menu, so ⌥⌘N is discoverable and works
@@ -8,7 +9,7 @@ struct CaptureCommands: Commands {
 
     var body: some Commands {
         CommandGroup(after: .newItem) {
-            Button("Capture Task…") { capture?.show() }
+            Button("Capture Task…") { capture?.show(context: CaptureContext()) }
                 .keyboardShortcut("n", modifiers: [.command, .option])
                 .disabled(!isEnabled || capture == nil)
         }

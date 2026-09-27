@@ -1,5 +1,6 @@
 import AppKit
 import OmakaseFeatures
+import OmakaseStore
 import SwiftUI
 
 /// Opens and closes the capture panel (M3.5 spec, Decisions). Each opening
@@ -7,23 +8,24 @@ import SwiftUI
 /// hidden, so there is no stale draft. Closing gives focus back to the app
 /// that had it when the panel opened.
 ///
-///     let panel = CapturePanelController { title, destination in services.capture(title, to: destination) }
-///     panel.show()
+///     let panel = CapturePanelController(actions: services.captureActions { handle($0) })
+///     panel.show(context: CaptureContext(), directory: services.capturePlaces(), lastArea: .work)
 @MainActor
 final class CapturePanelController {
-    private let onCapture: (String, CaptureDestination) -> Void
+    private let actions: CaptureModel.Actions
     private var panel: CapturePanel?
     private var previousApp: NSRunningApplication?
 
-    init(onCapture: @escaping (String, CaptureDestination) -> Void) { self.onCapture = onCapture }
+    init(actions: CaptureModel.Actions) { self.actions = actions }
 
-    func show() {
+    /// A new panel seeded with `context` (spec §4), offering `directory`'s
+    /// places; one already open is only brought forward, keeping its draft.
+    func show(context: CaptureContext, directory: PlaceDirectory, lastArea: TaskArea) {
         if let panel {
             panel.makeKeyAndOrderFront(nil)
             return
         }
-        let onCapture = self.onCapture
-        let model = CaptureModel(actions: .init(capture: { onCapture($0, $1) }))
+        let model = CaptureModel(context: context, directory: directory, lastArea: lastArea, actions: actions)
         let content = CaptureView(model: model, onClose: { [weak self] in self?.close() })
         // The hosting view is its own root, so the window's .tint never reaches it (#214).
         let panel = CapturePanel(content: content.tint(AppTint.capturePanel.color))

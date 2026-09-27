@@ -1,11 +1,15 @@
+import OmakaseStore
 import SwiftUI
 
-/// The ⌥⌘N capture panel, from the M2 mockup (`Mockups/CapturePanelView`):
-/// a neutral glass card, untinted because capture is not a timer state
-/// (docs/design-system-apple.md, floating surfaces). ⏎ saves for today,
-/// ⌘⏎ to the Inbox, ⎋ dismisses; `onClose` closes the window around it.
+/// The capture panel, from the M2 mockup (`Mockups/CapturePanelView`) and
+/// spec §4: a neutral glass card, untinted because capture is not a timer
+/// state (docs/design-system-apple.md, floating surfaces). The title, then
+/// the kind chips and the parent chip, then the hint. ⏎ saves where the
+/// context says, ⌘⏎ to the Inbox, ⌘1–3 pick the kind, ⎋ dismisses;
+/// `onClose` closes the window around it.
 ///
-///     CaptureView(model: CaptureModel(actions: actions), onClose: { panel.close() })
+///     CaptureView(model: CaptureModel(context: context, directory: directory, lastArea: .work, actions: actions),
+///                 onClose: { panel.close() })
 public struct CaptureView: View {
     private let model: CaptureModel
     private let onClose: () -> Void
@@ -30,30 +34,61 @@ public struct CaptureView: View {
     }
 
     private var card: some View {
-        VStack(alignment: .leading, spacing: Spacing.small) {
+        VStack(alignment: .leading, spacing: Spacing.medium) {
             HStack(spacing: Spacing.medium) {
                 Image(systemName: "tray.and.arrow.down").foregroundStyle(Palette.inkMuted.color)
                 TextField("Capture a task…", text: Binding(get: { model.draft }, set: { model.draft = $0 }))
                     .textFieldStyle(.plain)
                     .font(TypeScale.title)
                     .focused($isFieldFocused)
-                    .onSubmit { save(to: CaptureModel.enterDestination) }
+                    .onSubmit { closeIfSaved(model.saveEnter()) }
             }
-            HStack(spacing: Spacing.small) {
-                Text(CaptureModel.enterDestination.title).sectionLabel()
+            HStack(spacing: Spacing.medium) {
+                KindChipsView(selection: Binding(get: { model.area }, set: { model.choose($0) }))
                 Spacer()
-                Text(CaptureModel.hint).font(TypeScale.caption).foregroundStyle(Palette.inkMuted.color)
+                if model.showsParentChip { parentMenu }
             }
+            Text(model.hint).font(TypeScale.caption).foregroundStyle(Palette.inkMuted.color)
+        }
+    }
+
+    /// The current kind's places, a section per workspace, and "None".
+    private var parentMenu: some View {
+        Menu {
+            Button("None") { model.choose(parent: nil) }
+            ForEach(model.parentGroups) { group in parentSection(group) }
+        } label: {
+            Text(model.parentTitle).font(TypeScale.body)
+        }
+        .menuStyle(.borderlessButton)
+        .fixedSize()
+    }
+
+    @ViewBuilder private func parentSection(_ group: PlaceGroup) -> some View {
+        if let title = group.title {
+            Section(title) { parentButtons(group.entries) }
+        } else {
+            Section { parentButtons(group.entries) }
+        }
+    }
+
+    private func parentButtons(_ entries: [PlaceEntry]) -> some View {
+        ForEach(entries) { entry in
+            Button(entry.title) { model.choose(parent: entry.parent) }
         }
     }
 
     /// Key equivalents reach a button before the focused field's editor,
-    /// so ⌘⏎ and ⎋ work while typing. The buttons take no space and are
-    /// hidden from VoiceOver; the footer names the keys.
+    /// so ⌘⏎, ⌘1–3 and ⎋ work while typing. The buttons take no space and
+    /// are hidden from VoiceOver; the footer names the keys.
     private var shortcuts: some View {
         ZStack {
-            Button("Save to Inbox") { save(to: .inbox) }.keyboardShortcut(.return, modifiers: .command)
+            Button("Save to Inbox") { closeIfSaved(model.saveInbox()) }.keyboardShortcut(.return, modifiers: .command)
             Button("Dismiss") { dismiss() }.keyboardShortcut(.cancelAction)
+            ForEach(TaskArea.allCases, id: \.self) { area in
+                Button(area.title) { model.choose(area) }
+                    .keyboardShortcut(KeyEquivalent(Character(String(area.shortcutDigit))), modifiers: .command)
+            }
         }
         .buttonStyle(.plain)
         .opacity(0)
@@ -61,8 +96,8 @@ public struct CaptureView: View {
         .accessibilityHidden(true)
     }
 
-    private func save(to destination: CaptureDestination) {
-        guard model.save(to: destination) else { return }
+    private func closeIfSaved(_ saved: Bool) {
+        guard saved else { return }
         onClose()
     }
 
@@ -73,5 +108,14 @@ public struct CaptureView: View {
 }
 
 #Preview("Capture") {
-    CaptureView(model: CaptureModel(actions: .init(capture: { _, _ in })), onClose: {}).padding(Spacing.xLarge)
+    let directory = PlaceDirectory(
+        projects: [PlaceEntry(parent: .project("p1"), title: "Thesis", group: nil, color: KindTint.work)],
+        disciplines: [
+            PlaceEntry(parent: .discipline("d1"), title: "Linear algebra", group: nil, color: KindTint.study)
+        ],
+        semesterTitle: "Fall")
+    let model = CaptureModel(
+        context: CaptureContext(filing: TaskFiling(area: .study, parent: .discipline("d1"))), directory: directory,
+        lastArea: .work, actions: .init(capture: { _ in }, remember: { _ in }))
+    CaptureView(model: model, onClose: {}).padding(Spacing.xLarge)
 }
