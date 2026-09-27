@@ -7,8 +7,8 @@ import SwiftData
 // server's UUIDs as strings; colours are "#rrggbb".
 
 /// A server record the library caches: made from its DTO, then kept in step.
-protocol LibraryCached: PersistentModel {
-    associatedtype DTO: Identifiable where DTO.ID == UUID
+public protocol LibraryCached: PersistentModel {
+    associatedtype DTO: Identifiable & Sendable & Decodable where DTO.ID == UUID
     var id: String { get }
     init(dto: DTO)
     func apply(_ dto: DTO)

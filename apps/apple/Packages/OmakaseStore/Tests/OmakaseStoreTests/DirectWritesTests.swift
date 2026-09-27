@@ -31,7 +31,8 @@ struct DirectWritesTests {
     }
 
     @Test func anUpdateAppliesTheReplyToTheCachedRecord() async throws {
-        await api.script([.reply(201, workspaceJSON), .reply(200, workspaceJSON.replacingOccurrences(of: "Client work", with: "Renamed"))])
+        let renamed = workspaceJSON.replacingOccurrences(of: "Client work", with: "Renamed")
+        await api.script([.reply(201, workspaceJSON), .reply(200, renamed)])
         let path = "/api/v1/workspaces/11111111-1111-1111-1111-111111111111/"
         try await writes.save(WorkspaceRecord.self, "POST", "/api/v1/workspaces/", body: body)
         try await writes.save(WorkspaceRecord.self, "PATCH", path, body: body)
@@ -48,8 +49,9 @@ struct DirectWritesTests {
 
     @Test func aRefusalCarriesTheServersFieldMessagesAndCachesNothing() async throws {
         await api.script([.reply(400, #"{"name":["This field is required."],"color":["Enter a hex colour."]}"#)])
-        await #expect(throws: DirectWrites.Failure.rejected("color: Enter a hex colour. name: This field is required.")) {
-            try await writes.save(WorkspaceRecord.self, "POST", "/api/v1/workspaces/", body: body)
+        let expected = DirectWrites.Failure.rejected("color: Enter a hex colour. name: This field is required.")
+        await #expect(throws: expected) {
+            _ = try await writes.save(WorkspaceRecord.self, "POST", "/api/v1/workspaces/", body: body)
         }
         #expect(try context.fetch(FetchDescriptor<WorkspaceRecord>()).isEmpty)
     }
@@ -62,7 +64,7 @@ struct DirectWritesTests {
     @Test func offlineNothingIsQueuedOrCached() async throws {
         await api.script([.offline])
         await #expect(throws: DirectWrites.Failure.offline) {
-            try await writes.save(WorkspaceRecord.self, "POST", "/api/v1/workspaces/", body: body)
+            _ = try await writes.save(WorkspaceRecord.self, "POST", "/api/v1/workspaces/", body: body)
         }
         #expect(try context.fetch(FetchDescriptor<OutboxEntry>()).isEmpty)
         #expect(try context.fetch(FetchDescriptor<WorkspaceRecord>()).isEmpty)
@@ -71,7 +73,7 @@ struct DirectWritesTests {
     @Test func aSignedOutReplyIsNamed() async throws {
         await api.script([.signedOut])
         await #expect(throws: DirectWrites.Failure.signedOut) {
-            try await writes.save(WorkspaceRecord.self, "POST", "/api/v1/workspaces/", body: body)
+            _ = try await writes.save(WorkspaceRecord.self, "POST", "/api/v1/workspaces/", body: body)
         }
     }
 }
