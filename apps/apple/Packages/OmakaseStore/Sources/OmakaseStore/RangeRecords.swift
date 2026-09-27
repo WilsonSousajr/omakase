@@ -2,8 +2,8 @@ import Foundation
 import OmakaseAPI
 import SwiftData
 
-/// A weekly class on one day, as the server computed it. Read-only: nothing
-/// writes it locally, and it is never draggable (M4 spec, Decisions).
+/// A weekly class on one day, as the server computed it. Never draggable (M4
+/// spec, Decisions); the one local write is its cancellation (#207).
 @Model
 public final class ClassOccurrenceRecord {
     /// "<class_schedule_id>-<date>", the server's id for the occurrence.
@@ -17,6 +17,10 @@ public final class ClassOccurrenceRecord {
     public var disciplineColor: String
     public var classType: String
     public var location: String
+    /// Week of the semester's rotation, 1-based (#126).
+    public var week: Int = 1
+    /// Cancelled on this date: still drawn, struck through (#125, #207).
+    public var isCancelled: Bool = false
 
     public init(dto: ClassOccurrenceDTO) {
         (id, classScheduleID, day, startTime, endTime) = (dto.id, "", "", "", "")
@@ -29,6 +33,7 @@ public final class ClassOccurrenceRecord {
         (startTime, endTime) = (dto.startTime, dto.endTime)
         (disciplineName, disciplineColor) = (dto.disciplineName, dto.disciplineColor)
         (classType, location) = (dto.classType, dto.location)
+        (week, isCancelled) = (dto.week, dto.isCancelled)
     }
 }
 
