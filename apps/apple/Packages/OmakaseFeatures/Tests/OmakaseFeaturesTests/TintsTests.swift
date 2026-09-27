@@ -22,6 +22,17 @@ struct TintsTests {
         #expect(PriorityMark.color(for: "someday") == Palette.inkMuted)
     }
 
+    /// Only a priority that says something beyond the default shows its pill
+    /// (spec §8): Medium, unknown and absent priorities carry none.
+    @Test func showsInRowIsTrueOnlyForLowHighAndUrgent() {
+        #expect(PriorityMark.showsInRow("low"))
+        #expect(PriorityMark.showsInRow("high"))
+        #expect(PriorityMark.showsInRow("urgent"))
+        #expect(!PriorityMark.showsInRow("medium"))
+        #expect(!PriorityMark.showsInRow(""))
+        #expect(!PriorityMark.showsInRow("someday"))
+    }
+
     @Test func scalesAreOnTheFourPointGrid() {
         let steps = [Spacing.tiny, Spacing.small, Spacing.medium, Spacing.large, Spacing.xLarge, Spacing.xxLarge]
         #expect(steps == [4, 8, 12, 16, 24, 32])

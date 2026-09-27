@@ -32,4 +32,11 @@ public enum PriorityMark {
     public static func color(for priority: String) -> DesignColor {
         byName[priority] ?? Palette.inkMuted
     }
+
+    /// True only for a priority that says something beyond the default
+    /// (spec §8): Medium is every task's starting priority, so its pill added
+    /// no information and shouted on every row. Unknown priorities stay quiet too.
+    public static func showsInRow(_ priority: String) -> Bool {
+        priority == "low" || priority == "high" || priority == "urgent"
+    }
 }
