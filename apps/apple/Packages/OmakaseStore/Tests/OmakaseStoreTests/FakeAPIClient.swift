@@ -25,6 +25,7 @@ actor FakeAPIClient: APIClient {
     /// write land in the middle of a refresh.
     private var duringTasksFetch: (@Sendable () async -> Void)?
     private var occurrences: [ClassOccurrenceDTO] = []
+    private var taskOccurrences: [TaskDTO] = []
     private var sessionList: [PomodoroSessionDTO] = []
     /// Every range read, as "from..to" days or "after..before" instants: how RangeSync's tests see its bounds.
     private(set) var requestedRanges: [String] = []
@@ -41,6 +42,7 @@ actor FakeAPIClient: APIClient {
     func setWorkload(_ workload: WorkloadDTO, on day: String) { workloadsByDay[day] = workload }
     func setDuringTasksFetch(_ hook: @escaping @Sendable () async -> Void) { duringTasksFetch = hook }
     func setOccurrences(_ list: [ClassOccurrenceDTO]) { occurrences = list }
+    func setTaskOccurrences(_ list: [TaskDTO]) { taskOccurrences = list }
     func setSessions(_ list: [PomodoroSessionDTO]) { sessionList = list }
     func setDuringRangeFetch(_ hook: @escaping @Sendable () async -> Void) { duringRangeFetch = hook }
 
@@ -58,6 +60,11 @@ actor FakeAPIClient: APIClient {
     func carriedOver(on day: APIDay) async throws -> [TaskDTO] {
         note(day)
         return carriedByDay[day.string] ?? []
+    }
+
+    func occurrences(from first: APIDay, to last: APIDay) async throws -> [TaskDTO] {
+        requestedRanges.append("tasks \(first.string)..\(last.string)")
+        return taskOccurrences.filter { ($0.scheduledDate ?? first) >= first && ($0.scheduledDate ?? last) <= last }
     }
 
     func timeBlocks(on day: APIDay) async throws -> [TimeBlockDTO] {
@@ -117,11 +124,12 @@ actor FakeAPIClient: APIClient {
 extension TaskDTO {
     /// A task as the server would send it, for tests. `subtasks` nil leaves the key out, as the plain list does.
     static func make(
-        id: UUID = UUID(), title: String = "Task", day: String? = "2026-03-07", completed: Bool = false,
-        subtasks: [(String, Bool)]? = nil, remindAt: String? = nil, description: String = ""
+        id: UUID? = UUID(), title: String = "Task", day: String? = "2026-03-07", completed: Bool = false,
+        subtasks: [(String, Bool)]? = nil, remindAt: String? = nil, description: String = "", series: UUID? = nil
     ) throws -> TaskDTO {
         let json = """
-            {"id":"\(id)","title":"\(title)","description":"\(description)","priority":"medium","area":"work",
+            {"id":\(quoted(id)),"series":\(quoted(series)),"occurrence_date":\(series == nil ? "null" : quoted(day)),
+             "is_skipped":false,"is_virtual":\(id == nil),"recurrence":null,"title":"\(title)","description":"\(description)","priority":"medium","area":"work",
              "kanban_status":"todo","project":null,"discipline":null,"tags":[],
              "scheduled_date":\(day.map { "\"\($0)\"" } ?? "null"),"due_date":null,"estimated_minutes":null,
              "actual_minutes":0,"kanban_order":0,"is_completed":\(completed),"completed_at":null,
@@ -129,6 +137,15 @@ extension TaskDTO {
              "created_at":"2026-03-07T12:00:00Z","updated_at":"2026-03-07T12:00:00Z"\(subtasksJSON(subtasks))}
             """
         return try OmakaseJSON.decoder.decode(TaskDTO.self, from: Data(json.utf8))
+    }
+
+    /// A computed occurrence of `series` on `day`: no id, as today/ sends it (#206).
+    static func virtual(series: UUID, day: String, title: String = "Stand-up") throws -> TaskDTO {
+        try make(id: nil, title: title, day: day, subtasks: [], series: series)
+    }
+
+    private static func quoted(_ value: (some CustomStringConvertible)?) -> String {
+        value.map { "\"\($0)\"" } ?? "null"
     }
 
     private static func subtasksJSON(_ subtasks: [(String, Bool)]?) -> String {

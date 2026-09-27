@@ -25,7 +25,7 @@ public final class TaskRecord {
     public var notes: String = ""
 
     public init(dto: TaskDTO) {
-        id = dto.id.uuidString
+        id = dto.recordID
         (title, priority, scheduledDay) = (dto.title, dto.priority, dto.scheduledDate?.string)
         (isCompleted, completedAt, updatedAt) = (dto.isCompleted, dto.completedAt, dto.updatedAt)
         (kanbanStatus, dueDay, estimatedMinutes) = (dto.kanbanStatus, dto.dueDate?.string, dto.estimatedMinutes)

@@ -102,6 +102,6 @@ struct OutboxKindTests {
         await api.script([.reply(201, reply)])
         let worker = OutboxWorker(context: context, api: api, handlers: OutboxHandlers([TaskHandler(context: context)]))
         _ = await worker.drain()
-        #expect(record.id == server.id.uuidString)
+        #expect(record.id == server.recordID)
     }
 }

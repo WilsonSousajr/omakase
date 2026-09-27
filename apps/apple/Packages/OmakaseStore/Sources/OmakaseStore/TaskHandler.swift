@@ -12,8 +12,8 @@ public final class TaskHandler: OutboxHandler {
     public init(context: ModelContext) { self.context = context }
 
     public func apply(_ entry: OutboxEntry, body: Data) {
-        guard let dto = try? OmakaseJSON.decoder.decode(TaskDTO.self, from: body) else { return }
-        let serverID = dto.id.uuidString
+        guard let dto = try? OmakaseJSON.decoder.decode(TaskDTO.self, from: body), dto.id != nil else { return }
+        let serverID = dto.recordID
         let localID = entry.createsLocalID ?? serverID
         let descriptor = FetchDescriptor<TaskRecord>(predicate: #Predicate { $0.id == localID || $0.id == serverID })
         guard let record = try? context.fetch(descriptor).first else {

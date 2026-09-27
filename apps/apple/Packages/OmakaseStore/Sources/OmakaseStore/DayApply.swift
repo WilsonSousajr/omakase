@@ -13,7 +13,7 @@ struct DayApply {
     func tasks(_ today: [TaskDTO], carried: [TaskDTO], on day: String) throws {
         for dto in today { try upsertTask(dto, carried: false) }
         for dto in carried { try upsertTask(dto, carried: true) }
-        let keep = Set((today + carried).map(\.id.uuidString)).union(pending)
+        let keep = Set((today + carried).map(\.recordID)).union(pending)
         let onDay: String? = day
         let descriptor = FetchDescriptor<TaskRecord>(
             predicate: #Predicate { $0.scheduledDay == onDay || $0.isCarriedOver })
@@ -78,7 +78,7 @@ struct DayApply {
     }
 
     private func upsertTask(_ dto: TaskDTO, carried: Bool) throws {
-        let id = dto.id.uuidString
+        let id = dto.recordID
         guard !pending.contains(id) else { return }
         let record: TaskRecord
         if let existing = try fetchTask(id) {
