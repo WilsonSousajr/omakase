@@ -24,6 +24,12 @@ actor FakeAPIClient: APIClient {
     /// Runs while `tasks(on:)` is "on the network": how a test makes a local
     /// write land in the middle of a refresh.
     private var duringTasksFetch: (@Sendable () async -> Void)?
+    private var occurrences: [ClassOccurrenceDTO] = []
+    private var sessionList: [PomodoroSessionDTO] = []
+    /// Every range read, as "from..to" days or "after..before" instants: how RangeSync's tests see its bounds.
+    private(set) var requestedRanges: [String] = []
+    /// Runs while `timeBlocks(from:to:)` is "on the network".
+    private var duringRangeFetch: (@Sendable () async -> Void)?
 
     func setTasks(_ tasks: [TaskDTO], on day: String) { tasksByDay[day] = tasks }
     func script(_ outcomes: [SendOutcome]) { self.outcomes = outcomes }
@@ -34,6 +40,9 @@ actor FakeAPIClient: APIClient {
     func setProfile(_ profile: ProfileDTO) { storedProfile = profile }
     func setWorkload(_ workload: WorkloadDTO, on day: String) { workloadsByDay[day] = workload }
     func setDuringTasksFetch(_ hook: @escaping @Sendable () async -> Void) { duringTasksFetch = hook }
+    func setOccurrences(_ list: [ClassOccurrenceDTO]) { occurrences = list }
+    func setSessions(_ list: [PomodoroSessionDTO]) { sessionList = list }
+    func setDuringRangeFetch(_ hook: @escaping @Sendable () async -> Void) { duringRangeFetch = hook }
 
     func signIn(googleIDToken: String) async throws -> UserDTO { throw APIError.signedOut }
     func me() async throws -> UserDTO { throw APIError.signedOut }
@@ -74,6 +83,23 @@ actor FakeAPIClient: APIClient {
     func workload(on day: APIDay) async throws -> WorkloadDTO {
         note(day)
         return try workloadsByDay[day.string] ?? .make(day: day.string)
+    }
+
+    func timeBlocks(from first: APIDay, to last: APIDay) async throws -> [TimeBlockDTO] {
+        requestedRanges.append("blocks \(first.string)..\(last.string)")
+        await duringRangeFetch?()
+        return blocksByDay.filter { $0.key >= first.string && $0.key <= last.string }.flatMap(\.value)
+    }
+
+    func classOccurrences(from first: APIDay, to last: APIDay) async throws -> [ClassOccurrenceDTO] {
+        requestedRanges.append("classes \(first.string)..\(last.string)")
+        return occurrences.filter { $0.date >= first && $0.date <= last }
+    }
+
+    func sessions(startedAfter: Date, startedBefore: Date) async throws -> [PomodoroSessionDTO] {
+        let format = ISO8601DateFormatter()
+        requestedRanges.append("sessions \(format.string(from: startedAfter))..\(format.string(from: startedBefore))")
+        return sessionList.filter { $0.startedAt >= startedAfter && $0.startedAt < startedBefore }
     }
 
     private func note(_ day: APIDay) { requestedDays.append(day.string) }
@@ -130,6 +156,27 @@ extension TimeBlockDTO {
              "start_time":"09:00:00","end_time":"10:00:00","notes":"","session_rating":null}
             """
         return try OmakaseJSON.decoder.decode(TimeBlockDTO.self, from: Data(json.utf8))
+    }
+}
+
+extension ClassOccurrenceDTO {
+    static func make(schedule: UUID = UUID(), day: String, name: String = "Calculus") throws -> ClassOccurrenceDTO {
+        let json = """
+            {"id":"\(schedule)-\(day)","class_schedule_id":"\(schedule)","discipline_name":"\(name)",
+             "discipline_color":"#3B82F6","class_type":"lecture","location":"Room 101","date":"\(day)",
+             "start_time":"08:00:00","end_time":"09:40:00"}
+            """
+        return try OmakaseJSON.decoder.decode(ClassOccurrenceDTO.self, from: Data(json.utf8))
+    }
+}
+
+extension PomodoroSessionDTO {
+    static func make(id: UUID = UUID(), startedAt: String, block: UUID? = nil) throws -> PomodoroSessionDTO {
+        let json = """
+            {"id":"\(id)","task":null,"time_block":\(block.map { "\"\($0)\"" } ?? "null"),"session_type":"focus",
+             "duration_minutes":25,"started_at":"\(startedAt)","ended_at":null,"completed":false}
+            """
+        return try OmakaseJSON.decoder.decode(PomodoroSessionDTO.self, from: Data(json.utf8))
     }
 }
 

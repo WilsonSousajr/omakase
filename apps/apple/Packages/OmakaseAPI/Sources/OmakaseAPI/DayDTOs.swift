@@ -86,3 +86,17 @@ public struct WorkloadDTO: Sendable, Codable, Equatable {
     public let overMinutes: Int
     public let unestimatedCount: Int
 }
+
+/// `ClassOccurrenceSerializer`: a weekly class on one date, computed by the
+/// server and never written. `id` is "<class_schedule_id>-<date>", not a UUID.
+public struct ClassOccurrenceDTO: Sendable, Codable, Equatable, Identifiable {
+    public let id: String
+    public let classScheduleId: UUID
+    public let disciplineName: String
+    public let disciplineColor: String
+    public let classType: String
+    public let location: String
+    public let date: APIDay
+    public let startTime: String
+    public let endTime: String
+}

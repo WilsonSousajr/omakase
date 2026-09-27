@@ -13,6 +13,7 @@ final class AppServices {
     let api: OmakaseAPIClient
     let writes: TaskWrites
     let coordinator: SyncCoordinator
+    let rangeSync: RangeSync
     private let reachability = Reachability()
     private let notifier = PhaseNotifier()
     private let reminders = ReminderScheduler()
@@ -25,11 +26,15 @@ final class AppServices {
         let writes = TaskWrites(context: container.mainContext)
         self.writes = writes
         let sync = DaySync(context: container.mainContext, api: api)
+        rangeSync = RangeSync(api: api, context: container.mainContext)
         let worker = OutboxWorker(
             context: container.mainContext, api: api,
             handlers: Self.handlers(container.mainContext))
         coordinator = SyncCoordinator(drain: { await worker.drain() }, refresh: { try await sync.refresh() })
     }
+
+    /// Plan's visible days: their blocks, classes and sessions (#200).
+    func refreshRange(days: [String]) async throws { try await rangeSync.refresh(days: days) }
 
     var googleClientID: String { Bundle.main.object(forInfoDictionaryKey: "OmakaseGoogleClientID") as? String ?? "" }
 

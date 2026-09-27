@@ -8,6 +8,7 @@ public enum StoreSchema {
     public static let models: [any PersistentModel.Type] = [
         TaskRecord.self, OutboxEntry.self, SubtaskRecord.self, TimeBlockRecord.self, StudyBlockRecord.self,
         DailyReviewRecord.self, ProfileRecord.self, TimerStateRecord.self, WorkloadRecord.self,
+        ClassOccurrenceRecord.self, SessionRecord.self,
     ]
 
     /// On disk, the store is `<Application Support>/dev.omakase.mac/Omakase.store`.
