@@ -32,7 +32,8 @@ public struct PlaceTasksView: View {
                 Button("Delete", role: .destructive) { triage.confirmDelete() }
                 Button("Cancel", role: .cancel) { triage.cancelDelete() }
             },
-            message: { Text("It goes from every device once the server hears of it.") })
+            message: { Text("It goes from every device once the server hears of it.") }
+        )
         .onAppear { model.show(place) }
         .onChange(of: place) { _, newPlace in model.show(newPlace) }
         .onDisappear { model.hide() }

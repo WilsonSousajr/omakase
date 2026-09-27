@@ -133,7 +133,9 @@ struct PlaceSyncTests {
         await api.setOpenTasks([dto], for: .discipline(disciplineID))
         try await sync.refresh(.discipline("\(disciplineID)"), today: "2026-09-27")
         await api.setOpenTasksOffline(true)
-        await #expect(throws: APIError.self) { try await sync.refresh(.discipline("\(disciplineID)"), today: "2026-09-27") }
+        await #expect(throws: APIError.self) {
+            try await sync.refresh(.discipline("\(disciplineID)"), today: "2026-09-27")
+        }
         #expect(try all().count == 1)
     }
 
