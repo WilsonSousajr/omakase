@@ -205,9 +205,10 @@ localhost:8000/api/v1`. Seed first:
   `curl -X POST -H "Content-Type: application/json" -d '{"semester":"<id>","name":"Linear algebra","color":"#4F46E5"}' "…/study/disciplines/"`,
   `curl -X POST -H "Content-Type: application/json" -d '{"discipline":"<id>","day_of_week":<0 is Monday>,"start_time":"08:00","end_time":"09:30"}' "…/study/classschedules/"`
 
-1. Plan opens on today, scrolled to 08:00. Switch to Week: seven columns,
-   Monday first, with today's header in ink and the shu now line on its
-   column. Back to Day.
+1. Plan opens on today with 08:00 at the top, or, after 09:00, the hour
+   before the now line (#215). Press › : tomorrow opens at 08:00. Press
+   Today. Switch to Week: seven columns, Monday first, with today's header
+   in ink and the shu now line on its column. Back to Day.
 2. The class sits at 08:00-09:30 behind the grid, dashed with a book glyph,
    in indigo. It can't be dragged.
 3. Drag "Essay" from the column onto 10:00. A 10:00-11:00 block appears at

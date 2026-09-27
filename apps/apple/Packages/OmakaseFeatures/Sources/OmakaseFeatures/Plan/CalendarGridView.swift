@@ -1,16 +1,21 @@
 import SwiftUI
 
 /// The hours as a grid: a time gutter, then a column per visible day, each
-/// with its hour lines, Calendar.app's events and classes behind (#229), blocks in lanes, sessions at the
-/// trailing edge, and the now line on today's column. Scrolled to 08:00 on
-/// appear (spec M4, Grid). Each column takes drops (#203).
+/// with its hour lines, Calendar.app's events and classes behind (#229),
+/// blocks in lanes, sessions at the trailing edge, and the now line on
+/// today's column. Opens at `CalendarLayout.initialMinutes`, on appear and
+/// whenever the range moves (spec M4, Grid; #215). Each column takes drops
+/// (#203).
 struct CalendarGridView: View {
     static let gutter: CGFloat = 56
-    static let openingHour = 8
 
     let model: PlanModel
     let items: [CalendarItem]
     let layout = CalendarLayout.standard
+    /// Scrolled by points, not to an hour's id: the hour lines' ForEach
+    /// shares the gutter's Int ids at offset zero, so `scrollTo(8)` could
+    /// land on 06:00, and it ran once, before layout (#215).
+    @State private var position = ScrollPosition()
 
     var body: some View {
         TimelineView(.everyMinute) { context in
@@ -27,20 +32,27 @@ struct CalendarGridView: View {
 
     private func scrolledHours(now: CalendarNow) -> some View {
         let lanes = CalendarLayout.lanes(for: items)
-        return ScrollViewReader { proxy in
-            ScrollView {
-                HStack(alignment: .top, spacing: 0) {
-                    CalendarTimeGutterView(layout: layout)
-                    ForEach(model.visibleDays, id: \.self) { day in
-                        CalendarDayColumnView(
-                            day: day, model: model, items: items, lanes: lanes, layout: layout,
-                            now: day == now.day ? now : nil)
-                    }
+        return ScrollView {
+            HStack(alignment: .top, spacing: 0) {
+                CalendarTimeGutterView(layout: layout)
+                ForEach(model.visibleDays, id: \.self) { day in
+                    CalendarDayColumnView(
+                        day: day, model: model, items: items, lanes: lanes, layout: layout,
+                        now: day == now.day ? now : nil)
                 }
-                .padding(.vertical, Spacing.medium)
             }
-            .onAppear { proxy.scrollTo(Self.openingHour, anchor: .top) }
+            .padding(.vertical, Spacing.medium)
         }
+        .scrollPosition($position)
+        // A task runs after the first layout, so the offset lands; keyed by
+        // the range, so Today, ‹ › and Day/Week scroll again (#215).
+        .task(id: "\(model.mode.rawValue) \(model.anchorDay)") { scrollToOpening(now: now) }
+    }
+
+    private func scrollToOpening(now: CalendarNow) {
+        let day = model.visibleDays.contains(now.day) ? now.day : model.anchorDay
+        let minutes = layout.initialMinutes(day: day, today: now.day, nowMinutes: now.minutes)
+        position.scrollTo(y: layout.offset(forMinutes: minutes))
     }
 }
 
@@ -63,7 +75,7 @@ struct CalendarDayHeadersView: View {
     }
 }
 
-/// "08:00" beside each hour line; each hour is a scroll anchor.
+/// "08:00" beside each hour line.
 struct CalendarTimeGutterView: View {
     static let labelWidth = CalendarGridView.gutter - Spacing.small
 
@@ -78,7 +90,6 @@ struct CalendarTimeGutterView: View {
                     .offset(y: -6)
                     .frame(width: Self.labelWidth, height: layout.hourHeight, alignment: .topTrailing)
                     .padding(.trailing, Spacing.small)
-                    .id(hour)
             }
         }
     }

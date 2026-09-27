@@ -110,4 +110,25 @@ struct CalendarLayoutTests {
         let lane = CalendarLayout.sessionLaneWidth
         #expect(span == CalendarSpan(leading: 200 - lane, width: lane))
     }
+
+    /// The grid opened at 06:00 because the scroll to 08:00 never landed;
+    /// the target is now a number the view scrolls to (#215).
+    @Test func theGridOpensAtEightNotSixIssue215() {
+        let minutes = layout.initialMinutes(day: "2026-09-28", today: "2026-09-27", nowMinutes: 7 * 60)
+        #expect(minutes == 8 * 60)
+        #expect(layout.offset(forMinutes: minutes) == 104)
+    }
+
+    @Test func todayBeforeNineStillOpensAtEight() {
+        #expect(layout.initialMinutes(day: "d", today: "d", nowMinutes: 9 * 60) == 8 * 60)
+        #expect(layout.initialMinutes(day: "d", today: "d", nowMinutes: 30) == 8 * 60)
+    }
+
+    @Test func todayAfterNineOpensAnHourBeforeNow() {
+        #expect(layout.initialMinutes(day: "d", today: "d", nowMinutes: 14 * 60 + 20) == 13 * 60 + 20)
+    }
+
+    @Test func aLateNowOpensNoLowerThanTheLastHoursRow() {
+        #expect(layout.initialMinutes(day: "d", today: "d", nowMinutes: 23 * 60 + 50) == 22 * 60)
+    }
 }
