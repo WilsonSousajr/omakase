@@ -471,6 +471,22 @@ with no parent; this checks the store itself, over real on-disk data.
      `"area": "work"`, `"project": null` and `"discipline": null`.
 3. Quit and relaunch. The task is still there, still Work.
 
+## M9 S2 - Kind colours, motion tokens and the place directory
+
+`KindTint`, `Motion` and `PlaceDirectory` (spec §2, #255) are the shared
+pieces S4, S9 and S10 build capture, rows and calendar blocks on. Nothing
+in the built app shows a kind colour or an animation yet - that is those
+later slices. This slice's own proof is the gate, not the window:
+
+1. The Apple gate is green, including `KindTintTests` (contrast and ΔE
+   distance) and `PlaceDirectoryTests` (against an in-memory store).
+2. `swiftlint` rejects `withAnimation(`/`.animation(` outside
+   `Design/Motion.swift`: add one to any other file and
+   `swiftlint lint --strict` fails with `raw_animation`; remove it and the
+   gate is clean again.
+3. The window looks exactly as it did before this slice - no visible
+   change, since nothing calls `KindTint`, `Motion` or `PlaceDirectory` yet.
+
 ## M9 S3 - The main window moves into Features
 
 A behaviour-preserving refactor (#256): no visible change, but the window
