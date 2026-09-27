@@ -198,7 +198,7 @@ localhost:8000/api/v1`. Allow notifications when macOS asks.
 Plan, against the same stack. `<today>` and `<tomorrow>` are the Mac's
 local dates, and `curl …` is `curl -H "Authorization: Bearer <token>"
 localhost:8000/api/v1`. Seed first:
-- two tasks scheduled today, "Essay" and "Review PR"
+- three tasks scheduled today, "Essay", "Review PR" and "Reply to Ana"
 - a class on today's weekday, through the API: a semester, a discipline
   with a colour, then its schedule:
   `curl -X POST -H "Content-Type: application/json" -d '{"name":"Term","start_date":"<a month ago>","end_date":"<in two months>"}' "…/study/semesters/"`,
@@ -215,7 +215,8 @@ localhost:8000/api/v1`. Seed first:
    - `curl "…/timeblocks/?date=<today>"` has it, `10:00:00`-`11:00:00`.
    - `curl "…/tasks/<id>/"` has `"scheduled_date": "<today>"`.
 4. Week view: drag the block onto tomorrow's column at 14:00. It moves,
-   still an hour long.
+   still an hour long and still titled "Essay", although the task leaves
+   the column.
    - `curl "…/timeblocks/?date=<tomorrow>"` has it at `14:00:00`.
    - The task's `scheduled_date` is `<tomorrow>`.
 5. Drag the block's bottom edge down 30 minutes: it grows as you drag, in
@@ -225,7 +226,7 @@ localhost:8000/api/v1`. Seed first:
    Place anyway: the two blocks stand side by side.
 7. Right-click the "Review PR" block, Delete block: it goes, and
    `curl "…/timeblocks/?date=<tomorrow>"` no longer lists it.
-8. `docker-compose stop backend`. Drag "Review PR" onto today at 16:00: the
+8. `docker-compose stop backend`. Drag "Reply to Ana" onto today at 16:00: the
    block shows at once and the toolbar says a write is pending.
    `docker-compose start backend`; after the catch-up, `curl
    "…/timeblocks/?date=<today>"` lists exactly one 16:00 block
