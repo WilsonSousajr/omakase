@@ -4,7 +4,7 @@ from django.conf import settings
 from django.core.validators import RegexValidator
 from django.db import models
 
-from .constants import DEFAULT_DISCIPLINE_COLOR
+from .constants import DEFAULT_DISCIPLINE_COLOR, MAX_ROTATION_WEEKS
 
 hex_color_validator = RegexValidator(
     regex=r"^#[0-9a-fA-F]{6}$",
@@ -65,6 +65,10 @@ class Semester(models.Model):
     status = models.CharField(
         max_length=20, choices=SemesterStatusChoices.choices, default=SemesterStatusChoices.ACTIVE
     )
+    # Week A/B timetables (#126): the rotation length, and the date whose
+    # Monday starts week 1. A null anchor means the semester's start_date.
+    rotation_weeks = models.PositiveSmallIntegerField(default=1)
+    rotation_anchor = models.DateField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -74,6 +78,10 @@ class Semester(models.Model):
             models.CheckConstraint(
                 check=models.Q(end_date__gt=models.F("start_date")),
                 name="semester_end_after_start",
+            ),
+            models.CheckConstraint(
+                check=models.Q(rotation_weeks__gte=1, rotation_weeks__lte=MAX_ROTATION_WEEKS),
+                name="semester_rotation_weeks_range",
             ),
         ]
 
@@ -196,6 +204,8 @@ class ClassSchedule(models.Model):
     class_type = models.CharField(max_length=20, choices=ClassTypeChoices.choices, default=ClassTypeChoices.LECTURE)
     location = models.CharField(max_length=300, blank=True, default="")
     is_active = models.BooleanField(default=True)
+    # The rotation weeks (1-based) the class runs in; empty means every week (#126).
+    rotation_weeks_on = models.JSONField(default=list, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

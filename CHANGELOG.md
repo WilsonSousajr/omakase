@@ -12,6 +12,17 @@ for each milestone.
 
 ### Added
 
+- **Week A/B rotation for class schedules** (#126). `study/semesters/`
+  gains `rotation_weeks` (1-4, default 1) and `rotation_anchor` (a date whose
+  Monday starts week 1; null means `start_date`). `study/classschedules/`
+  gains `rotation_weeks_on`, the weeks a class runs in (empty means every
+  week). A rotation outside 1-4, a week outside the semester's rotation, a
+  non-integer week, or shrinking a rotation below a week a schedule uses is
+  a 400 naming the value and the range. `study/class-occurrences/` skips the
+  weeks a class does not run in, and each occurrence gains `week`. With the
+  default rotation of 1 every occurrence is returned as before, with
+  `week: 1`.
+
 - **`POST timeblocks/` is idempotent** (#199). It honours `Idempotency-Key`
   like the other creates the Mac outbox replays, so a retried block create
   books one block.

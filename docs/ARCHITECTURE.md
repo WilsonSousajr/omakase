@@ -127,10 +127,17 @@ import its mixin.
 - **ClassSchedule** is the recurring weekly timetable: `day_of_week` 0-6,
   start and end time, `class_type`, `location`, `is_active`, with a
   `CheckConstraint` for `end_time > start_time` and the day range.
+- **Rotation (#126).** A semester has `rotation_weeks` (1-4, checked in the
+  serializer and the database) and a `rotation_anchor` (null means
+  `start_date`). A schedule's `rotation_weeks_on` lists the weeks it runs in;
+  empty means every week. The week of a date is
+  `((monday(date) - monday(anchor)).days // 7) % rotation_weeks + 1`
+  (`study/services.py: rotation_week`), so the anchor's whole week is week 1.
 - **Class occurrences are computed, not stored.** `class-occurrences/`
   expands schedules over `date_from..date_to` (both required, at most 90 days),
   inside each semester's dates. Occurrences have composite ids
-  `{schedule_id}-{date}` because they are not database rows. The expansion
+  `{schedule_id}-{date}` because they are not database rows, and carry the
+  rotation `week` they fall in. The expansion
   is `study/services.py: class_occurrences(user, start, end)`, which the
   view and `stats/workload/` both call (#176).
 
@@ -205,11 +212,11 @@ and `auth/token/refresh/`.
 | `stats/review/` | GET | `date` required |
 | `stats/reviews/` | CRUD | one per user and day |
 | `stats/workload/` | GET | `date` required; planned minutes against the goal |
-| `study/semesters/` | CRUD | annotated `discipline_count` |
+| `study/semesters/` | CRUD | annotated `discipline_count`; `rotation_weeks` 1-4 |
 | `study/disciplines/` | CRUD | filter by semester and status; annotated `study_block_count` |
 | `study/studyblocks/` | CRUD | plus `carried-over/`; filter by discipline, type and status |
-| `study/classschedules/` | CRUD | filter by discipline, class type and `is_active` |
-| `study/class-occurrences/` | GET | `date_from` and `date_to` required, at most 90 days |
+| `study/classschedules/` | CRUD | filter by discipline, class type and `is_active`; `rotation_weeks_on` within the semester's rotation |
+| `study/class-occurrences/` | GET | `date_from` and `date_to` required, at most 90 days; each has its rotation `week` |
 
 ## Configuration and security
 
