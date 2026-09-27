@@ -20,13 +20,16 @@ public final class TaskRecord {
     public var isCarriedOver: Bool = false
     /// When to remind about the task (#127); nil means no reminder.
     public var remindAt: Date?
+    /// The server's `description`, edited in the task editor (#218). Not
+    /// `description`, which reads as CustomStringConvertible's.
+    public var notes: String = ""
 
     public init(dto: TaskDTO) {
         id = dto.id.uuidString
         (title, priority, scheduledDay) = (dto.title, dto.priority, dto.scheduledDate?.string)
         (isCompleted, completedAt, updatedAt) = (dto.isCompleted, dto.completedAt, dto.updatedAt)
         (kanbanStatus, dueDay, estimatedMinutes) = (dto.kanbanStatus, dto.dueDate?.string, dto.estimatedMinutes)
-        remindAt = dto.remindAt
+        (remindAt, notes) = (dto.remindAt, dto.description)
     }
 
     /// A record with no server copy yet: a local capture, a preview, a test.
@@ -41,7 +44,7 @@ public final class TaskRecord {
         (title, priority, scheduledDay) = (dto.title, dto.priority, dto.scheduledDate?.string)
         (isCompleted, completedAt, updatedAt) = (dto.isCompleted, dto.completedAt, dto.updatedAt)
         (kanbanStatus, dueDay, estimatedMinutes) = (dto.kanbanStatus, dto.dueDate?.string, dto.estimatedMinutes)
-        remindAt = dto.remindAt
+        (remindAt, notes) = (dto.remindAt, dto.description)
     }
 }
 

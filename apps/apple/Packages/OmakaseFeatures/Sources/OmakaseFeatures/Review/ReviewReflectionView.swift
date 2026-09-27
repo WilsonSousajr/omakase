@@ -19,6 +19,10 @@ struct ReviewReflectionView: View {
 /// "How productive did you feel today?": five marks, filled up to the rating.
 /// Choosing the chosen mark again clears it.
 struct ReviewRatingView: View {
+    /// An empty mark's colour: ink, like the filled ones, so it reads as a
+    /// choice on offer. Dimmed, it read as disabled (#213); the fill carries
+    /// the rating.
+    static let emptyMark = Palette.ink
     let model: ReviewModel
 
     var body: some View {
@@ -40,12 +44,16 @@ struct ReviewRatingView: View {
 
     private func dot(filled: Bool) -> some View {
         Image(systemName: filled ? "circle.fill" : "circle")
-            .foregroundStyle((filled ? Palette.ink : Palette.inkMuted).color)
+            .foregroundStyle((filled ? Palette.ink : Self.emptyMark).color)
     }
 }
 
 /// How much energy the day left: Low, Steady or High, one at most.
 struct ReviewEnergyView: View {
+    /// An unchosen level's label colour: ink, like the chosen one. Dimmed on
+    /// glass it read as disabled though it works (#213, as #172); the check
+    /// mark and the weight carry the choice.
+    static let unchosenLabel = Palette.ink
     let model: ReviewModel
 
     var body: some View {
@@ -67,7 +75,8 @@ struct ReviewEnergyView: View {
     private func label(_ level: ReviewEnergy) -> some View {
         let chosen = model.draft.energy == level.rawValue
         return Label(level.title, systemImage: chosen ? "checkmark.circle.fill" : "circle")
-            .foregroundStyle((chosen ? Palette.ink : Palette.inkMuted).color)
+            .fontWeight(chosen ? .semibold : .regular)
+            .foregroundStyle((chosen ? Palette.ink : Self.unchosenLabel).color)
     }
 }
 

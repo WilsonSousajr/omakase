@@ -24,22 +24,26 @@ struct FocusBoardListView: View {
         if !cards.isEmpty {
             VStack(alignment: .leading, spacing: Spacing.small) {
                 Text(title).sectionLabel()
-                ForEach(cards) { card in
-                    TaskRowView(
-                        title: card.title, priority: card.priority, isCompleted: card.isCompleted,
-                        marks: FocusMarks.labels(for: card, day: day, calendar: model.calendar),
-                        hasReminder: card.hasReminder
-                    ) { model.toggle(card.id) }
-                    .contextMenu { FocusTaskMenuView(card: card, day: day, model: model) }
-                    .padding(.horizontal, Spacing.small)
-                    .background(
-                        (model.selectedID == card.id ? Palette.surface.color : .clear),
-                        in: .rect(cornerRadius: Radius.small)
-                    )
-                    .contentShape(.rect)
-                    .onTapGesture { model.selectedID = card.id }
-                }
+                ForEach(cards) { card in row(card) }
             }
         }
+    }
+
+    private func row(_ card: FocusCard) -> some View {
+        TaskRowView(
+            title: card.title, priority: card.priority, isCompleted: card.isCompleted,
+            marks: FocusMarks.labels(for: card, day: day, calendar: model.calendar),
+            hasReminder: card.hasReminder
+        ) { model.toggle(card.id) }
+        .contextMenu { FocusTaskMenuView(card: card, day: day, model: model) }
+        .padding(.horizontal, Spacing.small)
+        .background(
+            (model.selectedID == card.id ? Palette.surface.color : .clear),
+            in: .rect(cornerRadius: Radius.small)
+        )
+        .contentShape(.rect)
+        .onTapGesture { model.selectedID = card.id }
+        // Simultaneous, so a single click still selects at once (#218).
+        .simultaneousGesture(TapGesture(count: 2).onEnded { model.beginEditing(card.id) })
     }
 }

@@ -251,3 +251,18 @@ localhost:8000/api/v1`. Seed first:
     the panel closes.
 13. Double-click a row or a block: nothing happens until the task
     editor (#218) connects `onEdit`.
+
+### Edit a task (#218)
+
+1. In Focus, double-click one of today's tasks (or select it and press
+   Return, or choose Edit…). The editor opens on its current values.
+2. Change the title, set the priority to Urgent, the estimate to 45 minutes
+   and a due date, then Save (⌘Return). The row and card show the changes
+   at once, offline too.
+   - `curl "…/tasks/<id>/"` has the new `title`, `"priority": "urgent"`,
+     `"estimated_minutes": 45` and the `due_date`.
+3. Open it again, empty the estimate field, turn Due date off and Save.
+   - `curl "…/tasks/<id>/"` has `"estimated_minutes": null` and
+     `"due_date": null`.
+4. Open it, blank the title: Save stays disabled. Escape closes the editor
+   and nothing is sent.
