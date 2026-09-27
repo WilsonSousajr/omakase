@@ -9,6 +9,8 @@ public enum SidebarItem: String, CaseIterable, Identifiable, Sendable {
     case focus
     /// The day's close: summary, rating, energy and win (M3.4).
     case review
+    /// Tasks with no date, to triage (M5, #225).
+    case inbox
 
     public var id: Self { self }
 
@@ -17,6 +19,7 @@ public enum SidebarItem: String, CaseIterable, Identifiable, Sendable {
         case .plan: "Plan"
         case .focus: "Focus"
         case .review: "Review"
+        case .inbox: "Inbox"
         }
     }
 
@@ -25,6 +28,7 @@ public enum SidebarItem: String, CaseIterable, Identifiable, Sendable {
         case .plan: "calendar"
         case .focus: "scope"
         case .review: "moon.stars"
+        case .inbox: "tray"
         }
     }
 }

@@ -72,6 +72,21 @@ public final class TaskWrites {
         return record
     }
 
+    /// Deletes the task (#225). A capture whose create was never sent is
+    /// withdrawn with everything queued on it; otherwise the DELETE is queued,
+    /// and a 404 on it counts as done (#201).
+    public func delete(_ record: TaskRecord) throws {
+        let id = record.id
+        context.delete(record)
+        if let create = queue.unsentCreate(of: id) {
+            queue.withdraw(create)
+        } else {
+            try queue.enqueue(
+                kind: "task.delete", method: "DELETE", path: "/api/v1/tasks/\(id)/", body: nil, subjectID: id)
+        }
+        try context.save()
+    }
+
     private func patch(_ record: TaskRecord, body: some Encodable) throws {
         try patch(record, raw: try OmakaseJSON.encoder.encode(body))
     }
