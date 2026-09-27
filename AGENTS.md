@@ -57,8 +57,8 @@ apps/apple/      the SwiftUI clients (macOS now, iOS later).
   gate.sh         the Apple gate, step for step what CI's apple-gate job runs.
 docs/           ARCHITECTURE.md, ROADMAP.md, IDEA.md, comparison.md,
                 audits/, research/, superpowers/.
-.github/        ci.yml (the gate, docker lint and build) and deploy.yml, which
-                deploys main to the production VPS on every push.
+.github/        ci.yml: the gate, docker lint and build. Production is deployed by
+                Coolify from main (docker-compose.coolify.yml, docs/deploy-coolify.md).
 ```
 
 One responsibility per app. `stats` reads `tasks`, `study` and `pomodoro`;
