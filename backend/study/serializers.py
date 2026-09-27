@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from .constants import MAX_ROTATION_WEEKS
-from .models import ClassSchedule, Discipline, Semester, StudyBlock
+from .models import ClassCancellation, ClassSchedule, Discipline, Holiday, Semester, StudyBlock
 
 
 def _highest_week_in_use(semester: Semester) -> int:
@@ -161,3 +161,28 @@ class ClassOccurrenceSerializer(serializers.Serializer):
     start_time = serializers.TimeField()
     end_time = serializers.TimeField()
     week = serializers.IntegerField()
+    is_cancelled = serializers.BooleanField()
+
+
+class HolidaySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Holiday
+        fields = ["id", "semester", "name", "start_date", "end_date", "created_at", "updated_at"]
+        read_only_fields = ["id", "created_at", "updated_at"]
+
+    def validate(self, data):
+        start = data.get("start_date", getattr(self.instance, "start_date", None))
+        end = data.get("end_date", getattr(self.instance, "end_date", None))
+        if start and end and end < start:
+            raise serializers.ValidationError(
+                f"end_date {end.isoformat()} is before start_date {start.isoformat()}; "
+                "a holiday ends on or after the day it starts."
+            )
+        return data
+
+
+class ClassCancellationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ClassCancellation
+        fields = ["id", "class_schedule", "date", "created_at"]
+        read_only_fields = fields

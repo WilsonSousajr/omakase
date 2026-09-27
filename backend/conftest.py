@@ -8,7 +8,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from pomodoro.models import PomodoroSession
 from stats.models import DailyReview
-from study.models import ClassSchedule, Discipline, Semester, StudyBlock
+from study.models import ClassCancellation, ClassSchedule, Discipline, Holiday, Semester, StudyBlock
 from tasks.models import Project, Subtask, Tag, Task, TimeBlock, Workspace
 
 
@@ -148,6 +148,24 @@ class ClassScheduleFactory(factory.django.DjangoModelFactory):
     class_type = "lecture"
     location = "Room 101"
     is_active = True
+
+
+class HolidayFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = Holiday
+
+    semester = factory.SubFactory(SemesterFactory)
+    name = factory.Sequence(lambda n: f"Holiday {n}")
+    start_date = datetime.date(2026, 4, 3)
+    end_date = datetime.date(2026, 4, 10)
+
+
+class ClassCancellationFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = ClassCancellation
+
+    class_schedule = factory.SubFactory(ClassScheduleFactory)
+    date = datetime.date(2026, 3, 9)
 
 
 class DailyReviewFactory(factory.django.DjangoModelFactory):

@@ -1,6 +1,6 @@
 from django.db.models import Count
 from django_filters import rest_framework as filters
-from rest_framework import viewsets
+from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
@@ -8,15 +8,17 @@ from rest_framework.views import APIView
 
 from omakase.client_dates import parse_client_date
 
-from .models import ClassSchedule, Discipline, Semester, StudyBlock
+from .models import ClassSchedule, Discipline, Holiday, Semester, StudyBlock
 from .serializers import (
+    ClassCancellationSerializer,
     ClassOccurrenceSerializer,
     ClassScheduleSerializer,
     DisciplineSerializer,
+    HolidaySerializer,
     SemesterSerializer,
     StudyBlockSerializer,
 )
-from .services import class_occurrences
+from .services import cancel_class, class_occurrences, restore_class
 
 
 class SemesterViewSet(viewsets.ModelViewSet):
@@ -124,6 +126,48 @@ class ClassScheduleViewSet(viewsets.ModelViewSet):
         if discipline and discipline.semester.user != self.request.user:
             raise PermissionDenied("You do not own this discipline.")
         serializer.save()
+
+    @action(detail=True, methods=["put", "delete"], url_path=r"cancellations/(?P<day>[^/]+)")
+    def cancellation(self, request, pk=None, day=None):
+        # Cancel (PUT) or restore (DELETE) one occurrence (#125). Both are
+        # idempotent by (schedule, date), so the Mac outbox replays them as is.
+        schedule = self.get_object()
+        target = parse_client_date(day)
+        if request.method == "DELETE":
+            restore_class(schedule, target)
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        cancellation, created = cancel_class(schedule, target)
+        code = status.HTTP_201_CREATED if created else status.HTTP_200_OK
+        return Response(ClassCancellationSerializer(cancellation).data, status=code)
+
+
+class HolidayFilter(filters.FilterSet):
+    class Meta:
+        model = Holiday
+        fields = ["semester"]
+
+
+class HolidayViewSet(viewsets.ModelViewSet):
+    """A semester's holidays (#125), scoped through the semester's owner."""
+
+    serializer_class = HolidaySerializer
+    filterset_class = HolidayFilter
+
+    def get_queryset(self):
+        return Holiday.objects.filter(semester__user=self.request.user).order_by("start_date")
+
+    def perform_create(self, serializer):
+        self._check_semester_owner(serializer)
+        serializer.save()
+
+    def perform_update(self, serializer):
+        self._check_semester_owner(serializer)
+        serializer.save()
+
+    def _check_semester_owner(self, serializer) -> None:
+        semester = serializer.validated_data.get("semester")
+        if semester and semester.user != self.request.user:
+            raise PermissionDenied("You do not own this semester.")
 
 
 class ClassOccurrenceView(APIView):
