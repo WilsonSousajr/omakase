@@ -1,0 +1,6 @@
+// Release builds (#245): the production API on Coolify (docs/deploy-coolify.md).
+// Set the domain here before building a release. api.example.invalid is
+// reserved (RFC 2606) and never resolves, so a release nobody filled in
+// fails to connect instead of reaching someone else's server.
+#include "App.xcconfig"
+OMAKASE_API_BASE_URL = https:/$()/api.example.invalid
