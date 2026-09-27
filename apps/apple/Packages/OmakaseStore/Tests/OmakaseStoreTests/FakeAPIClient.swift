@@ -129,7 +129,8 @@ extension TaskDTO {
     ) throws -> TaskDTO {
         let json = """
             {"id":\(quoted(id)),"series":\(quoted(series)),"occurrence_date":\(series == nil ? "null" : quoted(day)),
-             "is_skipped":false,"is_virtual":\(id == nil),"recurrence":null,"title":"\(title)","description":"\(description)","priority":"medium","area":"work",
+             "is_skipped":false,"is_virtual":\(id == nil),"recurrence":null,
+             "title":"\(title)","description":"\(description)","priority":"medium","area":"work",
              "kanban_status":"todo","project":null,"discipline":null,"tags":[],
              "scheduled_date":\(day.map { "\"\($0)\"" } ?? "null"),"due_date":null,"estimated_minutes":null,
              "actual_minutes":0,"kanban_order":0,"is_completed":\(completed),"completed_at":null,

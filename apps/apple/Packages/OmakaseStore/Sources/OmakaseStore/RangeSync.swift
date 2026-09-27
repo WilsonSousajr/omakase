@@ -40,8 +40,9 @@ struct RangeWindow {
 }
 
 /// Refreshes the visible range for Plan: its blocks, class occurrences,
-/// sessions (M4 spec §2 L), and its tasks with each series' occurrences (#206). The server's copy replaces the range's rows,
-/// except blocks with queued writes and `local-` placeholders, as in DaySync.
+/// sessions (M4 spec §2 L), and its tasks with each series' occurrences
+/// (#206). The server's copy replaces the range's rows, except blocks with
+/// queued writes and `local-` placeholders, as in DaySync.
 ///
 ///     try await RangeSync(api: api, context: container.mainContext).refresh(days: week)
 @MainActor

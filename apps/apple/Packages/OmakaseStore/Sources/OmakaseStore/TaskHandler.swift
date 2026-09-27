@@ -3,10 +3,11 @@ import OmakaseAPI
 import SwiftData
 
 /// A task write was accepted: the server's copy replaces the local one, and a
-/// create's `local-` record takes the server's id.
+/// create's `local-` record, or a materialized occurrence's `occ-` one (#206),
+/// takes the server's id.
 @MainActor
 public final class TaskHandler: OutboxHandler {
-    public let kinds = ["task.patch", "task.create"]
+    public let kinds = ["task.patch", "task.create", "task.materialize"]
     private let context: ModelContext
 
     public init(context: ModelContext) { self.context = context }

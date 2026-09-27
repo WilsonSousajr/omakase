@@ -9,8 +9,8 @@ import SwiftData
 ///     try TaskWrites(context: container.mainContext).toggleCompletion(record)
 @MainActor
 public final class TaskWrites {
-    private let context: ModelContext
-    private let queue: OutboxQueue
+    let context: ModelContext
+    let queue: OutboxQueue
 
     public init(context: ModelContext) { (self.context, queue) = (context, OutboxQueue(context: context)) }
 
@@ -76,9 +76,15 @@ public final class TaskWrites {
         try patch(record, raw: try OmakaseJSON.encoder.encode(body))
     }
 
+    /// The first write on a computed occurrence is its materialize (#206).
     private func patch(_ record: TaskRecord, raw: Data) throws {
-        try queue.enqueue(
-            kind: "task.patch", method: "PATCH", path: "/api/v1/tasks/\(record.id)/", body: raw, subjectID: record.id)
+        if record.isVirtual {
+            try materialize(record, body: raw)
+        } else {
+            try queue.enqueue(
+                kind: "task.patch", method: "PATCH", path: "/api/v1/tasks/\(record.id)/", body: raw,
+                subjectID: record.id)
+        }
         try context.save()
     }
 
