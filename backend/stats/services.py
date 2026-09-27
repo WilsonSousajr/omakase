@@ -8,7 +8,7 @@ from django.utils import timezone
 from accounts.models import UserProfile
 from study.models import StudyBlock
 from study.services import class_occurrences
-from tasks.models import Task
+from tasks.services import DayItem, day_items
 
 from .models import DailyReview
 
@@ -41,14 +41,15 @@ def _shutdown_stamp(review: DailyReview) -> datetime.datetime | None:
 def day_workload(user, day: datetime.date) -> dict:
     """The minutes `user` planned for `day`, against their daily goal (#128).
 
-    Tasks and study blocks count when scheduled on `day`, done or not; items
-    carried over from earlier days count only once rescheduled onto it.
+    Tasks and study blocks count when scheduled on `day`, done or not, and so
+    does each series' computed occurrence (#124); items carried over from
+    earlier days count only once rescheduled onto it.
     Items without an estimate add nothing and are counted instead, so a
     client can say the total is partial.
 
     >>> day_workload(request.user, datetime.date(2026, 9, 26))["over_minutes"]
     """
-    tasks = _estimate_totals(Task.objects.filter(user=user, scheduled_date=day))
+    tasks = _task_totals(day_items(user, day, day))
     blocks = _estimate_totals(StudyBlock.objects.filter(discipline__semester__user=user, scheduled_date=day))
     classes = _class_minutes(user, day)
     planned = tasks["minutes"] + blocks["minutes"] + classes
@@ -71,6 +72,15 @@ def _estimate_totals(items: QuerySet) -> dict[str, int]:
         minutes=Sum("estimated_minutes"), unestimated=Count("pk", filter=Q(estimated_minutes=None))
     )
     return {"minutes": totals["minutes"] or 0, "unestimated": totals["unestimated"]}
+
+
+def _task_totals(items: list[DayItem]) -> dict[str, int]:
+    """Sum of the day's task estimates, rows and computed occurrences alike, and how many have none."""
+    estimates = [item.estimated_minutes for item in items]
+    return {
+        "minutes": sum(minutes for minutes in estimates if minutes is not None),
+        "unestimated": estimates.count(None),
+    }
 
 
 def _class_minutes(user, day: datetime.date) -> int:
