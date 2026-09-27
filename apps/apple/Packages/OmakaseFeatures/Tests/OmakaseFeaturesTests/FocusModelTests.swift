@@ -1,4 +1,5 @@
 import Foundation
+import OmakaseStore
 import Testing
 
 @testable import OmakaseFeatures
@@ -16,7 +17,8 @@ final class RecordingFocusActions {
             toggleSubtask: { [unowned self] in calls.append("subtask \($0)") },
             remind: { [unowned self] id, date in
                 calls.append("remind \(id) \(date.map { "\($0.timeIntervalSince1970)" } ?? "clear")")
-            })
+            },
+            edit: { [unowned self] id, changes in calls.append("edit \(id) \(changes.title ?? "-")") })
     }
 }
 
@@ -101,5 +103,27 @@ struct FocusModelTests {
         #expect(model.selectedCard(in: board)?.id == "b")
         model.selectedID = nil
         #expect(model.selectedCard(in: board) == nil)
+    }
+
+    @Test func openingTheEditorSelectsTheTask() {
+        let model = FocusModel(actions: recorder.actions, defaults: defaults)
+        model.beginEditing("t2")
+        #expect(model.editingID == "t2" && model.selectedID == "t2")
+    }
+
+    @Test func returnEditsTheSelectedTaskOrNothing() {
+        let model = FocusModel(actions: recorder.actions, defaults: defaults)
+        model.editSelected()
+        #expect(model.editingID == nil)
+        model.selectedID = "t1"
+        model.editSelected()
+        #expect(model.editingID == "t1")
+    }
+
+    @Test func savingAnEditCallsItsWriteAndClosesTheEditor() {
+        let model = FocusModel(actions: recorder.actions, defaults: defaults)
+        model.beginEditing("t1")
+        model.saveEdit("t1", TaskEdit(title: "Renamed"))
+        #expect(recorder.calls == ["edit t1 Renamed"] && model.editingID == nil)
     }
 }

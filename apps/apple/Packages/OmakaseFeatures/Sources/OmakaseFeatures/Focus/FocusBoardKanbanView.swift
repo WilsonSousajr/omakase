@@ -33,6 +33,8 @@ struct FocusBoardColumnView: View {
                         isSelected: model.selectedID == card.id
                     )
                     .onTapGesture { model.selectedID = card.id }
+                    // Simultaneous, so a single click still selects at once (#218).
+                    .simultaneousGesture(TapGesture(count: 2).onEnded { model.beginEditing(card.id) })
                     .draggable(card.id)
                     .contextMenu { FocusTaskMenuView(card: card, day: day, model: model) }
                 }

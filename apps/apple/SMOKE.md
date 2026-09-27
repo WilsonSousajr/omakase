@@ -234,3 +234,18 @@ localhost:8000/api/v1`. Seed first:
 9. Select "Essay" in Focus and run a focus session to the end (or shorten
    the profile's pomodoro to 1 minute). Back in Plan, a thin grey lane is
    drawn beside the block at the times it ran. Breaks are not drawn.
+
+### Edit a task (#218)
+
+1. In Focus, double-click one of today's tasks (or select it and press
+   Return, or choose Edit…). The editor opens on its current values.
+2. Change the title, set the priority to Urgent, the estimate to 45 minutes
+   and a due date, then Save (⌘Return). The row and card show the changes
+   at once, offline too.
+   - `curl "…/tasks/<id>/"` has the new `title`, `"priority": "urgent"`,
+     `"estimated_minutes": 45` and the `due_date`.
+3. Open it again, empty the estimate field, turn Due date off and Save.
+   - `curl "…/tasks/<id>/"` has `"estimated_minutes": null` and
+     `"due_date": null`.
+4. Open it, blank the title: Save stays disabled. Escape closes the editor
+   and nothing is sent.
