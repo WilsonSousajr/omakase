@@ -143,9 +143,7 @@ class TestHolidayViewSet:
         holiday = HolidayFactory(semester__user=user)
         foreign = SemesterFactory()
 
-        resp = authenticated_client.patch(
-            f"{HOLIDAYS_URL}{holiday.pk}/", {"semester": str(foreign.pk)}, format="json"
-        )
+        resp = authenticated_client.patch(f"{HOLIDAYS_URL}{holiday.pk}/", {"semester": str(foreign.pk)}, format="json")
 
         assert resp.status_code in (status.HTTP_400_BAD_REQUEST, status.HTTP_403_FORBIDDEN)
         holiday.refresh_from_db()

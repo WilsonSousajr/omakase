@@ -56,7 +56,8 @@ class TestCancelledOccurrences:
         with django_assert_num_queries(3):
             occurrences = class_occurrences(user, MARCH_2, datetime.date(2026, 3, 29))
 
-        assert len(occurrences) == 16
+        # 4 schedules x Mondays 2, 16 and 23 March; the 9th is a holiday.
+        assert len(occurrences) == 12
         assert sum(o["is_cancelled"] for o in occurrences) == 4
 
 
