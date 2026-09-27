@@ -53,14 +53,14 @@ public final class LibrarySync {
         let unscheduled = try context.fetch(
             FetchDescriptor<TaskRecord>(predicate: #Predicate { $0.scheduledDay == nil }))
         let cached = Dictionary(unscheduled.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
-        for dto in dtos where !pending.contains(dto.id.uuidString) {
-            if let record = cached[dto.id.uuidString] {
+        for dto in dtos where !pending.contains(dto.recordID) {
+            if let record = cached[dto.recordID] {
                 record.apply(dto)
             } else {
                 context.insert(TaskRecord(dto: dto))
             }
         }
-        let kept = Set(dtos.map(\.id.uuidString)).union(pending)
+        let kept = Set(dtos.map(\.recordID)).union(pending)
         for (id, record) in cached where !kept.contains(id) && !id.hasPrefix("local-") { context.delete(record) }
     }
 }
