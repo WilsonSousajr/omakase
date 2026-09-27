@@ -37,4 +37,27 @@ struct OutboxRulesTests {
         #expect(String(bytes: entry.body ?? Data(), encoding: .utf8) == #"{"parent":"9F1C"}"#)
         #expect(OutboxRules.references(entry, localID: "local-1") == false)
     }
+
+    @Test func aDeleteWhoseTargetIsAlreadyGoneIsAccepted() {
+        // #201: a block deleted elsewhere must not park its delete forever.
+        let gone = Result<OutboxResponse, APIError>.success(OutboxResponse(status: 404, body: Data()))
+        #expect(OutboxRules.classify(gone, method: "DELETE") == .accepted(Data()))
+        #expect(OutboxRules.classify(gone, method: "PATCH") == .park("HTTP 404"))
+        #expect(OutboxRules.classify(.failure(.transport("offline")), method: "DELETE") == .retry("offline"))
+    }
+
+    @Test @MainActor func dependentsFollowACreateThatDependsOnACreate() {
+        // #201: a block created on a captured task, then moved, all offline.
+        let task = OutboxEntry(
+            sequence: 1, method: "POST", path: "/api/v1/tasks/", body: nil, subjectID: "local-t",
+            createsLocalID: "local-t")
+        let block = OutboxEntry(
+            sequence: 2, method: "POST", path: "/api/v1/timeblocks/", body: Data(#"{"task":"local-t"}"#.utf8),
+            subjectID: "local-b", createsLocalID: "local-b")
+        let move = OutboxEntry(
+            sequence: 3, method: "PATCH", path: "/api/v1/timeblocks/local-b/", body: nil, subjectID: "local-b")
+        let other = OutboxEntry(sequence: 4, method: "PATCH", path: "/api/v1/tasks/t9/", body: nil, subjectID: "t9")
+        let found = OutboxRules.dependents(of: task, among: [task, move, other, block])
+        #expect(found.map(\.sequence) == [2, 3])
+    }
 }

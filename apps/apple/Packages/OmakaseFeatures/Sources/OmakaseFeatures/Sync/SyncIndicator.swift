@@ -50,7 +50,8 @@ public enum SyncIndicator: Equatable, Sendable {
 extension ParkedWrite {
     private static let actionTitles = [
         "task.create": "Create task", "task.patch": "Update task", "subtask.patch": "Update subtask",
-        "block.patch": "Update block", "session.create": "Record focus session", "review.put": "Save review",
+        "block.patch": "Update block", "block.create": "Create block", "block.delete": "Delete block",
+        "session.create": "Record focus session", "review.put": "Save review",
     ]
 
     /// What the write was doing, in the user's words; an unknown kind shows as itself.

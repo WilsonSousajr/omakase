@@ -117,4 +117,33 @@ struct OutboxMaintenanceTests {
     @Test func discardingAnUnknownWriteSaysWhichOne() {
         #expect(throws: OutboxMaintenance.Failure.noEntry(sequence: 9)) { try maintenance.discard(sequence: 9) }
     }
+
+    @Test func discardingAParkedBlockCreateRemovesItsBlock() throws {
+        context.insert(TimeBlockRecord(id: "local-b", day: "2026-03-07", startTime: "09:00:00", endTime: "10:00:00"))
+        let create = OutboxEntry(
+            sequence: 1, method: "POST", path: "/api/v1/timeblocks/", body: nil, subjectID: "local-b",
+            createsLocalID: "local-b", kind: "block.create")
+        context.insert(create)
+        (create.state, create.lastError) = (.parked, "bad")
+        try context.save()
+        try maintenance.discard(sequence: 1)
+        #expect(try remaining().isEmpty)
+        #expect(try context.fetch(FetchDescriptor<TimeBlockRecord>()).isEmpty)
+    }
+
+    @Test func discardingATaskCreateTakesTheBlocksCreatedOnIt() throws {
+        context.insert(TaskRecord(id: "local-t", title: "Captured"))
+        context.insert(TimeBlockRecord(id: "local-b", day: "2026-03-07", startTime: "09:00:00", endTime: "10:00:00"))
+        enqueue(1, "/api/v1/tasks/", creates: "local-t")
+        context.insert(
+            OutboxEntry(
+                sequence: 2, method: "POST", path: "/api/v1/timeblocks/", body: Data(#"{"task":"local-t"}"#.utf8),
+                subjectID: "local-b", createsLocalID: "local-b", kind: "block.create"))
+        enqueue(3, "/api/v1/timeblocks/local-b/")
+        try context.save()
+        try maintenance.discard(sequence: 1)
+        #expect(try remaining().isEmpty)
+        #expect(try tasks().isEmpty)
+        #expect(try context.fetch(FetchDescriptor<TimeBlockRecord>()).isEmpty)
+    }
 }

@@ -196,7 +196,11 @@ struct DayWritesTests {
 
     @Test func everyKindTheWritesQueueHasAHandler() {
         let handlers = allHandlers()
-        for kind in ["task.patch", "task.create", "subtask.patch", "block.patch", "session.create", "review.put"] {
+        let kinds = [
+            "task.patch", "task.create", "subtask.patch", "block.patch", "block.create", "block.delete",
+            "session.create", "review.put",
+        ]
+        for kind in kinds {
             #expect(handlers.handles(kind), "no handler for \(kind)")
         }
     }

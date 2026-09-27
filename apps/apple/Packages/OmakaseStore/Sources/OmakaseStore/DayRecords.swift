@@ -38,6 +38,15 @@ public final class TimeBlockRecord {
         apply(dto)
     }
 
+    /// A block with no server copy yet: placed in Plan under a `local-` id (#201).
+    public init(
+        id: String, day: String, startTime: String, endTime: String, taskID: String? = nil,
+        studyBlockID: String? = nil
+    ) {
+        (self.id, self.day, self.startTime, self.endTime) = (id, day, startTime, endTime)
+        (self.taskID, self.studyBlockID, notes, sessionRating) = (taskID, studyBlockID, "", nil)
+    }
+
     public func apply(_ dto: TimeBlockDTO) {
         (day, startTime, endTime) = (dto.date.string, dto.startTime, dto.endTime)
         (taskID, studyBlockID) = (dto.task?.uuidString, dto.studyBlock?.uuidString)

@@ -31,6 +31,21 @@ public struct OutboxQueue {
         return subjects.contains { ids.contains($0) }
     }
 
+    /// The create for `localID` that has not reached the server, pending or parked.
+    func unsentCreate(of localID: String) -> OutboxEntry? {
+        queued().first { $0.createsLocalID == localID }
+    }
+
+    /// Deletes `entry` and every queued write that depends on it; returns them all.
+    @discardableResult
+    func withdraw(_ entry: OutboxEntry) -> [OutboxEntry] {
+        let withdrawn = [entry] + OutboxRules.dependents(of: entry, among: queued())
+        for gone in withdrawn { context.delete(gone) }
+        return withdrawn
+    }
+
+    private func queued() -> [OutboxEntry] { entries(in: .pending) + entries(in: .parked) }
+
     /// The entries in `state`, in the order they are sent.
     func entries(in state: OutboxEntry.State) -> [OutboxEntry] {
         let raw = state.rawValue

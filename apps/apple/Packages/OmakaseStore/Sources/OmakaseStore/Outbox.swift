@@ -25,6 +25,15 @@ public enum OutboxRules {
         }
     }
 
+    /// As `classify(_:)`, except that a DELETE whose target is already gone
+    /// is done: a block deleted elsewhere must not park forever (#201).
+    public static func classify(_ result: Result<OutboxResponse, APIError>, method: String) -> Outcome {
+        if method == "DELETE", case .success(let response) = result, response.status == 404 {
+            return .accepted(Data())
+        }
+        return classify(result)
+    }
+
     @MainActor
     public static func rewrite(_ entry: OutboxEntry, localID: String, serverID: String) {
         entry.path = entry.path.replacingOccurrences(of: localID, with: serverID)
@@ -38,9 +47,25 @@ public enum OutboxRules {
     }
 
     /// The entries in `candidates` that reference the id `entry` creates: parked
-    /// with it, retried with it, and discarded with it.
+    /// with it, retried with it, and discarded with it. Transitive, in sequence
+    /// order: a block created on a captured task depends on the task's create,
+    /// and the block's move on the block's create (#201).
     @MainActor
     public static func dependents(of entry: OutboxEntry, among candidates: [OutboxEntry]) -> [OutboxEntry] {
+        var found: [Int: OutboxEntry] = [:]
+        var unvisited = [entry]
+        while let next = unvisited.popLast() {
+            let fresh = directDependents(of: next, among: candidates).filter {
+                $0.sequence != entry.sequence && found[$0.sequence] == nil
+            }
+            for dependent in fresh { found[dependent.sequence] = dependent }
+            unvisited += fresh
+        }
+        return found.values.sorted { $0.sequence < $1.sequence }
+    }
+
+    @MainActor
+    private static func directDependents(of entry: OutboxEntry, among candidates: [OutboxEntry]) -> [OutboxEntry] {
         guard let localID = entry.createsLocalID else { return [] }
         return candidates.filter { $0.sequence != entry.sequence && references($0, localID: localID) }
     }
