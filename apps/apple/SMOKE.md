@@ -272,3 +272,30 @@ permission: `tccutil reset Calendar dev.omakase.mac` and
 7. Deny: `tccutil reset Calendar dev.omakase.mac`, turn it on, choose
    Don't Allow. The toggle stays off and a popover says "Omakase needs
    access in System Settings > Privacy > Calendars".
+
+## M8 - Cancelled classes
+
+Plan, against the same stack, with `curl …` as in M4. Seed the class of
+M4 on today's weekday (a semester, a discipline, a schedule through
+`…/study/classschedules/`), and note the schedule's `<id>`.
+
+1. Plan shows the class at 08:00-09:30, dashed, in its colour.
+2. Right-click it: the menu offers "Cancel this class". Choose it. The
+   class stays where it is, dimmed, its title struck through, behind any
+   block.
+   - `curl "…/study/class-occurrences/?date_from=<today>&date_to=<today>"`
+     has it with `"is_cancelled": true`.
+3. Right-click it again: the menu offers "Restore class". Choose it. The
+   class is drawn as before, and `curl` has `"is_cancelled": false`.
+4. Cancel it, then press ›, then Today: it is still struck through.
+5. Restore it. `docker-compose stop backend`. Cancel it: it is struck
+   through at once and the toolbar says a write is pending.
+   `docker-compose start backend`; after the catch-up it is still struck
+   through, `curl` has `"is_cancelled": true`, and the database has one
+   cancellation for the date:
+   `docker-compose exec db psql -U omakase -c "select count(*) from study_classcancellation where class_schedule_id = '<id>'"`
+   is 1.
+6. Restore it online. Offline again, cancel it and restore it before
+   reconnecting: the toolbar shows nothing pending, because the two
+   writes cancel out. Reconnect: `curl` has `"is_cancelled": false` and
+   the count in 5 is 0.
