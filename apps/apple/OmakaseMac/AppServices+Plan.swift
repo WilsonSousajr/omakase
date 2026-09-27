@@ -27,6 +27,14 @@ extension AppServices {
             delete: { [self] id in onBlock(id, onOutcome) { try blocks.delete($0) } })
     }
 
+    /// The Calendar.app overlay (#229), its toggle kept in UserDefaults.
+    func makeCalendarOverlay(defaults: UserDefaults = .standard) -> CalendarOverlayModel {
+        let key = "omakase.calendarOverlay"
+        return CalendarOverlayModel(
+            source: EventKitCalendar(), isStored: { defaults.bool(forKey: key) },
+            store: { defaults.set($0, forKey: key) })
+    }
+
     /// The cached block by id; one a catch-up has just removed is left alone.
     private func onBlock(
         _ id: String, _ onOutcome: @escaping @MainActor (SyncCoordinator.Outcome) -> Void,
