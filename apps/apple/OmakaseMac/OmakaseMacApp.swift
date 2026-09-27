@@ -8,7 +8,6 @@ struct OmakaseMacApp: App {
     @State private var services = Self.makeServices()
     @State private var signIn: SignInModel?
     @State private var signedIn = false
-    @State private var section: SidebarItem? = .focus
     @State private var focus: FocusModel?
     @State private var review: ReviewModel?
     @State private var plan: PlanModel?
@@ -77,19 +76,7 @@ struct OmakaseMacApp: App {
 
     @ViewBuilder private var content: some View {
         if signedIn {
-            NavigationSplitView {
-                List(SidebarItem.allCases, selection: $section) { item in
-                    SidebarRowView(item: item).listItemTint(.fixed(AppTint.sidebarIcons.color))
-                }
-                .scrollContentBackground(.hidden)
-            } detail: {
-                detail
-            }
-            .toolbar {
-                if let failedWrites {
-                    ToolbarItem(placement: .primaryAction) { SyncIndicatorView(model: failedWrites) }
-                }
-            }
+            MainWindowView(day: day, models: screenModels)
         } else if let signIn {
             SignInView(model: signIn).onChange(of: signIn.state) { _, state in
                 guard case .signedIn = state else { return }
@@ -99,20 +86,12 @@ struct OmakaseMacApp: App {
         }
     }
 
-    @ViewBuilder private var detail: some View {
-        switch section {
-        // Plan's panel acts through Focus's model, so its Complete, Reschedule,
-        // Remind me and the editor's Save queue exactly as Focus's do (#217, #218).
-        case .plan:
-            if let plan, let focus {
-                PlanScreenView(day: day, model: plan, focus: focus, overlay: calendarOverlay)
-            }
-        case .review: if let review { ReviewView(day: day, model: review) }
-        case .inbox: if let inbox { InboxView(day: day, model: inbox) }
-        case .projects: if let projects { ProjectsView(model: projects) }
-        case .study: if let study { StudyView(day: day, model: study) }
-        case .focus, nil: if let focus, let timer { FocusView(day: day, model: focus, timer: timer) }
-        }
+    /// Bundled for `MainWindowView` (#256); every model here is nil until
+    /// `makeScreenModels()` wires it in `start()`.
+    private var screenModels: ScreenModels {
+        ScreenModels(
+            focus: focus, review: review, plan: plan, inbox: inbox, projects: projects, study: study,
+            calendarOverlay: calendarOverlay, timer: timer, failedWrites: failedWrites)
     }
 
     private func start() async {
@@ -162,7 +141,7 @@ struct OmakaseMacApp: App {
         if outcome == .synced { Task { await services.refreshLibrary() } }
         services.replanReminders()
         plan?.caughtUp()
-        guard section == .plan, let plan, let calendarOverlay else { return }
+        guard let plan, plan.isShowing, let calendarOverlay else { return }
         Task { await calendarOverlay.refresh(days: plan.visibleDays) }
     }
 

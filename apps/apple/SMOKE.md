@@ -456,3 +456,16 @@ server has.
 6. Delete the semester. The dialog says its disciplines, their classes
    and its holidays go too. Confirm, and all of them are gone from the
    screen and from `curl`.
+
+## M9 S3 - The main window moves into Features
+
+A behaviour-preserving refactor (#256): no visible change, but the window
+is now `MainWindowView`, and its sidebar selection is persisted per window.
+
+1. Build and launch. The window looks exactly as before: the same
+   sidebar, the same Focus screen selected first.
+2. Select Plan, then quit and relaunch. Plan is still selected (before
+   this slice, a relaunch always opened on Focus, since the selection
+   wasn't saved).
+3. File › New Window (still present in this slice). The new window opens
+   on Focus, independent of the first window's selection.
