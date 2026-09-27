@@ -12,6 +12,17 @@ for each milestone.
 
 ### Added
 
+- **Holidays and cancelled classes** (#125). `study/holidays/` is CRUD for
+  a semester's holidays (`semester`, `name`, `start_date`, `end_date`, both
+  ends inclusive; filter by `?semester=`; an end before the start is a 400).
+  `study/class-occurrences/` omits every date inside a holiday.
+  `PUT study/classschedules/<id>/cancellations/<YYYY-MM-DD>/` cancels one
+  class (201, or 200 when it already was) and `DELETE` on the same path
+  restores it (204 either way); both are idempotent by path. A date that is
+  not an occurrence of the schedule is a 400. Each occurrence gains
+  `is_cancelled`: a cancelled class is returned marked, not omitted.
+  `stats/workload/`'s `class_minutes` no longer counts a cancelled class.
+
 - **Week A/B rotation for class schedules** (#126). `study/semesters/`
   gains `rotation_weeks` (1-4, default 1) and `rotation_anchor` (a date whose
   Monday starts week 1; null means `start_date`). `study/classschedules/`
