@@ -199,6 +199,12 @@ import its mixin.
   rotation `week` they fall in and `is_cancelled`. The expansion
   is `study/services.py: class_occurrences(user, start, end)`, which the
   view and `stats/workload/` both call (#176).
+- **Occurrences are wall-clock, so DST cannot move them (#132).** A class
+  is a weekday and two naive `TimeField`s, expanded by `date` arithmetic,
+  and returned as a date plus an offset-free time. No instant or offset is
+  computed, so neither the server's zone nor a clock change enters. The
+  client places the time on its own clock for that date. Checked across
+  both of London's 2026 changes by `study/tests/test_dst.py`.
 
 ### stats
 
