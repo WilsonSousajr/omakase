@@ -76,7 +76,7 @@ struct OmakaseMacApp: App {
 
     @ViewBuilder private var content: some View {
         if signedIn {
-            MainWindowView(day: day, models: screenModels)
+            MainWindowView(day: day, models: screenModels) { capture?.show(context: $0) }
         } else if let signIn {
             SignInView(model: signIn).onChange(of: signIn.state) { _, state in
                 guard case .signedIn = state else { return }
