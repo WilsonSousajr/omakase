@@ -53,6 +53,27 @@ public enum PlanDrop {
         return PlanPlacement(day: day, start: start, end: start + length)
     }
 
+    /// A drag shorter than this is a click, which selects or deselects
+    /// rather than drawing a slot (spec §9); the column's gesture uses it as
+    /// its minimum distance.
+    public static let slotMinimumDrag: CGFloat = 4
+
+    /// A slot drawn down a column between two offsets, either way (spec §9,
+    /// #264): both ends snap to 15 minutes inside the visible hours
+    /// (06:00-23:00), and it lasts at least 15 minutes, pulled back whole at
+    /// 23:00; nil for a bare click.
+    ///
+    ///     PlanDrop.slot(day: "2026-09-28", from: 468, to: 416, layout: .standard)   // 14:00-15:00
+    public static func slot(
+        day: String, from startOffset: CGFloat, to endOffset: CGFloat, layout: CalendarLayout
+    ) -> PlanPlacement? {
+        guard abs(endOffset - startOffset) >= slotMinimumDrag else { return nil }
+        let top = layout.minutes(forOffset: min(startOffset, endOffset))
+        let bottom = max(layout.minutes(forOffset: max(startOffset, endOffset)), top + CalendarLayout.snapMinutes)
+        let end = min(bottom, layout.lastMinute)
+        return PlanPlacement(day: day, start: min(top, end - CalendarLayout.snapMinutes), end: end)
+    }
+
     /// A block whose bottom edge is dragged to `offset`: the end snaps, at
     /// least 15 minutes after the start and at most 23:00; nil when the
     /// minimum would reach midnight.

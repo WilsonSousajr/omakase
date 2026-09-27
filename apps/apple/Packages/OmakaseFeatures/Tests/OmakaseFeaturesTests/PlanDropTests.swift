@@ -5,7 +5,8 @@ import Testing
 
 /// A drop on the grid as a day, a start and an end (spec M4, N2): snapped to
 /// 15 minutes, 60 minutes for a new block, kept inside 06:00-23:00, a move
-/// keeping its length and a resize keeping at least 15 minutes.
+/// keeping its length and a resize keeping at least 15 minutes. A slot drawn
+/// on an empty part of a column (spec §9, #264) snaps both ends the same way.
 struct PlanDropTests {
     let layout = CalendarLayout.standard
     let day = "2026-09-28"
@@ -100,5 +101,57 @@ struct PlanDropTests {
 
     @Test func aResizeThatWouldCrossMidnightIsRejected() {
         #expect(PlanDrop.resize(block(1430, 1435), bottom: offset(23), layout: layout) == nil)
+    }
+
+    // MARK: A drawn slot (spec §9, #264)
+
+    @Test func aSlotDrawnDownRunsFromWhereTheDragStarted() {
+        #expect(
+            PlanDrop.slot(day: day, from: offset(14), to: offset(15), layout: layout)
+                == PlanPlacement(day: day, start: 840, end: 900))
+    }
+
+    @Test func aSlotDrawnUpIsTheSameSlot() {
+        #expect(
+            PlanDrop.slot(day: day, from: offset(15), to: offset(14), layout: layout)
+                == PlanPlacement(day: day, start: 840, end: 900))
+    }
+
+    @Test func bothEndsOfASlotSnapToTheNearestQuarterHour() {
+        #expect(
+            PlanDrop.slot(day: day, from: offset(14, 7), to: offset(15, 8), layout: layout)
+                == PlanPlacement(day: day, start: 840, end: 915))
+    }
+
+    @Test func aShortDragDrawsAQuarterHour() {
+        #expect(
+            PlanDrop.slot(day: day, from: offset(14), to: offset(14, 6), layout: layout)
+                == PlanPlacement(day: day, start: 840, end: 855))
+    }
+
+    @Test func aSlotIsKeptInsideSixToEleven() {
+        #expect(
+            PlanDrop.slot(day: day, from: -40, to: offset(7), layout: layout)
+                == PlanPlacement(day: day, start: 360, end: 420))
+        #expect(
+            PlanDrop.slot(day: day, from: offset(22), to: 5_000, layout: layout)
+                == PlanPlacement(day: day, start: 1320, end: 1380))
+    }
+
+    @Test func aQuarterHourDrawnPastElevenIsPulledBackWhole() {
+        #expect(
+            PlanDrop.slot(day: day, from: offset(23), to: 5_000, layout: layout)
+                == PlanPlacement(day: day, start: 1365, end: 1380))
+    }
+
+    @Test(arguments: [0, 1, 3.9] as [CGFloat])
+    func aBareClickDrawsNoSlot(distance: CGFloat) {
+        #expect(PlanDrop.slot(day: day, from: offset(14), to: offset(14) + distance, layout: layout) == nil)
+        #expect(PlanDrop.slot(day: day, from: offset(14), to: offset(14) - distance, layout: layout) == nil)
+    }
+
+    @Test func theSlotsMinimumIsTheGesturesMinimumDistance() {
+        #expect(PlanDrop.slotMinimumDrag == 4)
+        #expect(PlanDrop.slot(day: day, from: offset(14), to: offset(14) + 4, layout: layout) != nil)
     }
 }
