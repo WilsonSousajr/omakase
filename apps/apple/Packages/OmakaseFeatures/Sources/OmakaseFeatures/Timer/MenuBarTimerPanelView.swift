@@ -11,8 +11,10 @@ public struct MenuBarTimerPanelView: View {
     private let today: String
     @Query private var tasks: [TaskRecord]
     @Query private var blocks: [TimeBlockRecord]
-    // Observed only to recompute the place directory when the library cache
-    // changes (spec §8); the fetched arrays themselves go unused.
+    @State private var placeDirectory = PlaceDirectory.empty
+    // Observed only to know when to reload the place directory (spec §8);
+    // read through `librarySnapshot` below, so this panel's body - which
+    // redraws every second while `timer.now` ticks - never refetches it.
     @Query private var libraryProjects: [ProjectRecord]
     @Query private var libraryDisciplines: [DisciplineRecord]
     @Environment(\.modelContext) private var modelContext
@@ -42,11 +44,16 @@ public struct MenuBarTimerPanelView: View {
         .frame(width: 320)
         // Its own root, apart from the main window's environment (spec §4, #214).
         .environment(\.placeDirectory, placeDirectory)
+        .onChange(of: librarySnapshot, initial: true) { _, _ in reloadPlaces() }
     }
 
-    private var placeDirectory: PlaceDirectory {
-        _ = (libraryProjects, libraryDisciplines)
-        return PlaceDirectory.load(from: modelContext, today: today)
+    private var librarySnapshot: PlaceLibrarySnapshot {
+        PlaceLibrarySnapshot(today: today, projects: libraryProjects, disciplines: libraryDisciplines)
+    }
+
+    /// Reloaded only when `librarySnapshot` changes, never on the timer's tick.
+    private func reloadPlaces() {
+        placeDirectory = PlaceDirectory.load(from: modelContext, today: today)
     }
 
     private var slots: [SessionBlock.Slot] {
