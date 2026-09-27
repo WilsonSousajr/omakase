@@ -33,6 +33,8 @@ public final class SessionWrites {
     /// task captured offline may have taken its server id meanwhile, and a
     /// stale `local-` id would park the session (final review, Important 2).
     public func record(_ session: FinishedSession, task: TaskRecord?) throws {
+        // A computed occurrence has no row to point at until materialized (#206).
+        if let task { try TaskWrites(context: context).materializeIfComputed(taskID: task.id) }
         let body = SessionBody(
             task: task?.id, timeBlock: session.timeBlockID, sessionType: session.type,
             durationMinutes: session.minutes, startedAt: session.startedAt, endedAt: session.endedAt,
