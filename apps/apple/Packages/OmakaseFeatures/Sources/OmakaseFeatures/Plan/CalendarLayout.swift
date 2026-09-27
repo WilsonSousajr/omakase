@@ -48,8 +48,8 @@ public struct CalendarLayout: Equatable, Sendable {
     /// The hours that get a row and a label.
     public var hours: [Int] { Array(firstHour..<lastHour) }
     public var totalHeight: CGFloat { CGFloat(lastHour - firstHour) * hourHeight }
-    private var firstMinute: Int { firstHour * 60 }
-    private var lastMinute: Int { lastHour * 60 }
+    var firstMinute: Int { firstHour * 60 }
+    var lastMinute: Int { lastHour * 60 }
 
     public func offset(forMinutes minutes: Int) -> CGFloat {
         CGFloat(minutes - firstMinute) / 60 * hourHeight
