@@ -36,7 +36,8 @@ struct StoreMigrationTests {
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         let url = root.appending(path: "Old.store")
 
-        let old = try ModelContainer(for: Schema([PreM9Schema.TaskRecord.self]), configurations: ModelConfiguration(url: url))
+        let old = try ModelContainer(
+            for: Schema([PreM9Schema.TaskRecord.self]), configurations: ModelConfiguration(url: url))
         old.mainContext.insert(PreM9Schema.TaskRecord(id: "old-1", title: "Before M9"))
         try old.mainContext.save()
 

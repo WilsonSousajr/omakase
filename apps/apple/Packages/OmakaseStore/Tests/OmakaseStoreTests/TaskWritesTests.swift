@@ -56,12 +56,12 @@ struct TaskWritesTests {
         // cache, never a `local-` id, unlike the id the capture itself creates.
         let disciplineID = UUID().uuidString
         let record = try TaskWrites(context: context).capture(
-            title: "Read chapter 4", day: "2026-03-07", filing: TaskFiling(area: .work, parent: .discipline(disciplineID)))
+            title: "Read chapter 4", day: "2026-03-07",
+            filing: TaskFiling(area: .work, parent: .discipline(disciplineID)))
         let entry = try #require(try outbox().first)
-        #expect(
-            String(bytes: entry.body ?? Data(), encoding: .utf8)
-                == #"{"area":"study","discipline":"\#(disciplineID)","scheduled_date":"2026-03-07","title":"Read chapter 4"}"#
-        )
+        let expected =
+            #"{"area":"study","discipline":"\#(disciplineID)","scheduled_date":"2026-03-07","title":"Read chapter 4"}"#
+        #expect(String(bytes: entry.body ?? Data(), encoding: .utf8) == expected)
         #expect(record.disciplineID == disciplineID && record.projectID == nil)
     }
 
