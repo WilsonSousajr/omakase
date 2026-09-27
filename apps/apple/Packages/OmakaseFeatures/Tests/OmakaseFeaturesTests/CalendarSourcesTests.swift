@@ -17,12 +17,13 @@ struct CalendarSourcesTests {
     }()
 
     func occurrence(
-        color: String = "#4F46E5", start: String = "08:00:00", end: String = "09:30:00"
+        color: String = "#4F46E5", start: String = "08:00:00", end: String = "09:30:00", cancelled: Bool = false
     ) throws -> ClassOccurrenceRecord {
         let json = """
             {"id": "c1-2026-09-28", "class_schedule_id": "8C1C3F8E-2B7B-4C39-9E6A-3C5D8F1B2A40",
              "discipline_name": "Linear algebra", "discipline_color": "\(color)", "class_type": "lecture",
-             "location": "B12", "date": "2026-09-28", "start_time": "\(start)", "end_time": "\(end)"}
+             "location": "B12", "date": "2026-09-28", "start_time": "\(start)", "end_time": "\(end)",
+             "week": 1, "is_cancelled": \(cancelled)}
             """
         let dto = try OmakaseJSON.decoder.decode(ClassOccurrenceDTO.self, from: Data(json.utf8))
         return ClassOccurrenceRecord(dto: dto)
@@ -57,6 +58,12 @@ struct CalendarSourcesTests {
                 == CalendarItem(
                     id: "c1-2026-09-28", day: "2026-09-28", start: 480, end: 570, title: "Linear algebra",
                     kind: .classOccurrence, tint: DesignColor(both: 0x4F46E5)))
+    }
+
+    @Test func aCancelledClassIsACancelledItemIssue207() throws {
+        let item = try #require(CalendarItem.classOccurrence(try occurrence(cancelled: true)))
+        #expect(item.isCancelled && item.kind == .classOccurrence)
+        #expect(CalendarItem.classOccurrence(try occurrence())?.isCancelled == false)
     }
 
     @Test func aClassWithAnUnreadableColourIsAccentGrey() throws {

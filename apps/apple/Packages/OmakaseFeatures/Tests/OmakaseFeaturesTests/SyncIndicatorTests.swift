@@ -58,6 +58,7 @@ struct SyncIndicatorTests {
         ("task.create", "Create task"), ("task.patch", "Update task"), ("subtask.patch", "Update subtask"),
         ("block.patch", "Update block"), ("block.create", "Create block"), ("block.delete", "Delete block"),
         ("session.create", "Record focus session"), ("review.put", "Save review"),
+        ("class.cancel", "Cancel class"), ("class.restore", "Restore class"),
     ])
     func eachKnownKindReadsAsAnAction(kind: String, expected: String) {
         #expect(Self.parked(kind).actionTitle == expected)
