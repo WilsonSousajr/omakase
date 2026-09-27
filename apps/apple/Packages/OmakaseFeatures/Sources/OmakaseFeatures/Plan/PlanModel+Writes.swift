@@ -39,11 +39,11 @@ extension PlanModel {
 
     /// Plan came on screen: its days are read now and after each catch-up.
     public func show() {
-        isShowing = true
+        setShowing(true)
         refreshRange()
     }
 
-    public func hide() { isShowing = false }
+    public func hide() { setShowing(false) }
 
     public func refreshRange() { actions.refresh(visibleDays) }
 

@@ -35,8 +35,10 @@ public final class PlanModel {
     public let calendar: Calendar
     private let today: () -> String
     @ObservationIgnored let actions: Actions
-    /// Catch-ups refresh the range only while Plan is on screen.
-    @ObservationIgnored var isShowing = false
+    /// Catch-ups refresh the range only while Plan is on screen; the window
+    /// also reads this to refresh the Calendar.app overlay only while Plan
+    /// shows (#256, replacing the section-equality check the app owned).
+    @ObservationIgnored public private(set) var isShowing = false
 
     public init(
         mode: Mode = .day, calendar: Calendar = PlanModel.weekCalendar(), actions: Actions = .none,
@@ -65,6 +67,10 @@ public final class PlanModel {
     public func goToday() { anchorDay = today() }
     public func previous() { move(by: -1) }
     public func next() { move(by: 1) }
+
+    /// `show()`/`hide()` (`PlanModel+Writes`) call this: `isShowing`'s
+    /// `private(set)` only reaches this file, so they can't set it directly.
+    func setShowing(_ value: Bool) { isShowing = value }
 
     /// A week column's header, "Mon 21".
     public func dayHeader(_ day: String) -> String { DayString.short(day, calendar: calendar) ?? day }
