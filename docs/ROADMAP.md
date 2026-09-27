@@ -22,6 +22,7 @@ reasons for it.
 | M8 | Repeats and exceptions | **Built, not yet smoke-tested.** From M7. Backend: #126, Week A/B rotation, merged as PR #210; #125, holidays and cancelled classes, as PR #211; #124, recurring tasks, as PR #232. Mac: #206, recurring occurrences, materialize and the Repeat menu, as PR #237; #207, cancelled classes, as PR #235. The smoke run, M8 in `apps/apple/SMOKE.md`, is pending. |
 | M5 | Parity | **Built, not yet smoke-tested.** `docs/superpowers/specs/2026-09-27-m5-parity-design.md`. Backend: task filters, logout and the library's fixtures (#223, PR #234); the DST test (#132, PR #236). Mac: the library cache, online-only writes and a real sign-out (#224, PR #238); the Inbox (#225, PR #239); Settings (#228, PR #240); Projects (#226, PR #241); Study (#227, this one); the Calendar.app overlay (#229, PR #231). The smoke runs, M5 in `apps/apple/SMOKE.md`, are pending. |
 | M6 | Production | **Prepared, not promoted.** `docs/superpowers/specs/2026-09-27-m6-production-design.md`. The API deploys on Coolify: migrations at start, `/api/health/` and no CORS default (#243, PR #247); the SSH deploy removed and a guide in `docs/deploy-coolify.md` (#244, PR #248); release builds pointed at production (#245, PR #249); the parity checklist and the 0.1.0 changelog (#246, this one). The develop→main promotion is open for the user: merging it deploys, and it and the `v0.1.0` tag are the user's. |
+| M9 | Kinds and places | **Designed.** `docs/superpowers/specs/2026-09-27-m9-kinds-and-places-design.md` (#252). A task says what it is for (Work, Study, Life), capture opens from ⌘N, the sidebar and the toolbar, the sidebar shows your places, and the visual pass: kind colours, a native toolbar, calmer rows, calendar blocks in colour, and motion. The slices S1-S13 follow the spec's review. |
 
 ## M0 - Groundwork
 
@@ -182,6 +183,21 @@ computed occurrences do not.
 **Delivers:** your data anywhere. Promote `develop` to `main`, make the VPS
 serve the API alone (proxy, CORS), point the app at it, and run the parity
 checklist.
+
+## M9 - Kinds and places
+
+**Delivers:** a task that says what it is for, and a window that shows it.
+Capture opens from ⌘N, the sidebar and the toolbar as well as ⌥⌘N, seeded
+from where you are, and picks Work, Study or Life with one key. The sidebar
+lists your day and your places: projects, the semester's disciplines and
+Life, each with its open tasks. Blocks and rows wear their kind's colour,
+each screen's controls move into the toolbar, and the app moves, springs
+and all, except under Reduce Motion.
+
+**Why now:** the user could not find how to create a task after M5, and
+the backend's `area`, `project` and `discipline` were never written or
+shown by the Mac. No API change is needed; the spec says what M9 changes in
+M2's design record on purpose.
 
 ## Later - iOS, then Android
 
