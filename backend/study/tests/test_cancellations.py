@@ -110,7 +110,7 @@ class TestCancelEndpoint:
         resp = authenticated_client.put(_url(schedule, "2026-03-10"))
 
         assert resp.status_code == status.HTTP_400_BAD_REQUEST
-        assert "2026-03-10" in str(resp.data)
+        assert "2026-03-10" in str(resp.data["date"])
         assert not ClassCancellation.objects.exists()
 
     def test_cancel_outside_the_semester_is_a_400(self, authenticated_client, user):
