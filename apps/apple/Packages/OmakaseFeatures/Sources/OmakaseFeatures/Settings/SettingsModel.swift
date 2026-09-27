@@ -19,12 +19,15 @@ public final class SettingsModel {
         let save: (ProfileChange) async throws -> Void
         let loginItemEnabled: () -> Bool
         let setLoginItem: (Bool) throws -> Void
+        /// The signed-in email, read online; nil offline.
+        let account: () async -> String?
 
         public init(
             save: @escaping (ProfileChange) async throws -> Void, loginItemEnabled: @escaping () -> Bool,
-            setLoginItem: @escaping (Bool) throws -> Void
+            setLoginItem: @escaping (Bool) throws -> Void, account: @escaping () async -> String? = { nil }
         ) {
             (self.save, self.loginItemEnabled, self.setLoginItem) = (save, loginItemEnabled, setLoginItem)
+            self.account = account
         }
     }
 
@@ -32,6 +35,7 @@ public final class SettingsModel {
     /// The last refusal or failure, in words; cleared by the next success.
     public private(set) var message: String?
     public private(set) var launchesAtLogin: Bool
+    public private(set) var email: String?
 
     @ObservationIgnored private var saved: ProfileValues?
     @ObservationIgnored private var isPending = false
@@ -68,6 +72,8 @@ public final class SettingsModel {
             (self.draft, message) = (saved, String(describing: error))
         }
     }
+
+    public func loadAccount() async { email = await actions.account() }
 
     public func setLaunchesAtLogin(_ enabled: Bool) {
         do {

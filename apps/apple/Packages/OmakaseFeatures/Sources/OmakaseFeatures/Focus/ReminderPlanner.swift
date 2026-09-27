@@ -116,4 +116,10 @@ enum ReminderClock {
         let second = match.3.flatMap { Int($0) } ?? 0
         return calendar.date(bySettingHour: hour, minute: minute, second: second, of: start)
     }
+
+    /// `date`'s wall-clock time as the server keeps it, "HH:MM:00" (#228).
+    static func time(from date: Date, calendar: Calendar) -> String {
+        let parts = calendar.dateComponents([.hour, .minute], from: date)
+        return String(format: "%02d:%02d:00", parts.hour ?? 0, parts.minute ?? 0)
+    }
 }
