@@ -46,7 +46,7 @@ function (#176).
 
 **Cancellations (#125):**
 - `ClassCancellation(class_schedule, date)`, unique on the pair.
-- `PUT study/class-schedules/<id>/cancellations/<date>/` cancels a class
+- `PUT study/classschedules/<id>/cancellations/<date>/` cancels a class
   on that date, and `DELETE` restores it.
   - The date must be an occurrence of that schedule, or the request is a
     400.
