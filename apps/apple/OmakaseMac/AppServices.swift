@@ -225,7 +225,7 @@ final class AppServices {
     private static func handlers(_ context: ModelContext) -> OutboxHandlers {
         OutboxHandlers([
             TaskHandler(context: context), SubtaskHandler(context: context), BlockHandler(context: context),
-            SessionHandler(), ReviewHandler(context: context),
+            SessionHandler(), ReviewHandler(context: context), ClassHandler(),
         ])
     }
 
