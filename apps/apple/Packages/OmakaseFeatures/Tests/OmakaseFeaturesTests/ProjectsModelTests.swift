@@ -62,6 +62,13 @@ struct ProjectsModelTests {
         #expect(recorder.calls == ["project w1 Thesis \(ProjectsModel.palette[2])"])
     }
 
+    @Test func renamesAreTrimmedAndBlankOnesSendNothing() async {
+        let projects = model()
+        await projects.renameWorkspace("w1", to: " Clients ")
+        await projects.rename(project: "p1", to: "   ")
+        #expect(recorder.calls == ["rename w1 Clients"])
+    }
+
     @Test func aStatusChangeIsAnEdit() async {
         await model().setStatus("paused", of: "p1")
         #expect(recorder.calls == ["edit p1 paused"])
