@@ -1,0 +1,33 @@
+{
+  "count": 1,
+  "next": null,
+  "previous": null,
+  "results": [
+    {
+      "actual_minutes": 0,
+      "area": "work",
+      "completed_at": null,
+      "created_at": "2026-09-27T13:27:12.820208Z",
+      "description": "",
+      "discipline": null,
+      "due_date": null,
+      "estimated_minutes": 25,
+      "id": "a99e5b5d-2f2b-407d-b5d7-2ae9622f4845",
+      "is_completed": false,
+      "is_skipped": false,
+      "is_virtual": false,
+      "kanban_order": 0,
+      "kanban_status": "todo",
+      "occurrence_date": null,
+      "priority": "medium",
+      "project": null,
+      "recurrence": null,
+      "remind_at": null,
+      "scheduled_date": null,
+      "series": null,
+      "tags": [],
+      "title": "Task 15",
+      "updated_at": "2026-09-27T13:27:12.820654Z"
+    }
+  ]
+}
