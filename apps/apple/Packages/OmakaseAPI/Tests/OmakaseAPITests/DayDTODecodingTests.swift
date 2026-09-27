@@ -79,7 +79,8 @@ struct DayDTODecodingTests {
         let json = """
             {"pomodoro_work_minutes":25,"pomodoro_short_break_minutes":5,"pomodoro_long_break_minutes":15,
              "pomodoros_before_long_break":4,"daily_work_goal_hours":"8.0","daily_study_goal_hours":"4.0",
-             "block_reminder_minutes":null,"shutdown_reminder_time":"17:30:00"}
+             "block_reminder_minutes":null,"shutdown_reminder_time":"17:30:00","timezone":"UTC",
+             "week_starts_on":"monday"}
             """
         let profile = try OmakaseJSON.decoder.decode(ProfileDTO.self, from: Data(json.utf8))
         #expect(profile.blockReminderMinutes == nil && profile.shutdownReminderTime == "17:30:00")
