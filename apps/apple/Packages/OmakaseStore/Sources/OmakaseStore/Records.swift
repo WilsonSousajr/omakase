@@ -30,9 +30,20 @@ public final class TaskRecord {
     /// Computed by the server and never stored there: the first write
     /// materializes it (`TaskWrites`), and until then its id is `occ-…`.
     public var isVirtual: Bool = false
+    // Defaulted so SwiftData migrates pre-M9 stores without a hand-written
+    // migration, as kanbanStatus did (spec §1).
+    public var area: String = "work"
+    public var projectID: String?
+    public var disciplineID: String?
 
     /// Part of a repeating series: Focus and Plan mark it with a repeat glyph.
     public var isRepeating: Bool { seriesID != nil }
+
+    /// This task's kind and parent, derived from `area`, `projectID` and
+    /// `disciplineID` the same way everywhere (`TaskFiling.init(areaWire:projectID:disciplineID:)`).
+    public var filing: TaskFiling {
+        TaskFiling(areaWire: area, projectID: projectID, disciplineID: disciplineID)
+    }
 
     public init(dto: TaskDTO) {
         id = dto.recordID
@@ -41,14 +52,17 @@ public final class TaskRecord {
         (kanbanStatus, dueDay, estimatedMinutes) = (dto.kanbanStatus, dto.dueDate?.string, dto.estimatedMinutes)
         (remindAt, notes) = (dto.remindAt, dto.description)
         (seriesID, occurrenceDay, isVirtual) = (dto.series?.uuidString, dto.occurrenceDate?.string, dto.isVirtual)
+        (area, projectID, disciplineID) = (dto.area, dto.project?.uuidString, dto.discipline?.uuidString)
     }
 
     /// A record with no server copy yet: a local capture, a preview, a test.
     public init(
-        id: String, title: String, priority: String = "medium", scheduledDay: String? = nil, isCompleted: Bool = false
+        id: String, title: String, priority: String = "medium", scheduledDay: String? = nil, isCompleted: Bool = false,
+        filing: TaskFiling = TaskFiling(area: .work, parent: nil)
     ) {
         (self.id, self.title, self.priority, self.scheduledDay) = (id, title, priority, scheduledDay)
         (self.isCompleted, completedAt, updatedAt) = (isCompleted, nil, .now)
+        (area, projectID, disciplineID) = (filing.area.rawValue, filing.parent?.projectID, filing.parent?.disciplineID)
     }
 
     public func apply(_ dto: TaskDTO) {
@@ -57,6 +71,7 @@ public final class TaskRecord {
         (kanbanStatus, dueDay, estimatedMinutes) = (dto.kanbanStatus, dto.dueDate?.string, dto.estimatedMinutes)
         (remindAt, notes) = (dto.remindAt, dto.description)
         (seriesID, occurrenceDay, isVirtual) = (dto.series?.uuidString, dto.occurrenceDate?.string, dto.isVirtual)
+        (area, projectID, disciplineID) = (dto.area, dto.project?.uuidString, dto.discipline?.uuidString)
     }
 }
 

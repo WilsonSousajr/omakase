@@ -42,6 +42,18 @@ struct DaySyncTests {
         #expect(try records().map(\.title) == ["Write spec"])
     }
 
+    @Test func refreshStoresATasksFiling() async throws {
+        // Spec §1: area, project and discipline reach the record through init(dto:).
+        await api.setProfile(try .make())
+        let disciplineID = UUID()
+        await api.setTasks(
+            [try .make(title: "Read chapter 4", area: "study", discipline: disciplineID)], on: "2026-03-07")
+        try await sync().refresh()
+        let record = try #require(try records().first)
+        #expect(record.area == "study" && record.disciplineID == disciplineID.uuidString && record.projectID == nil)
+        #expect(record.filing == TaskFiling(area: .study, parent: .discipline(disciplineID.uuidString)))
+    }
+
     @Test func aTaskGoneFromTheServerIsRemoved() async throws {
         await api.setProfile(try .make())
         await api.setTasks([try .make(title: "Old")], on: "2026-03-07")
