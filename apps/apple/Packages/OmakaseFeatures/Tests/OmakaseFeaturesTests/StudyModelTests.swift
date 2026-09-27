@@ -51,22 +51,40 @@ struct StudyModelTests {
         #expect(study.message == "The end, 2026-07-01, is before the start, 2026-08-01.")
     }
 
-    @Test func theChecksCoverEveryForm() {
-        #expect(StudyCheck.problem(.semester(SemesterForm(name: " ", institution: "", startDay: "2026-01-01", endDay: "2026-02-01"), id: nil)) == "A name is needed.")
-        let rotation = SemesterForm(name: "Fall", institution: "", startDay: "2026-01-01", endDay: "2026-02-01", rotationWeeks: 5)
+    @Test func theChecksCoverSemesters() {
+        #expect(
+            StudyCheck.problem(
+                .semester(
+                    SemesterForm(name: " ", institution: "", startDay: "2026-01-01", endDay: "2026-02-01"), id: nil))
+                == "A name is needed.")
+        let rotation = SemesterForm(
+            name: "Fall", institution: "", startDay: "2026-01-01", endDay: "2026-02-01", rotationWeeks: 5)
         #expect(StudyCheck.problem(.semester(rotation, id: nil)) == "The rotation is 5 weeks; it can be 1 to 4.")
-        let late = ClassScheduleForm(disciplineID: "d", dayOfWeek: 0, startTime: "11:00:00", endTime: "10:00:00", classType: "lecture", location: "")
-        #expect(StudyCheck.problem(.schedule(late, id: nil, rotationWeeks: 1)) == "The class ends at 10:00, before it starts at 11:00.")
-        let offRotation = ClassScheduleForm(disciplineID: "d", dayOfWeek: 0, startTime: "10:00:00", endTime: "11:00:00", classType: "lecture", location: "", rotationWeeksOn: [3])
-        #expect(StudyCheck.problem(.schedule(offRotation, id: nil, rotationWeeks: 2)) == "Week 3 is outside the semester's rotation of 2 weeks.")
+    }
+
+    @Test func theChecksCoverClassesAndHolidays() {
+        let late = ClassScheduleForm(
+            disciplineID: "d", dayOfWeek: 0, startTime: "11:00:00", endTime: "10:00:00", classType: "lecture",
+            location: "")
+        #expect(
+            StudyCheck.problem(.schedule(late, id: nil, rotationWeeks: 1))
+                == "The class ends at 10:00, before it starts at 11:00.")
+        let offRotation = ClassScheduleForm(
+            disciplineID: "d", dayOfWeek: 0, startTime: "10:00:00", endTime: "11:00:00", classType: "lecture",
+            location: "", rotationWeeksOn: [3])
+        #expect(
+            StudyCheck.problem(.schedule(offRotation, id: nil, rotationWeeks: 2))
+                == "Week 3 is outside the semester's rotation of 2 weeks.")
         let holiday = HolidayForm(semesterID: "s", name: "Easter", startDay: "2026-04-10", endDay: "2026-04-03")
-        #expect(StudyCheck.problem(.holiday(holiday, id: nil)) == "The end, 2026-04-03, is before the start, 2026-04-10.")
+        #expect(
+            StudyCheck.problem(.holiday(holiday, id: nil)) == "The end, 2026-04-03, is before the start, 2026-04-10.")
     }
 
     @Test func aRefusalKeepsTheFormOpenAndSaysWhy() async {
         recorder.failure = Offline()
         let study = model()
-        study.editing = .discipline(DisciplineForm(semesterID: "s", name: "Calculus", code: "", professor: "", color: "#3b82f6"), id: "d1")
+        study.editing = .discipline(
+            DisciplineForm(semesterID: "s", name: "Calculus", code: "", professor: "", color: "#3b82f6"), id: "d1")
         await study.saveEditing()
         #expect(study.editing != nil && study.message == "Needs a connection.")
     }
@@ -77,7 +95,20 @@ struct StudyModelTests {
         #expect(study.deleting?.warning == "Its disciplines, their classes and its holidays go too.")
         await study.confirmDelete()
         #expect(recorder.calls == ["delete s1"])
-        #expect(StudyModel.Deletion.discipline(id: "d1").warning == "Its classes go too. Its tasks and study blocks stay.")
+        #expect(
+            StudyModel.Deletion.discipline(id: "d1").warning == "Its classes go too. Its tasks and study blocks stay.")
+    }
+
+    @Test func cancellingClosesTheFormAndItsMessage() async {
+        let study = model()
+        study.editing = .holiday(
+            HolidayForm(semesterID: "s", name: "", startDay: "2026-04-03", endDay: "2026-04-03"), id: nil)
+        await study.saveEditing()
+        #expect(study.message == "A name is needed.")
+        study.cancelEditing()
+        #expect(study.editing == nil && study.message == nil)
+        #expect(StudyModel.Deletion.schedule(id: "c").warning == "Its classes leave the calendar.")
+        #expect(StudyModel.Deletion.holiday(id: "h").warning == "Its days have classes again.")
     }
 
     @Test func theDefaultSemesterIsTheOneTodayIsIn() {
