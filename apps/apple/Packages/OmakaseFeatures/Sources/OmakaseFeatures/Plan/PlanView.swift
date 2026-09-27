@@ -149,7 +149,7 @@ private let previewItems = [
     let focus = FocusModel(
         actions: .init(
             toggle: { _ in }, move: { _, _ in }, reschedule: { _, _ in }, toggleSubtask: { _ in },
-            remind: { _, _ in }))
+            remind: { _, _ in }, edit: { _, _ in }))
     let context = PlanTaskContext(focus: focus, day: "2026-09-26")
     PlanView(model: PlanModel { "2026-09-26" }, items: previewItems, tasks: [], context: context)
         .frame(width: 1120, height: 680)
