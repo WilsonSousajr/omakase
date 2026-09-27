@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// The hours as a grid: a time gutter, then a column per visible day, each
-/// with its hour lines, classes behind, blocks in lanes, sessions at the
+/// with its hour lines, Calendar.app's events and classes behind (#229), blocks in lanes, sessions at the
 /// trailing edge, and the now line on today's column. Scrolled to 08:00 on
 /// appear (spec M4, Grid). Each column takes drops (#203).
 struct CalendarGridView: View {
@@ -107,6 +107,11 @@ struct CalendarDayColumnView: View {
             let width = geometry.size.width
             ZStack(alignment: .topLeading) {
                 CalendarHourLinesView(layout: layout)
+                ForEach(ofKind(.externalEvent)) { item in
+                    placed(item, CalendarLayout.blockSpan(lane: nil, width: width)) {
+                        CalendarExternalEventView(item: item)
+                    }
+                }
                 ForEach(ofKind(.classOccurrence)) { item in
                     placed(item, CalendarLayout.blockSpan(lane: nil, width: width)) { CalendarItemView(item: item) }
                 }

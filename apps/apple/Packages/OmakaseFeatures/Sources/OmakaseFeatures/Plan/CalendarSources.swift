@@ -34,7 +34,8 @@ extension CalendarItem {
             title: "Focus", kind: .focusSession)
     }
 
-    private static func minuteOfDay(_ date: Date, calendar: Calendar) -> Int {
+    /// The wall-clock minute of `date` in `calendar`'s zone.
+    static func minuteOfDay(_ date: Date, calendar: Calendar) -> Int {
         let parts = calendar.dateComponents([.hour, .minute], from: date)
         return (parts.hour ?? 0) * 60 + (parts.minute ?? 0)
     }
