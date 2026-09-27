@@ -86,14 +86,20 @@ public struct OutboxMaintenance {
     /// create takes its `local-` task with it, since no server copy will come;
     /// a discarded patch leaves its record, and the next refresh restores the
     /// server's copy once no write protects it (M3.5 spec, Decisions).
+    /// A block's create takes its `local-` block, and so does a task's create
+    /// that a block was placed on, through the block's dependent create (#201).
     public func discard(sequence: Int) throws {
-        let entry = try entry(sequence)
-        let queued = queue.entries(in: .pending) + queue.entries(in: .parked)
-        for discarded in [entry] + OutboxRules.dependents(of: entry, among: queued) { context.delete(discarded) }
-        if let localID = entry.createsLocalID {
+        for discarded in queue.withdraw(try entry(sequence)) { try deleteRecord(createdBy: discarded) }
+        try context.save()
+    }
+
+    private func deleteRecord(createdBy entry: OutboxEntry) throws {
+        guard let localID = entry.createsLocalID else { return }
+        if entry.kind == "block.create" {
+            try context.delete(model: TimeBlockRecord.self, where: #Predicate { $0.id == localID })
+        } else {
             try context.delete(model: TaskRecord.self, where: #Predicate { $0.id == localID })
         }
-        try context.save()
     }
 
     private func entry(_ sequence: Int) throws -> OutboxEntry {
