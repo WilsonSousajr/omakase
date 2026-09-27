@@ -1,23 +1,56 @@
+import Foundation
 import OmakaseFeatures
 import OmakaseStore
 
 extension AppServices {
-    /// A capture saved through the store, so it works offline (M3.5 spec,
-    /// Decisions): Today takes the user's local day, the Inbox none. The
-    /// write then catches up at once, as Focus's writes do (#91).
-    func capture(
-        _ title: String, to destination: CaptureDestination,
-        onOutcome: @escaping @MainActor (SyncCoordinator.Outcome) -> Void
+    /// The last kind a capture used (spec §4), kept beside `omakase.calendarOverlay`.
+    private static let captureAreaKey = "omakase.capture.area"
+
+    /// The capture panel's writes (spec §4): each save goes through the
+    /// store, so it works offline (M3.5 spec, Decisions), and its kind is
+    /// remembered for the next opening.
+    func captureActions(
+        defaults: UserDefaults = .standard, onOutcome: @escaping @MainActor (SyncCoordinator.Outcome) -> Void
+    ) -> CaptureModel.Actions {
+        CaptureModel.Actions(
+            capture: { [self] request in capture(request, onOutcome: onOutcome) },
+            remember: { area in defaults.set(area.rawValue, forKey: Self.captureAreaKey) })
+    }
+
+    /// The kind a capture opens with when its context names none; Work until the first save.
+    func lastCaptureArea(defaults: UserDefaults = .standard) -> TaskArea {
+        TaskArea(storedRaw: defaults.string(forKey: Self.captureAreaKey))
+    }
+
+    /// The places the panel offers, read from the library cache each time it
+    /// opens: the panel is its own root, with none of the window's environment (#214).
+    func capturePlaces() -> PlaceDirectory {
+        PlaceDirectory.load(from: container.mainContext, today: FocusDay().today)
+    }
+
+    /// A capture saved through the store: Today takes the user's local day,
+    /// Plan's day or slot that day, the Inbox none. The write then catches up
+    /// at once, as Focus's writes do (#91).
+    private func capture(
+        _ request: CaptureRequest, onOutcome: @escaping @MainActor (SyncCoordinator.Outcome) -> Void
     ) {
-        let day = destination == .today ? FocusDay().today : nil
+        let day = Self.captureDay(for: request.destination)
         let (coordinator, writes) = (self.coordinator, self.writes)
-        // Work, no parent for now: S4 wires the panel's chosen kind through (spec §1).
-        let filing = TaskFiling(area: .work, parent: nil)
         Task {
             let outcome = try? await coordinator.write {
-                _ = try writes.capture(title: title, day: day, filing: filing)
+                _ = try writes.capture(title: request.title, day: day, filing: request.filing)
             }
             onOutcome(outcome ?? .synced)
+        }
+    }
+
+    private static func captureDay(for destination: CaptureDestination) -> String? {
+        switch destination {
+        case .today: FocusDay().today
+        case .day(let day): day
+        // S11 (#264) adds the slot's block in the same write; until then a slot saves its day.
+        case .slot(let slot): slot.day
+        case .inbox: nil
         }
     }
 }

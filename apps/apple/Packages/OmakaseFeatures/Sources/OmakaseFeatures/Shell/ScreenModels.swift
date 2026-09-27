@@ -3,7 +3,7 @@
 /// the app produces them today: nil until `start()` finishes wiring the
 /// screens, non-nil for the rest of the window's life.
 ///
-///     MainWindowView(day: FocusDay().today, models: screenModels)
+///     MainWindowView(day: FocusDay().today, models: screenModels, openCapture: { capture?.show(context: $0) })
 public struct ScreenModels {
     public let focus: FocusModel?
     public let review: ReviewModel?

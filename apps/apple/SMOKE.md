@@ -499,3 +499,33 @@ is now `MainWindowView`, and its sidebar selection is persisted per window.
    wasn't saved).
 3. File › New Window (still present in this slice). The new window opens
    on Focus, independent of the first window's selection.
+
+## M9 S4 - One capture panel that knows where you are
+
+⌘N, the toolbar's ＋ and ⌥⌘N open one panel, seeded from the screen it was
+opened on, and it asks what the task is for: Work, Study or Life, with an
+optional project or discipline (spec §4, #257). The library must be cached
+(open Projects and Study once, online) so the parent chip has places.
+
+1. On Focus, press ⌘N. The capture panel opens - not a new window - and
+   its hint reads `⌘1–3 kind · ⏎ Today · ⌘⏎ Inbox · ⎋ dismiss`. ⎋ closes it.
+2. Select Plan and page to another day with ›. Press ⌘N. The hint reads
+   `⏎ <that day>`, for example `⏎ Tue 29`.
+3. Press ⌘2. The Study chip is selected, and the parent chip reads
+   "No discipline"; its menu lists the current semester's disciplines
+   and "None". ⌘3 (Life) hides the parent chip; ⌘1 (Work) shows it again
+   as "No project", listing projects under each workspace's name.
+4. Press ⌘2 again, pick a discipline from the chip, type "Smoke test M9
+   S4" and press ⏎. The panel closes, and the task appears on Plan on that
+   day (and in Focus, if that day is today).
+   - `curl ".../api/v1/tasks/?search=Smoke%20test%20M9"` shows it with
+     `"area": "study"` and that discipline's id in `"discipline"`.
+5. Switch to another app and press ⌥⌘N. The panel opens over it with
+   Study already selected (the last kind saved) and ⏎ Today.
+6. Type "Smoke test inbox" and press ⌘⏎. It lands in the Inbox, with no
+   date.
+7. Click the toolbar's ＋ (tooltip "New Task (⌘N)"). The panel opens, as
+   ⌘N does on the same screen.
+8. Close the main window (⌘W) with the app still running. File › New Task
+   is still enabled, and ⌘N opens the panel with the last kind and ⏎ Today.
+9. Quit and relaunch. ⌥⌘N opens with the kind last saved (step 6's).

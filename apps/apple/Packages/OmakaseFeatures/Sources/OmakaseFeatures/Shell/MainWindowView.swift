@@ -5,15 +5,18 @@ import SwiftUI
 /// S7) and the detail each one shows. Moved out of the app target (#256) so
 /// later M9 slices can grow and test it without `OmakaseMac`. No visible
 /// change from the window `OmakaseMacApp` used to build inline (spec §3).
+/// It publishes where a new task would go, for ⌘N, and its toolbar's ＋
+/// opens capture with the same context (spec §4, #257).
 ///
-///     MainWindowView(day: FocusDay().today, models: screenModels)
+///     MainWindowView(day: FocusDay().today, models: screenModels, openCapture: { capture?.show(context: $0) })
 public struct MainWindowView: View {
     private let day: String
     private let models: ScreenModels
+    private let openCapture: (CaptureContext) -> Void
     @SceneStorage("omakase.sidebar") private var selectionRaw = SidebarSelection.item(.focus).rawValue
 
-    public init(day: String, models: ScreenModels) {
-        (self.day, self.models) = (day, models)
+    public init(day: String, models: ScreenModels, openCapture: @escaping (CaptureContext) -> Void) {
+        (self.day, self.models, self.openCapture) = (day, models, openCapture)
     }
 
     public var body: some View {
@@ -29,7 +32,19 @@ public struct MainWindowView: View {
             if let failedWrites = models.failedWrites {
                 ToolbarItem(placement: .primaryAction) { SyncIndicatorView(model: failedWrites) }
             }
+            // Until S8 settles the toolbar (spec §7): ＋ opens capture as ⌘N does.
+            ToolbarItem(placement: .primaryAction) {
+                Button("New Task", systemImage: "plus") { openCapture(captureContext) }
+                    .help("New Task (⌘N)")
+            }
         }
+        .focusedSceneValue(\.newTaskContext, captureContext)
+    }
+
+    /// Where ⌘N and ＋ file a new task from the screen shown (spec §4's
+    /// table); reading Plan's anchor day follows it as Plan pages.
+    private var captureContext: CaptureContext {
+        .forSelection(selection, planDay: models.plan?.anchorDay)
     }
 
     @ViewBuilder private var detail: some View {

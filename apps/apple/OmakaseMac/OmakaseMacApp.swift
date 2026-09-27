@@ -76,7 +76,7 @@ struct OmakaseMacApp: App {
 
     @ViewBuilder private var content: some View {
         if signedIn {
-            MainWindowView(day: day, models: screenModels)
+            MainWindowView(day: day, models: screenModels) { capture?.show(context: $0) }
         } else if let signIn {
             SignInView(model: signIn).onChange(of: signIn.state) { _, state in
                 guard case .signedIn = state else { return }
@@ -106,9 +106,9 @@ struct OmakaseMacApp: App {
         self.timer = timer
         services.startTicking(timer)
         startSyncIndicator()
-        capture = GlobalCapture { [services] title, destination in
-            services.capture(title, to: destination) { handle($0) }
-        }
+        capture = GlobalCapture(
+            actions: services.captureActions { handle($0) }, directory: { [services] in services.capturePlaces() },
+            lastArea: { [services] in services.lastCaptureArea() })
         signedIn = await api.hasStoredSession()
         services.startBackgroundCatchUp(onPathChange: { failedWrites?.setPathOnline($0) }, onOutcome: { handle($0) })
     }
