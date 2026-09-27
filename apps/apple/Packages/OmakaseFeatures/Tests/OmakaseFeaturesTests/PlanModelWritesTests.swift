@@ -17,7 +17,8 @@ final class PlanActionsRecorder {
             move: { self.calls.append("move \($0) \(Self.line($1))") },
             delete: { self.calls.append("delete \($0)") },
             cancelClass: { self.calls.append("cancel class \($0)") },
-            restoreClass: { self.calls.append("restore class \($0)") })
+            restoreClass: { self.calls.append("restore class \($0)") },
+            capture: { self.calls.append("capture \(Self.line($0))") })
     }
 
     static func line(_ placement: PlanPlacement) -> String {
@@ -172,10 +173,30 @@ struct PlanModelWritesTests {
         #expect(recorder.calls == ["delete b1"])
     }
 
+    // MARK: A drawn slot (spec §9, #264)
+
+    @Test func aSlotDrawnOnTheGridOpensCaptureWithIt() {
+        model().drawSlot(day: day, from: offset(15), to: offset(14))
+        #expect(recorder.calls == ["capture 2026-09-26 14:00:00-15:00:00"])
+    }
+
+    @Test func aSlotDrawnOverABlockOpensCaptureWithoutAsking() {
+        let plan = model()
+        plan.drawSlot(day: day, from: offset(13), to: offset(16))
+        #expect(plan.pending == nil)
+        #expect(recorder.calls == ["capture 2026-09-26 13:00:00-16:00:00"])
+    }
+
+    @Test func aBareClickOnTheGridOpensNothing() {
+        model().drawSlot(day: day, from: offset(14), to: offset(14) + 1)
+        #expect(recorder.calls.isEmpty)
+    }
+
     @Test func withoutActionsADropStillAnswers() {
         let plan = PlanModel { "2026-09-26" }
         plan.show()
         plan.deleteBlock("b1")
+        plan.drawSlot(day: day, from: offset(14), to: offset(15))
         #expect(plan.drop("task:t1", day: day, offset: offset(10), items: []))
         #expect(plan.drop("block:b1", day: day, offset: offset(12), items: [block("b1", 600, 660)]))
     }

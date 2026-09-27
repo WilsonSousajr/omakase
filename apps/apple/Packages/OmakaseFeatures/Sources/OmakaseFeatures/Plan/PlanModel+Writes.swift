@@ -12,8 +12,9 @@ public struct PlanPendingPlacement: Equatable, Sendable {
 
 extension PlanModel {
     /// What Plan asks the app for: the visible days read (#200), block
-    /// writes through the outbox (#201), by task or block id, and a class
-    /// cancelled or restored on its date (#207), by occurrence id.
+    /// writes through the outbox (#201), by task or block id, a class
+    /// cancelled or restored on its date (#207), by occurrence id, and
+    /// capture opened on a slot drawn on the grid (spec §9, #264).
     public struct Actions {
         let refresh: ([String]) -> Void
         let create: (String, PlanPlacement) -> Void
@@ -21,14 +22,16 @@ extension PlanModel {
         let delete: (String) -> Void
         let cancelClass: (String) -> Void
         let restoreClass: (String) -> Void
+        let capture: (PlanPlacement) -> Void
 
         public init(
             refresh: @escaping ([String]) -> Void, create: @escaping (String, PlanPlacement) -> Void,
             move: @escaping (String, PlanPlacement) -> Void, delete: @escaping (String) -> Void,
-            cancelClass: @escaping (String) -> Void = { _ in }, restoreClass: @escaping (String) -> Void = { _ in }
+            cancelClass: @escaping (String) -> Void = { _ in }, restoreClass: @escaping (String) -> Void = { _ in },
+            capture: @escaping (PlanPlacement) -> Void = { _ in }
         ) {
             (self.refresh, self.create, self.move, self.delete) = (refresh, create, move, delete)
-            (self.cancelClass, self.restoreClass) = (cancelClass, restoreClass)
+            (self.cancelClass, self.restoreClass, self.capture) = (cancelClass, restoreClass, capture)
         }
 
         /// No reads and no writes: previews, and a model built before the app wires one.
@@ -67,6 +70,16 @@ extension PlanModel {
     public func resize(_ block: CalendarItem, bottom: CGFloat, items: [CalendarItem]) {
         guard let placement = PlanDrop.resize(block, bottom: bottom, layout: .standard) else { return }
         propose(.block(block.id), placement, items: items)
+    }
+
+    /// A slot drawn on `day`'s empty grid between two offsets: capture opens
+    /// with it, and ⏎ there makes the task and its block (spec §9, #264). A
+    /// bare click draws nothing. Unlike a drop, it never asks about overlaps
+    /// (`propose`): the user drew it there on purpose (spec §9).
+    public func drawSlot(day: String, from startOffset: CGFloat, to endOffset: CGFloat) {
+        let slot = PlanDrop.slot(day: day, from: startOffset, to: endOffset, layout: .standard)
+        guard let slot else { return }
+        actions.capture(slot)
     }
 
     public func confirmPending() {
