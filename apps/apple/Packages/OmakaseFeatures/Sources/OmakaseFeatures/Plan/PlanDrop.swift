@@ -12,6 +12,9 @@ public struct PlanPlacement: Equatable, Sendable {
 
     public init(day: String, start: Int, end: Int) { (self.day, self.start, self.end) = (day, start, end) }
 
+    /// Where `item` is now, to tell a move that changes nothing.
+    init(of item: CalendarItem) { self.init(day: item.day, start: item.start, end: item.end) }
+
     public var startTime: String { Self.clock(start) }
     public var endTime: String { Self.clock(end) }
     public var minutes: Int { end - start }

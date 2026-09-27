@@ -14,6 +14,12 @@ public enum PlanDragPayload: Equatable, Sendable {
         self = match.1 == "task" ? .task(id) : .block(id)
     }
 
+    /// The block being moved; nil for a task.
+    public var blockID: String? {
+        guard case .block(let id) = self else { return nil }
+        return id
+    }
+
     public var text: String {
         switch self {
         case .task(let id): "task:\(id)"
