@@ -10,7 +10,26 @@ for each milestone.
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-09-27
+
+The first release with the native macOS client. The API is not frozen below
+1.0, and this release stays 0.x until the in-app smoke runs pass.
+
 ### Added
+
+- **The native macOS client** (M1-M5, M8). It covers:
+  - sign-in with Google
+  - Focus with the pomodoro timer
+  - Plan, a day and week calendar
+  - Review and shutdown
+  - the Inbox and ⌥⌘N capture
+  - Projects, Study, and Settings (⌘,)
+  - reminders and recurring tasks
+  - a read-only Calendar.app overlay
+
+  The daily loop works offline through an outbox; library edits are
+  online-only. `docs/parity-checklist.md` maps each web page to its Mac screen
+  and the smoke run that proves it.
 
 - **`GET /api/health/`** (#243), outside `api/v1`: 200 `{"status": "ok"}`
   when the database answers `SELECT 1`, 503 `{"status": "unavailable"}`
@@ -174,6 +193,10 @@ for each milestone.
   (#65)
 
 ### Removed
+
+- **The SSH deploy workflow and `docker-compose.prod.yml`** (#244). Coolify
+  deploys `main` from `docker-compose.coolify.yml`
+  (`docs/deploy-coolify.md`).
 
 - **The Next.js web client.** The repository is the API alone until the
   native macOS client. The compose service, CI jobs, pre-commit hook and env
