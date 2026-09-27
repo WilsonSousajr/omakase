@@ -11,9 +11,10 @@ public struct CalendarNow: Equatable, Sendable {
 
 /// What Plan shows (spec M4, N1): a day or a week around an anchor day,
 /// moved by Today, ‹ and ›. The week starts on Monday: the profile has no
-/// week-start preference to read.
+/// week-start preference to read. Its writes and range reads are injected
+/// (#203), so the app wires them to the outbox and tests record them.
 ///
-///     let plan = PlanModel { FocusDay().today }
+///     let plan = PlanModel(actions: services.planActions { handle($0) }) { FocusDay().today }
 ///     plan.mode = .week; plan.next()   // the following week
 @Observable
 @MainActor
@@ -25,11 +26,19 @@ public final class PlanModel {
 
     public var mode: Mode
     public private(set) var anchorDay: String
+    /// A drop that overlaps a block, waiting on "Place anyway?".
+    public internal(set) var pending: PlanPendingPlacement?
     public let calendar: Calendar
     private let today: () -> String
+    @ObservationIgnored let actions: Actions
+    /// Catch-ups refresh the range only while Plan is on screen.
+    @ObservationIgnored var isShowing = false
 
-    public init(mode: Mode = .day, calendar: Calendar = PlanModel.weekCalendar(), today: @escaping () -> String) {
-        (self.mode, self.calendar, self.today) = (mode, calendar, today)
+    public init(
+        mode: Mode = .day, calendar: Calendar = PlanModel.weekCalendar(), actions: Actions = .none,
+        today: @escaping () -> String
+    ) {
+        (self.mode, self.calendar, self.actions, self.today) = (mode, calendar, actions, today)
         anchorDay = today()
     }
 

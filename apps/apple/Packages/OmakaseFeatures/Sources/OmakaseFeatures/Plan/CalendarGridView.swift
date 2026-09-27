@@ -3,7 +3,7 @@ import SwiftUI
 /// The hours as a grid: a time gutter, then a column per visible day, each
 /// with its hour lines, classes behind, blocks in lanes, sessions at the
 /// trailing edge, and the now line on today's column. Scrolled to 08:00 on
-/// appear (spec M4, Grid).
+/// appear (spec M4, Grid). Each column takes drops (#203).
 struct CalendarGridView: View {
     static let gutter: CGFloat = 56
     static let openingHour = 8
@@ -33,7 +33,7 @@ struct CalendarGridView: View {
                     CalendarTimeGutterView(layout: layout)
                     ForEach(model.visibleDays, id: \.self) { day in
                         CalendarDayColumnView(
-                            items: items.filter { $0.day == day }, lanes: lanes, layout: layout,
+                            day: day, model: model, items: items, lanes: lanes, layout: layout,
                             now: day == now.day ? now : nil)
                     }
                 }
@@ -84,13 +84,23 @@ struct CalendarTimeGutterView: View {
     }
 }
 
-/// One day: hour lines, then its items placed by `CalendarLayout`.
+/// One day: hour lines, then its items placed by `CalendarLayout`. A drop
+/// lands at its y, snapped by `PlanDrop` (#203).
 struct CalendarDayColumnView: View {
+    /// The column's own space, so a drop's and a resize's y are grid offsets.
+    static let space = "plan.column"
+
+    let day: String
+    let model: PlanModel
+    /// Every visible item: a block dropped here may come from another day.
     let items: [CalendarItem]
     let lanes: [String: CalendarLane]
     let layout: CalendarLayout
     /// Set on today's column only.
     let now: CalendarNow?
+    /// The block whose bottom edge is being dragged, at its previewed end.
+    @State private var resizing: CalendarItem?
+    @State private var isTargeted = false
 
     var body: some View {
         GeometryReader { geometry in
@@ -100,22 +110,38 @@ struct CalendarDayColumnView: View {
                 ForEach(ofKind(.classOccurrence)) { item in
                     placed(item, CalendarLayout.blockSpan(lane: nil, width: width)) { CalendarItemView(item: item) }
                 }
-                ForEach(ofKind(.block)) { item in
-                    placed(item, CalendarLayout.blockSpan(lane: lanes[item.id], width: width)) {
-                        CalendarItemView(item: item)
-                    }
-                }
+                blocks(width: width)
                 ForEach(ofKind(.focusSession)) { item in
                     placed(item, CalendarLayout.sessionSpan(width: width)) { CalendarSessionView(item: item) }
                 }
                 nowMark
             }
         }
+        .coordinateSpace(.named(Self.space))
         .frame(height: layout.totalHeight)
+        .background(Palette.surface.color.opacity(isTargeted ? 0.35 : 0))
+        .dropDestination(for: String.self) { texts, location in
+            texts.first.map { model.drop($0, day: day, offset: location.y, items: items) } ?? false
+        } isTargeted: {
+            isTargeted = $0
+        }
         .overlay(alignment: .leading) { Rectangle().fill(Palette.hairline.color).frame(width: 1) }
     }
 
-    private func ofKind(_ kind: CalendarItem.Kind) -> [CalendarItem] { items.filter { $0.kind == kind } }
+    private func blocks(width: CGFloat) -> some View {
+        ForEach(ofKind(.block)) { item in
+            placed(
+                resizing?.id == item.id ? resizing ?? item : item,
+                CalendarLayout.blockSpan(lane: lanes[item.id], width: width)
+            ) {
+                PlanBlockView(item: item, model: model, items: items, layout: layout, resizing: $resizing)
+            }
+        }
+    }
+
+    private func ofKind(_ kind: CalendarItem.Kind) -> [CalendarItem] {
+        items.filter { $0.day == day && $0.kind == kind }
+    }
 
     @ViewBuilder
     private func placed(_ item: CalendarItem, _ span: CalendarSpan, content: () -> some View) -> some View {

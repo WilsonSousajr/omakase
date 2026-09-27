@@ -192,3 +192,45 @@ localhost:8000/api/v1`. Allow notifications when macOS asks.
 5. Set `shutdown_reminder_time` a few minutes ahead
    (`PATCH …/auth/profile/`), refresh, and shut the day down in Review
    before it fires: no shutdown reminder arrives.
+
+## M4
+
+Plan, against the same stack. `<today>` and `<tomorrow>` are the Mac's
+local dates, and `curl …` is `curl -H "Authorization: Bearer <token>"
+localhost:8000/api/v1`. Seed first:
+- three tasks scheduled today, "Essay", "Review PR" and "Reply to Ana"
+- a class on today's weekday, through the API: a semester, a discipline
+  with a colour, then its schedule:
+  `curl -X POST -H "Content-Type: application/json" -d '{"name":"Term","start_date":"<a month ago>","end_date":"<in two months>"}' "…/study/semesters/"`,
+  `curl -X POST -H "Content-Type: application/json" -d '{"semester":"<id>","name":"Linear algebra","color":"#4F46E5"}' "…/study/disciplines/"`,
+  `curl -X POST -H "Content-Type: application/json" -d '{"discipline":"<id>","day_of_week":<0 is Monday>,"start_time":"08:00","end_time":"09:30"}' "…/study/classschedules/"`
+
+1. Plan opens on today, scrolled to 08:00. Switch to Week: seven columns,
+   Monday first, with today's header in ink and the shu now line on its
+   column. Back to Day.
+2. The class sits at 08:00-09:30 behind the grid, dashed with a book glyph,
+   in indigo. It can't be dragged.
+3. Drag "Essay" from the column onto 10:00. A 10:00-11:00 block appears at
+   once.
+   - `curl "…/timeblocks/?date=<today>"` has it, `10:00:00`-`11:00:00`.
+   - `curl "…/tasks/<id>/"` has `"scheduled_date": "<today>"`.
+4. Week view: drag the block onto tomorrow's column at 14:00. It moves,
+   still an hour long and still titled "Essay", although the task leaves
+   the column.
+   - `curl "…/timeblocks/?date=<tomorrow>"` has it at `14:00:00`.
+   - The task's `scheduled_date` is `<tomorrow>`.
+5. Drag the block's bottom edge down 30 minutes: it grows as you drag, in
+   15-minute steps, and ends 90 minutes long. `curl` has `15:30:00`.
+6. Drag "Review PR" onto tomorrow at 14:30. The dialog says "Overlaps
+   Essay. Place anyway?". Cancel: nothing is created. Drag it again and
+   Place anyway: the two blocks stand side by side.
+7. Right-click the "Review PR" block, Delete block: it goes, and
+   `curl "…/timeblocks/?date=<tomorrow>"` no longer lists it.
+8. `docker-compose stop backend`. Drag "Reply to Ana" onto today at 16:00: the
+   block shows at once and the toolbar says a write is pending.
+   `docker-compose start backend`; after the catch-up, `curl
+   "…/timeblocks/?date=<today>"` lists exactly one 16:00 block
+   (the replayed create is idempotent, #199).
+9. Select "Essay" in Focus and run a focus session to the end (or shorten
+   the profile's pomodoro to 1 minute). Back in Plan, a thin grey lane is
+   drawn beside the block at the times it ran. Breaks are not drawn.

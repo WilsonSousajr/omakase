@@ -1,9 +1,8 @@
 import SwiftUI
 
 /// Plan (spec M4, N1): the tasks to plan from on the left, then the day or
-/// week as a calendar. It draws values, not records, so classes and focus
-/// sessions (#200) join `items` without the view changing; dragging (#203)
-/// comes later, so this is read-only.
+/// week as a calendar. It draws values, not records. A task dragged onto a
+/// slot makes a block, and a drop that overlaps asks first (#203).
 ///
 ///     PlanView(model: plan, items: blocks + classes + sessions, tasks: cards)
 public struct PlanView: View {
@@ -26,6 +25,15 @@ public struct PlanView: View {
             }
         }
         .navigationTitle("Plan")
+        .confirmationDialog(model.pending?.question ?? "", isPresented: isAsking, titleVisibility: .visible) {
+            Button("Place anyway") { model.confirmPending() }
+            Button("Cancel", role: .cancel) { model.cancelPending() }
+        }
+    }
+
+    /// Up while an overlapping drop waits; dismissing it cancels the drop.
+    private var isAsking: Binding<Bool> {
+        Binding(get: { model.pending != nil }, set: { if !$0 { model.cancelPending() } })
     }
 }
 
@@ -71,7 +79,9 @@ struct PlanTasksColumnView: View {
             } else {
                 ScrollView {
                     VStack(alignment: .leading, spacing: Spacing.small) {
-                        ForEach(open) { PlanTaskRowView(card: $0) }
+                        ForEach(open) { card in
+                            PlanTaskRowView(card: card).draggable(PlanDragPayload.task(card.id).text)
+                        }
                     }
                     .padding(Spacing.large)
                 }
