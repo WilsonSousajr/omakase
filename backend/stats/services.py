@@ -75,7 +75,9 @@ def _estimate_totals(items: QuerySet) -> dict[str, int]:
 
 def _class_minutes(user, day: datetime.date) -> int:
     """Minutes of `user`'s classes on `day`, from the weekly timetable."""
-    return sum(_minutes_between(occ["start_time"], occ["end_time"]) for occ in class_occurrences(user, day, day))
+    # A cancelled class is shown struck through, not planned time (#125).
+    occurrences = [occ for occ in class_occurrences(user, day, day) if not occ["is_cancelled"]]
+    return sum(_minutes_between(occ["start_time"], occ["end_time"]) for occ in occurrences)
 
 
 def _minutes_between(start: datetime.time, end: datetime.time) -> int:
