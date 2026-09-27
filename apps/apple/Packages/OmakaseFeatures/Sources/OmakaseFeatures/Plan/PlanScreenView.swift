@@ -31,13 +31,16 @@ public struct PlanScreenView: View {
     }
 
     public var body: some View {
-        PlanView(
-            model: model, items: blockItems + classItems + sessionItems, tasks: tasks.map { FocusCard(record: $0) },
-            context: PlanTaskContext(
-                focus: focus, day: day, cards: parentTasks.map { FocusCard(record: $0) }, onEdit: onEdit))
+        PlanView(model: model, items: blockItems + classItems + sessionItems, tasks: columnCards, context: context)
         .onAppear { model.show() }
         .onDisappear { model.hide() }
         .onChange(of: model.visibleDays) { model.refreshRange() }
+    }
+
+    private var columnCards: [FocusCard] { tasks.map { FocusCard(record: $0) } }
+
+    private var context: PlanTaskContext {
+        PlanTaskContext(focus: focus, day: day, cards: parentTasks.map { FocusCard(record: $0) }, onEdit: onEdit)
     }
 
     private var blockItems: [CalendarItem] {

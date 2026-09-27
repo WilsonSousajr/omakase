@@ -150,9 +150,8 @@ private let previewItems = [
         actions: .init(
             toggle: { _ in }, move: { _, _ in }, reschedule: { _, _ in }, toggleSubtask: { _ in },
             remind: { _, _ in }))
-    PlanView(
-        model: PlanModel { "2026-09-26" }, items: previewItems, tasks: [],
-        context: PlanTaskContext(focus: focus, day: "2026-09-26"))
+    let context = PlanTaskContext(focus: focus, day: "2026-09-26")
+    PlanView(model: PlanModel { "2026-09-26" }, items: previewItems, tasks: [], context: context)
         .frame(width: 1120, height: 680)
         .preferredColorScheme(.dark)
 }
