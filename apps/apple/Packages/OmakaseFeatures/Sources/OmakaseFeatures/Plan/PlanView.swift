@@ -1,35 +1,52 @@
 import SwiftUI
 
 /// Plan (spec M4, N1): the tasks to plan from on the left, then the day or
-/// week as a calendar. It draws values, not records. A task dragged onto a
-/// slot makes a block, and a drop that overlaps asks first (#203).
+/// week as a calendar, then, while something is selected, its panel (#217).
+/// It draws values, not records. A task dragged onto a slot makes a block,
+/// and a drop that overlaps asks first (#203).
 ///
-///     PlanView(model: plan, items: blocks + classes + sessions, tasks: cards)
+///     PlanView(model: plan, items: blocks + classes + sessions, tasks: cards, context: context)
 public struct PlanView: View {
+    static let panelWidth: CGFloat = 340
+
     private let model: PlanModel
     private let items: [CalendarItem]
     private let tasks: [FocusCard]
+    private let context: PlanTaskContext
 
-    public init(model: PlanModel, items: [CalendarItem], tasks: [FocusCard]) {
-        (self.model, self.items, self.tasks) = (model, items, tasks)
+    public init(model: PlanModel, items: [CalendarItem], tasks: [FocusCard], context: PlanTaskContext) {
+        (self.model, self.items, self.tasks, self.context) = (model, items, tasks, context)
     }
 
     public var body: some View {
         HStack(spacing: 0) {
-            PlanTasksColumnView(board: FocusBoard(cards: tasks), model: model, onEdit: nil).frame(width: 380)
+            PlanTasksColumnView(board: FocusBoard(cards: tasks), model: model, onEdit: context.onEdit)
+                .frame(width: 380)
             Divider().overlay(Palette.hairline.color)
             VStack(spacing: 0) {
                 PlanHeaderView(model: model)
                 Divider().overlay(Palette.hairline.color)
-                CalendarGridView(model: model, items: items)
+                CalendarGridView(model: model, items: items, onEdit: context.onEdit)
+            }
+            if model.selection != nil {
+                Divider().overlay(Palette.hairline.color)
+                PlanDetailPanelView(model: model, items: items, cards: known, context: context)
+                    .frame(width: Self.panelWidth)
             }
         }
+        .onChange(of: items, initial: true) { keepSelection() }
+        .onChange(of: known) { keepSelection() }
         .navigationTitle("Plan")
         .confirmationDialog(model.pending?.question ?? "", isPresented: isAsking, titleVisibility: .visible) {
             Button("Place anyway") { model.confirmPending() }
             Button("Cancel", role: .cancel) { model.cancelPending() }
         }
     }
+
+    /// Every task the panel can show: the column's and the other cached ones.
+    private var known: [FocusCard] { tasks + context.cards }
+
+    private func keepSelection() { model.keepSelection(taskIDs: Set(known.map(\.id)), items: items) }
 
     /// Up while an overlapping drop waits; dismissing it cancels the drop.
     private var isAsking: Binding<Bool> {
@@ -129,7 +146,13 @@ private let previewItems = [
 ]
 
 #Preview("Plan, dark") {
-    PlanView(model: PlanModel { "2026-09-26" }, items: previewItems, tasks: [])
+    let focus = FocusModel(
+        actions: .init(
+            toggle: { _ in }, move: { _, _ in }, reschedule: { _, _ in }, toggleSubtask: { _ in },
+            remind: { _, _ in }))
+    PlanView(
+        model: PlanModel { "2026-09-26" }, items: previewItems, tasks: [],
+        context: PlanTaskContext(focus: focus, day: "2026-09-26"))
         .frame(width: 1120, height: 680)
         .preferredColorScheme(.dark)
 }

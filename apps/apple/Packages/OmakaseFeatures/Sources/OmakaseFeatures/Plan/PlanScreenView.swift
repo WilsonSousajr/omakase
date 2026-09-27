@@ -7,9 +7,12 @@ import SwiftUI
 /// the day's open tasks. The visible days are read when Plan shows, when
 /// they change, and after each catch-up while it shows (M4 spec, Decisions).
 ///
-///     PlanScreenView(day: "2026-09-26", model: plan)
+///     PlanScreenView(day: "2026-09-26", model: plan, focus: focus)
 public struct PlanScreenView: View {
     private let model: PlanModel
+    private let day: String
+    private let focus: FocusModel
+    private let onEdit: ((String) -> Void)?
     @Query private var tasks: [TaskRecord]
     /// Every cached task, for titles: a block moved to another day keeps its
     /// parent's name although the column only lists today's tasks (#203).
@@ -19,16 +22,19 @@ public struct PlanScreenView: View {
     @Query private var classes: [ClassOccurrenceRecord]
     @Query private var sessions: [SessionRecord]
 
-    public init(day: String, model: PlanModel) {
-        self.model = model
+    /// `focus` completes, reschedules and reminds from the panel; `onEdit`
+    /// is the task editor's hook, nil until it lands (#217, #218).
+    public init(day: String, model: PlanModel, focus: FocusModel, onEdit: ((String) -> Void)? = nil) {
+        (self.day, self.model, self.focus, self.onEdit) = (day, model, focus, onEdit)
         let target: String? = day
         _tasks = Query(filter: #Predicate<TaskRecord> { $0.scheduledDay == target || $0.isCarriedOver })
     }
 
     public var body: some View {
         PlanView(
-            model: model, items: blockItems + classItems + sessionItems, tasks: tasks.map { FocusCard(record: $0) }
-        )
+            model: model, items: blockItems + classItems + sessionItems, tasks: tasks.map { FocusCard(record: $0) },
+            context: PlanTaskContext(
+                focus: focus, day: day, cards: parentTasks.map { FocusCard(record: $0) }, onEdit: onEdit))
         .onAppear { model.show() }
         .onDisappear { model.hide() }
         .onChange(of: model.visibleDays) { model.refreshRange() }
