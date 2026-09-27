@@ -30,6 +30,8 @@ public final class PlanModel {
     public internal(set) var pending: PlanPendingPlacement?
     /// What the detail panel shows (#217); nil hides the panel.
     public internal(set) var selection: PlanSelection?
+    /// The task #218's editor sheet is open on, or nil when it is closed.
+    public var editingID: String?
     public let calendar: Calendar
     private let today: () -> String
     @ObservationIgnored let actions: Actions

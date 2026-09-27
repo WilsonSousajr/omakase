@@ -33,4 +33,19 @@ extension PlanModel {
         default: return
         }
     }
+
+    /// Opens the task editor (#218) on a task, selecting it too: a
+    /// double-click on a row or a block, or Edit… in the panel.
+    ///
+    ///     plan.beginEditing(card.id)
+    public func beginEditing(_ taskID: String) { (selection, editingID) = (.task(taskID), taskID) }
+
+    /// Return: edits the selected task, or the selected block's task.
+    public func editSelected(in items: [CalendarItem]) {
+        switch selection {
+        case .task(let id): beginEditing(id)
+        case .block: selectedBlock(in: items)?.taskID.map { beginEditing($0) }
+        case nil: return
+        }
+    }
 }
