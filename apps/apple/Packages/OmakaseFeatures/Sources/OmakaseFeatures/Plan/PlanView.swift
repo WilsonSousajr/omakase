@@ -16,7 +16,7 @@ public struct PlanView: View {
 
     public var body: some View {
         HStack(spacing: 0) {
-            PlanTasksColumnView(board: FocusBoard(cards: tasks)).frame(width: 380)
+            PlanTasksColumnView(board: FocusBoard(cards: tasks), model: model, onEdit: nil).frame(width: 380)
             Divider().overlay(Palette.hairline.color)
             VStack(spacing: 0) {
                 PlanHeaderView(model: model)
@@ -64,9 +64,12 @@ struct PlanHeaderView: View {
     }
 }
 
-/// The open tasks the store holds: carried over, in progress, to do.
+/// The open tasks the store holds: carried over, in progress, to do. A
+/// click selects one; a double-click asks to edit it (#217).
 struct PlanTasksColumnView: View {
     let board: FocusBoard
+    let model: PlanModel
+    let onEdit: ((String) -> Void)?
 
     private var open: [FocusCard] { board.carriedOver + board.inProgress + board.toDo }
 
@@ -80,7 +83,9 @@ struct PlanTasksColumnView: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: Spacing.small) {
                         ForEach(open) { card in
-                            PlanTaskRowView(card: card).draggable(PlanDragPayload.task(card.id).text)
+                            PlanTaskRowView(card: card, isSelected: model.selection == .task(card.id))
+                                .planSelectable(select: { model.select(.task(card.id)) }, edit: { onEdit?(card.id) })
+                                .draggable(PlanDragPayload.task(card.id).text)
                         }
                     }
                     .padding(Spacing.large)
@@ -92,9 +97,11 @@ struct PlanTasksColumnView: View {
 }
 
 /// A task to plan: its title, estimate and priority, on an opaque row. No
-/// checkbox, because completing belongs to Focus.
+/// checkbox, because completing belongs to Focus. Selected, it has the
+/// Kanban card's 2-pt accent border (#217).
 struct PlanTaskRowView: View {
     let card: FocusCard
+    var isSelected = false
 
     var body: some View {
         HStack(spacing: Spacing.small) {
@@ -108,6 +115,7 @@ struct PlanTaskRowView: View {
         .padding(.horizontal, Spacing.medium)
         .padding(.vertical, Spacing.small)
         .background(Palette.surface.color, in: .rect(cornerRadius: Radius.medium))
+        .overlay { PlanSelectionBorderView(isSelected: isSelected, radius: Radius.medium) }
     }
 }
 

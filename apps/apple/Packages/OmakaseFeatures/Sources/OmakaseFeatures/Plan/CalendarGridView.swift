@@ -10,6 +10,8 @@ struct CalendarGridView: View {
 
     let model: PlanModel
     let items: [CalendarItem]
+    /// Asks to edit a block's task on a double-click (#217); nil does nothing.
+    var onEdit: ((String) -> Void)?
     let layout = CalendarLayout.standard
     /// Scrolled by points, not to an hour's id: the hour lines' ForEach
     /// shares the gutter's Int ids at offset zero, so `scrollTo(8)` could
@@ -37,7 +39,7 @@ struct CalendarGridView: View {
                 ForEach(model.visibleDays, id: \.self) { day in
                     CalendarDayColumnView(
                         day: day, model: model, items: items, lanes: lanes, layout: layout,
-                        now: day == now.day ? now : nil)
+                        now: day == now.day ? now : nil, onEdit: onEdit)
                 }
             }
             .padding(.vertical, Spacing.medium)
@@ -108,6 +110,7 @@ struct CalendarDayColumnView: View {
     let layout: CalendarLayout
     /// Set on today's column only.
     let now: CalendarNow?
+    var onEdit: ((String) -> Void)?
     /// The block whose bottom edge is being dragged, at its previewed end.
     @State private var resizing: CalendarItem?
     @State private var isTargeted = false
@@ -116,7 +119,10 @@ struct CalendarDayColumnView: View {
         GeometryReader { geometry in
             let width = geometry.size.width
             ZStack(alignment: .topLeading) {
+                // The empty grid under everything: a click there closes the panel (#217).
                 CalendarHourLinesView(layout: layout)
+                    .contentShape(.rect)
+                    .onTapGesture { model.select(nil) }
                 ForEach(ofKind(.classOccurrence)) { item in
                     placed(item, CalendarLayout.blockSpan(lane: nil, width: width)) { CalendarItemView(item: item) }
                 }
@@ -144,7 +150,8 @@ struct CalendarDayColumnView: View {
                 resizing?.id == item.id ? resizing ?? item : item,
                 CalendarLayout.blockSpan(lane: lanes[item.id], width: width)
             ) {
-                PlanBlockView(item: item, model: model, items: items, layout: layout, resizing: $resizing)
+                PlanBlockView(
+                    item: item, model: model, items: items, layout: layout, resizing: $resizing, onEdit: onEdit)
             }
         }
     }
