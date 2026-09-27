@@ -11,6 +11,7 @@ struct OmakaseMacApp: App {
     @State private var section: SidebarItem? = .focus
     @State private var focus: FocusModel?
     @State private var review: ReviewModel?
+    @State private var plan: PlanModel?
     @State private var timer: TimerModel?
     @State private var failedWrites: FailedWritesModel?
     @State private var prompt: SessionPrompt?
@@ -83,6 +84,7 @@ struct OmakaseMacApp: App {
 
     @ViewBuilder private var detail: some View {
         switch section {
+        case .plan: if let plan { PlanScreenView(day: day, model: plan) }
         case .review: if let review { ReviewView(day: day, model: review) }
         case .focus, nil: if let focus, let timer { FocusView(day: day, model: focus, timer: timer) }
         }
@@ -97,6 +99,7 @@ struct OmakaseMacApp: App {
         // still shows (final review C1). The server says otherwise via handle().
         focus = FocusModel(actions: services.focusActions { handle($0) })
         review = ReviewModel(actions: services.reviewActions { handle($0) })
+        plan = PlanModel { FocusDay().today }
         let timer = services.makeTimer { handle($0) }
         self.timer = timer
         services.startTicking(timer)
