@@ -46,6 +46,6 @@ struct PlanBlockView: View {
         guard let placement = PlanDrop.resize(item, bottom: bottom, layout: layout) else { return nil }
         return CalendarItem(
             id: item.id, day: item.day, start: item.start, end: placement.end, title: item.title, kind: item.kind,
-            tint: item.tint)
+            tint: item.tint, taskID: item.taskID)
     }
 }
