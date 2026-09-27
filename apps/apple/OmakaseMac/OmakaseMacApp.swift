@@ -17,7 +17,7 @@ struct OmakaseMacApp: App {
     @State private var failedWrites: FailedWritesModel?
     @State private var prompt: SessionPrompt?
     @State private var capture: GlobalCapture?
-    @State private var confirmingSignOut = false
+    @State private var settings: SettingsModel?
     /// Recomputed when the app becomes active: a window left open overnight
     /// moves to the new day (M1's known limitation).
     @State private var day = FocusDay().today
@@ -39,17 +39,16 @@ struct OmakaseMacApp: App {
                     item: $prompt, onDismiss: { timer?.dismissFinished() },
                     content: { prompt in SessionPromptView(prompt: prompt) { services.apply($0) { handle($0) } } }
                 )
-                .alert(SignOutWarning.title, isPresented: $confirmingSignOut) {
-                    Button(SignOutWarning.confirm, role: .destructive) { Task { await signOut() } }
-                    Button("Cancel", role: .cancel) {}
-                } message: {
-                    Text(SignOutWarning.message(unsent: services.unsentCount()))
-                }
         }
         .modelContainer(services.container)
-        .commands {
-            CaptureCommands(capture: capture, isEnabled: signedIn)
-            AccountCommands(isEnabled: signedIn) { confirmingSignOut = true }
+        .commands { CaptureCommands(capture: capture, isEnabled: signedIn) }
+
+        // ⌘, (#228): signed out, there is no profile to edit.
+        Settings {
+            if signedIn, let settings {
+                SettingsView(model: settings, overlay: calendarOverlay, account: settingsAccount)
+                    .modelContainer(services.container)
+            }
         }
 
         // The running timer from anywhere (spec, Menu bar): its countdown is
@@ -119,6 +118,7 @@ struct OmakaseMacApp: App {
         // still shows (final review C1). The server says otherwise via handle().
         focus = FocusModel(actions: services.focusActions { handle($0) })
         review = ReviewModel(actions: services.reviewActions { handle($0) })
+        settings = SettingsModel(actions: services.settingsActions())
         plan = PlanModel(actions: services.planActions { handle($0) }) { FocusDay().today }
         calendarOverlay = services.makeCalendarOverlay()
         let timer = services.makeTimer { handle($0) }
@@ -150,6 +150,10 @@ struct OmakaseMacApp: App {
         plan?.caughtUp()
         guard section == .plan, let plan, let calendarOverlay else { return }
         Task { await calendarOverlay.refresh(days: plan.visibleDays) }
+    }
+
+    private var settingsAccount: SettingsAccount {
+        SettingsAccount(unsentCount: { services.unsentCount() }, signOut: { Task { await signOut() } })
     }
 
     /// Signed out, the next account starts clean: nothing of this one stays (#224).

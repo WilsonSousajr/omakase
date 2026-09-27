@@ -8,17 +8,17 @@ import SwiftUI
 public struct SettingsView: View {
     @Bindable private var model: SettingsModel
     private let overlay: CalendarOverlayModel?
-    private let signOut: () -> Void
+    private let account: SettingsAccount
     @Query private var profiles: [ProfileRecord]
 
-    public init(model: SettingsModel, overlay: CalendarOverlayModel?, signOut: @escaping () -> Void) {
-        (self.model, self.overlay, self.signOut) = (model, overlay, signOut)
+    public init(model: SettingsModel, overlay: CalendarOverlayModel?, account: SettingsAccount) {
+        (self.model, self.overlay, self.account) = (model, overlay, account)
     }
 
     public var body: some View {
         VStack(spacing: 0) {
             TabView {
-                SettingsAccountTab(model: model, signOut: signOut).tabItem { Label("Account", systemImage: "person") }
+                SettingsAccountTab(model: model, account: account).tabItem { Label("Account", systemImage: "person") }
                 SettingsGeneralTab(model: model).tabItem { Label("General", systemImage: "gearshape") }
                 SettingsFocusTab(model: model).tabItem { Label("Focus", systemImage: "timer") }
                 SettingsRemindersTab(model: model).tabItem { Label("Reminders", systemImage: "bell") }
@@ -50,16 +50,34 @@ func draftBinding<Value>(
         })
 }
 
+/// Signing out from Settings (#224, #228): the count of unsent changes is
+/// read when asked, since the outbox drains while the window is open.
+public struct SettingsAccount {
+    let unsentCount: () -> Int
+    let signOut: () -> Void
+
+    public init(unsentCount: @escaping () -> Int, signOut: @escaping () -> Void) {
+        (self.unsentCount, self.signOut) = (unsentCount, signOut)
+    }
+}
+
 struct SettingsAccountTab: View {
     let model: SettingsModel
-    let signOut: () -> Void
+    let account: SettingsAccount
+    @State private var confirming = false
 
     var body: some View {
         Form {
             LabeledContent("Signed in as", value: model.email ?? "…")
-            Button("Sign Out…", role: .destructive) { signOut() }
+            Button("Sign Out…", role: .destructive) { confirming = true }
         }
         .formStyle(.grouped)
+        .alert(SignOutWarning.title, isPresented: $confirming) {
+            Button(SignOutWarning.confirm, role: .destructive) { account.signOut() }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text(SignOutWarning.message(unsent: account.unsentCount()))
+        }
     }
 }
 
