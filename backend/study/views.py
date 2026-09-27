@@ -8,11 +8,12 @@ from rest_framework.views import APIView
 
 from omakase.client_dates import parse_client_date
 
-from .models import ClassSchedule, Discipline, Semester, StudyBlock
+from .models import ClassSchedule, Discipline, Holiday, Semester, StudyBlock
 from .serializers import (
     ClassOccurrenceSerializer,
     ClassScheduleSerializer,
     DisciplineSerializer,
+    HolidaySerializer,
     SemesterSerializer,
     StudyBlockSerializer,
 )
@@ -124,6 +125,35 @@ class ClassScheduleViewSet(viewsets.ModelViewSet):
         if discipline and discipline.semester.user != self.request.user:
             raise PermissionDenied("You do not own this discipline.")
         serializer.save()
+
+
+class HolidayFilter(filters.FilterSet):
+    class Meta:
+        model = Holiday
+        fields = ["semester"]
+
+
+class HolidayViewSet(viewsets.ModelViewSet):
+    """A semester's holidays (#125), scoped through the semester's owner."""
+
+    serializer_class = HolidaySerializer
+    filterset_class = HolidayFilter
+
+    def get_queryset(self):
+        return Holiday.objects.filter(semester__user=self.request.user).order_by("start_date")
+
+    def perform_create(self, serializer):
+        self._check_semester_owner(serializer)
+        serializer.save()
+
+    def perform_update(self, serializer):
+        self._check_semester_owner(serializer)
+        serializer.save()
+
+    def _check_semester_owner(self, serializer) -> None:
+        semester = serializer.validated_data.get("semester")
+        if semester and semester.user != self.request.user:
+            raise PermissionDenied("You do not own this semester.")
 
 
 class ClassOccurrenceView(APIView):
