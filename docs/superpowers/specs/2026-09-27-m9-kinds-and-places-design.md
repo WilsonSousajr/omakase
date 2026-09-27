@@ -99,7 +99,7 @@ It also gets a computed `filing`.
 
 **Contract fixture, test only:** `task_create.json`, a `POST tasks/` with `area=study` and a discipline. It is written by `backend/tools/tests/test_contract_fixtures.py` and decoded in the Swift DTO tests.
 
-## 2. Kind colours and motion tokens (S2)
+## 2. Kind colours, motion tokens and the place directory (S2)
 
 `OmakaseFeatures/Design/KindTint.swift` holds the kind colours. Measured on 2026-09-27:
 
@@ -141,6 +141,20 @@ Colour here is data, so it survives the monochrome rule (Principle 3).
 - `MotionTests` pins that mapping; both `Animation` and `ContentTransition` are Equatable.
 - A SwiftLint custom rule, `raw_animation`, rejects `withAnimation(` and `.animation(` outside `Motion.swift`, so no screen can bypass Reduce Motion.
 - Tokens are statics on plain enums, never on a View (#233).
+
+**`OmakaseFeatures/Places/PlaceDirectory.swift`** answers "what is this task's
+place called, and what colour does it show?". Capture (§4), rows (§8) and
+blocks (§9) all ask, so it lands here rather than with capture.
+
+- `PlaceDirectory.load(from:today:)` reads the library cache:
+  - active projects, grouped by workspace;
+  - the active semester that contains today (else the latest active one)
+    and its active disciplines.
+- `places(for:)` lists a kind's places, and `mark(for:)` gives a filing's
+  title and colour.
+- It reaches views as the `placeDirectory` environment value, and is
+  handed to the capture panel and the menu-bar panel, which are their own
+  roots.
 
 ## 3. The window moves into Features (S3)
 
@@ -305,7 +319,7 @@ Every screen puts its controls in the window's toolbar and names itself with `na
 ## 9. Calendar (S10, S11)
 
 **Blocks wear their kind (S10):**
-- `CalendarItem.block(_:parents:)` takes its tint from `KindTint.mark`. A study block takes its discipline's colour.
+- `CalendarItem.block(_:titles:marks:)` takes its tint from `KindTint.mark`. A study block takes its discipline's colour.
 - `CalendarItemView` draws a 3-pt bar and a faint fill of that colour on the opaque `surface`, the title, a time line when the block is tall enough, and the kind's glyph.
 - Class occurrences keep their dashed outline and `book`.
 - Today's column is lifted: a faint surface and an emphasised header.
@@ -391,15 +405,15 @@ Each row is one issue, one branch and one PR to `develop`. `S1 →` means "after
 |---|---|---|
 | S0 | `docs(M9): the kinds, places and capture design` (#252) | - |
 | S1 | `feat(M9): a task knows its kind and parent` | S0 |
-| S2 | `feat(M9): kind colours and motion tokens` | S0 |
+| S2 | `feat(M9): kind colours, motion tokens and the place directory` | S1 |
 | S3 | `refactor(M9): the main window moves into Features` | S0 |
 | S4 | `feat(M9): one capture panel that knows where you are` | S1, S2, S3 |
-| S5 | `feat(M9): re-file a task from the editor and the Inbox` | S4 |
+| S5 | `feat(M9): re-file a task from the editor and the Inbox` | S4, S6 |
 | S6 | `feat(M9): a place's task list` | S1, S3 |
 | S7 | `feat(M9): the sidebar shows your day and your places` | S4, S6 |
 | S8 | `feat(M9): native toolbar and one screen header` | S7 |
 | S9 | `feat(M9): calmer task rows` | S1, S2 |
 | S10 | `feat(M9): calendar blocks wear their kind` | S1, S2 |
 | S11 | `feat(M9): draw a slot to capture a task and its block` | S4, S10 |
-| S12 | `feat(M9): motion` | S7, S11 |
+| S12 | `feat(M9): motion` | S8, S11 |
 | S13 | `docs(M9): the design record and smoke` | S12 |
