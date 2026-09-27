@@ -11,6 +11,13 @@ extension AppServices {
     ) {
         let day = destination == .today ? FocusDay().today : nil
         let (coordinator, writes) = (self.coordinator, self.writes)
-        Task { onOutcome((try? await coordinator.write { _ = try writes.capture(title: title, day: day) }) ?? .synced) }
+        // Work, no parent for now: S4 wires the panel's chosen kind through (spec §1).
+        let filing = TaskFiling(area: .work, parent: nil)
+        Task {
+            let outcome = try? await coordinator.write {
+                _ = try writes.capture(title: title, day: day, filing: filing)
+            }
+            onOutcome(outcome ?? .synced)
+        }
     }
 }

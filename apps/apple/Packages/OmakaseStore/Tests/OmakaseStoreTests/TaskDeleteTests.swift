@@ -31,7 +31,7 @@ struct TaskDeleteTests {
 
     @Test func aCaptureTheServerNeverSawIsWithdrawnNotDeleted() throws {
         let writes = TaskWrites(context: context)
-        let captured = try writes.capture(title: "Typo", day: nil)
+        let captured = try writes.capture(title: "Typo", day: nil, filing: TaskFiling(area: .work, parent: nil))
         try writes.toggleCompletion(captured)
         try writes.delete(captured)
         #expect(try context.fetchCount(FetchDescriptor<TaskRecord>()) == 0)
