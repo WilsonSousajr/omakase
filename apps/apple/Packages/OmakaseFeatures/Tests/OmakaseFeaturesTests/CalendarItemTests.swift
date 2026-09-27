@@ -49,4 +49,17 @@ struct CalendarItemTests {
         #expect(plain.color == Palette.accent)
         #expect(tinted.color == Palette.indigo)
     }
+
+    /// A block knows its parent task, so its panel can open it (#217).
+    @Test func aBlockCarriesItsParentTask() {
+        let item = CalendarItem.block(
+            id: "b1", day: "d", startTime: "09:00:00", endTime: "10:00:00", title: "Essay", taskID: "t1")
+        #expect(item?.taskID == "t1")
+        #expect(CalendarItem.block(id: "b", day: "d", startTime: "09:00", endTime: "10:00", title: "T")?.taskID == nil)
+    }
+
+    @Test func anItemsTimeRangeIsItsClockTimes() {
+        let item = CalendarItem(id: "b", day: "d", start: 9 * 60 + 5, end: 14 * 60 + 30, title: "T", kind: .block)
+        #expect(item.timeRange == "09:05 – 14:30")
+    }
 }
