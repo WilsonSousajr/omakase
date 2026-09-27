@@ -70,7 +70,10 @@ struct ProjectWritesTests {
     }
 
     @Test func anEditSendsWhatChangedAndClearsADueDateWithNull() async throws {
-        await api.script([.reply(201, workspaceJSON()), .reply(201, projectJSON(due: "\"2026-12-01\"")), .reply(200, projectJSON(status: "paused"))])
+        await api.script([
+            .reply(201, workspaceJSON()), .reply(201, projectJSON(due: "\"2026-12-01\"")),
+            .reply(200, projectJSON(status: "paused")),
+        ])
         let workspace = try await writes.createWorkspace(name: "Client work", color: "#3b82f6")
         let project = try await writes.createProject(in: workspace, name: "Thesis", color: "#3b82f6")
         try await writes.editProject(project, ProjectEdit(status: "paused", dueDay: .clear))
