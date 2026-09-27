@@ -12,7 +12,8 @@ struct SettingsTimeTests {
     }
 
     @Test func aPickedTimeIsTheServersWallClockString() throws {
-        let date = try #require(calendar.date(from: DateComponents(year: 2026, month: 9, day: 27, hour: 21, minute: 30)))
+        let parts = DateComponents(year: 2026, month: 9, day: 27, hour: 21, minute: 30)
+        let date = try #require(calendar.date(from: parts))
         #expect(ReminderClock.time(from: date, calendar: calendar) == "21:30:00")
     }
 
