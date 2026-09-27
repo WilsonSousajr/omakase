@@ -11,6 +11,11 @@ class GoogleLoginSerializer(serializers.Serializer):
     credential = serializers.CharField()
 
 
+class LogoutSerializer(serializers.Serializer):
+    # Bounded: a simplejwt refresh token is a few hundred characters (#223).
+    refresh = serializers.CharField(max_length=2048)
+
+
 class UserSerializer(serializers.ModelSerializer):
     avatar_color = serializers.CharField(source="profile.avatar_color", read_only=True)
     first_name = serializers.CharField(read_only=True)

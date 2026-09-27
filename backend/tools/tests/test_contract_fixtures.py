@@ -22,13 +22,16 @@ from conftest import (
     ClassScheduleFactory,
     DailyReviewFactory,
     DisciplineFactory,
+    HolidayFactory,
     PomodoroSessionFactory,
+    ProjectFactory,
     SemesterFactory,
     StudyBlockFactory,
     SubtaskFactory,
     TagFactory,
     TaskFactory,
     TimeBlockFactory,
+    WorkspaceFactory,
 )
 from tasks.models import TaskRecurrence
 
@@ -298,6 +301,73 @@ class TestContractFixtures:
         resp = authenticated_client.get("/api/v1/auth/profile/")
         assert resp.status_code == 200
         check_fixture("profile", _body(resp))
+
+    def test_profile_patch(self, authenticated_client):
+        # Settings writes each change as a profile PATCH (#223); both reminders
+        # are set so the Swift test decodes values, not only nulls.
+        resp = authenticated_client.patch(
+            "/api/v1/auth/profile/",
+            {"week_starts_on": "sunday", "block_reminder_minutes": 10, "shutdown_reminder_time": "18:30:00"},
+            format="json",
+        )
+        assert resp.status_code == 200, resp.content
+        check_fixture("profile_patch", _body(resp))
+
+    def test_auth_me_patch(self, authenticated_client):
+        resp = authenticated_client.patch("/api/v1/auth/me/", {"first_name": "Ada"}, format="json")
+        assert resp.status_code == 200, resp.content
+        check_fixture("auth_me_patch", _body(resp))
+
+
+@pytest.mark.django_db
+class TestLibraryContractFixtures:
+    """The lists LibrarySync reads for Projects, Study and the Inbox (#223)."""
+
+    def test_workspaces_list(self, authenticated_client, user):
+        workspace = WorkspaceFactory(user=user, name="Client work")
+        ProjectFactory(workspace=workspace)
+        resp = authenticated_client.get("/api/v1/workspaces/")
+        assert resp.status_code == 200
+        check_fixture("workspaces_list", _body(resp))
+
+    def test_projects_list(self, authenticated_client, user):
+        project = ProjectFactory(workspace=WorkspaceFactory(user=user), due_date=datetime.date(2026, 6, 30))
+        TaskFactory(user=user, project=project)
+        resp = authenticated_client.get("/api/v1/projects/")
+        assert resp.status_code == 200
+        check_fixture("projects_list", _body(resp))
+
+    def test_tasks_unscheduled(self, authenticated_client, user):
+        # The Inbox (#223): no date, and neither series templates nor skipped rows.
+        TaskFactory(user=user, scheduled_date=None, estimated_minutes=25, project=None, discipline=None)
+        resp = authenticated_client.get("/api/v1/tasks/?unscheduled=true&is_completed=false")
+        assert resp.status_code == 200
+        check_fixture("tasks_unscheduled", _body(resp))
+
+    def test_study_semesters_list(self, authenticated_client, user):
+        SemesterFactory(user=user, rotation_weeks=2, rotation_anchor=datetime.date(2026, 3, 2))
+        resp = authenticated_client.get("/api/v1/study/semesters/")
+        assert resp.status_code == 200
+        check_fixture("study_semesters_list", _body(resp))
+
+    def test_study_disciplines_list(self, authenticated_client, user):
+        DisciplineFactory(semester=SemesterFactory(user=user), professor="Dr. Lovelace", credits=4, target_grade=8.5)
+        resp = authenticated_client.get("/api/v1/study/disciplines/")
+        assert resp.status_code == 200
+        check_fixture("study_disciplines_list", _body(resp))
+
+    def test_study_classschedules_list(self, authenticated_client, user):
+        semester = SemesterFactory(user=user, rotation_weeks=2, rotation_anchor=datetime.date(2026, 3, 2))
+        ClassScheduleFactory(discipline=DisciplineFactory(semester=semester), rotation_weeks_on=[1])
+        resp = authenticated_client.get("/api/v1/study/classschedules/")
+        assert resp.status_code == 200
+        check_fixture("study_classschedules_list", _body(resp))
+
+    def test_study_holidays_list(self, authenticated_client, user):
+        HolidayFactory(semester=SemesterFactory(user=user), name="Easter")
+        resp = authenticated_client.get("/api/v1/study/holidays/")
+        assert resp.status_code == 200
+        check_fixture("study_holidays_list", _body(resp))
 
 
 def test_fixtures_hold_no_live_tokens():
