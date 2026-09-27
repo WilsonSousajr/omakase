@@ -63,4 +63,15 @@ public struct DesignColor: Equatable, Sendable {
     public init(both hex: UInt32) {
         self.init(dark: hex, light: hex)
     }
+
+    /// A colour the server stores as "#RRGGBB" (a discipline's), the same in
+    /// both appearances; nil for anything but six hex digits.
+    ///
+    ///     DesignColor(hex: "#4F46E5")   // DesignColor(both: 0x4F46E5)
+    public init?(hex text: String) {
+        guard let match = text.wholeMatch(of: /#?([0-9A-Fa-f]{6})/), let value = UInt32(match.1, radix: 16) else {
+            return nil
+        }
+        self.init(both: value)
+    }
 }
