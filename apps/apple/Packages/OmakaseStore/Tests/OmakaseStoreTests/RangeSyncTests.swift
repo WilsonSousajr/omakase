@@ -44,7 +44,7 @@ struct RangeSyncTests {
         // Local midnight in UTC-3 is 03:00Z; the end is the start of the day after the last.
         #expect(
             Set(await api.requestedRanges) == [
-                "blocks 2026-09-21..2026-09-27", "classes 2026-09-21..2026-09-27",
+                "blocks 2026-09-21..2026-09-27", "classes 2026-09-21..2026-09-27", "tasks 2026-09-21..2026-09-27",
                 "sessions 2026-09-21T03:00:00Z..2026-09-28T03:00:00Z",
             ])
     }
