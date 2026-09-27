@@ -27,7 +27,7 @@ struct OmakaseMacApp: App {
                 .frame(minWidth: WindowSize.minimum.width, minHeight: WindowSize.minimum.height)
                 // Dark first, grey accent, translucent ground (docs/design-system-apple.md).
                 .preferredColorScheme(Appearance.default.colorScheme)
-                .tint(Palette.accent.color)
+                .tint(AppTint.window.color)
                 .omakaseWindowBackground()
                 .task { await start() }
                 .onChange(of: scenePhase) { _, phase in if phase == .active { day = FocusDay().today } }
@@ -48,6 +48,7 @@ struct OmakaseMacApp: App {
                     focus.selectedID = id
                     NSApp.activate()
                 }
+                .tint(AppTint.menuBarPanel.color)
                 .modelContainer(services.container)
             }
         } label: {
@@ -63,8 +64,10 @@ struct OmakaseMacApp: App {
     @ViewBuilder private var content: some View {
         if signedIn {
             NavigationSplitView {
-                List(SidebarItem.allCases, selection: $section) { Label($0.title, systemImage: $0.symbol) }
-                    .scrollContentBackground(.hidden)
+                List(SidebarItem.allCases, selection: $section) { item in
+                    Label(item.title, systemImage: item.symbol).listItemTint(.fixed(AppTint.sidebarIcons.color))
+                }
+                .scrollContentBackground(.hidden)
             } detail: {
                 detail
             }
