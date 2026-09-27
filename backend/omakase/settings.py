@@ -104,6 +104,7 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+
 # CORS: the native clients send no Origin and the web client is gone, so
 # no origin is allowed unless the environment names one (#243).
 def cors_allowed_origins(environ: Mapping[str, str]) -> list[str]:
