@@ -550,3 +550,36 @@ column is lifted.
    semibold ink against the other days' muted grey.
 5. Toggle light and dark (System Settings › Appearance). Every colour
    above still reads clearly in both.
+
+## M9 S11 - Draw a slot to capture a task and its block
+
+Dragging across an empty part of a Plan column opens capture with that day
+and time, and ⏎ creates the task and its block together through the outbox
+(spec §9, #264). The library must be cached so ⌘2 has Study's colour.
+
+1. Plan › Day. Press on an empty 14:00 slot and drag down to 15:00. A
+   dashed ghost reading "14:00 – 15:00" follows the pointer in 15-minute
+   steps. Dragging up from 15:00 to 14:00 draws the same slot.
+2. Release. The capture panel opens and its hint reads `⏎ <day>, 14:00`,
+   for example `⏎ Mon 28, 14:00`.
+3. Press ⌘2, type "Smoke test M9 S11" and press ⏎. The panel closes, and
+   the task and a Study-coloured 14:00-15:00 block appear on Plan, with no
+   "Place anyway?" question even over another block.
+   - `curl ".../api/v1/timeblocks/?date=<day>"` shows the block with the
+     new task's server id in `"task"`.
+4. Turn Wi-Fi off. Draw a slot, capture a task with ⏎: the task and block
+   appear at once and the toolbar's sync item shows the write as waiting.
+   Turn Wi-Fi on: both sync, and the block keeps its title and colour
+   throughout (#274).
+5. With the panel already open (⌘N, type a few words, don't save), draw
+   another slot. The same panel comes forward with the new slot in its
+   hint, and the words you typed are still there.
+6. Click a block to select it, then click an empty part of the grid. The
+   panel closes, and no capture opens: a bare click never draws a slot.
+7. Drag a task from the list on the left onto the grid at 16:00. It is
+   scheduled as a 16:00-17:00 block, as before this slice. Dragging a
+   block moves it, and dragging its bottom edge resizes it, as before.
+8. Offline again, capture on a slot, then click its block › Open task and
+   reschedule the task to the backlog. Delete it from the Inbox before
+   reconnecting. Its block disappears from Plan with it (#275), and
+   reconnecting sends nothing for it.
