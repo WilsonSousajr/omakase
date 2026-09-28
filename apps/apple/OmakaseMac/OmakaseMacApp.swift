@@ -66,11 +66,8 @@ struct OmakaseMacApp: App {
                 .modelContainer(services.container)
             }
         } label: {
-            if let timer, let text = MenuBar.label(for: timer.state, remaining: timer.remainingText) {
-                Label(text, systemImage: "timer")
-            } else {
-                Image(systemName: "timer")
-            }
+            // Its own view, so App.body never reads the tick (#260 review).
+            if let timer { MenuBarTimerLabelView(timer: timer) } else { Image(systemName: "timer") }
         }
         .menuBarExtraStyle(.window)
     }
@@ -92,7 +89,8 @@ struct OmakaseMacApp: App {
     private var screenModels: ScreenModels {
         ScreenModels(
             focus: focus, review: review, plan: plan, inbox: inbox, projects: projects, study: study,
-            calendarOverlay: calendarOverlay, timer: timer, failedWrites: failedWrites, places: places)
+            calendarOverlay: calendarOverlay, timer: timer, failedWrites: failedWrites, places: places,
+            settings: settings)
     }
 
     private func start() async {
@@ -129,8 +127,8 @@ struct OmakaseMacApp: App {
         places = PlaceListModel(actions: services.placesActions())
     }
 
-    /// The toolbar's sync item follows every catch-up, the backoff wake's
-    /// included, rather than polling the outbox (#185).
+    /// The sync item (in the sidebar's footer since #260) follows every
+    /// catch-up, the backoff wake's included, rather than polling the outbox (#185).
     private func startSyncIndicator() {
         let model = FailedWritesModel(actions: services.failedWritesActions())
         services.coordinator.onEveryOutcome = { model.record($0) }

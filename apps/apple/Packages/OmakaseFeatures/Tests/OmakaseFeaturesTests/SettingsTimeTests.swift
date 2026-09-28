@@ -35,4 +35,29 @@ struct SettingsAccountTests {
         await settings.loadAccount()
         #expect(settings.email == "ada@example.com")
     }
+
+    /// The sidebar's footer reads the address each time it appears (#260),
+    /// and offline the read gives nil: a known address must not turn back
+    /// into "Account".
+    @Test func anOfflineReadKeepsTheLastKnownAddressIssue260() async {
+        let replies = AccountReplies(["ada@example.com", nil])
+        let settings = SettingsModel(
+            actions: .init(
+                save: { _ in }, loginItemEnabled: { false }, setLoginItem: { _ in },
+                account: { replies.next() }),
+            schedule: { _ in })
+        await settings.loadAccount()
+        await settings.loadAccount()
+        #expect(settings.email == "ada@example.com")
+    }
+}
+
+/// A named fake for `/me`: the addresses it answers with, in order; nil is an offline read.
+@MainActor
+final class AccountReplies {
+    private var replies: [String?]
+
+    init(_ replies: [String?]) { self.replies = replies }
+
+    func next() -> String? { replies.isEmpty ? nil : replies.removeFirst() }
 }

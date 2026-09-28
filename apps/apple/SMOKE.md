@@ -557,6 +557,57 @@ online) so the section has projects and disciplines to list.
    project drops from "Places", and if it was selected, the window falls
    back to Focus.
 
+## M9 S7 - The sidebar shows your day and your places
+
+The sidebar is the now strip, the day, your places with counts, and a
+footer (spec §6, #260), in macOS 26's glass sidebar with no background of
+its own (glass-pass §2). The library must be cached (open Projects and
+Study once, online) so Work and Study have places.
+
+1. Compare the sidebar with spec §6's sketch. From the top: Focus, Plan,
+   Review, Inbox (with its count); then Work with its projects, Study with
+   the current semester's title and its disciplines, and Life. Each place
+   has a small coloured dot where a glyph would be, every title starts on
+   one line, and headers and rows are otherwise grey. With more than one
+   workspace, each workspace's name heads its projects. Focus has no count
+   on purpose, though the sketch shows one: neither the brief nor the
+   spec's text asks for it (the controller will ask the user).
+2. The counts are open tasks: each header's is the sum of its places', a
+   place with none shows no count, and the Inbox counts what has no day.
+3. Select a task in Focus and start the timer. The top of the sidebar shows
+   a small ring in the focus colour, the countdown and the task's title.
+   The countdown ticks each second; the rows and counts below it don't
+   flicker or redraw. To check that nothing else redraws, build for
+   profiling and open Instruments' SwiftUI template. Record about 10
+   seconds with the timer running and without touching the app. In the
+   View Body lane, `SidebarNowStripView` and `MenuBarTimerLabelView` run
+   about once a second, while `MainWindowView` and `SidebarView` don't run
+   at all. Before #260's fix, the menu-bar label's countdown made
+   `App.body` redraw the whole window every second.
+4. Pause. The strip stays, dimmed. Resume, then Skip to a break: the ring
+   takes the break's colour.
+5. Skip until the timer waits with no phase running, with a block later
+   today (place one on Plan). The strip reads "Next · <start> <title>".
+   With nothing later today, the strip is gone.
+6. Select Plan, then click the strip. Focus opens with the strip's task
+   selected.
+7. Click "Work": Projects opens, and the Work row shows the selection. Click
+   "Study": Study opens. Click "Life": Life's list opens. The semester's
+   title under Study can't be selected.
+8. Click a discipline. Its list opens, and its count matches the list's
+   rows. Complete one: the count drops by one (the digits roll; with
+   Reduce Motion on, they just change), and Study's count with it.
+9. Click the footer's "＋ New Task" (it shows ⌘N). The capture panel opens
+   seeded as ⌘N would on this screen (on the discipline: Study ▸ that
+   discipline).
+10. The footer's second row: a glass circle with your address's initial,
+    your address (cut short with …), and the sync capsule ("Synced"). The
+    toolbar no longer has a sync item. The circle opens Settings; the sync
+    capsule opens its status popover above it, or the failed-writes sheet
+    when something is parked.
+11. Toggle light and dark. The strip, the dots, the counts and the footer's
+    capsules read clearly in both.
+
 ## M9 S9 - Calmer task rows
 
 Every row now says what the task is for, the default Medium pill is gone,
