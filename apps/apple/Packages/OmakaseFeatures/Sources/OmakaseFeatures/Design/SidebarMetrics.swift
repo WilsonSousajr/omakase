@@ -1,7 +1,8 @@
 import CoreGraphics
 
-/// The sidebar's measures (spec §6, #260): its column, the places' indent
-/// and the now strip's ring.
+/// The sidebar's measures (spec §6, #260): its column; the glyph column
+/// the places' dots, the sub-headers and the now strip's ring take, in
+/// line with the system's glyphs on the day's rows; and the ring itself.
 ///
 ///     List { … }.navigationSplitViewColumnWidth(
 ///         min: SidebarMetrics.minWidth, ideal: SidebarMetrics.idealWidth, max: SidebarMetrics.maxWidth)

@@ -8,8 +8,9 @@ extension AppServices {
     /// Each write goes through the outbox in one `coordinator.write` and
     /// catches up at once, as Focus's do (#91); `onOutcome` sees the result.
     /// A failed range read shows nothing more: the sync item (the sidebar
-    /// footer's since #260) already says the app is offline. A slot drawn on the grid opens
-    /// capture through `openCapture`, as ⌘N and ＋ do (spec §9, #264).
+    /// footer's since #260) already says the app is offline. A slot drawn
+    /// on the grid opens capture through `openCapture`, as ⌘N and ＋ do
+    /// (spec §9, #264).
     func planActions(
         openCapture: @escaping (CaptureContext) -> Void,
         onOutcome: @escaping @MainActor (SyncCoordinator.Outcome) -> Void
