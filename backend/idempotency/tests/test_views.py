@@ -12,7 +12,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from conftest import TaskFactory, UserFactory
 from idempotency.models import IdempotencyRecord
-from tasks.models import Task, TimeBlock
+from tasks.models import Subtask, Task, TimeBlock
 
 TASKS = "/api/v1/tasks/"
 
@@ -170,3 +170,28 @@ class TestIdempotentTimeBlockCreate:
         resp = _post(_client_for(other), key, _block_body(other), url=TIMEBLOCKS)
         assert resp.status_code == 201 and "Idempotent-Replayed" not in resp
         assert _block_count(user) == _block_count(other) == 1
+
+
+def _subtasks_url(user) -> str:
+    return f"/api/v1/tasks/{TaskFactory(user=user).pk}/subtasks/"
+
+
+@pytest.mark.django_db
+class TestIdempotentSubtaskCreate:
+    # G4 queues a capture's subtasks in the Mac outbox (#286), which replays
+    # a create after a timeout; without the mixin the retry adds the subtask
+    # twice (invariant 9).
+    def test_replayed_subtask_create_makes_one_subtask_issue286(self, authenticated_client, user):
+        key, url = str(uuid.uuid4()), _subtasks_url(user)
+        first = _post(authenticated_client, key, {"title": "Outline", "order": 0}, url=url)
+        second = _post(authenticated_client, key, {"title": "Outline", "order": 0}, url=url)
+        assert first.status_code == second.status_code == 201, first.data
+        # The replay is the stored JSON, so compare JSON: .data holds UUID objects.
+        assert second["Idempotent-Replayed"] == "true" and second.json() == first.json()
+        assert Subtask.objects.filter(task__user=user).count() == 1
+
+    def test_different_keys_create_two_subtasks(self, authenticated_client, user):
+        url = _subtasks_url(user)
+        _post(authenticated_client, str(uuid.uuid4()), {"title": "Outline"}, url=url)
+        _post(authenticated_client, str(uuid.uuid4()), {"title": "Outline"}, url=url)
+        assert Subtask.objects.filter(task__user=user).count() == 2
