@@ -17,3 +17,7 @@ custom_rules:
     excluded: ".*Design/Motion\\.swift"
     message: "Only Design/Motion.swift may animate directly, so Reduce Motion (spec §2/§10) is never bypassed - route through Motion.resolved/.perform/.motion(...)."
     severity: warning
+  raw_glass_button:
+    regex: 'buttonStyle\(\.glass(Prominent)?\)'
+    message: "use .secondary / .icon (Design/Buttons.swift) — one shape family, glass-pass §1"
+    severity: warning
