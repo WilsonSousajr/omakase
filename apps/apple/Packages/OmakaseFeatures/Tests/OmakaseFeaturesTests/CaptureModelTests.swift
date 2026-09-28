@@ -4,13 +4,14 @@ import Testing
 
 @testable import OmakaseFeatures
 
-/// Records what the model asks the app for, in order: each capture and
-/// each remembered kind.
+/// Records what the model asks the app for, in order: each capture, each
+/// remembered kind, and each remembered expansion (#286).
 @MainActor
 final class CaptureRecorder {
     enum Event: Equatable {
         case capture(CaptureRequest)
         case remember(TaskArea)
+        case rememberExpanded(Bool)
     }
 
     private(set) var events: [Event] = []
@@ -24,7 +25,8 @@ final class CaptureRecorder {
 
     var actions: CaptureModel.Actions {
         CaptureModel.Actions(
-            capture: { [self] in events.append(.capture($0)) }, remember: { [self] in events.append(.remember($0)) })
+            capture: { [self] in events.append(.capture($0)) }, remember: { [self] in events.append(.remember($0)) },
+            rememberExpanded: { [self] in events.append(.rememberExpanded($0)) })
     }
 }
 
@@ -210,19 +212,19 @@ struct CaptureModelTests {
     @Test func enterSavesForTodayByDefault() {
         let model = model()
         #expect(model.enterDestination == .today)
-        #expect(model.hint == "⌘1–3 kind · ⏎ Today · ⌘⏎ Inbox · ⎋ dismiss")
+        #expect(model.hint == "⌘E more/less · ⏎ Today · ⌘⏎ Inbox · ⎋")
     }
 
     @Test func enterSavesToThePlanDay() {
         let model = model(CaptureContext(day: "2026-09-28"))
         #expect(model.enterDestination == .day("2026-09-28"))
-        #expect(model.hint == "⌘1–3 kind · ⏎ Mon 28 · ⌘⏎ Inbox · ⎋ dismiss")
+        #expect(model.hint == "⌘E more/less · ⏎ Mon 28 · ⌘⏎ Inbox · ⎋")
     }
 
     @Test func aSlotWinsOverTheDay() {
         let model = model(CaptureContext(day: "2026-09-30", slot: Self.slot))
         #expect(model.enterDestination == .slot(Self.slot))
-        #expect(model.hint == "⌘1–3 kind · ⏎ Mon 28, 14:00 · ⌘⏎ Inbox · ⎋ dismiss")
+        #expect(model.hint == "⌘E more/less · ⏎ Mon 28, 14:00 · ⌘⏎ Inbox · ⎋")
     }
 
     @Test func eachDestinationHasATitle() {
@@ -243,7 +245,7 @@ struct CaptureModelTests {
         model.draft = "Read chapter 4"
         model.reseed(context: CaptureContext(slot: Self.slot), directory: Self.directory)
         #expect(model.enterDestination == .slot(Self.slot))
-        #expect(model.hint == "⌘1–3 kind · ⏎ Mon 28, 14:00 · ⌘⏎ Inbox · ⎋ dismiss")
+        #expect(model.hint == "⌘E more/less · ⏎ Mon 28, 14:00 · ⌘⏎ Inbox · ⎋")
         #expect(model.draft == "Read chapter 4")
     }
 

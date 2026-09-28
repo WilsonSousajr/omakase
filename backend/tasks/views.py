@@ -221,7 +221,9 @@ class TaskViewSet(IdempotentCreateMixin, viewsets.ModelViewSet):
         return Response({"status": "ok"})
 
 
-class SubtaskViewSet(viewsets.ModelViewSet):
+class SubtaskViewSet(IdempotentCreateMixin, viewsets.ModelViewSet):
+    # The Mac outbox replays a capture's subtask creates (#286), so a retry
+    # after a timeout must not add the subtask twice (invariant 9).
     serializer_class = SubtaskSerializer
     pagination_class = None
 

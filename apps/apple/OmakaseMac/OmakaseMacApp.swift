@@ -109,7 +109,8 @@ struct OmakaseMacApp: App {
         startSyncIndicator()
         capture = GlobalCapture(
             actions: services.captureActions { handle($0) }, directory: { [services] in services.capturePlaces() },
-            lastArea: { [services] in services.lastCaptureArea() })
+            lastArea: { [services] in services.lastCaptureArea() },
+            isExpanded: { [services] in services.captureOpensExpanded() })
         signedIn = await api.hasStoredSession()
         services.startBackgroundCatchUp(onPathChange: { failedWrites?.setPathOnline($0) }, onOutcome: { handle($0) })
     }

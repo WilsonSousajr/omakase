@@ -10,7 +10,7 @@ import SwiftUI
 /// it when the panel opened.
 ///
 ///     let panel = CapturePanelController(actions: services.captureActions { handle($0) })
-///     panel.show(context: CaptureContext(), directory: services.capturePlaces(), lastArea: .work)
+///     panel.show(context: CaptureContext(), directory: services.capturePlaces(), lastArea: .work, isExpanded: false)
 @MainActor
 final class CapturePanelController {
     private let actions: CaptureModel.Actions
@@ -22,16 +22,19 @@ final class CapturePanelController {
     init(actions: CaptureModel.Actions) { self.actions = actions }
 
     /// A new panel seeded with `context` (spec §4), offering `directory`'s
-    /// places. One already open takes the new context and places and is
-    /// brought forward, keeping its draft: a slot drawn on Plan while it is
-    /// open must not be dropped (S4's review, #264).
-    func show(context: CaptureContext, directory: PlaceDirectory, lastArea: TaskArea) {
+    /// places, expanded when `isExpanded` (#286). One already open takes the
+    /// new context and places and is brought forward, keeping its draft: a
+    /// slot drawn on Plan while it is open must not be dropped (S4's review,
+    /// #264). The panel's hosting view sizes the window to its content, so
+    /// ⌘E grows and shrinks it with its top edge kept.
+    func show(context: CaptureContext, directory: PlaceDirectory, lastArea: TaskArea, isExpanded: Bool) {
         if let panel, let model {
             model.reseed(context: context, directory: directory)
             panel.makeKeyAndOrderFront(nil)
             return
         }
-        let model = CaptureModel(context: context, directory: directory, lastArea: lastArea, actions: actions)
+        let model = CaptureModel(
+            context: context, directory: directory, lastArea: lastArea, isExpanded: isExpanded, actions: actions)
         self.model = model
         let content = CaptureView(model: model, onClose: { [weak self] in self?.close() })
         // The hosting view is its own root, so the window's .tint never reaches it (#214).

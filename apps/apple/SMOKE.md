@@ -508,7 +508,8 @@ optional project or discipline (spec §4, #257). The library must be cached
 (open Projects and Study once, online) so the parent chip has places.
 
 1. On Focus, press ⌘N. The capture panel opens - not a new window - and
-   its hint reads `⌘1–3 kind · ⏎ Today · ⌘⏎ Inbox · ⎋ dismiss`. ⎋ closes it.
+   its hint reads `⌘E more/less · ⏎ Today · ⌘⏎ Inbox · ⎋` (G4's wording,
+   #286). ⎋ closes it.
 2. Select Plan and page to another day with ›. Press ⌘N. The hint reads
    `⏎ <that day>`, for example `⏎ Tue 29`.
 3. Press ⌘2. The Study chip is selected, and the parent chip reads
@@ -708,3 +709,49 @@ catch-up. A single in-flight refresh now serves every concurrent 401.
    terminal running it): exactly one `POST /api/v1/auth/token/refresh/`,
    not seven, and every other request that first got a 401 appears again
    right after with a 200.
+
+## M9 G4 - The capture panel expands with ⌘E
+
+⌘E opens the day, priority, estimate, notes and subtasks in the capture
+panel, in place, and a save sends them with the task; the subtasks queue
+behind it through the outbox (glass-pass §4, #286). The backend must be at
+#286's commit or later.
+
+1. On Focus, press ⌘N. The hint reads `⌘E more/less · ⏎ Today · ⌘⏎ Inbox
+   · ⎋`, with a More capsule at its right.
+2. Type "Smoke test M9 G4" and press ⌘E. The panel grows downward in
+   place, its top edge staying put, to show a day field (today), an
+   Estimate ⌄ capsule, the Low, Medium, High and Urgent chips (Medium
+   chosen), a Notes line and one empty subtask line. More reads Less.
+3. Click High: it takes the faint ink fill and a dot in its colour. Pick
+   45m from Estimate ⌄: the capsule reads "45m". Click Notes and type
+   "Ask about §3".
+4. Click the subtask line and type "Outline", ⏎, "Draft", ⏎, "Send". Each
+   ⏎ opens a line below and moves to it; ⏎ on an empty line adds nothing.
+   While a subtask line has the focus the hint reads `⌘E more/less · ⏎ new
+   subtask · ⌘⏎ Today · ⎋`.
+5. Press ⌘⏎. The panel closes, and Focus shows the task with High and 45m
+   and its subtasks "Outline", "Draft" and "Send", in that order; Edit…
+   shows the notes.
+   - `curl -H "Authorization: Bearer $TOKEN" ".../api/v1/tasks/<id>/"`
+     shows `"priority": "high"`, `"estimated_minutes": 45`,
+     `"description": "Ask about §3"` and three subtasks, `"order"` 0-2.
+6. Press ⌘N. The panel opens expanded and empty (`omakase.capture.expanded`
+   remembers it). ⌘E collapses it, the panel shrinks back, and the cursor
+   is in the title. Quit and relaunch: ⌘N opens it collapsed.
+7. Expand it and set the day field to another day. The hint names it
+   (for example `⏎ Wed 30`), and ⏎ from the title saves the task to that
+   day on Plan. ⌘⏎ from the title still saves to the Inbox.
+8. Turn Wi-Fi off. Capture a task with two subtasks as in steps 2-5: the
+   task and its subtasks show in Focus at once, and the toolbar's sync item
+   shows the writes waiting. Turn Wi-Fi on: all three sync, the subtasks
+   stay under the task, and checking one off syncs too.
+9. Plan › Day: draw a 14:00-15:00 slot. The panel's hint reads `⏎ <day>,
+   14:00`. Press ⌘N: the same panel stays, still naming the slot. Type a
+   title, add one subtask and press ⌘⏎: the task, its block and its
+   subtask all appear.
+10. Replay a subtask create: run
+    `curl -X POST -H "Authorization: Bearer $TOKEN" -H "Idempotency-Key: g4-smoke-1" -H "Content-Type: application/json" -d '{"title":"Once"}' ".../api/v1/tasks/<id>/subtasks/"`
+    twice. Both answer 201 with the same body, the second with
+    `Idempotent-Replayed: true`, and `GET .../tasks/<id>/` lists "Once"
+    once.

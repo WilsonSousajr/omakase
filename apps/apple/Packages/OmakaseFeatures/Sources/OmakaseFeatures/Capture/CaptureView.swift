@@ -6,7 +6,9 @@ import SwiftUI
 /// state (docs/design-system-apple.md, floating surfaces). The title, then
 /// the kind chips and the parent chip, then the hint. ⏎ saves where the
 /// context says, ⌘⏎ to the Inbox, ⌘1–3 pick the kind, ⎋ dismisses;
-/// `onClose` closes the window around it.
+/// `onClose` closes the window around it. ⌘E, or More, expands it in place
+/// to the day, priority, estimate, notes and subtasks (glass-pass §4, #286),
+/// and the window grows and shrinks with it.
 ///
 ///     CaptureView(model: CaptureModel(context: context, directory: directory, lastArea: .work, actions: actions),
 ///                 onClose: { panel.close() })
@@ -48,7 +50,22 @@ public struct CaptureView: View {
                 Spacer()
                 if model.showsParentChip { parentMenu }
             }
+            if model.isExpanded { CaptureDetailsView(model: model, onSave: closeIfSaved) }
+            footer
+        }
+    }
+
+    /// The hint, and More or Less: ⌘E's button, for the pointer.
+    private var footer: some View {
+        HStack(spacing: Spacing.medium) {
             Text(model.hint).font(TypeScale.caption).foregroundStyle(Palette.inkMuted.color)
+            Spacer()
+            Button(
+                model.isExpanded ? "Less" : "More", systemImage: model.isExpanded ? "chevron.up" : "chevron.down",
+                action: toggleExpanded
+            )
+            .buttonStyle(.secondary)
+            .help("⌘E")
         }
     }
 
@@ -80,11 +97,14 @@ public struct CaptureView: View {
     }
 
     /// Key equivalents reach a button before the focused field's editor,
-    /// so ⌘⏎, ⌘1–3 and ⎋ work while typing. The buttons take no space and
-    /// are hidden from VoiceOver; the footer names the keys.
+    /// so ⌘⏎, ⌘E, ⌘1–3 and ⎋ work while typing. The buttons take no space
+    /// and are hidden from VoiceOver; the footer names the keys. ⌘⏎ saves
+    /// to the Inbox, or where ⏎ would from a subtask line (#286).
     private var shortcuts: some View {
         ZStack {
-            Button("Save to Inbox") { closeIfSaved(model.saveInbox()) }.keyboardShortcut(.return, modifiers: .command)
+            Button("Save to Inbox") { closeIfSaved(model.saveCommandReturn()) }
+                .keyboardShortcut(.return, modifiers: .command)
+            Button("More or Less", action: toggleExpanded).keyboardShortcut("e", modifiers: .command)
             Button("Dismiss") { dismiss() }.keyboardShortcut(.cancelAction)
             ForEach(TaskArea.allCases, id: \.self) { area in
                 Button(area.title) { model.choose(area) }
@@ -95,6 +115,12 @@ public struct CaptureView: View {
         .opacity(0)
         .frame(width: 0, height: 0)
         .accessibilityHidden(true)
+    }
+
+    /// Collapsing takes the focus back to the title, since a field that had it may be gone.
+    private func toggleExpanded() {
+        model.toggleExpanded()
+        if !model.isExpanded { isFieldFocused = true }
     }
 
     private func closeIfSaved(_ saved: Bool) {
