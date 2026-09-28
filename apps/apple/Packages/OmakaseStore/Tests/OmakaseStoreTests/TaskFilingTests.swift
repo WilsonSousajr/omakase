@@ -47,4 +47,27 @@ struct TaskFilingTests {
         let filing = TaskFiling(areaWire: "personal", projectID: nil, disciplineID: nil)
         #expect(filing.area == .life && filing.parent == nil)
     }
+
+    // MARK: Choosing a kind, dropping a mismatched parent (S5, #258)
+
+    @Test func choosingADisciplinesKindKeepsTheDiscipline() {
+        let filing = TaskFiling.choosing(.study, keeping: .discipline("d1"))
+        #expect(filing == TaskFiling(area: .study, parent: .discipline("d1")))
+    }
+
+    @Test(arguments: [TaskArea.work, .life])
+    func choosingAnotherKindDropsTheDiscipline(area: TaskArea) {
+        let filing = TaskFiling.choosing(area, keeping: .discipline("d1"))
+        #expect(filing == TaskFiling(area: area, parent: nil))
+    }
+
+    @Test(arguments: [TaskArea.study, .life])
+    func choosingAnotherKindDropsTheProject(area: TaskArea) {
+        let filing = TaskFiling.choosing(area, keeping: .project("p1"))
+        #expect(filing == TaskFiling(area: area, parent: nil))
+    }
+
+    @Test func choosingWithNoParentStaysWithNoParent() {
+        #expect(TaskFiling.choosing(.life, keeping: nil) == TaskFiling(area: .life, parent: nil))
+    }
 }
