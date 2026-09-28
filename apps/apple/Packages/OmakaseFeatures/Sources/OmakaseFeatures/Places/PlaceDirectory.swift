@@ -176,8 +176,9 @@ public struct PlaceDirectory: Equatable, Sendable {
         return places
     }
 
-    /// The place a filing's parent names; shared with the sidebar's
-    /// temporary Places section (S6, #259), which lists the same entries.
+    /// The place a filing's parent names; shared with the sidebar's places
+    /// (`SidebarPlaces`, #260; S6's temporary section before it, #259),
+    /// which list the same entries.
     static func place(for parent: TaskParent) -> TaskPlace {
         switch parent {
         case .project(let id): .project(id)
