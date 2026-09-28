@@ -52,6 +52,23 @@ public final class TaskEditorModel {
         set { estimate = newValue }
     }
 
+    /// The "Kind" row's chip selection (spec §4, S5 #258).
+    public var area: TaskArea { draft.filing.area }
+
+    /// The "Kind" row's parent menu (spec §4, S5 #258); nil is "no parent".
+    public var parent: TaskParent? { draft.filing.parent }
+
+    /// Picks a kind (a chip), dropping a parent that no longer fits it —
+    /// the same rule capture's `CaptureModel` uses (`TaskFiling.choosing`).
+    public func choose(_ area: TaskArea) {
+        draft.filing = TaskFiling.choosing(area, keeping: draft.filing.parent)
+    }
+
+    /// Picks a parent, or none, and the kind it implies (spec §1).
+    public func choose(parent: TaskParent?) {
+        draft.filing = TaskFiling(area: draft.filing.area, parent: parent)
+    }
+
     /// The due date toggle: on starts from today, off clears it.
     public var hasDueDate: Bool {
         get { draft.dueDay != nil }
