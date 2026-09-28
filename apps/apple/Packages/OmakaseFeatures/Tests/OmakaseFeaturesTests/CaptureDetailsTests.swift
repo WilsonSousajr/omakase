@@ -211,6 +211,43 @@ struct CaptureDetailsTests {
         #expect(model.details == CaptureDetails())
     }
 
+    // MARK: Opened again while open (S11's review, carried into #286)
+
+    @Test func reopeningWithoutASlotKeepsTheOpenSlotIssue286() {
+        let model = model(CaptureContext(slot: Self.slot))
+        model.reseed(context: CaptureContext(day: "2026-09-30"), directory: Self.directory)
+        #expect(model.enterDestination == .slot(Self.slot))
+    }
+
+    @Test func reopeningWithoutASlotKeepsAPickedDay() {
+        let model = model()
+        model.details.date = "2026-10-01"
+        model.reseed(context: CaptureContext(day: "2026-09-30"), directory: Self.directory)
+        #expect(model.enterDestination == .day("2026-10-01"))
+    }
+
+    @Test func aNewSlotReplacesAPickedDay() {
+        let model = model()
+        model.details.date = "2026-10-01"
+        model.reseed(context: CaptureContext(slot: Self.slot), directory: Self.directory)
+        #expect(model.enterDestination == .slot(Self.slot))
+        #expect(model.details.date == nil)
+    }
+
+    @Test func aKeptParentGoneFromTheReReadPlacesIsDroppedIssue286() {
+        let model = model()
+        model.choose(parent: .project("p1"))
+        model.reseed(context: CaptureContext(), directory: .empty)
+        #expect(model.filing == TaskFiling(area: .work, parent: nil))
+    }
+
+    @Test func aKeptParentStillListedStays() {
+        let model = model()
+        model.choose(parent: .project("p1"))
+        model.reseed(context: CaptureContext(), directory: Self.directory)
+        #expect(model.parent == .project("p1"))
+    }
+
     // MARK: The block a drawn slot books
 
     @Test func onlyASlotBooksABlock() {

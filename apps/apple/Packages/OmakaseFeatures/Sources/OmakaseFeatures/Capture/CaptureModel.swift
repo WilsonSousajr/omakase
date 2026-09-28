@@ -163,11 +163,23 @@ extension CaptureModel {
     /// context names none, stay. `directory` is read again, as a new panel
     /// would read it.
     ///
+    /// A slot already drawn stays when the new context has none, as with ⌘N
+    /// over the open panel, and a new slot replaces a picked day. A kept
+    /// parent the re-read places no longer list is dropped (S11's review, #286).
+    ///
     ///     model.reseed(context: CaptureContext(slot: slot), directory: services.capturePlaces())
     public func reseed(context: CaptureContext, directory: PlaceDirectory) {
-        (self.context, self.directory) = (context, directory)
-        guard let filing = context.filing else { return }
+        if context.slot != nil { details.date = nil }
+        let slot = context.slot ?? self.context.slot
+        self.context = CaptureContext(filing: context.filing, day: context.day, slot: slot)
+        self.directory = directory
+        guard let filing = context.filing else { return dropParentIfUnlisted() }
         (area, parent) = (filing.area, filing.parent)
+    }
+
+    private func dropParentIfUnlisted() {
+        guard let parent, !parentChoices.contains(where: { $0.parent == parent }) else { return }
+        self.parent = nil
     }
 }
 
