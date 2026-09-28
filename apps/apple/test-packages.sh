@@ -7,7 +7,9 @@ cd "$(dirname "$0")"
 # Build products live outside the checkout (#134): in an iCloud-synced folder
 # the File Provider tags each new .xctest bundle with FinderInfo, and
 # codesign rejects it. ~/Library/Caches is never synced.
-SCRATCH="${OMAKASE_SWIFTPM_SCRATCH:-$HOME/Library/Caches/omakase/swiftpm}"
+# One dir per checkout, so parallel worktrees never wait on each other's
+# SwiftPM lock, and removed worktrees' dirs are deleted here (#297).
+SCRATCH=$(python3 tools/swiftpm_scratch.py --cache-root "$HOME/Library/Caches/omakase/swiftpm" --checkout "$(git rev-parse --show-toplevel)")
 for package in Packages/*/; do
   name=$(basename "$package")
   swift test --package-path "$package" --scratch-path "$SCRATCH/$name" --enable-code-coverage
