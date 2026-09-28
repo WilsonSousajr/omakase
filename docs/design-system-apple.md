@@ -58,6 +58,9 @@ medium `#F59E0B`, high `#F97316`, urgent `#EF4444`.
   and cards, and has no more chroma than the neutrals. A pure grey would look
   blue next to warm sumi.
 - The primary pill's label is ≥ 4.5:1 on the pill.
+- The secondary capsule's ink label is ≥ 4.5:1 over the blurred ground
+  (7.3 / 9.0) and on a chosen capsule's ink fill (5.4 / 7.2), and the
+  primary and secondary are both `ControlMetrics.height` tall (#283).
 - Over a blurred desktop (the behind-window material averages what is
   behind to about mid-grey), `ink` stays ≥ 4.5:1 (7.3 / 9.0) and `inkMuted`
   ≥ 3:1 (3.0 / 3.0).
@@ -121,7 +124,14 @@ measured, not guessed: `TranslucencyTests`.
 - **One primary action per screen** (Sign in, the timer's pause/start):
   `.buttonStyle(.primary)`, an inverted ink pill. In dark mode it is light,
   with a sumi label.
-- **Every other button:** `.buttonStyle(.glass)`, neutral.
+- **Every other button:** `.buttonStyle(.secondary)`, a neutral glass
+  capsule with an ink label, the same height as the primary
+  (`ControlMetrics.height`, 32 pt). Menus take `.menuStyle(.secondary)`,
+  which draws their ⌄; icon-only buttons are `.icon` glass circles as
+  tall. A chosen chip or an on toggle adds a faint ink fill.
+- The system's glass button style is not used outside the toolbar: its
+  rounded rectangle beside the pill read as loose (#283), and SwiftLint's
+  `raw_glass_button` rule rejects it.
 - **System controls** (checkboxes, selection): `Palette.accent` through
   `.tint` and the app's `AccentColor`. They are grey, never the system blue.
 - `.glassProminent` is not used. Its label colour is the system's choice
@@ -140,7 +150,7 @@ measured, not guessed: `TranslucencyTests`.
   a coloured dot and the name in ink, beside the estimate. The name stays
   in ink because amber text on paper is too faint to read.
 - **Calendar blocks:** the block's source colour (project or discipline) as
-  a 3-pt bar and a faint fill on an opaque `surface`.
+  a 3-pt bar on an opaque `surface`, with no fill (#283: colour as a mark).
   - Class occurrences are dashed, because they are fixed, not planned.
   - Colour here is data, which is why it survives the monochrome rule.
 
