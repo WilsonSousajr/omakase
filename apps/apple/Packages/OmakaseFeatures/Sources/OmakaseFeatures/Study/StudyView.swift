@@ -191,7 +191,7 @@ struct StudyClassesColumn: View {
         }
         .font(TypeScale.body).foregroundStyle(Palette.ink.color)
         .padding(Spacing.small)
-        .background(Palette.surface.color, in: .rect(cornerRadius: Radius.small))
+        .background(Palette.surface.color, in: .rect(cornerRadius: Radius.medium))
         .contextMenu {
             Button("Edit…") {
                 model.editing = .schedule(StudyForms.form(schedule), id: schedule.id, rotationWeeks: rotation)

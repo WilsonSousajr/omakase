@@ -25,7 +25,7 @@ public struct SessionPromptView: View {
                 .scrollContentBackground(.hidden)
                 .padding(Spacing.small)
                 .frame(height: 110)
-                .background(Palette.surface.color, in: .rect(cornerRadius: Radius.medium))
+                .background(Palette.surface.color, in: .rect(cornerRadius: Radius.small))
             HStack {
                 Spacer()
                 Button("Skip") { dismiss() }.buttonStyle(.secondary).keyboardShortcut(.cancelAction)

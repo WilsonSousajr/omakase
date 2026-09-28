@@ -39,7 +39,7 @@ struct FocusBoardListView: View {
         .padding(.horizontal, Spacing.small)
         .background(
             (model.selectedID == card.id ? Palette.surface.color : .clear),
-            in: .rect(cornerRadius: Radius.small)
+            in: .rect(cornerRadius: Radius.medium)
         )
         .contentShape(.rect)
         .onTapGesture { model.selectedID = card.id }
