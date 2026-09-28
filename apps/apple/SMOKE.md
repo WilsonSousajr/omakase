@@ -569,7 +569,9 @@ Study once, online) so Work and Study have places.
    the current semester's title and its disciplines, and Life. Each place
    has a small coloured dot where a glyph would be, every title starts on
    one line, and headers and rows are otherwise grey. With more than one
-   workspace, each workspace's name heads its projects.
+   workspace, each workspace's name heads its projects. Focus has no count
+   on purpose, though the sketch shows one: neither the brief nor the
+   spec's text asks for it (the controller will ask the user).
 2. The counts are open tasks: each header's is the sum of its places', a
    place with none shows no count, and the Inbox counts what has no day.
 3. Select a task in Focus and start the timer. The top of the sidebar shows
