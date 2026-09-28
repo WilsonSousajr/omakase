@@ -36,20 +36,34 @@ public enum CaptureDestination: Equatable, Sendable {
         }
     }
 
+    /// The block a drawn slot books with its task (S11, #264), in the
+    /// Store's shape; nil for every other destination.
+    ///
+    ///     request.destination.captureSlot   // CaptureSlot(day: "2026-09-28", start: "14:00:00", end: "15:00:00")
+    public var captureSlot: CaptureSlot? {
+        guard case .slot(let slot) = self else { return nil }
+        return CaptureSlot(day: slot.day, start: slot.startTime, end: slot.endTime)
+    }
+
     private static func short(_ day: String, _ calendar: Calendar) -> String {
         DayString.short(day, calendar: calendar) ?? day
     }
 }
 
-/// One save from the panel: the trimmed title, its kind and parent, and
-/// where it lands. The app turns it into `TaskWrites.capture`.
+/// One save from the panel: the trimmed title, its kind and parent, where
+/// it lands, and what ⌘E added (#286). The app turns it into
+/// `TaskWrites.captureTask`.
 public struct CaptureRequest: Equatable, Sendable {
     public let title: String
     public let filing: TaskFiling
     public let destination: CaptureDestination
+    public let details: TaskCaptureDetails
 
-    public init(title: String, filing: TaskFiling, destination: CaptureDestination) {
-        (self.title, self.filing, self.destination) = (title, filing, destination)
+    public init(
+        title: String, filing: TaskFiling, destination: CaptureDestination,
+        details: TaskCaptureDetails = TaskCaptureDetails()
+    ) {
+        (self.title, self.filing, self.destination, self.details) = (title, filing, destination, details)
     }
 }
 
@@ -75,17 +89,28 @@ extension TaskArea {
 @Observable
 @MainActor
 public final class CaptureModel {
-    /// What a save asks for: the capture itself, then the kind to remember.
+    /// What a save asks for: the capture itself, then the kind to remember;
+    /// and ⌘E, whether the panel is expanded, to remember for next time.
     public struct Actions {
         let capture: (CaptureRequest) -> Void
         let remember: (TaskArea) -> Void
+        let rememberExpanded: (Bool) -> Void
 
-        public init(capture: @escaping (CaptureRequest) -> Void, remember: @escaping (TaskArea) -> Void) {
-            (self.capture, self.remember) = (capture, remember)
+        public init(
+            capture: @escaping (CaptureRequest) -> Void, remember: @escaping (TaskArea) -> Void,
+            rememberExpanded: @escaping (Bool) -> Void = { _ in }
+        ) {
+            (self.capture, self.remember, self.rememberExpanded) = (capture, remember, rememberExpanded)
         }
     }
 
     public var draft = ""
+    /// ⌘E's fields are showing (glass-pass §4); toggled with `toggleExpanded()`.
+    public internal(set) var isExpanded: Bool
+    /// What ⌘E opens: the day, priority, estimate, notes and subtasks.
+    public var details = CaptureDetails()
+    /// A subtask line has the focus: ⏎ adds a line there, so ⌘⏎ saves where ⏎ would.
+    public var isEditingSubtasks = false
     /// Set with `choose(_:)`, which keeps the parent consistent with it.
     public private(set) var area: TaskArea
     /// Set with `choose(parent:)`, which derives the area from it.
@@ -95,14 +120,18 @@ public final class CaptureModel {
     /// and the hint and the parent chip redraw from them.
     private var context: CaptureContext
     private var directory: PlaceDirectory
-    @ObservationIgnored private let calendar: Calendar
-    @ObservationIgnored private let actions: Actions
+    @ObservationIgnored let calendar: Calendar
+    /// The client's day (invariant 2), read when it is needed.
+    @ObservationIgnored let today: () -> String
+    @ObservationIgnored let actions: Actions
 
+    /// `isExpanded` is how the last panel was left (`CaptureExpansion`).
     public init(
-        context: CaptureContext, directory: PlaceDirectory, lastArea: TaskArea, calendar: Calendar = .current,
-        actions: Actions
+        context: CaptureContext, directory: PlaceDirectory, lastArea: TaskArea, isExpanded: Bool = false,
+        calendar: Calendar = .current, today: @escaping () -> String = { FocusDay().today }, actions: Actions
     ) {
         (self.context, self.directory, self.calendar, self.actions) = (context, directory, calendar, actions)
+        (self.isExpanded, self.today) = (isExpanded, today)
         area = context.filing?.area ?? lastArea
         parent = context.filing?.parent
     }
@@ -165,28 +194,41 @@ extension CaptureModel {
 // MARK: - Saving
 
 extension CaptureModel {
-    /// Where ⏎ saves (spec §4): the drawn slot, else the day, else Today.
+    /// Where ⏎ saves (spec §4): a picked day (glass-pass §4), else the drawn
+    /// slot, else the day, else Today.
     public var enterDestination: CaptureDestination {
+        if let date = details.date { return destination(picked: date) }
         if let slot = context.slot { return .slot(slot) }
         if let day = context.day { return .day(day) }
         return .today
     }
 
-    /// The footer: the keys, and what ⏎ does in this context.
-    public var hint: String {
-        "⌘1–3 kind · ⏎ \(enterDestination.title(calendar: calendar)) · ⌘⏎ Inbox · ⎋ dismiss"
+    /// A picked day keeps the drawn slot when it is the slot's own day, and
+    /// is Today when it is the client's.
+    private func destination(picked date: String) -> CaptureDestination {
+        if let slot = context.slot, slot.day == date { return .slot(slot) }
+        return date == today() ? .today : .day(date)
     }
 
-    /// Saves the draft to `destination` as the current filing, remembers the
-    /// kind and clears the draft; an empty or whitespace-only title saves
-    /// nothing and returns false.
+    /// The footer: the keys, and what ⏎ does in this context. In a subtask
+    /// line ⏎ adds a line, so ⌘⏎ takes ⏎'s save.
+    public var hint: String {
+        let destination = enterDestination.title(calendar: calendar)
+        guard isEditingSubtasks else { return "⌘E more/less · ⏎ \(destination) · ⌘⏎ Inbox · ⎋" }
+        return "⌘E more/less · ⏎ new subtask · ⌘⏎ \(destination) · ⎋"
+    }
+
+    /// Saves the draft to `destination` as the current filing, with what ⌘E
+    /// added, remembers the kind and clears the draft and its details; an
+    /// empty or whitespace-only title saves nothing and returns false.
     @discardableResult
     public func save(to destination: CaptureDestination) -> Bool {
         let title = draft.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !title.isEmpty else { return false }
-        actions.capture(CaptureRequest(title: title, filing: filing, destination: destination))
+        actions.capture(
+            CaptureRequest(title: title, filing: filing, destination: destination, details: details.taskDetails))
         actions.remember(area)
-        draft = ""
+        clearDraft()
         return true
     }
 
@@ -199,5 +241,7 @@ extension CaptureModel {
     public func saveInbox() -> Bool { save(to: .inbox) }
 
     /// Drops the draft: the panel is closed, never hidden, so nothing stale returns.
-    public func dismiss() { draft = "" }
+    public func dismiss() { clearDraft() }
+
+    private func clearDraft() { (draft, details, isEditingSubtasks) = ("", CaptureDetails(), false) }
 }
