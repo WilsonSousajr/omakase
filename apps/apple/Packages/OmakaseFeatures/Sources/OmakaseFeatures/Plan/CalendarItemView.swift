@@ -1,11 +1,12 @@
 import SwiftUI
 
 /// A block or a class on the grid (design-system-apple, Signals; spec §9): a
-/// block wears its source's colour as a 3-pt bar, a faint fill on an opaque
-/// surface, and its kind's glyph beside the title, with the time range
-/// under it once it is tall enough; a class is dashed with a book glyph
-/// instead of a bar, because it is fixed, not planned. A cancelled class
-/// stays, struck through and dimmed (#207): it is information, not absence.
+/// block wears its source's colour only as a 3-pt bar on an opaque surface
+/// (glass-pass §1, #283: colour as a mark, no fill), with its kind's glyph
+/// beside the title, and the time range under it once it is tall enough; a
+/// class is dashed with a book glyph instead of a bar, because it is fixed,
+/// not planned. A cancelled class stays, struck through and dimmed (#207):
+/// it is information, not absence. `CalendarItemLook` says which colour goes where.
 struct CalendarItemView: View {
     let item: CalendarItem
 
@@ -13,19 +14,18 @@ struct CalendarItemView: View {
     private var isCancelled: Bool { isClass && item.isCancelled }
 
     var body: some View {
-        let tint = item.color.color
+        let look = CalendarItemLook(item)
         HStack(alignment: .top, spacing: Spacing.tiny) {
-            mark(tint)
-            content(tint)
+            mark(look)
+            content(look)
             Spacer(minLength: 0)
         }
         .padding(Spacing.tiny)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .background(tint.opacity(isClass ? 0.06 : 0.14), in: .rect(cornerRadius: Radius.small))
-        // Opaque under the tint, so neither the hour lines nor the desktop
-        // show through a block.
-        .background(Palette.surface.color, in: .rect(cornerRadius: Radius.small))
-        .overlay { if isClass { dashedBorder(tint) } }
+        // Opaque, so neither the hour lines nor the desktop show through a
+        // block. S10's tint over it went in #283: colour is a mark.
+        .background(look.fill.color, in: .rect(cornerRadius: Radius.small))
+        .overlay { if let dash = look.dash { dashedBorder(dash.color) } }
         .clipShape(.rect(cornerRadius: Radius.small))
         .opacity(isCancelled ? 0.45 : 1)
         .help(isCancelled ? "\(item.title), cancelled" : item.title)
@@ -34,21 +34,21 @@ struct CalendarItemView: View {
     /// The leading edge: a class's book instead of a bar, since it has no
     /// colour of its own to wear (#207); a block's 3-pt colour bar otherwise.
     @ViewBuilder
-    private func mark(_ tint: Color) -> some View {
-        if isClass {
-            Image(systemName: item.symbol ?? "book").font(TypeScale.caption).foregroundStyle(tint)
+    private func mark(_ look: CalendarItemLook) -> some View {
+        if let bar = look.bar {
+            Capsule().fill(bar.color).frame(width: 3)
         } else {
-            Capsule().fill(tint).frame(width: 3)
+            Image(systemName: item.symbol ?? "book").font(TypeScale.caption).foregroundStyle(look.glyph.color)
         }
     }
 
     /// The title with a block's own kind glyph beside it, and its time
     /// range under it once `item.showsTimeRange` says there is room.
-    private func content(_ tint: Color) -> some View {
+    private func content(_ look: CalendarItemLook) -> some View {
         VStack(alignment: .leading, spacing: 2) {
             HStack(spacing: Spacing.tiny) {
                 if !isClass, let symbol = item.symbol {
-                    Image(systemName: symbol).font(TypeScale.caption).foregroundStyle(tint)
+                    Image(systemName: symbol).font(TypeScale.caption).foregroundStyle(look.glyph.color)
                 }
                 Text(item.title).font(TypeScale.caption.weight(.medium)).foregroundStyle(Palette.ink.color)
                     .strikethrough(isCancelled)
