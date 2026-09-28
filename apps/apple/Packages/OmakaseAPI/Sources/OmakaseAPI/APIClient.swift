@@ -82,6 +82,10 @@ public actor OmakaseAPIClient: APIClient {
     private let baseURL: URL
     private let transport: any HTTPTransport
     private let tokens: any TokenStore
+    /// The refresh every concurrent 401 currently awaits, so N of them share
+    /// one `POST token/refresh/` instead of firing one each (#276): an
+    /// actor's reentrancy at each `await` let every 401 start its own.
+    private var inFlightRefresh: Task<Void, Error>?
 
     public init(baseURL: URL, transport: any HTTPTransport, tokens: any TokenStore) {
         (self.baseURL, self.transport, self.tokens) = (baseURL, transport, tokens)
@@ -228,7 +232,23 @@ public actor OmakaseAPIClient: APIClient {
         return retry
     }
 
+    /// Joins the in-flight refresh if one is already running, otherwise
+    /// starts it. The check-and-start has no `await` in it, so it is atomic
+    /// even though the actor is reentrant: only the first 401 of a batch
+    /// creates the task, and every other one awaits that same task's result.
     private func refresh() async throws {
+        if let inFlightRefresh {
+            try await inFlightRefresh.value
+            return
+        }
+        let task = Task { try await self.performRefresh() }
+        inFlightRefresh = task
+        defer { inFlightRefresh = nil }
+        try await task.value
+    }
+
+    /// The actual `POST token/refresh/`, run exactly once per `refresh()` caller group.
+    private func performRefresh() async throws {
         guard var stored = await tokens.load() else { throw APIError.signedOut }
         let body = try OmakaseJSON.encoder.encode(["refresh": stored.refresh])
         let reply = try await raw("POST", "/api/v1/auth/token/refresh/", body: body, auth: false)
