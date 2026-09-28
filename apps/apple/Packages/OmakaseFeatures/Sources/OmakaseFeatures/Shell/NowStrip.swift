@@ -1,5 +1,3 @@
-import CoreGraphics
-
 /// The pomodoro as the now strip reads it: plain values, so the mapping is
 /// testable without a running `TimerModel`.
 public struct NowStripTimer: Equatable, Sendable {
@@ -90,19 +88,12 @@ public enum NowStripState: Equatable, Sendable {
     }
 }
 
-/// The now strip's mapping and measures (spec §6, #260): the running or
-/// paused phase, else the day's next block (`MenuBar.nextBlock`, as the
-/// menu-bar panel picks it), else nothing.
+/// The now strip's mapping (spec §6, #260): the running or paused phase,
+/// else the day's next block (`MenuBar.nextBlock`, as the menu-bar panel
+/// picks it), else nothing. Its measures are `SidebarMetrics`'.
 ///
 ///     NowStrip.state(timer: NowStripTimer(timer, title: title), nextBlock: next)   // .running(…)
 public enum NowStrip {
-    /// The ring's diameter: a mark beside the countdown, not a dial.
-    public static let ringDiameter: CGFloat = 18
-    /// The ring's stroke.
-    public static let ringLineWidth: CGFloat = 3
-    /// A paused phase's strip: dimmed as a disabled control is.
-    public static let pausedOpacity = ControlMetrics.disabledOpacity
-
     /// A phase on, else the next block, else `.idle`. A phase whose task
     /// isn't cached reads as the phase ("Short break"); a block with no
     /// task is a study block, and reads "Study" as the menu-bar panel does.
