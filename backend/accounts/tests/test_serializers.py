@@ -3,7 +3,6 @@ from django.contrib.auth.models import User
 from rest_framework.test import APIRequestFactory
 
 from accounts.serializers import (
-    ChangePasswordSerializer,
     UpdateProfileSerializer,
     UserSerializer,
 )
@@ -133,88 +132,3 @@ class TestUpdateProfileSerializer:
         serializer.save()
         user.profile.refresh_from_db()
         assert user.profile.avatar_color == "#ff5733"
-
-
-@pytest.mark.django_db
-class TestChangePasswordSerializer:
-    def test_change_password_success(self, user):
-        request = make_request(user)
-        serializer = ChangePasswordSerializer(
-            data={
-                "old_password": "testpass123",
-                "new_password": "newpass12345",
-                "new_password_confirm": "newpass12345",
-            },
-            context={"request": request},
-        )
-        assert serializer.is_valid(), serializer.errors
-        serializer.save()
-        user.refresh_from_db()
-        assert user.check_password("newpass12345")
-
-    def test_wrong_old_password(self, user):
-        request = make_request(user)
-        serializer = ChangePasswordSerializer(
-            data={
-                "old_password": "wrongpassword",
-                "new_password": "newpass12345",
-                "new_password_confirm": "newpass12345",
-            },
-            context={"request": request},
-        )
-        assert not serializer.is_valid()
-        assert "old_password" in serializer.errors
-
-    def test_new_passwords_mismatch(self, user):
-        request = make_request(user)
-        serializer = ChangePasswordSerializer(
-            data={
-                "old_password": "testpass123",
-                "new_password": "newpass12345",
-                "new_password_confirm": "different123",
-            },
-            context={"request": request},
-        )
-        assert not serializer.is_valid()
-        assert "new_password_confirm" in serializer.errors
-
-    def test_new_password_too_short(self, user):
-        request = make_request(user)
-        serializer = ChangePasswordSerializer(
-            data={
-                "old_password": "testpass123",
-                "new_password": "short",
-                "new_password_confirm": "short",
-            },
-            context={"request": request},
-        )
-        assert not serializer.is_valid()
-        assert "new_password" in serializer.errors
-
-    def test_new_password_too_common(self, user):
-        """BUG-1 regression: AUTH_PASSWORD_VALIDATORS must be enforced."""
-        request = make_request(user)
-        serializer = ChangePasswordSerializer(
-            data={
-                "old_password": "testpass123",
-                "new_password": "password1234",
-                "new_password_confirm": "password1234",
-            },
-            context={"request": request},
-        )
-        assert not serializer.is_valid()
-        assert "new_password" in serializer.errors
-
-    def test_new_password_entirely_numeric(self, user):
-        """BUG-1 regression: NumericPasswordValidator must reject all-digit passwords."""
-        request = make_request(user)
-        serializer = ChangePasswordSerializer(
-            data={
-                "old_password": "testpass123",
-                "new_password": "12345678",
-                "new_password_confirm": "12345678",
-            },
-            context={"request": request},
-        )
-        assert not serializer.is_valid()
-        assert "new_password" in serializer.errors

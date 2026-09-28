@@ -155,18 +155,10 @@ class TestTaskViewSet:
         dates = [r["created_at"] for r in resp.data["results"]]
         assert dates == sorted(dates, reverse=True)
 
-    def test_today_endpoint_no_date_param(self, authenticated_client, user):
-        from datetime import date
-
-        TaskFactory(scheduled_date=date.today(), user=user)
-        TaskFactory(scheduled_date=date.today() - datetime.timedelta(days=1), user=user)
-        resp = authenticated_client.get("/api/v1/tasks/today/")
-        assert resp.status_code == status.HTTP_200_OK
-        assert resp.data["count"] == 1
-
     def test_today_empty(self, authenticated_client, user):
         TaskFactory(scheduled_date=datetime.date(2020, 1, 1), user=user)
-        resp = authenticated_client.get("/api/v1/tasks/today/")
+        resp = authenticated_client.get("/api/v1/tasks/today/?date=2026-03-07")
+        assert resp.status_code == status.HTTP_200_OK
         assert resp.data["count"] == 0
 
     def test_today_with_date_param(self, authenticated_client, user):
@@ -181,13 +173,35 @@ class TestTaskViewSet:
         resp = authenticated_client.get("/api/v1/tasks/today/?date=2026-03-08")
         assert resp.data["count"] == 0
 
-    def test_today_with_invalid_date_falls_back(self, authenticated_client, user):
+    def test_today_with_invalid_date_returns_400(self, authenticated_client, user):
+        """Invalid date param must 400 — never silently fall back to server UTC.
+
+        Falling back caused the bug where tasks vanished near midnight when
+        client and server timezones disagreed (see fix 25c7db9).
+        """
         from datetime import date
 
         TaskFactory(scheduled_date=date.today(), user=user)
         resp = authenticated_client.get("/api/v1/tasks/today/?date=not-a-date")
-        assert resp.status_code == status.HTTP_200_OK
-        assert resp.data["count"] == 1
+        assert resp.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_today_without_date_is_rejected_issue65(self, authenticated_client, user):
+        """A missing ?date= must 400, like a malformed one - never the server's day.
+
+        25c7db9 stopped the fallback for a malformed date and kept it for a
+        missing one, so the server's UTC day still answered whenever a client
+        forgot the param (#65). /tasks/carried-over/ already refuses it.
+        """
+        TaskFactory(scheduled_date=datetime.date(2026, 3, 7), user=user)
+        resp = authenticated_client.get("/api/v1/tasks/today/")
+        assert resp.status_code == status.HTTP_400_BAD_REQUEST
+        assert "date" in resp.data["detail"]
+
+    def test_today_rejects_basic_iso_form_issue69(self, authenticated_client, user):
+        """fromisoformat accepted 20260307; the contract is YYYY-MM-DD (#69)."""
+        TaskFactory(scheduled_date=datetime.date(2026, 3, 7), user=user)
+        resp = authenticated_client.get("/api/v1/tasks/today/?date=20260307")
+        assert resp.status_code == status.HTTP_400_BAD_REQUEST
 
     def test_reorder_bulk_success(self, authenticated_client, user):
         t1 = TaskFactory(user=user)
@@ -224,6 +238,54 @@ class TestTaskViewSet:
     def test_nonexistent_task_404(self, authenticated_client):
         resp = authenticated_client.get(f"/api/v1/tasks/{uuid.uuid4()}/")
         assert resp.status_code == status.HTTP_404_NOT_FOUND
+
+    def test_task_actual_minutes_with_time_blocks(self, authenticated_client, user):
+        """Task with 2 time blocks (30min each) returns 60 actual_minutes."""
+        task = TaskFactory(user=user)
+        TimeBlockFactory(task=task, start_time=datetime.time(9, 0), end_time=datetime.time(9, 30))
+        TimeBlockFactory(task=task, start_time=datetime.time(14, 0), end_time=datetime.time(14, 30))
+        resp = authenticated_client.get("/api/v1/tasks/")
+        task_data = next(t for t in resp.data["results"] if str(t["id"]) == str(task.pk))
+        assert task_data["actual_minutes"] == 60
+
+    def test_task_actual_minutes_zero_without_time_blocks(self, authenticated_client, user):
+        """Task with no time blocks returns 0 actual_minutes."""
+        TaskFactory(user=user)
+        resp = authenticated_client.get("/api/v1/tasks/")
+        assert resp.data["results"][0]["actual_minutes"] == 0
+
+    def test_carried_over_returns_past_incomplete_tasks(self, authenticated_client, user):
+        TaskFactory(user=user, scheduled_date=datetime.date(2026, 3, 10), is_completed=False)
+        TaskFactory(user=user, scheduled_date=datetime.date(2026, 3, 11), is_completed=False)
+        TaskFactory(user=user, scheduled_date=datetime.date(2026, 3, 9), is_completed=True)
+        resp = authenticated_client.get("/api/v1/tasks/carried-over/?date=2026-03-11")
+        assert resp.status_code == status.HTTP_200_OK
+        assert len(resp.data) == 1
+        assert resp.data[0]["scheduled_date"] == "2026-03-10"
+
+    def test_carried_over_excludes_completed(self, authenticated_client, user):
+        TaskFactory(user=user, scheduled_date=datetime.date(2026, 3, 9), is_completed=True)
+        resp = authenticated_client.get("/api/v1/tasks/carried-over/?date=2026-03-11")
+        assert resp.status_code == status.HTTP_200_OK
+        assert len(resp.data) == 0
+
+    def test_carried_over_excludes_today_and_future(self, authenticated_client, user):
+        TaskFactory(user=user, scheduled_date=datetime.date(2026, 3, 11), is_completed=False)
+        TaskFactory(user=user, scheduled_date=datetime.date(2026, 3, 12), is_completed=False)
+        resp = authenticated_client.get("/api/v1/tasks/carried-over/?date=2026-03-11")
+        assert resp.status_code == status.HTTP_200_OK
+        assert len(resp.data) == 0
+
+    def test_carried_over_requires_date_param(self, authenticated_client, user):
+        resp = authenticated_client.get("/api/v1/tasks/carried-over/")
+        assert resp.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_carried_over_user_scoped(self, authenticated_client, user):
+        other_user = UserFactory()
+        TaskFactory(user=other_user, scheduled_date=datetime.date(2026, 3, 9))
+        resp = authenticated_client.get("/api/v1/tasks/carried-over/?date=2026-03-11")
+        assert resp.status_code == status.HTTP_200_OK
+        assert len(resp.data) == 0
 
     def test_unauthenticated_returns_401(self, api_client):
         resp = api_client.get("/api/v1/tasks/")
@@ -362,6 +424,95 @@ class TestTimeBlockViewSet:
         assert resp.status_code == status.HTTP_204_NO_CONTENT
         assert Task.objects.filter(pk=task_pk).exists()
 
+    def test_create_timeblock_with_notes(self, authenticated_client, user):
+        task = TaskFactory(user=user)
+        resp = authenticated_client.post(
+            "/api/v1/timeblocks/",
+            {
+                "task": str(task.pk),
+                "date": "2025-01-15",
+                "start_time": "09:00:00",
+                "end_time": "10:00:00",
+                "notes": "Great focus session",
+            },
+            format="json",
+        )
+        assert resp.status_code == status.HTTP_201_CREATED
+        assert resp.data["notes"] == "Great focus session"
+
+    def test_update_timeblock_notes(self, authenticated_client, user):
+        tb = TimeBlockFactory(task__user=user)
+        resp = authenticated_client.patch(
+            f"/api/v1/timeblocks/{tb.pk}/",
+            {"notes": "Updated session notes"},
+            format="json",
+        )
+        assert resp.status_code == status.HTTP_200_OK
+        assert resp.data["notes"] == "Updated session notes"
+
+    def test_notes_returned_in_get(self, authenticated_client, user):
+        tb = TimeBlockFactory(task__user=user, notes="My session notes")
+        resp = authenticated_client.get(f"/api/v1/timeblocks/{tb.pk}/")
+        assert resp.status_code == status.HTTP_200_OK
+        assert resp.data["notes"] == "My session notes"
+
+    def test_notes_defaults_to_empty_string(self, authenticated_client, user):
+        task = TaskFactory(user=user)
+        resp = authenticated_client.post(
+            "/api/v1/timeblocks/",
+            {
+                "task": str(task.pk),
+                "date": "2025-01-15",
+                "start_time": "09:00:00",
+                "end_time": "10:00:00",
+            },
+            format="json",
+        )
+        assert resp.status_code == status.HTTP_201_CREATED
+        assert resp.data["notes"] == ""
+
+    def test_patch_timeblock_session_rating(self, authenticated_client, user):
+        task = TaskFactory(user=user)
+        tb = TimeBlockFactory(task=task)
+        resp = authenticated_client.patch(
+            f"/api/v1/timeblocks/{tb.pk}/",
+            {"session_rating": 4},
+            format="json",
+        )
+        assert resp.status_code == 200
+        assert resp.data["session_rating"] == 4
+
+    def test_session_rating_zero_rejected(self, authenticated_client, user):
+        task = TaskFactory(user=user)
+        tb = TimeBlockFactory(task=task)
+        resp = authenticated_client.patch(
+            f"/api/v1/timeblocks/{tb.pk}/",
+            {"session_rating": 0},
+            format="json",
+        )
+        assert resp.status_code == 400
+
+    def test_session_rating_six_rejected(self, authenticated_client, user):
+        task = TaskFactory(user=user)
+        tb = TimeBlockFactory(task=task)
+        resp = authenticated_client.patch(
+            f"/api/v1/timeblocks/{tb.pk}/",
+            {"session_rating": 6},
+            format="json",
+        )
+        assert resp.status_code == 400
+
+    def test_session_rating_null_allowed(self, authenticated_client, user):
+        task = TaskFactory(user=user)
+        tb = TimeBlockFactory(task=task)
+        resp = authenticated_client.patch(
+            f"/api/v1/timeblocks/{tb.pk}/",
+            {"session_rating": None},
+            format="json",
+        )
+        assert resp.status_code == 200
+        assert resp.data["session_rating"] is None
+
     def test_unauthenticated_returns_401(self, api_client):
         resp = api_client.get("/api/v1/timeblocks/")
         assert resp.status_code == status.HTTP_401_UNAUTHORIZED
@@ -393,12 +544,18 @@ class TestTaskViewEdgeCases:
         resp = authenticated_client.patch("/api/v1/tasks/reorder-bulk/", payload, format="json")
         assert resp.status_code == status.HTTP_200_OK
 
-    def test_reorder_bulk_nonexistent_ids_ignored(self, authenticated_client):
+    def test_reorder_bulk_nonexistent_ids_returns_400(self, authenticated_client):
+        """Nonexistent task IDs must 400 — never silently no-op.
+
+        Silent no-op masked client/server desync bugs (see fix c870d97).
+        """
+        missing_id = str(uuid.uuid4())
         payload = [
-            {"id": str(uuid.uuid4()), "kanban_order": 0, "kanban_status": "todo"},
+            {"id": missing_id, "kanban_order": 0, "kanban_status": "todo"},
         ]
         resp = authenticated_client.patch("/api/v1/tasks/reorder-bulk/", payload, format="json")
-        assert resp.status_code == status.HTTP_200_OK
+        assert resp.status_code == status.HTTP_400_BAD_REQUEST
+        assert missing_id in resp.data["detail"]
 
 
 @pytest.mark.django_db

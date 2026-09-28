@@ -19,6 +19,9 @@ class DailyReview(models.Model):
         validators=[MinValueValidator(1), MaxValueValidator(5)],
     )
     win_of_the_day = models.TextField(blank=True, default="")
+    # How the day felt, 1 (drained) to 3 (energised): the only source for
+    # IDEA §13's energy mapping (#130).
+    energy = models.PositiveSmallIntegerField(null=True, blank=True)
     is_shutdown = models.BooleanField(default=False)
     shutdown_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -27,6 +30,12 @@ class DailyReview(models.Model):
     class Meta:
         unique_together = ("user", "date")
         ordering = ["-date"]
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(energy__isnull=True) | models.Q(energy__gte=1, energy__lte=3),
+                name="dailyreview_energy_1_to_3",
+            )
+        ]
 
     def __str__(self):
         return f"{self.user.username} — {self.date}"

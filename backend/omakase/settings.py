@@ -1,4 +1,5 @@
 import os
+from collections.abc import Mapping
 from datetime import timedelta
 from pathlib import Path
 
@@ -33,6 +34,7 @@ INSTALLED_APPS = [
     "pomodoro",
     "stats",
     "study",
+    "idempotency",
 ]
 
 MIDDLEWARE = [
@@ -65,6 +67,20 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "omakase.wsgi.application"
 
+
+def google_client_ids(environ: Mapping[str, str]) -> list[str]:
+    """Every OAuth client whose Google ID tokens this API accepts (#76).
+
+    GOOGLE_CLIENT_IDS is comma-separated: web, macOS, later iOS. The single
+    GOOGLE_CLIENT_ID is still read for one release, so an unchanged .env on
+    the VPS keeps working. Usage: ``google_client_ids(os.environ)``.
+    """
+    raw = environ.get("GOOGLE_CLIENT_IDS") or environ.get("GOOGLE_CLIENT_ID", "")
+    return [client.strip() for client in raw.split(",") if client.strip()]
+
+
+GOOGLE_CLIENT_IDS = google_client_ids(os.environ)
+
 DATABASE_URL = os.environ.get("DATABASE_URL")
 if not DATABASE_URL:
     raise ImproperlyConfigured("DATABASE_URL environment variable is required")
@@ -76,12 +92,7 @@ DATABASES = {
     )
 }
 
-AUTH_PASSWORD_VALIDATORS = [
-    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
-    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
-    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
-    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
-]
+AUTH_PASSWORD_VALIDATORS = []
 
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
@@ -93,11 +104,35 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# CORS
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://localhost:3001",
-]
+
+# CORS: the native clients send no Origin and the web client is gone, so
+# no origin is allowed unless the environment names one (#243).
+def cors_allowed_origins(environ: Mapping[str, str]) -> list[str]:
+    """Comma-separated CORS_ALLOWED_ORIGINS; blanks dropped. Usage: ``cors_allowed_origins(os.environ)``."""
+    return [origin.strip() for origin in environ.get("CORS_ALLOWED_ORIGINS", "").split(",") if origin.strip()]
+
+
+CORS_ALLOWED_ORIGINS = cors_allowed_origins(os.environ)
+
+# CSRF trusted origins (required when behind reverse proxy with HTTPS)
+CSRF_TRUSTED_ORIGINS = os.environ.get(
+    "CSRF_TRUSTED_ORIGINS",
+    "http://localhost:3000,http://localhost:8000",
+).split(",")
+
+# The container's health probe is plain HTTP inside the network, so it is
+# never redirected to HTTPS (#243); harmless while the redirect is off.
+SECURE_REDIRECT_EXEMPT = [r"^api/health/$"]
+
+# Production security (only when DEBUG=False)
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
 
 # DRF
 REST_FRAMEWORK = {
@@ -120,7 +155,6 @@ REST_FRAMEWORK = {
     ],
     "DEFAULT_THROTTLE_RATES": {
         "anon": "20/minute",
-        "password_change": "5/hour",
     },
 }
 

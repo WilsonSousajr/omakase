@@ -1,0 +1,169 @@
+import Foundation
+import OmakaseAPI
+import SwiftData
+import Testing
+
+@testable import OmakaseStore
+
+@MainActor
+struct TaskWritesTests {
+    let container: ModelContainer
+    var context: ModelContext { container.mainContext }
+
+    init() throws { container = try StoreSchema.container(inMemory: true) }
+
+    func seeded(completed: Bool = false) throws -> TaskRecord {
+        let record = TaskRecord(dto: try .make(completed: completed))
+        context.insert(record)
+        try context.save()
+        return record
+    }
+
+    func outbox() throws -> [OutboxEntry] {
+        try context.fetch(FetchDescriptor<OutboxEntry>(sortBy: [SortDescriptor(\.sequence)]))
+    }
+
+    @Test func toggleUpdatesTheModelAndQueuesOnePatch() throws {
+        let record = try seeded()
+        try TaskWrites(context: context).toggleCompletion(record)
+        let entry = try #require(try outbox().first)
+        #expect(record.isCompleted && record.completedAt != nil)
+        #expect(entry.method == "PATCH" && entry.path == "/api/v1/tasks/\(record.id)/" && entry.subjectID == record.id)
+        #expect(String(bytes: entry.body ?? Data(), encoding: .utf8) == #"{"is_completed":true}"#)
+    }
+
+    @Test func settingAReminderQueuesItsInstant() throws {
+        let record = try seeded()
+        try TaskWrites(context: context).setReminder(record, at: Date(timeIntervalSince1970: 1_772_884_800))
+        let entry = try #require(try outbox().first)
+        #expect(record.remindAt == Date(timeIntervalSince1970: 1_772_884_800))
+        #expect(entry.kind == "task.patch" && entry.path == "/api/v1/tasks/\(record.id)/")
+        #expect(String(bytes: entry.body ?? Data(), encoding: .utf8) == #"{"remind_at":"2026-03-07T12:00:00.000Z"}"#)
+    }
+
+    @Test func clearingAReminderSendsAnExplicitNull() throws {
+        // Spec §Verification: an omitted key would leave the server's reminder set.
+        let record = try seeded()
+        record.remindAt = .now
+        try TaskWrites(context: context).setReminder(record, at: nil)
+        let entry = try #require(try outbox().first)
+        #expect(record.remindAt == nil)
+        #expect(String(bytes: entry.body ?? Data(), encoding: .utf8) == #"{"remind_at":null}"#)
+    }
+
+    @Test func captureSendsTheFilingsAreaAndDiscipline() throws {
+        // Spec §1: a project's or discipline's id comes from the library
+        // cache, never a `local-` id, unlike the id the capture itself creates.
+        let disciplineID = UUID().uuidString
+        let record = try TaskWrites(context: context).capture(
+            title: "Read chapter 4", day: "2026-03-07",
+            filing: TaskFiling(area: .work, parent: .discipline(disciplineID)))
+        let entry = try #require(try outbox().first)
+        let expected =
+            #"{"area":"study","discipline":"\#(disciplineID)","scheduled_date":"2026-03-07","title":"Read chapter 4"}"#
+        #expect(String(bytes: entry.body ?? Data(), encoding: .utf8) == expected)
+        #expect(record.disciplineID == disciplineID && record.projectID == nil)
+    }
+
+    @Test func captureWithNoParentOmitsProjectAndDiscipline() throws {
+        let record = try TaskWrites(context: context).capture(
+            title: "Buy milk", day: nil, filing: TaskFiling(area: .life, parent: nil))
+        let entry = try #require(try outbox().first)
+        #expect(String(bytes: entry.body ?? Data(), encoding: .utf8) == #"{"area":"personal","title":"Buy milk"}"#)
+        #expect(record.filing == TaskFiling(area: .life, parent: nil))
+    }
+
+    @Test func twoTogglesReplayInOrder() async throws {
+        // Review Focus 5: complete, then undo, both offline.
+        let record = try seeded()
+        let writes = TaskWrites(context: context)
+        try writes.toggleCompletion(record)
+        try writes.toggleCompletion(record)
+        let api = FakeAPIClient()
+        await api.script([.reply(200, "{}"), .reply(200, "{}")])
+        _ = await OutboxWorker(context: context, api: api, handlers: OutboxHandlers([RecordingHandler()])).drain()
+        let bodies = await api.sentRequests.map { String(bytes: $0.body ?? Data(), encoding: .utf8) ?? "" }
+        #expect(bodies == [#"{"is_completed":true}"#, #"{"is_completed":false}"#])
+        #expect(record.completedAt == nil)
+    }
+
+    @Test func writeSurvivesANewContextOnTheSameContainer() throws {
+        // Review Focus 1: the app quit between enqueue and send. A fresh
+        // context on the same container (as on relaunch) still sees the entry.
+        let record = try seeded()
+        try TaskWrites(context: context).toggleCompletion(record)
+        let relaunched = ModelContext(container)
+        #expect(try relaunched.fetch(FetchDescriptor<OutboxEntry>()).count == 1)
+    }
+
+    @Test func theServerCopyIsAppliedOnAccept() throws {
+        let record = try seeded()
+        let server = try TaskDTO.make(id: UUID(uuidString: record.id)!, title: "Renamed on server", completed: true)
+        let entry = OutboxEntry(sequence: 1, method: "PATCH", path: "/x/", body: nil, subjectID: record.id)
+        TaskHandler(context: context).apply(entry, body: try OmakaseJSON.encoder.encode(server))
+        #expect(record.title == "Renamed on server" && record.isCompleted)
+    }
+
+    @Test func anAcceptedCreateTakesTheServersID() throws {
+        let local = try seeded()
+        local.id = "local-7"
+        let server = try TaskDTO.make(title: "Captured")
+        let entry = OutboxEntry(
+            sequence: 1, method: "POST", path: "/api/v1/tasks/", body: nil, subjectID: "local-7",
+            createsLocalID: "local-7")
+        TaskHandler(context: context).apply(entry, body: try OmakaseJSON.encoder.encode(server))
+        #expect(local.id == server.recordID && local.title == "Captured")
+    }
+
+    @Test func anAcceptedCreateRepointsTheTasksBlocksAndSubtasksIssue274() throws {
+        // #274: a block drawn on a capture (#264) and a subtask cached under the
+        // placeholder must follow the task to its server id at once, not
+        // only when the block's own create is accepted later.
+        let local = try seeded()
+        local.id = "local-7"
+        let block = TimeBlockRecord(
+            id: "local-b", day: "2026-03-07", startTime: "09:00:00", endTime: "10:00:00", taskID: "local-7")
+        let subtask = SubtaskRecord(dto: try .make(title: "Outline"), taskID: "local-7")
+        context.insert(block)
+        context.insert(subtask)
+        let server = try TaskDTO.make(title: "Captured")
+        let entry = OutboxEntry(
+            sequence: 1, method: "POST", path: "/api/v1/tasks/", body: nil, subjectID: "local-7",
+            createsLocalID: "local-7")
+        TaskHandler(context: context).apply(entry, body: try OmakaseJSON.encoder.encode(server))
+        #expect(block.taskID == server.recordID)
+        #expect(subtask.taskID == server.recordID)
+    }
+
+    @Test func aBodyThatIsNotATaskChangesNothing() throws {
+        let record = try seeded()
+        let entry = OutboxEntry(sequence: 1, method: "PATCH", path: "/x/", body: nil, subjectID: record.id)
+        TaskHandler(context: context).apply(entry, body: Data("{}".utf8))
+        let count = try context.fetch(FetchDescriptor<TaskRecord>()).count
+        #expect(record.title == "Task" && count == 1)
+    }
+
+    @Test func aRecordCanBeBuiltWithoutAServerCopy() {
+        let record = TaskRecord(id: "local-3", title: "Captured", priority: "high", isCompleted: false)
+        #expect(record.id == "local-3" && record.priority == "high" && record.scheduledDay == nil)
+        #expect(record.completedAt == nil && !record.isCompleted)
+    }
+
+    @Test func acceptingAnEarlierWriteKeepsALaterQueuedChange() async throws {
+        // Review finding I5: complete then undo while offline; the first
+        // PATCH is accepted, the connection drops before the second. The
+        // server's copy (completed) must not overwrite the queued undo.
+        let record = try seeded()
+        let writes = TaskWrites(context: context)
+        try writes.toggleCompletion(record)
+        try writes.toggleCompletion(record)
+        let serverCopy = try TaskDTO.make(id: UUID(uuidString: record.id)!, completed: true)
+        let api = FakeAPIClient()
+        let body = String(bytes: try OmakaseJSON.encoder.encode(serverCopy), encoding: .utf8) ?? ""
+        await api.script([.reply(200, body), .offline])
+        _ = await OutboxWorker(context: context, api: api, handlers: OutboxHandlers([TaskHandler(context: context)]))
+            .drain()
+        #expect(record.isCompleted == false)
+        #expect(try outbox().count == 1)
+    }
+}

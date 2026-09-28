@@ -1,5 +1,8 @@
 # Omakase Design System
 
+> The web client was removed in #62; this is its record. The native Apple
+> app's identity, which follows it, is in `docs/design-system-apple.md`.
+
 Monochrome design inspired by wstech.tech, with Sunsama-style productivity layout. Supports light and dark themes via `next-themes`.
 
 ## Color Tokens
@@ -343,6 +346,21 @@ Settings link: user avatar section links to /settings, Settings gear icon from l
 Review icon: CheckSquare from lucide-react
 Settings icon: Settings (gear) from lucide-react
 ```
+
+### Login Page
+
+Centered, editorial-minimal layout. Two animation-staggered groups: brand (immediate) + sign-in (150ms delay).
+
+```
+Brand wordmark: text-2xl font-light uppercase tracking-[0.3em] text-[var(--color-text-primary)]
+Decorative divider: h-px w-8 bg-[var(--color-border)] (centered, mt-4)
+Tagline: text-xs text-[var(--color-text-faint)] ("Plan. Focus. Ship.")
+Spacing: mb-12 between brand and sign-in
+Animation: fade-in-up 0.6s ease-out (CSS keyframe in globals.css)
+Google button: theme="outline" size="large" width="320"
+```
+
+Auth layout wrapper: `flex min-h-screen w-full items-center justify-center bg-[var(--color-bg)]` → `max-w-sm px-4` inner container.
 
 ### Theme Toggle
 

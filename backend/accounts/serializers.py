@@ -1,46 +1,19 @@
 import re
 
-from django.contrib.auth import password_validation
 from django.contrib.auth.models import User
-from django.core.exceptions import ValidationError as DjangoValidationError
-from django.db import IntegrityError, transaction
+from django.db import transaction
 from rest_framework import serializers
 
-from accounts.models import UserProfile
+from accounts.models import BLOCK_REMINDER_MAX, BLOCK_REMINDER_MIN, UserProfile
 
 
-class RegisterSerializer(serializers.Serializer):
-    username = serializers.CharField(max_length=150)
-    email = serializers.EmailField()
-    password = serializers.CharField(write_only=True, min_length=8)
-    password_confirm = serializers.CharField(write_only=True, min_length=8)
+class GoogleLoginSerializer(serializers.Serializer):
+    credential = serializers.CharField()
 
-    def validate_username(self, value):
-        if User.objects.filter(username=value).exists():
-            raise serializers.ValidationError("Unable to register with the provided credentials.")
-        return value
 
-    def validate_email(self, value):
-        if User.objects.filter(email=value).exists():
-            raise serializers.ValidationError("Unable to register with the provided credentials.")
-        return value
-
-    def validate(self, data):
-        if data["password"] != data["password_confirm"]:
-            raise serializers.ValidationError({"password_confirm": "Passwords do not match."})
-        temp_user = User(username=data.get("username", ""), email=data.get("email", ""))
-        try:
-            password_validation.validate_password(data["password"], temp_user)
-        except DjangoValidationError as e:
-            raise serializers.ValidationError({"password": e.messages})
-        return data
-
-    def create(self, validated_data):
-        validated_data.pop("password_confirm")
-        try:
-            return User.objects.create_user(**validated_data)
-        except IntegrityError:
-            raise serializers.ValidationError("Unable to register with the provided credentials.")
+class LogoutSerializer(serializers.Serializer):
+    # Bounded: a simplejwt refresh token is a few hundred characters (#223).
+    refresh = serializers.CharField(max_length=2048)
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -97,38 +70,11 @@ class UpdateProfileSerializer(serializers.Serializer):
         return user
 
 
-class ChangePasswordSerializer(serializers.Serializer):
-    old_password = serializers.CharField(write_only=True)
-    new_password = serializers.CharField(write_only=True, min_length=8)
-    new_password_confirm = serializers.CharField(write_only=True, min_length=8)
-
-    def validate_old_password(self, value):
-        user = self.context["request"].user
-        if not user.check_password(value):
-            raise serializers.ValidationError("Current password is incorrect.")
-        return value
-
-    def validate_new_password(self, value):
-        user = self.context["request"].user
-        try:
-            password_validation.validate_password(value, user)
-        except DjangoValidationError as e:
-            raise serializers.ValidationError(e.messages)
-        return value
-
-    def validate(self, data):
-        if data["new_password"] != data["new_password_confirm"]:
-            raise serializers.ValidationError({"new_password_confirm": "New passwords do not match."})
-        return data
-
-    def save(self, **kwargs):
-        user = self.context["request"].user
-        user.set_password(self.validated_data["new_password"])
-        user.save()
-        return user
-
-
 class UserProfileSerializer(serializers.ModelSerializer):
+    # Declared, not derived: the derived field's bounds answer "Ensure this value is
+    # less than or equal to 120." without the value sent (#127).
+    block_reminder_minutes = serializers.IntegerField(allow_null=True, required=False)
+
     class Meta:
         model = UserProfile
         fields = [
@@ -140,7 +86,18 @@ class UserProfileSerializer(serializers.ModelSerializer):
             "pomodoros_before_long_break",
             "daily_work_goal_hours",
             "daily_study_goal_hours",
+            "block_reminder_minutes",
+            "shutdown_reminder_time",
             "created_at",
             "updated_at",
         ]
         read_only_fields = ["created_at", "updated_at"]
+
+    def validate_block_reminder_minutes(self, minutes: int | None) -> int | None:
+        """Null turns the heads-up off; anything else must fall in 1-120 (#127)."""
+        if minutes is None or BLOCK_REMINDER_MIN <= minutes <= BLOCK_REMINDER_MAX:
+            return minutes
+        raise serializers.ValidationError(
+            f"block_reminder_minutes {minutes!r} is outside {BLOCK_REMINDER_MIN}-{BLOCK_REMINDER_MAX}; "
+            "send null for off."
+        )

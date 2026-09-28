@@ -25,10 +25,21 @@ services:
       DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?DJANGO_SECRET_KEY is required in .env}
       DJANGO_DEBUG: ${DJANGO_DEBUG:-False}
       DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,backend}
+      GOOGLE_CLIENT_IDS: ${GOOGLE_CLIENT_IDS:-${GOOGLE_CLIENT_ID:-}}
+      # tools/tests/test_gate_workflow.py reads the CI workflow and pre-commit
+      # config, which live outside backend/ (#66).
+      REPO_ROOT: /repo
     ports:
       - "8000:8000"
     volumes:
       - ./backend:/app
+      - ./.github:/repo/.github:ro
+      - ./.pre-commit-config.yaml:/repo/.pre-commit-config.yaml:ro
+      # Read-write: tools/tests/test_contract_fixtures.py writes them (#78).
+      # Read-only for the Apple gate's workflow and coverage-gate tests (#85);
+      # the Fixtures mount below stays read-write on top of it.
+      - ./apps/apple:/repo/apps/apple:ro
+      - ./apps/apple/Fixtures:/repo/apps/apple/Fixtures
     depends_on:
       db:
         condition: service_healthy
@@ -36,24 +47,5 @@ services:
       sh -c "python manage.py migrate --noinput &&
              python manage.py runserver 0.0.0.0:8000"
 
-  frontend:
-    build:
-      context: ./frontend
-      target: dev
-    environment:
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000/api/v1}
-      WATCHPACK_POLLING: "true"
-      CI: "true"
-    ports:
-      - "3001:3000"
-    volumes:
-      - ./frontend:/app
-      - frontend_node_modules:/app/node_modules
-    depends_on:
-      - backend
-    command: >
-      sh -c "pnpm install && pnpm dev"
-
 volumes:
   pgdata:
-  frontend_node_modules:

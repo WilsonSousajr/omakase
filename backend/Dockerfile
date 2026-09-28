@@ -1,4 +1,6 @@
-FROM python:3.12-slim AS base
+# Exact, not 3.12: a floating tag drifts to a new patch without a diff, and
+# CI pins the same version so both run one toolchain (#66, omatty #261).
+FROM python:3.12.14-slim AS base
 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
@@ -23,7 +25,8 @@ RUN addgroup --system --gid 1001 django && \
     adduser --system --uid 1001 --gid 1001 django
 
 RUN python manage.py collectstatic --noinput 2>/dev/null || true
-RUN chown -R django:django /app
+RUN chown -R django:django /app && chmod +x /app/docker-entrypoint.sh
 
 USER django
-CMD ["gunicorn", "omakase.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3"]
+# Migrations, then gunicorn: Coolify runs no separate migrate step (#243).
+CMD ["/app/docker-entrypoint.sh"]

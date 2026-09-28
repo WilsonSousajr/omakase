@@ -1,0 +1,96 @@
+import Foundation
+import OmakaseAPI
+
+/// The outbox's decisions as pure functions (spec, Data flow -> Replay).
+///
+///     OutboxRules.classify(.success(response))   // .accepted / .retry / .park / .signedOut
+public enum OutboxRules {
+    public enum Outcome: Equatable, Sendable {
+        case accepted(Data)
+        case retry(String)
+        case park(String)
+        case signedOut
+    }
+
+    /// 1 s doubling, capped at 5 min.
+    public static func backoff(afterAttempts attempts: Int) -> TimeInterval {
+        min(pow(2, Double(max(attempts, 1) - 1)), 300)
+    }
+
+    public static func classify(_ result: Result<OutboxResponse, APIError>) -> Outcome {
+        switch result {
+        case .failure(.signedOut): return .signedOut
+        case .failure(let error): return .retry(describe(error))
+        case .success(let response): return classify(response)
+        }
+    }
+
+    /// As `classify(_:)`, except that a DELETE whose target is already gone
+    /// is done: a block deleted elsewhere must not park forever (#201).
+    public static func classify(_ result: Result<OutboxResponse, APIError>, method: String) -> Outcome {
+        if method == "DELETE", case .success(let response) = result, response.status == 404 {
+            return .accepted(Data())
+        }
+        return classify(result)
+    }
+
+    @MainActor
+    public static func rewrite(_ entry: OutboxEntry, localID: String, serverID: String) {
+        entry.path = entry.path.replacingOccurrences(of: localID, with: serverID)
+        entry.body = entry.body.map { replacing(localID, with: serverID, in: $0) }
+        if entry.subjectID == localID { entry.subjectID = serverID }
+    }
+
+    @MainActor
+    public static func references(_ entry: OutboxEntry, localID: String) -> Bool {
+        entry.path.contains(localID) || entry.body.map { text($0).contains(localID) } ?? false
+    }
+
+    /// The entries in `candidates` that reference the id `entry` creates: parked
+    /// with it, retried with it, and discarded with it. Transitive, in sequence
+    /// order: a block created on a captured task depends on the task's create,
+    /// and the block's move on the block's create (#201).
+    @MainActor
+    public static func dependents(of entry: OutboxEntry, among candidates: [OutboxEntry]) -> [OutboxEntry] {
+        var found: [Int: OutboxEntry] = [:]
+        var unvisited = [entry]
+        while let next = unvisited.popLast() {
+            let fresh = directDependents(of: next, among: candidates).filter {
+                $0.sequence != entry.sequence && found[$0.sequence] == nil
+            }
+            for dependent in fresh { found[dependent.sequence] = dependent }
+            unvisited += fresh
+        }
+        return found.values.sorted { $0.sequence < $1.sequence }
+    }
+
+    @MainActor
+    private static func directDependents(of entry: OutboxEntry, among candidates: [OutboxEntry]) -> [OutboxEntry] {
+        guard let localID = entry.createsLocalID else { return [] }
+        return candidates.filter { $0.sequence != entry.sequence && references($0, localID: localID) }
+    }
+
+    private static func classify(_ response: OutboxResponse) -> Outcome {
+        switch response.status {
+        case 200..<300: return .accepted(response.body)
+        case 429, 500...: return .retry("HTTP \(response.status)")
+        default: return .park(detail(response.body) ?? "HTTP \(response.status)")
+        }
+    }
+
+    private static func detail(_ body: Data) -> String? {
+        let object = try? JSONSerialization.jsonObject(with: body) as? [String: Any]
+        return object?["detail"] as? String
+    }
+
+    private static func describe(_ error: APIError) -> String {
+        if case .transport(let reason) = error { return reason }
+        return String(describing: error)
+    }
+
+    private static func text(_ body: Data) -> String { String(bytes: body, encoding: .utf8) ?? "" }
+
+    private static func replacing(_ old: String, with new: String, in body: Data) -> Data {
+        Data(text(body).replacingOccurrences(of: old, with: new).utf8)
+    }
+}

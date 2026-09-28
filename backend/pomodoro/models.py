@@ -2,6 +2,7 @@ import uuid
 
 from django.conf import settings
 from django.db import models
+from django.utils import timezone
 
 
 class SessionTypeChoices(models.TextChoices):
@@ -18,9 +19,15 @@ class PomodoroSession(models.Model):
     task = models.ForeignKey(
         "tasks.Task", on_delete=models.SET_NULL, null=True, blank=True, related_name="pomodoro_sessions"
     )
+    time_block = models.ForeignKey(
+        "tasks.TimeBlock", on_delete=models.SET_NULL, null=True, blank=True, related_name="pomodoro_sessions"
+    )
     session_type = models.CharField(max_length=20, choices=SessionTypeChoices.choices, default=SessionTypeChoices.FOCUS)
     duration_minutes = models.PositiveIntegerField(default=25)
-    started_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    # The Mac's clock, not the server's: a session finished offline is posted
+    # later and must keep when it ran (M3.1 spec §1.1). The default still
+    # stamps a session sent without one.
+    started_at = models.DateTimeField(default=timezone.now, db_index=True)
     ended_at = models.DateTimeField(null=True, blank=True)
     completed = models.BooleanField(default=False)
 

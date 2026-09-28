@@ -1,0 +1,279 @@
+import Foundation
+import OmakaseAPI
+import OmakaseFeatures
+import OmakaseStore
+import SwiftData
+
+/// Wires the packages together (spec, Structure: the app target stays thin).
+/// Coordination - one catch-up at a time, signed-out surfaced, background work
+/// started once - lives in OmakaseStore.SyncCoordinator, under the gate.
+@MainActor
+final class AppServices {
+    let container: ModelContainer
+    let api: OmakaseAPIClient
+    let writes: TaskWrites
+    let coordinator: SyncCoordinator
+    let rangeSync: RangeSync
+    let librarySync: LibrarySync
+    private let reachability = Reachability()
+    private let notifier = PhaseNotifier()
+    private let reminders = ReminderScheduler()
+
+    init() throws {
+        container = try StoreSchema.container(inMemory: false)
+        api = OmakaseAPIClient(
+            baseURL: Self.baseURL, transport: URLSessionTransport(),
+            tokens: CachingTokenStore(wrapping: KeychainTokenStore()))
+        let writes = TaskWrites(context: container.mainContext)
+        self.writes = writes
+        let sync = DaySync(context: container.mainContext, api: api)
+        rangeSync = RangeSync(api: api, context: container.mainContext)
+        librarySync = LibrarySync(api: api, context: container.mainContext)
+        let worker = OutboxWorker(
+            context: container.mainContext, api: api,
+            handlers: Self.handlers(container.mainContext))
+        coordinator = SyncCoordinator(drain: { await worker.drain() }, refresh: { try await sync.refresh() })
+    }
+
+    /// Plan's visible days: their blocks, classes and sessions (#200).
+    func refreshRange(days: [String]) async throws { try await rangeSync.refresh(days: days) }
+
+    /// The library and the Inbox (#224). Offline it keeps the last copy.
+    func refreshLibrary() async { try? await librarySync.refresh() }
+
+    /// Settings' writes (#228): the profile online, launch at login through
+    /// the system, and the signed-in email read online.
+    func settingsActions() -> SettingsModel.Actions {
+        let (api, context) = (self.api, container.mainContext)
+        return SettingsModel.Actions(
+            save: { change in try await ProfileWrites(api: api, context: context).save(change) },
+            loginItemEnabled: { LoginItem.isEnabled }, setLoginItem: { try LoginItem.setEnabled($0) },
+            account: { try? await api.me().email })
+    }
+
+    /// Writes the server hasn't taken, which signing out would lose.
+    func unsentCount() -> Int { (try? SessionReset(context: container.mainContext).unsentCount()) ?? 0 }
+
+    /// Revokes the refresh token when it can, forgets both tokens, and erases
+    /// the store and the outbox (#224; parent spec L149-151).
+    func signOut() async {
+        await api.signOut()
+        try? SessionReset(context: container.mainContext).erase()
+    }
+
+    var googleClientID: String { Bundle.main.object(forInfoDictionaryKey: "OmakaseGoogleClientID") as? String ?? "" }
+
+    /// On launch, on reconnect and every 5 minutes; `onOutcome` sees every
+    /// result, and `onPathChange` each time the network comes or goes.
+    func startBackgroundCatchUp(
+        onPathChange: @escaping @MainActor (Bool) -> Void,
+        onOutcome: @escaping @MainActor (SyncCoordinator.Outcome) -> Void
+    ) {
+        guard coordinator.claimBackgroundStart() else { return }
+        let coordinator = self.coordinator
+        reachability.start { isOnline in
+            Task { @MainActor in
+                onPathChange(isOnline)
+                if isOnline { onOutcome(await coordinator.catchUp()) }
+            }
+        }
+        Task { @MainActor in
+            while !Task.isCancelled {
+                onOutcome(await coordinator.catchUp())
+                try? await Task.sleep(for: .seconds(300))
+            }
+        }
+    }
+
+    /// Focus's writes, by task id: each finds the record, writes it through
+    /// the outbox and catches up at once (#91); `onOutcome` sees the result.
+    func focusActions(onOutcome: @escaping @MainActor (SyncCoordinator.Outcome) -> Void) -> FocusModel.Actions {
+        FocusModel.Actions(
+            toggle: { [self] id in perform(on: id, onOutcome) { try self.writes.toggleCompletion($0) } },
+            move: { [self] id, status in perform(on: id, onOutcome) { try self.writes.setKanbanStatus($0, to: status) }
+            },
+            reschedule: { [self] id, day in perform(on: id, onOutcome) { try self.writes.reschedule($0, to: day) } },
+            toggleSubtask: { [self] id in toggleSubtask(id, onOutcome) },
+            remind: { [self] id, date in perform(on: id, onOutcome) { try self.writes.setReminder($0, at: date) } },
+            edit: { [self] id, changes in perform(on: id, onOutcome) { try self.writes.edit($0, changes: changes) } },
+            setRepeat: { [self] id, rule in
+                perform(on: id, onOutcome) { try self.writes.setRecurrence($0, rule: rule) }
+            },
+            stopRepeat: { [self] id, today in
+                perform(on: id, onOutcome) { try self.writes.stopRecurrence($0, today: today) }
+            })
+    }
+
+    /// The Inbox's writes (#225): the same queued task writes Focus uses, so
+    /// triage works offline. A place list's writes go through the same
+    /// actions (spec §5, #259): both share `TriageModel`.
+    func inboxActions(onOutcome: @escaping @MainActor (SyncCoordinator.Outcome) -> Void) -> TriageModel.Actions {
+        TriageModel.Actions(
+            schedule: { [self] id, day in perform(on: id, onOutcome) { try self.writes.reschedule($0, to: day) } },
+            toggle: { [self] id in perform(on: id, onOutcome) { try self.writes.toggleCompletion($0) } },
+            delete: { [self] id in perform(on: id, onOutcome) { try self.writes.delete($0) } },
+            edit: { [self] id, changes in perform(on: id, onOutcome) { try self.writes.edit($0, changes: changes) } })
+    }
+
+    /// Replaces the pending reminders with the store's plan (#187): after
+    /// every catch-up and every write, which all end in an outcome.
+    func replanReminders() { reminders.replan(from: container.mainContext) }
+
+    /// The review's writes: the day's draft saved locally and PUT through the
+    /// outbox, then a catch-up, as Focus's writes do (M3.4 spec §2). Shut down
+    /// is one `coordinator.write`: the closed review, then each rollover.
+    func reviewActions(onOutcome: @escaping @MainActor (SyncCoordinator.Outcome) -> Void) -> ReviewModel.Actions {
+        let writes = ReviewWrites(context: container.mainContext)
+        return ReviewModel.Actions(
+            save: { [self] day, values in
+                reviewWrite(onOutcome) {
+                    try writes.save(
+                        day: day, rating: values.rating, win: values.win, energy: values.energy,
+                        shutdown: values.isShutdown)
+                }
+            },
+            shutDown: { [self] day, values, rollovers in
+                reviewWrite(onOutcome) {
+                    try writes.shutDown(
+                        day: day, rating: values.rating, win: values.win, energy: values.energy, rollovers: rollovers)
+                }
+            })
+    }
+
+    private func reviewWrite(
+        _ onOutcome: @escaping @MainActor (SyncCoordinator.Outcome) -> Void, _ write: @escaping () throws -> Void
+    ) {
+        let coordinator = self.coordinator
+        Task { onOutcome((try? await coordinator.write { try write() }) ?? .synced) }
+    }
+
+    private func toggleSubtask(_ id: String, _ onOutcome: @escaping @MainActor (SyncCoordinator.Outcome) -> Void) {
+        let descriptor = FetchDescriptor<SubtaskRecord>(predicate: #Predicate { $0.id == id })
+        guard let subtask = try? container.mainContext.fetch(descriptor).first else { return }
+        let (coordinator, writes) = (self.coordinator, SubtaskWrites(context: container.mainContext))
+        Task { onOutcome((try? await coordinator.write { try writes.toggle(subtask) }) ?? .synced) }
+    }
+
+    private func perform(
+        on id: String, _ onOutcome: @escaping @MainActor (SyncCoordinator.Outcome) -> Void,
+        _ write: @escaping (TaskRecord) throws -> Void
+    ) {
+        let descriptor = FetchDescriptor<TaskRecord>(predicate: #Predicate { $0.id == id })
+        guard let record = try? container.mainContext.fetch(descriptor).first else { return }
+        let coordinator = self.coordinator
+        Task { onOutcome((try? await coordinator.write { try write(record) }) ?? .synced) }
+    }
+
+    /// The failed-writes sheet's hands on the outbox: a retry or discard is
+    /// followed by a catch-up, whose outcome the model sees through
+    /// `coordinator.onEveryOutcome` (#185).
+    func failedWritesActions() -> FailedWritesModel.Actions {
+        let (maintenance, coordinator) = (OutboxMaintenance(context: container.mainContext), self.coordinator)
+        let catchUp = { Task { _ = await coordinator.catchUp() } }
+        return FailedWritesModel.Actions(
+            status: { maintenance.status() },
+            retry: { sequence in
+                try maintenance.retry(sequence: sequence)
+                catchUp()
+            },
+            discard: { sequence in
+                try maintenance.discard(sequence: sequence)
+                catchUp()
+            },
+            syncNow: { catchUp() })
+    }
+
+    /// The pomodoro, resumed from the store: a phase that ran out while the
+    /// app was quit is recorded as it ran. Its finished phases are posted as
+    /// sessions through the outbox, against the task's block (#129).
+    func makeTimer(onOutcome: @escaping @MainActor (SyncCoordinator.Outcome) -> Void) -> TimerModel {
+        let context = container.mainContext
+        let store = TimerStateStore(context: context)
+        let saved = store.load().flatMap { try? JSONDecoder().decode(PomodoroState.self, from: $0) } ?? .idle
+        return TimerModel(
+            state: saved,
+            settings: { PomodoroSettings(profile: try? context.fetch(FetchDescriptor<ProfileRecord>()).first) },
+            blockFor: { [self] in blockNow(for: $0) },
+            actions: TimerModel.Actions(
+                save: { try? store.save(JSONEncoder().encode($0)) },
+                record: { [self] in record($0, onOutcome) },
+                notify: { [notifier] in notifier.notify(at: $0, ending: $1) }))
+    }
+
+    private func blockNow(for taskID: String) -> String? {
+        let day = FocusDay().today
+        let descriptor = FetchDescriptor<TimeBlockRecord>(predicate: #Predicate { $0.day == day })
+        let blocks = (try? container.mainContext.fetch(descriptor)) ?? []
+        let slots = blocks.map { SessionBlock.Slot(id: $0.id, taskID: $0.taskID, start: $0.startTime, end: $0.endTime) }
+        return SessionBlock.pick(for: taskID, in: slots, at: DayString.time(.now, calendar: .current))
+    }
+
+    private func record(_ phase: CompletedPhase, _ onOutcome: @escaping @MainActor (SyncCoordinator.Outcome) -> Void) {
+        let context = container.mainContext
+        let task = phase.taskID.flatMap { id in
+            try? context.fetch(FetchDescriptor<TaskRecord>(predicate: #Predicate { $0.id == id })).first
+        }
+        let session = FinishedSession(
+            timeBlockID: phase.blockID, type: phase.phase.sessionType, minutes: phase.minutes,
+            startedAt: phase.startedAt, endedAt: phase.endedAt, completed: phase.completed)
+        let (coordinator, writes) = (self.coordinator, SessionWrites(context: context))
+        Task { onOutcome((try? await coordinator.write { try writes.record(session, task: task) }) ?? .synced) }
+    }
+
+    /// The prompt for a focus that just finished: its task's title and the
+    /// subtasks it has checked (#163).
+    func prompt(for finished: CompletedPhase?) -> SessionPrompt? {
+        guard let taskID = finished?.taskID else { return nil }
+        let context = container.mainContext
+        let task = try? context.fetch(FetchDescriptor<TaskRecord>(predicate: #Predicate { $0.id == taskID })).first
+        let done = FetchDescriptor<SubtaskRecord>(
+            predicate: #Predicate { $0.taskID == taskID && $0.isCompleted }, sortBy: [SortDescriptor(\.order)])
+        let subtasks = (try? context.fetch(done)) ?? []
+        return SessionPrompt.make(for: finished, taskTitle: task?.title, doneSubtasks: subtasks.map(\.title))
+    }
+
+    /// Saves the prompt's rating and notes to the block, through the outbox.
+    func apply(_ writes: [SessionPrompt.Write], onOutcome: @escaping @MainActor (SyncCoordinator.Outcome) -> Void) {
+        let context = container.mainContext
+        let (coordinator, blocks) = (self.coordinator, BlockWrites(context: context))
+        func block(_ id: String) -> TimeBlockRecord? {
+            try? context.fetch(FetchDescriptor<TimeBlockRecord>(predicate: #Predicate { $0.id == id })).first
+        }
+        Task {
+            let outcome = try? await coordinator.write {
+                for write in writes {
+                    switch write {
+                    case .rate(let id, let value): if let found = block(id) { try blocks.rate(found, value) }
+                    case .notes(let id, let text): if let found = block(id) { try blocks.saveNotes(found, text) }
+                    }
+                }
+            }
+            onOutcome(outcome ?? .synced)
+        }
+    }
+
+    /// Ticks the timer every second while the app runs, so a phase ends on
+    /// time with the window closed (the menu bar and notifications rely on it).
+    func startTicking(_ timer: TimerModel) {
+        Task { @MainActor in
+            while !Task.isCancelled {
+                timer.tick()
+                try? await Task.sleep(for: .seconds(1))
+            }
+        }
+    }
+
+    /// Every kind of write the app queues, and what applies its reply (M3.1 spec §3).
+    private static func handlers(_ context: ModelContext) -> OutboxHandlers {
+        OutboxHandlers([
+            TaskHandler(context: context), SubtaskHandler(context: context), BlockHandler(context: context),
+            SessionHandler(), ReviewHandler(context: context), RecurrenceHandler(context: context),
+            ClassHandler(),
+        ])
+    }
+
+    private static var baseURL: URL {
+        let configured = Bundle.main.object(forInfoDictionaryKey: "OmakaseAPIBaseURL") as? String
+        return configured.flatMap(URL.init(string:)) ?? URL(string: "http://localhost:8000")!
+    }
+}

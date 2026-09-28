@@ -221,6 +221,56 @@ class TestStudyBlockViewSet:
         resp = authenticated_client.delete(f"{self.URL}{study_block.pk}/")
         assert resp.status_code == status.HTTP_204_NO_CONTENT
 
+    def test_study_block_actual_minutes(self, authenticated_client, user):
+        """StudyBlock with time block returns correct actual_minutes."""
+        sb = StudyBlockFactory(discipline__semester__user=user)
+        TimeBlockFactory(task=None, study_block=sb, start_time=datetime.time(10, 0), end_time=datetime.time(11, 0))
+        resp = authenticated_client.get(self.URL)
+        sb_data = next(s for s in resp.data["results"] if str(s["id"]) == str(sb.pk))
+        assert sb_data["actual_minutes"] == 60
+
+    def test_study_block_actual_minutes_zero(self, authenticated_client, user):
+        """StudyBlock with no time blocks returns 0."""
+        StudyBlockFactory(discipline__semester__user=user)
+        resp = authenticated_client.get(self.URL)
+        assert resp.data["results"][0]["actual_minutes"] == 0
+
+    def test_carried_over_returns_past_incomplete_blocks(self, authenticated_client, user):
+        sb = StudyBlockFactory(
+            discipline__semester__user=user,
+            scheduled_date=datetime.date(2026, 3, 9),
+            status="planned",
+        )
+        # Completed — excluded
+        StudyBlockFactory(
+            discipline__semester__user=user,
+            scheduled_date=datetime.date(2026, 3, 9),
+            status="completed",
+        )
+        # Skipped — excluded
+        StudyBlockFactory(
+            discipline__semester__user=user,
+            scheduled_date=datetime.date(2026, 3, 9),
+            status="skipped",
+        )
+        resp = authenticated_client.get(f"{self.URL}carried-over/?date=2026-03-11")
+        assert resp.status_code == status.HTTP_200_OK
+        assert len(resp.data) == 1
+        assert str(resp.data[0]["id"]) == str(sb.pk)
+
+    def test_carried_over_requires_date(self, authenticated_client, user):
+        resp = authenticated_client.get(f"{self.URL}carried-over/")
+        assert resp.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_carried_over_user_scoped(self, authenticated_client, user):
+        StudyBlockFactory(
+            scheduled_date=datetime.date(2026, 3, 9),
+            status="planned",
+        )  # different user
+        resp = authenticated_client.get(f"{self.URL}carried-over/?date=2026-03-11")
+        assert resp.status_code == status.HTTP_200_OK
+        assert len(resp.data) == 0
+
 
 @pytest.mark.django_db
 class TestTimeBlockPolymorphicFK:

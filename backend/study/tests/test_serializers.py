@@ -250,6 +250,8 @@ class TestClassOccurrenceSerializer:
             "date": datetime.date(2026, 3, 5),
             "start_time": datetime.time(10, 0),
             "end_time": datetime.time(11, 40),
+            "week": 2,
+            "is_cancelled": True,
         }
         serializer = ClassOccurrenceSerializer(occurrence)
         data = serializer.data
@@ -257,6 +259,8 @@ class TestClassOccurrenceSerializer:
         assert data["discipline_name"] == "Calculus II"
         assert data["date"] == "2026-03-05"
         assert data["start_time"] == "10:00:00"
+        assert data["week"] == 2
+        assert data["is_cancelled"] is True
 
     def test_serializes_many(self):
         occurrences = [
@@ -270,6 +274,8 @@ class TestClassOccurrenceSerializer:
                 "date": datetime.date(2026, 3, i),
                 "start_time": datetime.time(14, 0),
                 "end_time": datetime.time(16, 0),
+                "week": 1,
+                "is_cancelled": False,
             }
             for i in range(1, 4)
         ]

@@ -1,0 +1,297 @@
+import Foundation
+import OmakaseAPI
+import SwiftData
+import Testing
+
+@testable import OmakaseStore
+
+/// A settable clock for tests: the day can roll over mid-test.
+final class TestClock: @unchecked Sendable {
+    var now: Date
+    init(_ now: Date) { self.now = now }
+}
+
+@MainActor
+struct DaySyncTests {
+    let container: ModelContainer
+    let api = FakeAPIClient()
+    let utc: Calendar = {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = .gmt
+        return calendar
+    }()
+    let clock = TestClock(Date(timeIntervalSince1970: 1_772_884_800))  // 2026-03-07 12:00 UTC
+
+    init() throws { container = try StoreSchema.container(inMemory: true) }
+
+    func sync() -> DaySync {
+        let clock = self.clock
+        return DaySync(context: container.mainContext, api: api, clock: { clock.now }, calendar: utc)
+    }
+
+    func records() throws -> [TaskRecord] { try container.mainContext.fetch(FetchDescriptor<TaskRecord>()) }
+
+    func subtasks() throws -> [SubtaskRecord] {
+        try container.mainContext.fetch(FetchDescriptor<SubtaskRecord>(sortBy: [SortDescriptor(\.order)]))
+    }
+
+    @Test func refreshStoresTodaysTasks() async throws {
+        await api.setProfile(try .make())
+        await api.setTasks([try .make(title: "Write spec")], on: "2026-03-07")
+        try await sync().refresh()
+        #expect(try records().map(\.title) == ["Write spec"])
+    }
+
+    @Test func refreshStoresATasksFiling() async throws {
+        // Spec §1: area, project and discipline reach the record through init(dto:).
+        await api.setProfile(try .make())
+        let disciplineID = UUID()
+        await api.setTasks(
+            [try .make(title: "Read chapter 4", area: "study", discipline: disciplineID)], on: "2026-03-07")
+        try await sync().refresh()
+        let record = try #require(try records().first)
+        #expect(record.area == "study" && record.disciplineID == disciplineID.uuidString && record.projectID == nil)
+        #expect(record.filing == TaskFiling(area: .study, parent: .discipline(disciplineID.uuidString)))
+    }
+
+    @Test func aSecondRefreshMovesAFilingFromAProjectToADiscipline() async throws {
+        // Spec §1: apply(_:), not only init(dto:), must carry area/project/
+        // discipline - a second refresh is an update, not an insert.
+        await api.setProfile(try .make())
+        let id = UUID()
+        let projectID = UUID()
+        await api.setTasks([try .make(id: id, title: "Draft essay", project: projectID)], on: "2026-03-07")
+        let today = sync()
+        try await today.refresh()
+        let moved = try #require(try records().first)
+        #expect(moved.area == "work" && moved.projectID == projectID.uuidString)
+        let disciplineID = UUID()
+        await api.setTasks(
+            [try .make(id: id, title: "Draft essay", area: "study", discipline: disciplineID)], on: "2026-03-07")
+        try await today.refresh()
+        let record = try #require(try records().first)
+        #expect(record.area == "study" && record.disciplineID == disciplineID.uuidString)
+        #expect(record.projectID == nil)
+    }
+
+    @Test func aTaskGoneFromTheServerIsRemoved() async throws {
+        await api.setProfile(try .make())
+        await api.setTasks([try .make(title: "Old")], on: "2026-03-07")
+        let today = sync()
+        try await today.refresh()
+        await api.setTasks([], on: "2026-03-07")
+        try await today.refresh()
+        #expect(try records().isEmpty)
+    }
+
+    @Test func anItemWithQueuedWritesKeepsItsLocalState() async throws {
+        await api.setProfile(try .make())
+        let task = try TaskDTO.make(title: "Mine", completed: false)
+        await api.setTasks([task], on: "2026-03-07")
+        let today = sync()
+        try await today.refresh()
+        let record = try #require(try records().first)
+        record.isCompleted = true
+        container.mainContext.insert(
+            OutboxEntry(
+                sequence: 1, method: "PATCH", path: "/api/v1/tasks/\(task.recordID)/", body: nil,
+                subjectID: task.recordID))
+        try await today.refresh()
+        #expect(try records().first?.isCompleted == true)
+    }
+
+    @Test func todayIsRecomputedFromTheClock() async throws {
+        await api.setProfile(try .make())
+        // Review Focus 2: the day rolls over while the app stays open.
+        await api.setTasks([try .make(title: "Friday", day: "2026-03-07")], on: "2026-03-07")
+        await api.setTasks([try .make(title: "Saturday", day: "2026-03-08")], on: "2026-03-08")
+        let today = sync()
+        try await today.refresh()
+        clock.now = clock.now.addingTimeInterval(86_400)
+        try await today.refresh()
+        #expect(try records().map(\.title).sorted() == ["Friday", "Saturday"])
+    }
+
+    @Test func aRefreshKeepsOtherDaysAndLocalPlaceholders() async throws {
+        await api.setProfile(try .make())
+        await api.setTasks([try .make(title: "Other day", day: "2026-03-06")], on: "2026-03-06")
+        let yesterday = DaySync(
+            context: container.mainContext, api: api, clock: { Date(timeIntervalSince1970: 1_772_798_400) },
+            calendar: utc)
+        try await yesterday.refresh()
+        let placeholder = TaskRecord(dto: try .make(title: "Captured offline"))
+        placeholder.id = "local-1"
+        container.mainContext.insert(placeholder)
+        try await sync().refresh()
+        #expect(try records().map(\.title).sorted() == ["Captured offline", "Other day"])
+    }
+
+    @Test func aRefreshUpdatesAnExistingRecordInPlace() async throws {
+        await api.setProfile(try .make())
+        let id = UUID()
+        await api.setTasks([try .make(id: id, title: "Draft")], on: "2026-03-07")
+        let today = sync()
+        try await today.refresh()
+        await api.setTasks([try .make(id: id, title: "Renamed on server", completed: true)], on: "2026-03-07")
+        try await today.refresh()
+        let only = try #require(try records().first)
+        #expect(try records().count == 1 && only.title == "Renamed on server" && only.isCompleted)
+    }
+
+    @Test func anOutboxEntryStartsPendingAndStoresItsState() {
+        let entry = OutboxEntry(sequence: 1, method: "PATCH", path: "/x/", body: nil, subjectID: nil)
+        #expect(entry.state == .pending && entry.attempts == 0 && !entry.idempotencyKey.isEmpty)
+        entry.state = .parked
+        #expect(entry.stateRaw == "parked" && entry.state == .parked)
+    }
+
+    @Test func oneRefreshAsksForOneDay() async throws {
+        // Review Focus 4: every request of one refresh names the same day.
+        await api.setProfile(try .make())
+        try await sync().refresh()
+        #expect(Set(await api.requestedDays) == ["2026-03-07"])
+        // The workload is the seventh request (#177); the profile names no day.
+        #expect(await api.requestedDays.count == 6)
+    }
+
+    @Test func theDaysWorkloadIsCached() async throws {
+        await api.setProfile(try .make())
+        await api.setWorkload(try .make(day: "2026-03-07", planned: 300, unestimated: 2), on: "2026-03-07")
+        try await sync().refresh()
+        let record = try #require(try container.mainContext.fetch(FetchDescriptor<WorkloadRecord>()).first)
+        #expect(record.day == "2026-03-07" && record.plannedMinutes == 300 && record.taskMinutes == 300)
+        #expect(record.goalMinutes == 720 && record.overMinutes == -420 && record.unestimatedCount == 2)
+    }
+
+    @Test func aRefreshReplacesTheDaysWorkloadInPlace() async throws {
+        await api.setProfile(try .make())
+        await api.setWorkload(try .make(day: "2026-03-07", planned: 300), on: "2026-03-07")
+        let today = sync()
+        try await today.refresh()
+        await api.setWorkload(try .make(day: "2026-03-07", planned: 800), on: "2026-03-07")
+        try await today.refresh()
+        let records = try container.mainContext.fetch(FetchDescriptor<WorkloadRecord>())
+        #expect(records.count == 1 && records.first?.overMinutes == 80)
+    }
+
+    @Test func carriedOverTasksAreMarked() async throws {
+        await api.setProfile(try .make())
+        await api.setCarriedOver([try .make(title: "Yesterday's", day: "2026-03-06")], on: "2026-03-07")
+        try await sync().refresh()
+        #expect(try records().first?.isCarriedOver == true)
+    }
+
+    @Test func embeddedSubtasksAreStoredAndDroppedOnesRemoved() async throws {
+        await api.setProfile(try .make())
+        let task = try TaskDTO.make(title: "Parent", subtasks: [("a", false), ("b", true)])
+        await api.setTasks([task], on: "2026-03-07")
+        try await sync().refresh()
+        #expect(try subtasks().map(\.title) == ["a", "b"])
+        let trimmed = try TaskDTO.make(id: task.id, title: "Parent", subtasks: [("a", false)])
+        await api.setTasks([trimmed], on: "2026-03-07")
+        try await sync().refresh()
+        #expect(try subtasks().map(\.title) == ["a"])
+    }
+
+    @Test func blocksReviewAndProfileAreCached() async throws {
+        await api.setProfile(try .make())
+        await api.setBlocks([try .make(day: "2026-03-07")], on: "2026-03-07")
+        await api.setReview(try .make(day: "2026-03-07", energy: 2), on: "2026-03-07")
+        try await sync().refresh()
+        let context = container.mainContext
+        #expect(try context.fetch(FetchDescriptor<TimeBlockRecord>()).count == 1)
+        #expect(try context.fetch(FetchDescriptor<DailyReviewRecord>()).first?.energy == 2)
+        #expect(try context.fetch(FetchDescriptor<ProfileRecord>()).first?.workMinutes == 25)
+        #expect(try context.fetch(FetchDescriptor<ProfileRecord>()).first?.workGoalHours == 8)
+        // Settings shows the zone; Plan's week follows the week start (#224).
+        #expect(try context.fetch(FetchDescriptor<ProfileRecord>()).first?.timezone == "UTC")
+        #expect(try context.fetch(FetchDescriptor<ProfileRecord>()).first?.weekStartsOn == "monday")
+    }
+
+    @Test func reminderFieldsAreCached() async throws {
+        // #187: the planner reads these from the store, never the network.
+        await api.setProfile(try .make(blockReminderMinutes: 10, shutdownReminderTime: "17:30:00"))
+        await api.setTasks([try .make(title: "Call", remindAt: "2026-03-07T15:00:00Z")], on: "2026-03-07")
+        try await sync().refresh()
+        let profile = try #require(try container.mainContext.fetch(FetchDescriptor<ProfileRecord>()).first)
+        #expect(profile.blockReminderMinutes == 10 && profile.shutdownReminderTime == "17:30:00")
+        #expect(try records().first?.remindAt == Date(timeIntervalSince1970: 1_772_895_600))
+    }
+
+    @Test func aClearedReminderIsClearedLocally() async throws {
+        await api.setProfile(try .make(blockReminderMinutes: nil))
+        let id = UUID()
+        await api.setTasks([try .make(id: id, remindAt: "2026-03-07T15:00:00Z")], on: "2026-03-07")
+        try await sync().refresh()
+        await api.setTasks([try .make(id: id)], on: "2026-03-07")
+        try await sync().refresh()
+        #expect(try records().first?.remindAt == nil)
+        #expect(try container.mainContext.fetch(FetchDescriptor<ProfileRecord>()).first?.blockReminderMinutes == nil)
+    }
+
+    @Test func aBlockGoneFromTheServerIsRemovedUnlessQueued() async throws {
+        await api.setProfile(try .make())
+        let kept = try TimeBlockDTO.make(day: "2026-03-07")
+        await api.setBlocks([try .make(day: "2026-03-07"), kept], on: "2026-03-07")
+        try await sync().refresh()
+        container.mainContext.insert(
+            OutboxEntry(sequence: 1, method: "PATCH", path: "/x", body: nil, subjectID: kept.id.uuidString))
+        await api.setBlocks([], on: "2026-03-07")
+        try await sync().refresh()
+        let left = try container.mainContext.fetch(FetchDescriptor<TimeBlockRecord>())
+        #expect(left.map(\.id) == [kept.id.uuidString])
+    }
+
+    @Test func aQueuedReviewKeepsItsLocalValues() async throws {
+        await api.setProfile(try .make())
+        container.mainContext.insert(DailyReviewRecord(day: "2026-03-07", energy: 3))
+        container.mainContext.insert(
+            OutboxEntry(
+                sequence: 1, method: "PUT", path: "/r", body: nil,
+                subjectID: DailyReviewRecord.subjectID(for: "2026-03-07")))
+        await api.setReview(try .make(day: "2026-03-07", energy: 1), on: "2026-03-07")
+        try await sync().refresh()
+        #expect(try container.mainContext.fetch(FetchDescriptor<DailyReviewRecord>()).first?.energy == 3)
+    }
+
+    @Test func theDayIsRecomputedAfterMidnight() async throws {
+        await api.setProfile(try .make())
+        let daySync = sync()
+        try await daySync.refresh()
+        clock.now = clock.now.addingTimeInterval(13 * 3600)  // 2026-03-08 01:00 UTC
+        try await daySync.refresh()
+        #expect(await api.requestedDays.last == "2026-03-08")
+    }
+
+    @Test func aWriteMadeDuringARefreshIsNotOverwritten() async throws {
+        // Final review, Important 1: a toggle while the refresh waits on the
+        // network must survive it, as it did under TodaySync.
+        await api.setProfile(try .make())
+        await api.setTasks([try .make(title: "Mine", completed: false)], on: "2026-03-07")
+        try await sync().refresh()
+        let container = self.container
+        await api.setDuringTasksFetch {
+            await MainActor.run {
+                guard let record = try? container.mainContext.fetch(FetchDescriptor<TaskRecord>()).first else { return }
+                try? TaskWrites(context: container.mainContext).toggleCompletion(record)
+            }
+        }
+        try await sync().refresh()
+        #expect(try records().first?.isCompleted == true)
+    }
+
+    @Test func aReviewSavedDuringARefreshIsNotDeleted() async throws {
+        // Final review, Important 1: the server has no review yet; the one
+        // saved mid-refresh must not be deleted for being missing.
+        await api.setProfile(try .make())
+        let container = self.container
+        await api.setDuringTasksFetch {
+            await MainActor.run {
+                try? ReviewWrites(context: container.mainContext).save(
+                    day: "2026-03-07", rating: 4, win: "typed it", energy: nil, shutdown: false)
+            }
+        }
+        try await sync().refresh()
+        #expect(try container.mainContext.fetch(FetchDescriptor<DailyReviewRecord>()).first?.win == "typed it")
+    }
+}

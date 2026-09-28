@@ -1,0 +1,15 @@
+[
+  {
+    "class_schedule_id": "b4933eb0-9ad5-4f3a-bcea-9940d164cea9",
+    "class_type": "lecture",
+    "date": "2026-03-02",
+    "discipline_color": "#a3a3a3",
+    "discipline_name": "Discipline 1",
+    "end_time": "11:40:00",
+    "id": "b4933eb0-9ad5-4f3a-bcea-9940d164cea9-2026-03-02",
+    "is_cancelled": true,
+    "location": "Room 101",
+    "start_time": "10:00:00",
+    "week": 1
+  }
+]

@@ -1,0 +1,86 @@
+import Foundation
+import Testing
+
+@testable import OmakaseAPI
+
+struct DTODecodingTests {
+    @Test func decodesTheLoginResponse() throws {
+        let pair = try OmakaseJSON.decoder.decode(TokenPairDTO.self, from: Fixture.data("auth_google"))
+        #expect(!pair.access.isEmpty && !pair.refresh.isEmpty)
+        #expect(pair.user.email == "ada@example.com")
+    }
+
+    @Test func decodesARefreshWithoutARotatedRefreshToken() throws {
+        // SIMPLE_JWT does not rotate refresh tokens: the response is access only.
+        let token = try OmakaseJSON.decoder.decode(AccessTokenDTO.self, from: Fixture.data("token_refresh"))
+        #expect(!token.access.isEmpty)
+    }
+
+    @Test func decodesMe() throws {
+        let user = try OmakaseJSON.decoder.decode(UserDTO.self, from: Fixture.data("auth_me"))
+        #expect(user.id > 0 && user.avatarColor.hasPrefix("#"))
+    }
+
+    @Test func decodesTodaysPage() throws {
+        let page = try OmakaseJSON.decoder.decode(Page<TaskDTO>.self, from: Fixture.data("tasks_today"))
+        let task = try #require(page.results.first)
+        #expect(page.count == 2)
+        #expect(task.scheduledDate?.string == "2026-03-07")
+        #expect(task.tags.count == 1 && task.isCompleted == false && task.completedAt == nil)
+    }
+
+    @Test func decodesACompletedTask() throws {
+        let task = try OmakaseJSON.decoder.decode(TaskDTO.self, from: Fixture.data("task_patch"))
+        #expect(task.isCompleted && task.completedAt != nil)
+    }
+
+    @Test func decodesATasksAreaAndDiscipline() throws {
+        // Spec §1: a create with area "study" and a discipline (#254).
+        let task = try OmakaseJSON.decoder.decode(TaskDTO.self, from: Fixture.data("task_create"))
+        #expect(task.area == "study" && task.project == nil)
+        #expect(task.discipline != nil)
+    }
+
+    @Test func decodesATaskReminderAsAUTCInstant() throws {
+        // #187: remind_at is an ISO-8601 datetime in UTC with a "Z".
+        let reminded = try OmakaseJSON.decoder.decode(TaskDTO.self, from: Fixture.data("task_patch"))
+        #expect(reminded.remindAt?.timeIntervalSince1970 == 1_772_884_800)
+        let page = try OmakaseJSON.decoder.decode(Page<TaskDTO>.self, from: Fixture.data("tasks_today"))
+        #expect(page.results.first?.remindAt == nil)
+    }
+
+    @Test func decodesMicrosecondAndWholeSecondDatetimes() throws {
+        // Review Focus 3: DRF emits microseconds; some producers emit none.
+        let json = #"["2026-03-07T12:00:00.123456Z", "2026-03-07T12:00:00Z", "2026-03-07T12:00:00.1+00:00"]"#
+        let dates = try OmakaseJSON.decoder.decode([Date].self, from: Data(json.utf8))
+        #expect(dates[1].timeIntervalSince1970 == 1_772_884_800)
+        #expect(abs(dates[0].timeIntervalSince(dates[1]) - 0.123) < 0.001)
+    }
+
+    @Test func aMalformedDatetimeNamesTheValue() {
+        #expect {
+            try OmakaseJSON.decoder.decode([Date].self, from: Data(#"["07/03/2026"]"#.utf8))
+        } throws: { error in
+            String(describing: error).contains("\"07/03/2026\" is not an ISO-8601 datetime")
+        }
+    }
+
+    @Test func encodesSnakeCaseWithSortedKeys() throws {
+        struct Body: Encodable {
+            let isCompleted: Bool
+            let codeVerifier: String
+        }
+        let data = try OmakaseJSON.encoder.encode(Body(isCompleted: true, codeVerifier: "v"))
+        #expect(String(bytes: data, encoding: .utf8) == #"{"code_verifier":"v","is_completed":true}"#)
+    }
+
+    @Test func datesEncodeAsISO8601AndRoundTripIssue90() throws {
+        // The encoder had no date strategy, so Foundation wrote seconds since
+        // 2001 (-978307200) - which the decoder, and DRF, reject (#90).
+        let instant = Date(timeIntervalSince1970: 1_772_884_800.123)
+        let data = try OmakaseJSON.encoder.encode(["started_at": instant])
+        #expect(String(bytes: data, encoding: .utf8) == #"{"started_at":"2026-03-07T12:00:00.123Z"}"#)
+        let back = try OmakaseJSON.decoder.decode([String: Date].self, from: data)
+        #expect(abs((back["started_at"] ?? .distantPast).timeIntervalSince(instant)) < 0.001)
+    }
+}

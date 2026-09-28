@@ -4,7 +4,7 @@ from django.conf import settings
 from django.core.validators import RegexValidator
 from django.db import models
 
-from .constants import DEFAULT_DISCIPLINE_COLOR
+from .constants import DEFAULT_DISCIPLINE_COLOR, MAX_ROTATION_WEEKS
 
 hex_color_validator = RegexValidator(
     regex=r"^#[0-9a-fA-F]{6}$",
@@ -65,6 +65,10 @@ class Semester(models.Model):
     status = models.CharField(
         max_length=20, choices=SemesterStatusChoices.choices, default=SemesterStatusChoices.ACTIVE
     )
+    # Week A/B timetables (#126): the rotation length, and the date whose
+    # Monday starts week 1. A null anchor means the semester's start_date.
+    rotation_weeks = models.PositiveSmallIntegerField(default=1)
+    rotation_anchor = models.DateField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -74,6 +78,10 @@ class Semester(models.Model):
             models.CheckConstraint(
                 check=models.Q(end_date__gt=models.F("start_date")),
                 name="semester_end_after_start",
+            ),
+            models.CheckConstraint(
+                check=models.Q(rotation_weeks__gte=1, rotation_weeks__lte=MAX_ROTATION_WEEKS),
+                name="semester_rotation_weeks_range",
             ),
         ]
 
@@ -123,6 +131,12 @@ class StudyBlock(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return self.title
+
     def save(self, *args, **kwargs):
         from django.utils import timezone
 
@@ -170,12 +184,6 @@ class StudyBlock(models.Model):
 
         super().save(*args, **kwargs)
 
-    class Meta:
-        ordering = ["-created_at"]
-
-    def __str__(self):
-        return self.title
-
 
 class ClassSchedule(models.Model):
     DAY_OF_WEEK_CHOICES = [
@@ -196,6 +204,8 @@ class ClassSchedule(models.Model):
     class_type = models.CharField(max_length=20, choices=ClassTypeChoices.choices, default=ClassTypeChoices.LECTURE)
     location = models.CharField(max_length=300, blank=True, default="")
     is_active = models.BooleanField(default=True)
+    # The rotation weeks (1-based) the class runs in; empty means every week (#126).
+    rotation_weeks_on = models.JSONField(default=list, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -215,3 +225,49 @@ class ClassSchedule(models.Model):
     def __str__(self):
         day_name = dict(self.DAY_OF_WEEK_CHOICES).get(self.day_of_week, "")
         return f"{self.discipline} — {day_name} {self.start_time:%H:%M}"
+
+
+class Holiday(models.Model):
+    """A date range with no classes in its semester (#125). Both ends are inclusive."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    semester = models.ForeignKey(Semester, on_delete=models.CASCADE, related_name="holidays")
+    name = models.CharField(max_length=200)
+    start_date = models.DateField()
+    end_date = models.DateField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["start_date"]
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(end_date__gte=models.F("start_date")),
+                name="holiday_end_not_before_start",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.name} ({self.start_date} - {self.end_date})"
+
+
+class ClassCancellation(models.Model):
+    """One occurrence of a class schedule that does not happen (#125).
+
+    An exception to the weekly rule, keyed by (schedule, date): the M8
+    principle stores exceptions, never occurrences.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    class_schedule = models.ForeignKey(ClassSchedule, on_delete=models.CASCADE, related_name="cancellations")
+    date = models.DateField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["date"]
+        constraints = [
+            models.UniqueConstraint(fields=["class_schedule", "date"], name="class_cancellation_one_per_date"),
+        ]
+
+    def __str__(self):
+        return f"{self.class_schedule} cancelled on {self.date}"

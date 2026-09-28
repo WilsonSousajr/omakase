@@ -1,0 +1,49 @@
+name: Omakase
+options:
+  bundleIdPrefix: dev.omakase
+  deploymentTarget:
+    macOS: "26.0"
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    MACOSX_DEPLOYMENT_TARGET: "26.0"
+packages:
+  OmakaseAPI:
+    path: Packages/OmakaseAPI
+  OmakaseStore:
+    path: Packages/OmakaseStore
+  OmakaseFeatures:
+    path: Packages/OmakaseFeatures
+targets:
+  OmakaseMac:
+    type: application
+    platform: macOS
+    sources: [OmakaseMac]
+    configFiles:
+      Debug: Config/App.xcconfig
+      Release: Config/Release.xcconfig
+    info:
+      path: OmakaseMac/Info.plist
+      properties:
+        CFBundleDisplayName: Omakase
+        LSApplicationCategoryType: public.app-category.productivity
+        OmakaseAPIBaseURL: $(OMAKASE_API_BASE_URL)
+        OmakaseGoogleClientID: $(OMAKASE_GOOGLE_CLIENT_ID)
+        # Plan's Calendar.app overlay reads events (#229); it needs full access.
+        NSCalendarsFullAccessUsageDescription: "Omakase shows your calendar's events behind your plan. It never changes them."
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
+    dependencies:
+      - package: OmakaseAPI
+      - package: OmakaseStore
+      - package: OmakaseFeatures
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.omakase.mac
+        # Local signing: no paid membership, no sandbox (spec, Constraints).
+        CODE_SIGN_IDENTITY: "-"
+        CODE_SIGN_STYLE: Manual
+        ENABLE_APP_SANDBOX: NO
+        # M2 identity: the ensō icon (Icon Composer) and the grey accent.
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor

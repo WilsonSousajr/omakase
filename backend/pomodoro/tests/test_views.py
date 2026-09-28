@@ -1,3 +1,5 @@
+import datetime
+
 import pytest
 from rest_framework import status
 
@@ -60,7 +62,8 @@ class TestPomodoroSessionViewSet:
         session = PomodoroSessionFactory(completed=False, user=user, task__user=user)
         resp = authenticated_client.patch(
             f"/api/v1/pomodoro/sessions/{session.pk}/",
-            {"completed": True, "ended_at": "2025-01-15T10:30:00Z"},
+            # After the session's start: ended_at may not precede started_at (#142).
+            {"completed": True, "ended_at": (session.started_at + datetime.timedelta(minutes=25)).isoformat()},
             format="json",
         )
         assert resp.status_code == status.HTTP_200_OK

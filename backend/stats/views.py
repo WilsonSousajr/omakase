@@ -4,28 +4,25 @@ from django.db.models import DurationField, ExpressionWrapper, F, Q, Sum
 from django.db.models.functions import Coalesce
 from django.utils import timezone
 from rest_framework import viewsets
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from idempotency.mixins import IdempotentCreateMixin
+from omakase.client_dates import parse_client_date
 from pomodoro.models import PomodoroSession
 from study.models import StudyBlock
 from tasks.models import Task, TimeBlock
 
 from .models import DailyReview
 from .serializers import DailyReviewSerializer
+from .services import day_workload, put_review
 
 
 class DailyStatsView(APIView):
     def get(self, request):
         user = request.user
-        date_str = request.query_params.get("date")
-        if date_str:
-            try:
-                today = datetime.date.fromisoformat(date_str)
-            except ValueError:
-                today = timezone.localdate()
-        else:
-            today = timezone.localdate()
+        today = parse_client_date(request.query_params.get("date"))
         week_start = today - datetime.timedelta(days=today.weekday())
 
         hours_focused_today = self._hours_focused_today(user, today)
@@ -110,20 +107,7 @@ class ReviewSummaryView(APIView):
     """Aggregate review data for a given date."""
 
     def get(self, request):
-        date_str = request.query_params.get("date")
-        if not date_str:
-            return Response(
-                {"detail": "date query parameter is required."},
-                status=400,
-            )
-
-        try:
-            review_date = datetime.date.fromisoformat(date_str)
-        except ValueError:
-            return Response(
-                {"detail": "Invalid date format. Use YYYY-MM-DD."},
-                status=400,
-            )
+        review_date = parse_client_date(request.query_params.get("date"))
 
         user = request.user
 
@@ -196,7 +180,15 @@ class ReviewSummaryView(APIView):
         return round(total / 60, 1)
 
 
-class DailyReviewViewSet(viewsets.ModelViewSet):
+class WorkloadView(APIView):
+    """The day's planned minutes against the goal (#128): parse, call, respond."""
+
+    def get(self, request):
+        day = parse_client_date(request.query_params.get("date"))
+        return Response(day_workload(request.user, day))
+
+
+class DailyReviewViewSet(IdempotentCreateMixin, viewsets.ModelViewSet):
     serializer_class = DailyReviewSerializer
     filterset_fields = ["date"]
 
@@ -205,6 +197,16 @@ class DailyReviewViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+
+    @action(detail=False, methods=["put"], url_path=r"by-date/(?P<day>[^/]+)")
+    def by_date(self, request, day=None):
+        # The outbox's review write (M3.1 spec §1.3): the path's date is the
+        # key, so a body `date` is ignored rather than trusted.
+        target = parse_client_date(day)
+        serializer = self.get_serializer(data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        values = {k: v for k, v in serializer.validated_data.items() if k != "date"}
+        return Response(self.get_serializer(put_review(request.user, target, values)).data)
 
     def perform_update(self, serializer):
         instance = serializer.instance
