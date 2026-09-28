@@ -611,3 +611,21 @@ and time, and ⏎ creates the task and its block together through the outbox
    reschedule the task to the backlog. Delete it from the Inbox before
    reconnecting. Its block disappears from Plan with it (#275), and
    reconnecting sends nothing for it.
+
+## #279
+
+Dragging a card on Focus's Kanban did nothing for a carried-over task: the
+write reached the server, but the board always re-sorted a carried-over
+card back into To do regardless of its kanban status. Seed as M3.2 does,
+with a task carried over from yesterday.
+
+1. Drag an ordinary (not carried-over) card from To do to In progress: it
+   moves there and stays after quitting and relaunching. The server agrees
+   (`curl …/tasks/today/?date=<today>`).
+2. Drag the carried-over card ("from <weekday> <day>") from To do to In
+   progress: it moves there too, keeping its "from" mark, and does not
+   snap back to To do.
+3. Drag a card into an empty column (In progress or Done, once neither has
+   a card left in it): the drop still works.
+4. Stop the backend. Drag a card to In progress, then start the backend:
+   the move replays, and the server has `kanban_status: "in_progress"`.
