@@ -48,7 +48,7 @@ public struct TimerGlassView: View {
             Button {
             } label: {
                 Image(systemName: "backward.end.fill")
-            }.buttonStyle(.glass)
+            }.buttonStyle(.icon)
             Button {
             } label: {
                 Image(systemName: "pause.fill").padding(.horizontal, Spacing.small)
@@ -57,7 +57,7 @@ public struct TimerGlassView: View {
             Button {
             } label: {
                 Image(systemName: "forward.end.fill")
-            }.buttonStyle(.glass)
+            }.buttonStyle(.icon)
         }
         .controlSize(.large)
     }

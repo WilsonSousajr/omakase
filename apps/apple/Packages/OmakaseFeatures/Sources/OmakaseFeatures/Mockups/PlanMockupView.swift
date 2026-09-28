@@ -19,7 +19,7 @@ struct PlanTaskColumnView: View {
             HStack {
                 Text("Tasks").sectionLabel()
                 Spacer()
-                Button("Plan my day") {}.buttonStyle(.glass).controlSize(.small)
+                Button("Plan my day") {}.buttonStyle(.secondary).controlSize(.small)
             }
             .padding(Spacing.large)
             Divider().overlay(Palette.hairline.color)
@@ -45,7 +45,7 @@ struct PlanCalendarView: View {
             HStack(spacing: Spacing.medium) {
                 Text("Thursday, 25 September").font(TypeScale.title).foregroundStyle(Palette.ink.color)
                 Spacer()
-                Button("Today") {}.buttonStyle(.glass)
+                Button("Today") {}.buttonStyle(.secondary)
                 Picker("Range", selection: $range) {
                     Text("Day").tag("Day")
                     Text("Week").tag("Week")

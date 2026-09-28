@@ -88,11 +88,11 @@ struct PlanBlockDetailView: View {
                 .foregroundStyle(Palette.inkMuted.color)
             if block.taskID != nil {
                 HStack(spacing: Spacing.medium) {
-                    Button("Open task") { model.openTask(of: block) }.buttonStyle(.glass)
-                    Button("Edit task…", action: edit).buttonStyle(.glass).keyboardShortcut(.return, modifiers: [])
+                    Button("Open task") { model.openTask(of: block) }.buttonStyle(.secondary)
+                    Button("Edit task…", action: edit).buttonStyle(.secondary).keyboardShortcut(.return, modifiers: [])
                 }
             }
-            Button("Delete block", role: .destructive) { model.deleteBlock(block.id) }.buttonStyle(.glass)
+            Button("Delete block", role: .destructive) { model.deleteBlock(block.id) }.buttonStyle(.secondary)
         }
     }
 }

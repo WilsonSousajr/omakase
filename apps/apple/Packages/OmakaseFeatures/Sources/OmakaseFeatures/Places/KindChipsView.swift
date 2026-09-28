@@ -2,9 +2,11 @@ import OmakaseStore
 import SwiftUI
 
 /// The three kind chips (spec §4): Work, Study and Life, each its glyph and
-/// name, the chosen one filled and outlined in its kind colour. The capture
-/// panel shows them and the task editor reuses them (S5). ⌘1–3 belong to
-/// the panel's hidden buttons, not to the chips, so Tab stays in the field.
+/// name on a grey glass capsule, the chosen one with a faint ink fill and a
+/// dot in its kind colour (glass-pass §1, #283: colour as a mark, not a
+/// border). The capture panel shows them and the task editor reuses them
+/// (S5). ⌘1–3 belong to the panel's hidden buttons, not to the chips, so
+/// Tab stays in the field.
 ///
 ///     KindChipsView(selection: Binding(get: { model.area }, set: { model.choose($0) }))
 public struct KindChipsView: View {
@@ -21,20 +23,17 @@ public struct KindChipsView: View {
 
     private func chip(for area: TaskArea) -> some View {
         let isSelected = area == selection
-        let tint = KindTint.token(for: area).color
         return Button {
             selection = area
         } label: {
-            Label(area.title, systemImage: area.symbol)
-                .font(TypeScale.body)
-                .foregroundStyle(isSelected ? tint : Palette.inkMuted.color)
-                .padding(.horizontal, Spacing.medium)
-                .padding(.vertical, Spacing.tiny)
-                .background(isSelected ? tint.opacity(0.14) : .clear, in: .capsule)
-                .overlay { Capsule().strokeBorder(isSelected ? tint : Palette.hairline.color) }
-                .contentShape(.capsule)
+            HStack(spacing: Spacing.tiny) {
+                if let dot = KindChip.dot(for: area, selection: selection) {
+                    Circle().fill(dot.color).frame(width: ControlMetrics.markDot, height: ControlMetrics.markDot)
+                }
+                Label(area.title, systemImage: area.symbol)
+            }
         }
-        .buttonStyle(.plain)
+        .buttonStyle(SecondaryButtonStyle(isSelected: isSelected))
         .accessibilityAddTraits(isSelected ? .isSelected : [])
         .help("\(area.title) (⌘\(area.shortcutDigit))")
     }

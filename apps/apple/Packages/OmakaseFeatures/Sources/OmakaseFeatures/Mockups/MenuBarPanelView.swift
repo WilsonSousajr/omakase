@@ -53,11 +53,11 @@ struct MenuBarTimerRowView: View {
                     Button {
                     } label: {
                         Image(systemName: "pause.fill")
-                    }.buttonStyle(.glass)
+                    }.buttonStyle(.icon)
                     Button {
                     } label: {
                         Image(systemName: "forward.end.fill")
-                    }.buttonStyle(.glass)
+                    }.buttonStyle(.icon)
                 }
             }
         }

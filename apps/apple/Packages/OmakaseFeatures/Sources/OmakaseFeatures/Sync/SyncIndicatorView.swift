@@ -42,7 +42,7 @@ struct SyncStatusPopoverView: View {
                 Text("Next try at \(due, style: .time)").font(TypeScale.caption)
                     .foregroundStyle(Palette.inkMuted.color)
             }
-            Button("Sync now") { model.syncNow() }.buttonStyle(.glass)
+            Button("Sync now") { model.syncNow() }.buttonStyle(.secondary)
         }
         .padding(Spacing.large)
     }

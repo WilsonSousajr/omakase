@@ -43,7 +43,7 @@ struct TaskEditorSheetView: View {
             // Deleted elsewhere while the sheet was opening: say so, and let Escape close it.
             VStack(spacing: Spacing.large) {
                 ContentUnavailableView("This task is no longer here", systemImage: "questionmark.circle")
-                Button("Close") { dismiss() }.buttonStyle(.glass).keyboardShortcut(.cancelAction)
+                Button("Close") { dismiss() }.buttonStyle(.secondary).keyboardShortcut(.cancelAction)
             }
             .padding(Spacing.xLarge)
             .frame(width: 440)

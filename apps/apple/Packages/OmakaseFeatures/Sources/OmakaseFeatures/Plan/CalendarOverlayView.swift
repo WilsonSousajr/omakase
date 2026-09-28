@@ -34,8 +34,7 @@ struct CalendarOverlayToggleView: View {
         Toggle(isOn: isOn) {
             Label("Calendar", systemImage: "calendar.badge.clock")
         }
-        .toggleStyle(.button)
-        .buttonStyle(.glass)
+        .toggleStyle(.secondary)
         .help("Show Calendar.app's events behind your plan")
         .popover(isPresented: isShowingMessage) {
             Text(overlay.message ?? "").font(TypeScale.body).padding(Spacing.large).frame(width: 280)

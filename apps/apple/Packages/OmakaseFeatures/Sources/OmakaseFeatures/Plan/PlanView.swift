@@ -73,13 +73,13 @@ struct PlanHeaderView: View {
             Text(model.title).font(TypeScale.title).foregroundStyle(Palette.ink.color)
             Spacer()
             if let overlay { CalendarOverlayToggleView(overlay: overlay) }
-            Button("Today") { model.goToday() }.buttonStyle(.glass)
+            Button("Today") { model.goToday() }.buttonStyle(.secondary)
             HStack(spacing: Spacing.tiny) {
                 Button("Previous", systemImage: "chevron.left") { model.previous() }
                 Button("Next", systemImage: "chevron.right") { model.next() }
             }
             .labelStyle(.iconOnly)
-            .buttonStyle(.glass)
+            .buttonStyle(.icon)
             Picker("Range", selection: $model.mode) {
                 Text("Day").tag(PlanModel.Mode.day)
                 Text("Week").tag(PlanModel.Mode.week)

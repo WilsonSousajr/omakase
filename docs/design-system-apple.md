@@ -43,6 +43,7 @@ Ratios are WCAG 2.x contrast, measured from the token values.
 | `shu` | `#D0462C` | `#C8402A` | focus phase, the now line | 4.06 / 4.53 on background |
 | `matcha` | `#7FAF82` | `#5E8C61` | short break | 7.38 / 3.54 on background |
 | `indigo` (ai) | `#6D8FC4` | `#3F5E8C` | long break | 5.63 / 5.99 on background |
+| `destructive` | `#FFA297` | `#8C201A` | a destructive button's label (#283), never shu | 4.6 / 4.6 over the blurred ground |
 
 Priority dots keep the web's colours in both appearances: low `#6B7280`,
 medium `#F59E0B`, high `#F97316`, urgent `#EF4444`.
@@ -58,6 +59,12 @@ medium `#F59E0B`, high `#F97316`, urgent `#EF4444`.
   and cards, and has no more chroma than the neutrals. A pure grey would look
   blue next to warm sumi.
 - The primary pill's label is ≥ 4.5:1 on the pill.
+- The secondary capsule's ink label is ≥ 4.5:1 over the blurred ground
+  (7.3 / 9.0) and on a chosen capsule's ink fill (5.4 / 7.2), and the
+  primary and secondary are both `ControlMetrics.height` tall (#283).
+- A destructive button's red (`destructive`) is ≥ 4.5:1 over the blurred
+  ground too. The system red reads only 2.6 / 1.8:1 there, so the token is
+  lighter in dark and deeper in light.
 - Over a blurred desktop (the behind-window material averages what is
   behind to about mid-grey), `ink` stays ≥ 4.5:1 (7.3 / 9.0) and `inkMuted`
   ≥ 3:1 (3.0 / 3.0).
@@ -121,7 +128,16 @@ measured, not guessed: `TranslucencyTests`.
 - **One primary action per screen** (Sign in, the timer's pause/start):
   `.buttonStyle(.primary)`, an inverted ink pill. In dark mode it is light,
   with a sumi label.
-- **Every other button:** `.buttonStyle(.glass)`, neutral.
+- **Every other button:** `.buttonStyle(.secondary)`, a neutral glass
+  capsule with an ink label, the same height as the primary
+  (`ControlMetrics.height`, 32 pt). Menus take `.menuStyle(.secondary)`,
+  which draws their ⌄; icon-only buttons are `.icon` glass circles as
+  tall. A chosen chip or an on toggle adds a faint ink fill. A destructive
+  button ("Delete block") keeps the platform's red label: mono chrome is
+  about kind colour, not the destructive signal.
+- The system's glass button style is not used outside the toolbar: its
+  rounded rectangle beside the pill read as loose (#283), and SwiftLint's
+  `raw_glass_button` rule rejects it.
 - **System controls** (checkboxes, selection): `Palette.accent` through
   `.tint` and the app's `AccentColor`. They are grey, never the system blue.
 - `.glassProminent` is not used. Its label colour is the system's choice
@@ -140,7 +156,7 @@ measured, not guessed: `TranslucencyTests`.
   a coloured dot and the name in ink, beside the estimate. The name stays
   in ink because amber text on paper is too faint to read.
 - **Calendar blocks:** the block's source colour (project or discipline) as
-  a 3-pt bar and a faint fill on an opaque `surface`.
+  a 3-pt bar on an opaque `surface`, with no fill (#283: colour as a mark).
   - Class occurrences are dashed, because they are fixed, not planned.
   - Colour here is data, which is why it survives the monochrome rule.
 
@@ -212,7 +228,8 @@ An ensō: one ink brush circle on sumi, open where the brush lifts.
 
 The app targets **macOS 26**. Everything this identity uses shipped in 26:
 - `glassEffect`, `GlassEffectContainer`
-- `.glass` buttons
+- interactive `glassEffect` shapes, which draw the `.secondary` and
+  `.menuStyle(.secondary)` capsules and the `.icon` circles (#283)
 - `containerBackground(for: .window)`
 - Icon Composer icons
 

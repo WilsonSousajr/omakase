@@ -64,6 +64,25 @@ struct CalendarItemTests {
         #expect(tinted.color == Palette.indigo)
     }
 
+    /// Colour is a mark, not a fill (glass-pass §1, #283): S10's faint tint
+    /// under a block is gone, leaving opaque `surface` with the 3-pt bar as
+    /// the block's only colour; its kind glyph goes quiet.
+    @Test func aBlockIsSolidSurfaceWithOnlyItsBarInColourIssue283() {
+        let item = CalendarItem(
+            id: "b", day: "d", start: 0, end: 60, title: "T", kind: .block, tint: KindTint.work, symbol: "briefcase")
+        let look = CalendarItemLook(fill: Palette.surface, bar: KindTint.work, glyph: Palette.inkMuted, dash: nil)
+        #expect(CalendarItemLook(item) == look)
+    }
+
+    /// A class has no bar: it stays dashed, with its book in its colour,
+    /// on the same untinted `surface` (#283).
+    @Test func aClassIsDashedSurfaceWithItsBookInColourIssue283() {
+        let item = CalendarItem(
+            id: "c", day: "d", start: 0, end: 60, title: "C", kind: .classOccurrence, tint: Palette.indigo)
+        let look = CalendarItemLook(fill: Palette.surface, bar: nil, glyph: Palette.indigo, dash: Palette.indigo)
+        #expect(CalendarItemLook(item) == look)
+    }
+
     /// A block knows its parent task, so its panel can open it (#217).
     @Test func aBlockCarriesItsParentTask() {
         let item = CalendarItem.block(

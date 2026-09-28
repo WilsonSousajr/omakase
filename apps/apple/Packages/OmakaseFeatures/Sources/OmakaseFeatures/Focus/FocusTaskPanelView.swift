@@ -79,6 +79,8 @@ struct FocusSubtasksView: View {
 struct FocusPanelActionsView: View {
     /// The Reschedule menu's label: ink, like the other glass buttons. Left to
     /// itself a `.menuStyle(.button)` menu draws it dim, as if disabled (#172).
+    /// `.menuStyle(.secondary)` wraps `.menuStyle(.button)`, so every menu
+    /// capsule still sets this explicitly (#283).
     static let menuLabel = Palette.ink
     let card: FocusCard
     let day: String
@@ -111,7 +113,7 @@ struct FocusPanelActionsView: View {
         } label: {
             Text("Edit…").foregroundStyle(Self.menuLabel.color)
         }
-        .buttonStyle(.glass)
+        .buttonStyle(.secondary)
         .keyboardShortcut(.return, modifiers: [])
     }
 
@@ -122,8 +124,7 @@ struct FocusPanelActionsView: View {
         } label: {
             Text("Reschedule").foregroundStyle(Self.menuLabel.color)
         }
-        .menuStyle(.button)
-        .buttonStyle(.glass)
+        .menuStyle(.secondary)
         .fixedSize()
         .popover(isPresented: $picking) { datePicker }
     }
@@ -159,8 +160,7 @@ struct FocusRemindMenuView: View {
         } label: {
             Text("Remind me").foregroundStyle(FocusPanelActionsView.menuLabel.color)
         }
-        .menuStyle(.button)
-        .buttonStyle(.glass)
+        .menuStyle(.secondary)
         .fixedSize()
         .popover(isPresented: $picking) { timePicker }
     }
@@ -196,8 +196,7 @@ struct FocusRepeatMenuView: View {
         } label: {
             Label("Repeat", systemImage: "repeat").foregroundStyle(FocusPanelActionsView.menuLabel.color)
         }
-        .menuStyle(.button)
-        .buttonStyle(.glass)
+        .menuStyle(.secondary)
         .fixedSize()
     }
 }

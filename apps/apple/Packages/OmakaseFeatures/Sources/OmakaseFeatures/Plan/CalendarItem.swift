@@ -8,7 +8,7 @@ import OmakaseStore
 ///     CalendarItem(id: "b1", day: "2026-09-26", start: 540, end: 600, title: "Essay", kind: .block)
 public struct CalendarItem: Identifiable, Equatable, Sendable {
     public enum Kind: Equatable, Sendable {
-        /// Planned: a bar and a faint fill, laned beside overlapping blocks.
+        /// Planned: a bar on solid surface (#283), laned beside overlapping blocks.
         case block
         /// Fixed by the timetable: dashed, drawn behind the blocks.
         case classOccurrence

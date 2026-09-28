@@ -59,14 +59,14 @@ struct TriageRowView: View {
     var body: some View {
         HStack(spacing: Spacing.small) {
             PlanTaskRowView(card: card, showsKindMark: showsKindMark)
-            Button("Today") { model.schedule(card.id, .today) }.buttonStyle(.glass)
+            Button("Today") { model.schedule(card.id, .today) }.buttonStyle(.secondary)
             Menu {
                 TriageActionItems(card: card, model: model) { picking = true }
             } label: {
                 Image(systemName: "ellipsis").foregroundStyle(Palette.ink.color)
             }
             .menuStyle(.button)
-            .buttonStyle(.glass)
+            .buttonStyle(.icon)
             .fixedSize()
             .popover(isPresented: $picking) { datePicker }
         }

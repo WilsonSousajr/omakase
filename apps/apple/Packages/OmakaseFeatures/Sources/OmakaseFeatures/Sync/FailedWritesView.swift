@@ -18,7 +18,7 @@ public struct FailedWritesView: View {
             if model.parked.isEmpty { emptyState } else { rows }
             HStack {
                 Spacer()
-                Button("Done") { dismiss() }.buttonStyle(.glass).keyboardShortcut(.defaultAction)
+                Button("Done") { dismiss() }.buttonStyle(.secondary).keyboardShortcut(.defaultAction)
             }
         }
         .padding(Spacing.xLarge)
@@ -75,8 +75,8 @@ struct FailedWriteRowView: View {
                     .font(TypeScale.caption).foregroundStyle(Palette.inkMuted.color)
             }
             Spacer()
-            Button("Retry", action: retry).buttonStyle(.glass)
-            Button("Discard", action: discard).buttonStyle(.glass)
+            Button("Retry", action: retry).buttonStyle(.secondary)
+            Button("Discard", action: discard).buttonStyle(.secondary)
         }
         .padding(Spacing.medium)
         .background(Palette.surface.color, in: .rect(cornerRadius: Radius.medium))

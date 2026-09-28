@@ -45,8 +45,7 @@ struct ReviewRolloverRowView: View {
             // An explicit ink label: a `.menuStyle(.button)` menu draws its own dim (#172).
             Text(model.rolloverLabel(for: card.id)).foregroundStyle(FocusPanelActionsView.menuLabel.color)
         }
-        .menuStyle(.button)
-        .buttonStyle(.glass)
+        .menuStyle(.secondary)
         .fixedSize()
         .popover(isPresented: $picking) { datePicker }
     }
@@ -89,7 +88,7 @@ struct ReviewClosedView: View {
                 .font(TypeScale.title).foregroundStyle(Palette.ink.color)
             Text(ReviewModel.shutdownLine).font(TypeScale.body).foregroundStyle(Palette.inkMuted.color)
             Button("Reopen") { model.reopen() }
-                .buttonStyle(.glass)
+                .buttonStyle(.secondary)
         }
         .reviewCard()
     }
