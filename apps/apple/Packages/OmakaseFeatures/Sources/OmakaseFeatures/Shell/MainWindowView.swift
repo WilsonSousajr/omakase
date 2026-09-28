@@ -72,6 +72,10 @@ public struct MainWindowView: View {
         Label(entry.title, systemImage: symbol).tag(SidebarSelection.place(PlaceDirectory.place(for: entry.parent)))
     }
 
+    /// Opens a place from elsewhere on the screen (spec §6): a project
+    /// card's double-click, ⏎ on a selected one, or its context menu's Open.
+    private func open(_ place: TaskPlace) { selectionRaw = SidebarSelection.place(place).rawValue }
+
     /// Where ⌘N and ＋ file a new task from the screen shown (spec §4's
     /// table); reading Plan's anchor day follows it as Plan pages.
     private var captureContext: CaptureContext {
@@ -101,7 +105,7 @@ public struct MainWindowView: View {
             }
         case .item(.review): if let review = models.review { ReviewView(day: day, model: review) }
         case .item(.inbox): if let inbox = models.inbox { InboxView(day: day, model: inbox) }
-        case .item(.projects): if let projects = models.projects { ProjectsView(model: projects) }
+        case .item(.projects): if let projects = models.projects { ProjectsView(model: projects, open: open) }
         case .item(.study): if let study = models.study { StudyView(day: day, model: study) }
         case .item(.focus):
             if let focus = models.focus, let timer = models.timer { FocusView(day: day, model: focus, timer: timer) }

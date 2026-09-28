@@ -101,4 +101,21 @@ struct ProjectsModelTests {
         await projects.confirmDelete()
         #expect(recorder.calls.isEmpty)
     }
+
+    @Test func aCardsOwnPlaceIsItsProject() {
+        #expect(cards[0].place == .project("p1"))
+    }
+
+    @Test func theSelectedCardsPlaceIsWhatEnterOrOpenActOn() {
+        let projects = model()
+        #expect(projects.selectedPlace(in: cards) == nil)
+        projects.selectedID = "p2"
+        #expect(projects.selectedPlace(in: cards) == .project("p2"))
+    }
+
+    @Test func aSelectionGoneFromTheCardsHasNoPlace() {
+        let projects = model()
+        projects.selectedID = "gone"
+        #expect(projects.selectedPlace(in: cards) == nil)
+    }
 }

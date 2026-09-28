@@ -639,6 +639,24 @@ and time, and ⏎ creates the task and its block together through the outbox
    reconnecting. Its block disappears from Plan with it (#275), and
    reconnecting sends nothing for it.
 
+## M9 G7 - A project card opens its tasks
+
+Clicking a project card did nothing but select it (spec §6, #289). Seed a
+workspace with a couple of projects and open Projects.
+
+1. Click a project card once: it gets an accent outline, and no other
+   screen appears.
+2. Double-click the card: the sidebar selects that project under Places,
+   and the detail shows its task list (S6's screen), grouped
+   Overdue/Today/Upcoming/No date.
+3. Back on Projects, click a different card once to select it (no outline
+   moves until you click), then press ⏎: the sidebar and detail switch to
+   that project's list.
+4. Right-click a card: the menu's first item is "Open". Choosing it does
+   the same as the double-click.
+5. Quit and relaunch: the sidebar still shows the project you last opened,
+   selected (`@SceneStorage("omakase.sidebar")`, spec §3).
+
 ## #279
 
 Dragging a card on Focus's Kanban did nothing for a carried-over task: the
