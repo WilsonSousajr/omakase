@@ -38,6 +38,46 @@ struct SidebarCountsTests {
         #expect(counts.inbox == 2)
     }
 
+    /// The tally is a third copy of "an open task in this place", beside
+    /// `TaskPlace.openTasksPredicate`, which `PlaceTasksView` and `PlaceSync`
+    /// share so the two can't drift. This pins the tally to that predicate
+    /// over every kind of record the two could disagree on.
+    @MainActor
+    @Test func theTallyAgreesWithEachPlacesPredicate() throws {
+        let records = Self.fixtureRecords()
+        // SidebarView's query: the tally only ever sees open tasks.
+        let counts = SidebarCounts.tally(records.filter { !$0.isCompleted }.map(SidebarOpenTask.init))
+        let places: [TaskPlace] = [.project("p1"), .project("p2"), .discipline("d1"), .discipline("d2"), .life]
+        for place in places {
+            let listed = try records.filter { try place.openTasksPredicate.evaluate($0) }.count
+            #expect(counts.count(for: place) == listed, "\(place)")
+        }
+    }
+
+    /// Open, completed and virtual records in a project, a discipline and
+    /// Life, and a server row that says Life but names a project.
+    @MainActor
+    private static func fixtureRecords() -> [TaskRecord] {
+        let project = TaskFiling(area: .work, parent: .project("p1"))
+        let discipline = TaskFiling(area: .study, parent: .discipline("d1"))
+        let life = TaskFiling(area: .life, parent: nil)
+        let virtual = TaskRecord(id: "occ-1", title: "Standup", scheduledDay: "2026-09-28", filing: project)
+        virtual.isVirtual = true
+        let virtualLife = TaskRecord(id: "occ-2", title: "Run", scheduledDay: "2026-09-28", filing: life)
+        virtualLife.isVirtual = true
+        let inconsistent = TaskRecord(id: "t9", title: "Odd", filing: TaskFiling(area: .work, parent: .project("p2")))
+        inconsistent.area = TaskArea.life.rawValue
+        return [
+            TaskRecord(id: "t1", title: "Ship", scheduledDay: "2026-09-27", filing: project),
+            TaskRecord(id: "t2", title: "Plan", filing: project),
+            TaskRecord(id: "t3", title: "Done", isCompleted: true, filing: project), virtual,
+            TaskRecord(id: "t4", title: "Proof", filing: discipline),
+            TaskRecord(id: "t5", title: "Read", isCompleted: true, filing: discipline),
+            TaskRecord(id: "t6", title: "Groceries", filing: life),
+            TaskRecord(id: "t7", title: "Dentist", isCompleted: true, filing: life), virtualLife, inconsistent,
+        ]
+    }
+
     @MainActor
     @Test func aRecordReadsAsPlainValues() {
         let record = TaskRecord(
