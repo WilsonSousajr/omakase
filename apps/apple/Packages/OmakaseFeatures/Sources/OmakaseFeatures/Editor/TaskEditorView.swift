@@ -6,6 +6,7 @@ import SwiftUI
 public struct TaskEditorView: View {
     @State private var model: TaskEditorModel
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.placeDirectory) private var directory
 
     public init(model: TaskEditorModel) { _model = State(initialValue: model) }
 
@@ -16,6 +17,7 @@ public struct TaskEditorView: View {
                 .textFieldStyle(.plain)
                 .font(TypeScale.title)
                 .foregroundStyle(Palette.ink.color)
+            kindRow
             TaskEditorNotesView(notes: $model.draft.notes)
             TaskEditorPriorityView(priority: $model.draft.priority)
             TaskEditorEstimateView(model: model)
@@ -24,6 +26,19 @@ public struct TaskEditorView: View {
         }
         .padding(Spacing.xLarge)
         .frame(width: 440)
+    }
+
+    /// Re-files the task (spec §4, S5 #258): the same kind chips and parent
+    /// menu capture uses, so a pre-M9 task can move to Study or Life.
+    private var kindRow: some View {
+        HStack(spacing: Spacing.medium) {
+            Text("Kind").sectionLabel()
+            KindChipsView(selection: Binding(get: { model.area }, set: { model.choose($0) }))
+            Spacer()
+            ParentMenuChip(
+                area: model.area, parent: Binding(get: { model.parent }, set: { model.choose(parent: $0) }),
+                directory: directory)
+        }
     }
 
     private var buttons: some View {
