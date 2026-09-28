@@ -22,8 +22,15 @@ struct SidebarItemTests {
         #expect(SidebarItem.review.symbol == "moon.stars")
     }
 
-    @Test func planLeadsTheSidebarAsTheWebClientsDid() {
-        #expect(SidebarItem.allCases.first == .plan)
+    /// Focus leads the day because the app opens on it (M9 spec §6, decided
+    /// with the user in the M9 brainstorm, #260). Plan led until then, as
+    /// the web client's navigation did; Projects and Study left the day for
+    /// the Work and Study headers.
+    @Test func focusLeadsTheDay() {
+        #expect(SidebarItem.day == [.focus, .plan, .review, .inbox])
+    }
+
+    @Test func planIsTheCalendar() {
         #expect(SidebarItem.plan.title == "Plan")
         #expect(SidebarItem.plan.symbol == "calendar")
     }

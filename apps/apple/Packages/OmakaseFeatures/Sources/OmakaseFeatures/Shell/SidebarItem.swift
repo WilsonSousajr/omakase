@@ -1,7 +1,8 @@
-/// A screen in the window's sidebar, in the web client's navigation (Plan,
-/// Focus, Review, Projects, Study). A case exists only once its screen does.
+/// A screen in the window's sidebar. A case exists only once its screen does.
+/// The sidebar lists the day (`day`) as rows; Projects and Study open from
+/// the Work and Study headers above their places (spec §6, #260).
 ///
-///     List(SidebarItem.allCases, selection: $selection) { Label($0.title, systemImage: $0.symbol) }
+///     ForEach(SidebarItem.day) { item in SidebarRowView(item: item, count: 0).tag(SidebarSelection.item(item)) }
 public enum SidebarItem: String, CaseIterable, Identifiable, Sendable {
     /// The day or week as a calendar, with the task column to plan from (M4).
     case plan
@@ -15,6 +16,11 @@ public enum SidebarItem: String, CaseIterable, Identifiable, Sendable {
     case projects
     /// Semesters, disciplines, class schedules and holidays (M5, #227).
     case study
+
+    /// The day's screens, in the sidebar's order: Focus leads because the
+    /// app opens on it (spec §6). Plan led until M9, as the web client's
+    /// navigation did; the user changed that in the M9 brainstorm.
+    public static let day: [SidebarItem] = [.focus, .plan, .review, .inbox]
 
     public var id: Self { self }
 
