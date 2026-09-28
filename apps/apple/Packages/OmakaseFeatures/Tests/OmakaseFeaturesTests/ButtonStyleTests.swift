@@ -4,11 +4,15 @@ import Testing
 @testable import OmakaseFeatures
 
 /// Buttons are monochrome, like the web client's: the user rejected shu on
-/// buttons. The primary action is an inverted ink pill.
+/// buttons. The primary action is an inverted ink pill; every other button
+/// is a glass capsule of the same height, and an icon button a glass circle
+/// (glass-pass §1, #283).
 @MainActor
 struct ButtonStyleTests {
+    static let sides = [true, false]  // dark first
+
     @Test func primaryLabelReadsOnItsPill() {
-        for dark in [true, false] {
+        for dark in Self.sides {
             let pill = PrimaryButtonStyle.fill.side(dark: dark)
             #expect(RGB.contrast(PrimaryButtonStyle.label.side(dark: dark), pill) >= 4.5)
         }
@@ -22,5 +26,74 @@ struct ButtonStyleTests {
     @Test func primaryRendersAsSwiftUI() {
         let renderer = ImageRenderer(content: Button("Sign in") {}.buttonStyle(.primary))
         #expect(renderer.cgImage != nil)
+    }
+
+    /// The height is the primary pill's own from before #283 (a headline
+    /// line and `Spacing.small` above and below), so Complete keeps its size
+    /// and everything beside it grows to match.
+    @Test func theControlHeightIsThePrimaryPillsOwnIssue283() {
+        let pill = Text("Complete").font(TypeScale.headline).padding(.vertical, Spacing.small)
+        #expect(Self.size(of: pill).height == ControlMetrics.height)
+    }
+
+    /// Focus's Complete was a capsule while Edit… and Reschedule beside it
+    /// were shorter rounded rectangles, which read as loose (#283).
+    @Test func primaryAndSecondaryShareTheControlHeightIssue283() {
+        #expect(Self.size(of: Button("Complete") {}.buttonStyle(.primary)).height == ControlMetrics.height)
+        #expect(Self.size(of: Button("Edit…") {}.buttonStyle(.secondary)).height == ControlMetrics.height)
+        let repeatButton = Button("Repeat", systemImage: "repeat") {}.buttonStyle(.secondary)
+        #expect(Self.size(of: repeatButton).height == ControlMetrics.height)
+        let chosen = Button("Study") {}.buttonStyle(SecondaryButtonStyle(isSelected: true))
+        #expect(Self.size(of: chosen).height == ControlMetrics.height)
+    }
+
+    /// An icon button (‹ ›, the rating dots) is a circle as tall as the capsules beside it.
+    @Test func anIconButtonIsACircleOfTheControlHeightIssue283() {
+        let size = Self.size(of: Button("Next", systemImage: "chevron.right") {}.buttonStyle(.icon))
+        #expect(size == CGSize(width: ControlMetrics.height, height: ControlMetrics.height))
+    }
+
+    /// The glass blurs what is behind it. The worst backdrop in the window
+    /// is its own ground over a blurred desktop (`TranslucencyTests`):
+    /// cards and panels are opaque `surface`, which ink reads on at 13.9:1.
+    @Test func secondaryLabelReadsOnGlassOverTheBlurredGroundIssue283() {
+        for dark in Self.sides {
+            let ground = TranslucencyTests.blurred(dark: dark)
+            #expect(RGB.contrast(SecondaryButtonStyle.label.side(dark: dark), ground) >= 4.5)
+        }
+    }
+
+    /// A chosen chip or an on toggle adds a faint ink fill; its label still reads.
+    @Test func aChosenLabelReadsOnItsInkTintIssue283() {
+        for dark in Self.sides {
+            let ground = TranslucencyTests.blurred(dark: dark)
+            let fill = SecondaryButtonStyle.selectedFill.side(dark: dark)
+            let chosen = fill.composited(over: ground, opacity: ControlMetrics.selectedFillOpacity)
+            #expect(RGB.contrast(SecondaryButtonStyle.label.side(dark: dark), chosen) >= 4.5)
+        }
+    }
+
+    /// Mono chrome (glass-pass §1): the capsule's label and its chosen fill
+    /// are ink. A dim label read as disabled on glass (#172, #213).
+    @Test func secondaryIsInkNotShuIssue283() {
+        #expect(SecondaryButtonStyle.label == Palette.ink)
+        #expect(SecondaryButtonStyle.selectedFill == Palette.ink)
+    }
+
+    /// A glass control has no bezel change to show a press or a disabled
+    /// state, so its label carries both, disabled winning.
+    @Test func aGlassLabelDimsWhenPressedAndMoreWhenDisabledIssue283() {
+        #expect(ControlMetrics.labelOpacity(isPressed: false, isEnabled: true) == 1)
+        #expect(ControlMetrics.labelOpacity(isPressed: true, isEnabled: true) == ControlMetrics.pressedOpacity)
+        #expect(ControlMetrics.labelOpacity(isPressed: true, isEnabled: false) == ControlMetrics.disabledOpacity)
+        #expect(ControlMetrics.disabledOpacity < ControlMetrics.pressedOpacity)
+    }
+
+    /// The rendered size in points: the renderer's scale is 1.
+    private static func size(of view: some View) -> CGSize {
+        let renderer = ImageRenderer(content: view)
+        renderer.scale = 1
+        guard let image = renderer.cgImage else { return .zero }
+        return CGSize(width: image.width, height: image.height)
     }
 }
