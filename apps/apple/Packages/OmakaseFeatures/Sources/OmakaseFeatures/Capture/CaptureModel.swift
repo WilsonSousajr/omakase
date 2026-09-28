@@ -92,9 +92,10 @@ public final class CaptureModel {
     public private(set) var parent: TaskParent?
 
     /// Observed, not fixed: `reseed` replaces both while the panel is open,
-    /// and the hint and the parent chip redraw from them.
+    /// and the hint and `ParentMenuChip` redraw from them.
     private var context: CaptureContext
-    private var directory: PlaceDirectory
+    /// Read by `ParentMenuChip`, which the panel and the task editor share (S5, #258).
+    public private(set) var directory: PlaceDirectory
     @ObservationIgnored private let calendar: Calendar
     @ObservationIgnored private let actions: Actions
 
@@ -110,12 +111,11 @@ public final class CaptureModel {
     /// The kind and parent a save sends, derived in the store's one place.
     public var filing: TaskFiling { TaskFiling(area: area, parent: parent) }
 
-    /// Picks a kind (⌘1–3 or a chip), dropping a parent that no longer fits:
-    /// a discipline under Work, a project under Study, any parent under Life.
+    /// Picks a kind (⌘1–3 or a chip), dropping a parent that no longer fits
+    /// it (`TaskFiling.choosing`, shared with the task editor, #258).
     public func choose(_ area: TaskArea) {
-        self.area = area
-        guard let parent, TaskFiling(area: area, parent: parent).area != area else { return }
-        self.parent = nil
+        let filing = TaskFiling.choosing(area, keeping: parent)
+        (self.area, parent) = (filing.area, filing.parent)
     }
 
     /// Picks a parent, or none, and the kind it implies (spec §1).
