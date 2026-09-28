@@ -35,6 +35,14 @@ actor FakeAPIClient: APIClient {
     private var library = FakeLibrary()
     private var libraryOffline = false
     private(set) var signOutCount = 0
+    /// A place's open tasks (spec §5), keyed by `PlaceTasksQuery.filterItem`.
+    private var openTasksByQuery: [String: [TaskDTO]] = [:]
+    private var openTasksOffline = false
+    /// Every place query asked for, in order: how `PlaceSyncTests` sees which place was read.
+    private(set) var requestedPlaceQueries: [String] = []
+    /// Runs while `openTasks(_:)` is "on the network": how a test makes a
+    /// local write land, or be accepted, in the middle of a place's refresh.
+    private var duringOpenTasksFetch: (@Sendable () async -> Void)?
 
     func setTasks(_ tasks: [TaskDTO], on day: String) { tasksByDay[day] = tasks }
     func script(_ outcomes: [SendOutcome]) { self.outcomes = outcomes }
@@ -51,6 +59,9 @@ actor FakeAPIClient: APIClient {
     func setDuringRangeFetch(_ hook: @escaping @Sendable () async -> Void) { duringRangeFetch = hook }
     func setLibrary(_ lists: FakeLibrary) { library = lists }
     func setLibraryOffline(_ offline: Bool) { libraryOffline = offline }
+    func setOpenTasks(_ tasks: [TaskDTO], for query: PlaceTasksQuery) { openTasksByQuery[Self.key(query)] = tasks }
+    func setOpenTasksOffline(_ offline: Bool) { openTasksOffline = offline }
+    func setDuringOpenTasksFetch(_ hook: @escaping @Sendable () async -> Void) { duringOpenTasksFetch = hook }
 
     func signIn(googleIDToken: String) async throws -> UserDTO { throw APIError.signedOut }
     func me() async throws -> UserDTO { throw APIError.signedOut }
@@ -64,11 +75,28 @@ actor FakeAPIClient: APIClient {
     func holidays() async throws -> [HolidayDTO] { try libraryRead(library.holidays) }
     func unscheduledTasks() async throws -> [TaskDTO] { try libraryRead(library.inbox) }
 
+    func openTasks(_ query: PlaceTasksQuery) async throws -> [TaskDTO] {
+        requestedPlaceQueries.append(Self.key(query))
+        await duringOpenTasksFetch?()
+        guard !openTasksOffline else { throw APIError.transport("offline") }
+        return openTasksByQuery[Self.key(query)] ?? []
+    }
+
     private func libraryRead<Item>(_ items: [Item]) throws -> [Item] {
         if libraryOffline { throw APIError.transport("offline") }
         return items
     }
     func hasStoredSession() async -> Bool { true }
+
+    /// A stable key for the query's case and value, since `PlaceTasksQuery`
+    /// keeps its own request-building `filterItem` internal to OmakaseAPI.
+    private static func key(_ query: PlaceTasksQuery) -> String {
+        switch query {
+        case .project(let id): "project:\(id.uuidString)"
+        case .discipline(let id): "discipline:\(id.uuidString)"
+        case .area(let value): "area:\(value)"
+        }
+    }
 
     func tasks(on day: APIDay) async throws -> [TaskDTO] {
         note(day)
@@ -145,11 +173,16 @@ extension TaskDTO {
     static func make(
         id: UUID? = UUID(), title: String = "Task", day: String? = "2026-03-07", completed: Bool = false,
         subtasks: [(String, Bool)]? = nil, remindAt: String? = nil, description: String = "", series: UUID? = nil,
-        area: String = "work", project: UUID? = nil, discipline: UUID? = nil
+        area: String = "work", project: UUID? = nil, discipline: UUID? = nil, isSkipped: Bool = false,
+        // A series template (#124): `recurrence` set with no `series`, as the plain list also returns it (spec §5).
+        hasRecurrence: Bool = false
     ) throws -> TaskDTO {
+        let recurrence =
+            hasRecurrence
+            ? #"{"freq":"weekly","interval":1,"weekdays":[],"starts_on":"2026-03-07","until":null}"# : "null"
         let json = """
             {"id":\(quoted(id)),"series":\(quoted(series)),"occurrence_date":\(series == nil ? "null" : quoted(day)),
-             "is_skipped":false,"is_virtual":\(id == nil),"recurrence":null,
+             "is_skipped":\(isSkipped),"is_virtual":\(id == nil),"recurrence":\(recurrence),
              "title":"\(title)","description":"\(description)","priority":"medium","area":"\(area)",
              "kanban_status":"todo","project":\(quoted(project)),"discipline":\(quoted(discipline)),"tags":[],
              "scheduled_date":\(day.map { "\"\($0)\"" } ?? "null"),"due_date":null,"estimated_minutes":null,

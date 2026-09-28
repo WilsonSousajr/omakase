@@ -11,12 +11,13 @@ struct OmakaseMacApp: App {
     @State private var focus: FocusModel?
     @State private var review: ReviewModel?
     @State private var plan: PlanModel?
-    @State private var inbox: InboxModel?
+    @State private var inbox: TriageModel?
     @State private var projects: ProjectsModel?
     @State private var study: StudyModel?
     @State private var calendarOverlay: CalendarOverlayModel?
     @State private var timer: TimerModel?
     @State private var failedWrites: FailedWritesModel?
+    @State private var places: PlaceListModel?
     @State private var prompt: SessionPrompt?
     @State private var capture: GlobalCapture?
     @State private var settings: SettingsModel?
@@ -91,7 +92,7 @@ struct OmakaseMacApp: App {
     private var screenModels: ScreenModels {
         ScreenModels(
             focus: focus, review: review, plan: plan, inbox: inbox, projects: projects, study: study,
-            calendarOverlay: calendarOverlay, timer: timer, failedWrites: failedWrites)
+            calendarOverlay: calendarOverlay, timer: timer, failedWrites: failedWrites, places: places)
     }
 
     private func start() async {
@@ -118,13 +119,14 @@ struct OmakaseMacApp: App {
         focus = FocusModel(actions: services.focusActions { handle($0) })
         review = ReviewModel(actions: services.reviewActions { handle($0) })
         settings = SettingsModel(actions: services.settingsActions())
-        inbox = InboxModel(actions: services.inboxActions { handle($0) }) { FocusDay().today }
+        inbox = TriageModel(actions: services.inboxActions { handle($0) }) { FocusDay().today }
         projects = ProjectsModel(actions: services.projectsActions())
         study = StudyModel(actions: services.studyActions())
         // A drawn slot opens the same panel as ⌘N (#264); `capture` is read when it fires.
         let planActions = services.planActions(openCapture: { capture?.show(context: $0) }, onOutcome: { handle($0) })
         plan = PlanModel(actions: planActions) { FocusDay().today }
         calendarOverlay = services.makeCalendarOverlay()
+        places = PlaceListModel(actions: services.placesActions())
     }
 
     /// The toolbar's sync item follows every catch-up, the backoff wake's
@@ -143,6 +145,7 @@ struct OmakaseMacApp: App {
         if outcome == .synced { Task { await services.refreshLibrary() } }
         services.replanReminders()
         plan?.caughtUp()
+        places?.caughtUp()
         guard let plan, plan.isShowing, let calendarOverlay else { return }
         Task { await calendarOverlay.refresh(days: plan.visibleDays) }
     }

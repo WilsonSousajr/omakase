@@ -4,9 +4,10 @@ import Testing
 
 @testable import OmakaseFeatures
 
-/// The Inbox (#225): tasks with no date, triaged to a day, done, edited or deleted.
+/// Triaging a task list (#225, #259): the Inbox's or a place's, scheduled,
+/// done, edited or deleted.
 @MainActor
-struct InboxModelTests {
+struct TriageModelTests {
     final class Recorder {
         var scheduled: [(String, String?)] = []
         var toggled: [String] = []
@@ -16,11 +17,11 @@ struct InboxModelTests {
 
     private let recorder = Recorder()
 
-    private func model() -> InboxModel {
+    private func model() -> TriageModel {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = TimeZone(identifier: "America/Sao_Paulo")!
         let recorder = recorder
-        return InboxModel(
+        return TriageModel(
             actions: .init(
                 schedule: { recorder.scheduled.append(($0, $1)) }, toggle: { recorder.toggled.append($0) },
                 delete: { recorder.deleted.append($0) }, edit: { recorder.edited.append(($0, $1)) }),
@@ -72,6 +73,6 @@ struct InboxModelTests {
     }
 
     @Test func theBadgeCountsOpenTasksAndHidesAtZero() {
-        #expect(InboxModel.badge(count: 0) == 0 && InboxModel.badge(count: 4) == 4)
+        #expect(TriageModel.badge(count: 0) == 0 && TriageModel.badge(count: 4) == 4)
     }
 }

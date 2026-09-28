@@ -530,6 +530,33 @@ optional project or discipline (spec §4, #257). The library must be cached
    is still enabled, and ⌘N opens the panel with the last kind and ⏎ Today.
 9. Quit and relaunch. ⌥⌘N opens with the kind last saved (step 6's).
 
+## M9 S6 - A place's task list
+
+A project, a discipline or Life now lists its own open tasks (spec §5,
+#259), through a plain, temporary "Places" section in the sidebar (S7
+replaces it). The library must be cached (open Projects and Study once,
+online) so the section has projects and disciplines to list.
+
+1. In the sidebar, under "Places", your projects, the current semester's
+   disciplines, and "Life" all show as rows.
+2. Click a discipline. Its list opens: the title reads the discipline's
+   name, and its open tasks show grouped Overdue, Today, Upcoming and No
+   date (a section with no tasks is left out).
+3. ⌘N there. The capture panel opens seeded Study ▸ that discipline (no
+   kind chip needed - it's already picked). Type "Smoke test M9 S6" and
+   press ⏎ Today. The task appears under Today in the place's list.
+   - `curl ".../api/v1/tasks/?search=Smoke%20test%20M9%20S6"` shows
+     `"area": "study"` and that discipline's id in `"discipline"`.
+4. Complete it (the checkbox, or ⋯ › Complete). It leaves the list.
+5. Click a project, then "Life". Each opens its own list the same way; an
+   empty one shows "Nothing here yet. ⌘N adds a task to <place>."
+6. Archive the project you had selected (any project works; deleting also
+   does it):
+   `curl -X PATCH -H "Authorization: Bearer <token>" -H "Content-Type: application/json" -d '{"status":"archived"}' ".../api/v1/projects/<id>/"`.
+   Catch up (offline then online, or wait for the 5-minute timer) - the
+   project drops from "Places", and if it was selected, the window falls
+   back to Focus.
+
 ## M9 S9 - Calmer task rows
 
 Every row now says what the task is for, the default Medium pill is gone,

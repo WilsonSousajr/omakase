@@ -2,15 +2,17 @@ import Foundation
 import Observation
 import OmakaseStore
 
-/// The Inbox (#225): tasks with no date, which capture's ⌘⏎ puts here
-/// (IDEA §17). Each one is triaged to a day, done, edited or deleted; the
-/// writes go through the outbox like Focus's, so the Inbox works offline.
+/// Triaging a list of tasks (#225, #259): the Inbox's tasks with no date -
+/// which capture's ⌘⏎ puts here (IDEA §17) - or a place's open ones. Each
+/// one is scheduled, done, edited or deleted; the writes go through the
+/// outbox like Focus's, so triage works offline. The Inbox and a place
+/// list share this one model, so they act on a task the same way (spec §5).
 ///
-///     let inbox = InboxModel(actions: actions) { FocusDay().today }
-///     inbox.schedule(id, .tomorrow)
+///     let triage = TriageModel(actions: actions) { FocusDay().today }
+///     triage.schedule(id, .tomorrow)
 @Observable
 @MainActor
-public final class InboxModel {
+public final class TriageModel {
     public struct Actions {
         /// The task and its new day; the Inbox never unschedules.
         let schedule: (String, String?) -> Void

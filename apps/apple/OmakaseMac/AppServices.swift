@@ -105,9 +105,10 @@ final class AppServices {
     }
 
     /// The Inbox's writes (#225): the same queued task writes Focus uses, so
-    /// triage works offline.
-    func inboxActions(onOutcome: @escaping @MainActor (SyncCoordinator.Outcome) -> Void) -> InboxModel.Actions {
-        InboxModel.Actions(
+    /// triage works offline. A place list's writes go through the same
+    /// actions (spec §5, #259): both share `TriageModel`.
+    func inboxActions(onOutcome: @escaping @MainActor (SyncCoordinator.Outcome) -> Void) -> TriageModel.Actions {
+        TriageModel.Actions(
             schedule: { [self] id, day in perform(on: id, onOutcome) { try self.writes.reschedule($0, to: day) } },
             toggle: { [self] id in perform(on: id, onOutcome) { try self.writes.toggleCompletion($0) } },
             delete: { [self] id in perform(on: id, onOutcome) { try self.writes.delete($0) } },

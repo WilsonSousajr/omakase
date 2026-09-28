@@ -13,6 +13,6 @@ public struct SidebarRowView: View {
 
     public var body: some View {
         Label(item.title, systemImage: item.symbol)
-            .badge(item == .inbox ? InboxModel.badge(count: inbox.count) : 0)
+            .badge(item == .inbox ? TriageModel.badge(count: inbox.count) : 0)
     }
 }

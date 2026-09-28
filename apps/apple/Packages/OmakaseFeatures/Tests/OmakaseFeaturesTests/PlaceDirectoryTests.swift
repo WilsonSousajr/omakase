@@ -180,4 +180,29 @@ struct PlaceDirectoryTests {
         projects.first?.name = "Renamed"
         #expect(snapshot != PlaceLibrarySnapshot(today: "2026-09-27", projects: projects, disciplines: disciplines))
     }
+
+    /// `make` is what a screen's own `@Query` builds the directory from
+    /// (spec §6, S6 #259), so it must read the same records `load` does.
+    @MainActor
+    @Test func makeBuildsTheSameDirectoryFromAlreadyFetchedRecords() throws {
+        let container = try StoreSchema.container(inMemory: true)
+        let context = container.mainContext
+        try insertSampleLibrary(into: context)
+        let directory = PlaceDirectory.make(
+            workspaces: try context.fetch(FetchDescriptor<WorkspaceRecord>()),
+            projects: try context.fetch(FetchDescriptor<ProjectRecord>()),
+            semesters: try context.fetch(FetchDescriptor<SemesterRecord>()),
+            disciplines: try context.fetch(FetchDescriptor<DisciplineRecord>()), today: "2026-09-27")
+        #expect(directory.projects.map(\.title) == ["Thesis"])
+        #expect(directory.disciplines.map(\.title) == ["Calculus"])
+        #expect(directory.semesterTitle == "Fall")
+    }
+
+    @Test func placeForAProjectParentIsAProjectPlace() {
+        #expect(PlaceDirectory.place(for: .project("p1")) == .project("p1"))
+    }
+
+    @Test func placeForADisciplineParentIsADisciplinePlace() {
+        #expect(PlaceDirectory.place(for: .discipline("d1")) == .discipline("d1"))
+    }
 }
