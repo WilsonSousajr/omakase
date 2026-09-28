@@ -58,9 +58,9 @@ public struct CaptureView: View {
             Button("None") { model.choose(parent: nil) }
             ForEach(model.parentGroups) { group in parentSection(group) }
         } label: {
-            Text(model.parentTitle).font(TypeScale.body)
+            Text(model.parentTitle)
         }
-        .menuStyle(.borderlessButton)
+        .menuStyle(.secondary)
         .fixedSize()
     }
 
