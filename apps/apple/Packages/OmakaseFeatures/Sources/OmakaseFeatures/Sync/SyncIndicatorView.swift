@@ -1,10 +1,12 @@
 import SwiftUI
 
-/// The toolbar's sync item: the glyph and a short label, on the system's own
-/// untinted glass. A tap opens the failed-writes sheet when something is
-/// parked, and otherwise a popover with the status and Sync now.
+/// The sync item: the glyph and a short label. A tap opens the
+/// failed-writes sheet when something is parked, and otherwise a popover
+/// with the status and Sync now. It lived in the toolbar, on the system's
+/// own untinted glass, until the sidebar's footer took it (spec §6, #260);
+/// there it is a `.secondary` capsule, like every other button beside it.
 ///
-///     .toolbar { ToolbarItem(placement: .primaryAction) { SyncIndicatorView(model: failedWrites) } }
+///     SidebarFooterView(settings: settings, failedWrites: failedWrites) { … }   // draws SyncIndicatorView(model:)
 public struct SyncIndicatorView: View {
     private let model: FailedWritesModel
     @State private var showsFailedWrites = false
@@ -18,8 +20,10 @@ public struct SyncIndicatorView: View {
                 .labelStyle(.titleAndIcon)
                 .symbolRenderingMode(.monochrome)
         }
+        .buttonStyle(.secondary)
         .help(model.indicator.label)
-        .popover(isPresented: $showsStatus, arrowEdge: .bottom) { SyncStatusPopoverView(model: model) }
+        // Opens upward: the footer sits at the window's bottom edge.
+        .popover(isPresented: $showsStatus, arrowEdge: .top) { SyncStatusPopoverView(model: model) }
         .sheet(isPresented: $showsFailedWrites) { FailedWritesView(model: model) }
     }
 
