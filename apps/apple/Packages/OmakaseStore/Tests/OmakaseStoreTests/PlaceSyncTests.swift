@@ -139,6 +139,35 @@ struct PlaceSyncTests {
         #expect(try all().count == 1)
     }
 
+    /// A write pending before the read started, accepted (its outbox entry
+    /// removed) while the network call was in flight, must still keep its
+    /// local state: the read's snapshot of `today`'s DTO is stale relative
+    /// to that acceptance. DaySync and RangeSync union a snapshot taken
+    /// before the read with one taken after (final review, Important 1);
+    /// `PlaceSync` must do the same.
+    @Test func aWriteAcceptedWhileTheReadIsInFlightKeepsItsLocalState() async throws {
+        let dto = try TaskDTO.make(title: "Read chapter 4", area: "study", discipline: disciplineID)
+        await api.setOpenTasks([dto], for: .discipline(disciplineID))
+        let sync = PlaceSync(api: api, context: context)
+        try await sync.refresh(.discipline("\(disciplineID)"), today: "2026-09-27")
+        let task = try #require(try all().first)
+        try TaskWrites(context: context).edit(task, changes: TaskEdit(title: "Renamed locally"))
+        // The server's answer for this refresh is scripted before the edit
+        // above, so it still carries the stale title - as a real GET sent
+        // before the PATCH landed would.
+        await api.setOpenTasks([dto], for: .discipline(disciplineID))
+        let (container, taskID) = (self.container, task.id)
+        await api.setDuringOpenTasksFetch {
+            await MainActor.run {
+                let entries = try? container.mainContext.fetch(FetchDescriptor<OutboxEntry>())
+                for entry in (entries ?? []) where entry.subjectID == taskID { container.mainContext.delete(entry) }
+                try? container.mainContext.save()
+            }
+        }
+        try await sync.refresh(.discipline("\(disciplineID)"), today: "2026-09-27")
+        #expect(try all().map(\.title) == ["Renamed locally"])
+    }
+
     @Test func aPlaceIDThatIsNotAUUIDThrows() async throws {
         await #expect(throws: PlaceIDError.self) {
             try await PlaceSync(api: api, context: context).refresh(.project("not-a-uuid"), today: "2026-09-27")

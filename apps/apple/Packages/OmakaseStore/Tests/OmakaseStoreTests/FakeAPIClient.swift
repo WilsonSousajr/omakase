@@ -40,6 +40,9 @@ actor FakeAPIClient: APIClient {
     private var openTasksOffline = false
     /// Every place query asked for, in order: how `PlaceSyncTests` sees which place was read.
     private(set) var requestedPlaceQueries: [String] = []
+    /// Runs while `openTasks(_:)` is "on the network": how a test makes a
+    /// local write land, or be accepted, in the middle of a place's refresh.
+    private var duringOpenTasksFetch: (@Sendable () async -> Void)?
 
     func setTasks(_ tasks: [TaskDTO], on day: String) { tasksByDay[day] = tasks }
     func script(_ outcomes: [SendOutcome]) { self.outcomes = outcomes }
@@ -58,6 +61,7 @@ actor FakeAPIClient: APIClient {
     func setLibraryOffline(_ offline: Bool) { libraryOffline = offline }
     func setOpenTasks(_ tasks: [TaskDTO], for query: PlaceTasksQuery) { openTasksByQuery[Self.key(query)] = tasks }
     func setOpenTasksOffline(_ offline: Bool) { openTasksOffline = offline }
+    func setDuringOpenTasksFetch(_ hook: @escaping @Sendable () async -> Void) { duringOpenTasksFetch = hook }
 
     func signIn(googleIDToken: String) async throws -> UserDTO { throw APIError.signedOut }
     func me() async throws -> UserDTO { throw APIError.signedOut }
@@ -73,6 +77,7 @@ actor FakeAPIClient: APIClient {
 
     func openTasks(_ query: PlaceTasksQuery) async throws -> [TaskDTO] {
         requestedPlaceQueries.append(Self.key(query))
+        await duringOpenTasksFetch?()
         guard !openTasksOffline else { throw APIError.transport("offline") }
         return openTasksByQuery[Self.key(query)] ?? []
     }

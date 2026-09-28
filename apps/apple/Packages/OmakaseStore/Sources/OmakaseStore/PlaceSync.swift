@@ -24,9 +24,15 @@ public final class PlaceSync {
     public init(api: any APIClient, context: ModelContext) { (self.api, self.context) = (api, context) }
 
     public func refresh(_ place: TaskPlace, today: String) async throws {
+        // Snapshot before the read too: a write pending here and accepted
+        // while the network call is in flight loses its outbox entry before
+        // the after-snapshot can see it, but the read's DTO is still stale
+        // relative to that acceptance (as DaySync and RangeSync guard,
+        // final review, Important 1).
+        let pendingBefore = try pendingSubjects()
         let dtos = try await api.openTasks(try query(for: place))
         let kept = dtos.filter { !isSeriesTemplate($0) && !$0.isSkipped }
-        let pending = try pendingSubjects()
+        let pending = pendingBefore.union(try pendingSubjects())
         for dto in kept where !pending.contains(dto.recordID) { try upsert(dto) }
         try prune(place, keeping: Set(kept.map(\.recordID)), pending: pending, today: today)
         try context.save()
