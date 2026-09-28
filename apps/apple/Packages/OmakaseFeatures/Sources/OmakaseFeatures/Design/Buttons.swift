@@ -128,7 +128,10 @@ struct SecondaryMenuButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         let label = HStack(spacing: Spacing.tiny) {
             configuration.label
+            // Drawn, not the system's indicator, so VoiceOver would read it
+            // as "Down"; the menu button's own trait already says it opens.
             Image(systemName: "chevron.down").font(TypeScale.caption.weight(.semibold)).imageScale(.small)
+                .accessibilityHidden(true)
         }
         return SecondaryCapsuleBody(label: label, role: nil, isPressed: configuration.isPressed, isSelected: false)
     }
