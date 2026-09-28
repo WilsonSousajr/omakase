@@ -4,13 +4,18 @@ import SwiftUI
 
 /// Projects (#226): workspaces on the left (All first), their projects as
 /// cards on the right. Every write is online; a failure is said at the foot.
+/// A card opens its own task list (spec §6): double-click, ⏎ on a selected
+/// one, or the context menu's Open, all through `open`.
 public struct ProjectsView: View {
     @Bindable private var model: ProjectsModel
+    private let open: (TaskPlace) -> Void
     @Query(sort: \WorkspaceRecord.name) private var workspaces: [WorkspaceRecord]
     @Query(sort: \ProjectRecord.name) private var projects: [ProjectRecord]
     @State private var naming: ProjectsNaming?
 
-    public init(model: ProjectsModel) { self.model = model }
+    public init(model: ProjectsModel, open: @escaping (TaskPlace) -> Void) {
+        (self.model, self.open) = (model, open)
+    }
 
     public var body: some View {
         HStack(spacing: 0) {
@@ -20,7 +25,8 @@ public struct ProjectsView: View {
                 header
                 Divider().overlay(Palette.hairline.color)
                 ProjectsGrid(
-                    model: model, cards: model.visible(projects.map(ProjectCard.init(record:))), naming: $naming)
+                    model: model, cards: model.visible(projects.map(ProjectCard.init(record:))), naming: $naming,
+                    open: open)
                 if let message = model.message {
                     Text(message).font(TypeScale.caption).foregroundStyle(Palette.inkMuted.color).padding(
                         Spacing.medium)
@@ -119,6 +125,7 @@ struct ProjectsGrid: View {
     let model: ProjectsModel
     let cards: [ProjectCard]
     @Binding var naming: ProjectsNaming?
+    let open: (TaskPlace) -> Void
 
     var body: some View {
         ScrollView {
@@ -127,13 +134,34 @@ struct ProjectsGrid: View {
                     .padding(Spacing.large)
             }
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 220), spacing: Spacing.medium)], spacing: Spacing.medium) {
-                ForEach(cards) { card in ProjectCardView(card: card).contextMenu { menu(card) } }
+                ForEach(cards) { card in row(card) }
             }
             .padding(Spacing.large)
         }
+        .background(openShortcut)
     }
 
+    private func row(_ card: ProjectCard) -> some View {
+        ProjectCardView(card: card, isSelected: model.selectedID == card.id)
+            .onTapGesture { model.selectedID = card.id }
+            // Simultaneous, so a single click still selects at once (spec §6, matches Focus's board, #218).
+            .simultaneousGesture(TapGesture(count: 2).onEnded { open(card.place) })
+            .contextMenu { menu(card) }
+    }
+
+    /// ⏎ opens the selected card's list, the same place the double-click and
+    /// the context menu's Open do (spec §6). Invisible: it carries no
+    /// control of its own, only the shortcut.
+    private var openShortcut: some View {
+        Button("Open", action: openSelected).keyboardShortcut(.return, modifiers: [])
+            .disabled(model.selectedID == nil)
+            .hidden()
+    }
+
+    private func openSelected() { model.selectedPlace(in: cards).map(open) }
+
     @ViewBuilder private func menu(_ card: ProjectCard) -> some View {
+        Button("Open") { open(card.place) }
         Button("Rename…") { naming = .renameProject(id: card.id, name: card.name) }
         Menu("Status") {
             ForEach(ProjectsModel.statuses, id: \.self) { status in
@@ -144,9 +172,11 @@ struct ProjectsGrid: View {
     }
 }
 
-/// A project: its colour as a bar, its name, status and task count.
+/// A project: its colour as a bar, its name, status and task count. A
+/// selected card (spec §6) is outlined; ⏎ and Open act on it.
 struct ProjectCardView: View {
     let card: ProjectCard
+    var isSelected = false
 
     var body: some View {
         HStack(spacing: Spacing.small) {
@@ -161,6 +191,12 @@ struct ProjectCardView: View {
         .padding(Spacing.medium)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Palette.surface.color, in: .rect(cornerRadius: Radius.medium))
+        .overlay {
+            if isSelected {
+                RoundedRectangle(cornerRadius: Radius.medium).strokeBorder(Palette.accent.color, lineWidth: 2)
+            }
+        }
+        .contentShape(.rect(cornerRadius: Radius.medium))
     }
 }
 

@@ -23,6 +23,10 @@ public struct ProjectCard: Identifiable, Equatable, Sendable {
             id: record.id, workspaceID: record.workspaceID, name: record.name, color: record.color,
             status: record.status, taskCount: record.taskCount)
     }
+
+    /// Where this card's own task list lives (spec §6): the sidebar
+    /// selection a double-click, ⏎ or the context menu's Open sets.
+    public var place: TaskPlace { .project(id) }
 }
 
 /// Projects (#226): workspaces and their projects, written online (parent
@@ -78,6 +82,9 @@ public final class ProjectsModel {
 
     /// nil is All.
     public var selectedWorkspaceID: String?
+    /// The card a click selected (spec §6): highlighted on the grid, and
+    /// what ⏎ or the context menu's Open acts on.
+    public var selectedID: String?
     public private(set) var message: String?
     public private(set) var deleting: Deletion?
 
@@ -88,6 +95,15 @@ public final class ProjectsModel {
     public func visible(_ cards: [ProjectCard]) -> [ProjectCard] {
         guard let selectedWorkspaceID else { return cards }
         return cards.filter { $0.workspaceID == selectedWorkspaceID }
+    }
+
+    /// The selected card's own place (spec §6): nil when nothing is
+    /// selected, or the selection no longer names a card (deleted or
+    /// filtered out elsewhere).
+    ///
+    ///     model.selectedPlace(in: cards)  // .project("p1"), when p1 is selected
+    public func selectedPlace(in cards: [ProjectCard]) -> TaskPlace? {
+        cards.first { $0.id == selectedID }?.place
     }
 
     /// `existing` picks the next colour, so neighbours differ.
