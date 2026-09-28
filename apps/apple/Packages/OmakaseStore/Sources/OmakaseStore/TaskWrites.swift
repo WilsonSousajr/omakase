@@ -69,7 +69,7 @@ public final class TaskWrites {
     /// project or discipline reaches the server filed the same way (spec §1).
     /// `details` adds its priority, estimate and notes (#286); its subtasks
     /// are `captureTask`'s, which the app calls.
-    public func capture(
+    func capture(
         title: String, day: String?, filing: TaskFiling, details: TaskCaptureDetails = TaskCaptureDetails()
     ) throws -> TaskRecord {
         let record = TaskRecord(id: "local-\(UUID().uuidString)", title: title, scheduledDay: day, filing: filing)
