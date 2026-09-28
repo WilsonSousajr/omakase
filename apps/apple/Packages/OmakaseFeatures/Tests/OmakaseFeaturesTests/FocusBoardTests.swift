@@ -58,6 +58,18 @@ struct FocusBoardTests {
         #expect(board.carriedOver.isEmpty && board.done.map(\.title) == ["yesterday's"])
     }
 
+    /// #279: a carried-over card already moved to In progress must stay
+    /// there, not snap back to To do — the bug was `toDo`/`inProgress`
+    /// both excluding every carried-over card, so a drag to In progress
+    /// persisted the write but the board re-sorted it into To do anyway.
+    @Test func aCarriedOverTaskInProgressStaysThereIssue279() {
+        let board = FocusBoard(records: [record("carried and doing", status: "in_progress", carried: true)])
+        #expect(board.inProgress.map(\.title) == ["carried and doing"])
+        #expect(board.carriedOver.isEmpty && board.toDo.isEmpty)
+        let inProgressColumn = board.columns.first { $0.status == "in_progress" }
+        #expect(inProgressColumn?.cards.map(\.title) == ["carried and doing"])
+    }
+
     @Test func aCardCarriesWhatTheBoardShows() {
         let source = record("Essay", "high", carried: true)
         (source.estimatedMinutes, source.dueDay, source.scheduledDay) = (45, "2026-03-09", "2026-03-06")
