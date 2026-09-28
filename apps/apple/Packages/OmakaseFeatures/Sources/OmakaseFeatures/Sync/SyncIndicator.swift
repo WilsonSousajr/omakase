@@ -1,7 +1,8 @@
 import OmakaseStore
 
-/// The toolbar's sync glyph, from whether the server is reachable and what the
-/// outbox holds (M3.5 spec, Decisions: the indicator). A parked write wins
+/// The sync glyph (in the sidebar's footer since #260, the toolbar's before),
+/// from whether the server is reachable and what the outbox holds (M3.5
+/// spec, Decisions: the indicator). A parked write wins
 /// over everything, offline included, because only the user can clear it.
 ///
 ///     let indicator = SyncIndicator(isOnline: true, status: maintenance.status())
