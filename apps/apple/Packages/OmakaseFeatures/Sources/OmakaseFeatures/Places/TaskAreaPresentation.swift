@@ -27,4 +27,10 @@ extension TaskArea {
         case .life: 3
         }
     }
+
+    /// `ParentMenuChip`'s label with no parent chosen (spec §4, S5 #258):
+    /// which kind of parent is missing. Life never shows the chip.
+    public var noParentTitle: String {
+        self == .study ? "No discipline" : "No project"
+    }
 }

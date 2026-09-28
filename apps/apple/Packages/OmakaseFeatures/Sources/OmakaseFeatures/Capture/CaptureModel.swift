@@ -142,26 +142,6 @@ extension CaptureModel {
     }
 }
 
-// MARK: - The parent chip
-
-extension CaptureModel {
-    /// The current kind's places: Work's projects, Study's disciplines, none for Life.
-    public var parentChoices: [PlaceEntry] { directory.places(for: area) }
-
-    /// The parent menu's sections, a workspace each.
-    public var parentGroups: [PlaceGroup] { PlaceGroup.groups(of: parentChoices) }
-
-    /// Hidden for Life, and whenever the kind has no places to offer (an
-    /// empty library cache): the kind alone still saves.
-    public var showsParentChip: Bool { !parentChoices.isEmpty }
-
-    /// The chip's label: the parent's name, or which kind of parent is missing.
-    public var parentTitle: String {
-        guard parent != nil else { return area == .study ? "No discipline" : "No project" }
-        return directory.mark(for: filing).title
-    }
-}
-
 // MARK: - Saving
 
 extension CaptureModel {

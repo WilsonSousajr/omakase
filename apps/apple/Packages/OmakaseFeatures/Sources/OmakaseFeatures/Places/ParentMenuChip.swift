@@ -32,7 +32,7 @@ public struct ParentMenuChip: View {
 
     /// The parent's name, or which kind of parent is missing.
     private var title: String {
-        guard let parent else { return area == .study ? "No discipline" : "No project" }
+        guard let parent else { return area.noParentTitle }
         return directory.mark(for: TaskFiling(area: area, parent: parent)).title
     }
 

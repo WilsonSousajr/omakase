@@ -22,4 +22,10 @@ struct TaskAreaPresentationTests {
         #expect(TaskArea.study.shortcutDigit == 2)
         #expect(TaskArea.life.shortcutDigit == 3)
     }
+
+    /// `ParentMenuChip`'s label with no parent chosen (spec §4, S5 #258).
+    @Test func noParentTitleNamesWhatIsMissing() {
+        #expect(TaskArea.work.noParentTitle == "No project")
+        #expect(TaskArea.study.noParentTitle == "No discipline")
+    }
 }
