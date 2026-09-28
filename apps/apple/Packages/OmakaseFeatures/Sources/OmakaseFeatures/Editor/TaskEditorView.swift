@@ -29,7 +29,7 @@ public struct TaskEditorView: View {
     private var buttons: some View {
         HStack {
             Spacer()
-            Button("Cancel") { dismiss() }.buttonStyle(.glass).keyboardShortcut(.cancelAction)
+            Button("Cancel") { dismiss() }.buttonStyle(.secondary).keyboardShortcut(.cancelAction)
             Button("Save") { if model.save() { dismiss() } }
                 .buttonStyle(.primary)
                 .keyboardShortcut(.return, modifiers: .command)

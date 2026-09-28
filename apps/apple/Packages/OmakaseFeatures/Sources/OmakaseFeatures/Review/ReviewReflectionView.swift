@@ -35,7 +35,7 @@ struct ReviewRatingView: View {
                     } label: {
                         dot(filled: mark <= (model.draft.rating ?? 0))
                     }
-                    .buttonStyle(.glass)
+                    .buttonStyle(.icon)
                     .accessibilityLabel("Rate \(mark) of \(ReviewModel.ratings.upperBound)")
                 }
             }
@@ -66,7 +66,7 @@ struct ReviewEnergyView: View {
                     } label: {
                         label(level)
                     }
-                    .buttonStyle(.glass)
+                    .buttonStyle(.secondary)
                 }
             }
         }

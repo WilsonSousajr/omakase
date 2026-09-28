@@ -111,7 +111,7 @@ struct FocusPanelActionsView: View {
         } label: {
             Text("Edit…").foregroundStyle(Self.menuLabel.color)
         }
-        .buttonStyle(.glass)
+        .buttonStyle(.secondary)
         .keyboardShortcut(.return, modifiers: [])
     }
 
@@ -122,8 +122,7 @@ struct FocusPanelActionsView: View {
         } label: {
             Text("Reschedule").foregroundStyle(Self.menuLabel.color)
         }
-        .menuStyle(.button)
-        .buttonStyle(.glass)
+        .menuStyle(.secondary)
         .fixedSize()
         .popover(isPresented: $picking) { datePicker }
     }
@@ -159,8 +158,7 @@ struct FocusRemindMenuView: View {
         } label: {
             Text("Remind me").foregroundStyle(FocusPanelActionsView.menuLabel.color)
         }
-        .menuStyle(.button)
-        .buttonStyle(.glass)
+        .menuStyle(.secondary)
         .fixedSize()
         .popover(isPresented: $picking) { timePicker }
     }
@@ -196,8 +194,7 @@ struct FocusRepeatMenuView: View {
         } label: {
             Label("Repeat", systemImage: "repeat").foregroundStyle(FocusPanelActionsView.menuLabel.color)
         }
-        .menuStyle(.button)
-        .buttonStyle(.glass)
+        .menuStyle(.secondary)
         .fixedSize()
     }
 }

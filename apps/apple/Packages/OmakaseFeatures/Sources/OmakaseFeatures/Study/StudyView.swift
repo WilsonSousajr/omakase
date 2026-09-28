@@ -92,7 +92,7 @@ struct StudySemesterColumn: View {
             }
             .scrollContentBackground(.hidden)
             Button("New Semester…") { model.editing = .semester(StudyForms.newSemester(today: day), id: nil) }
-                .buttonStyle(.glass).padding(Spacing.medium)
+                .buttonStyle(.secondary).padding(Spacing.medium)
         }
     }
 }
@@ -118,7 +118,7 @@ struct StudySemesterDetail: View {
                     }
                     Button("New Holiday…") { model.editing = .holiday(StudyForms.newHoliday(in: semester), id: nil) }
                 }
-                .buttonStyle(.glass).padding(Spacing.medium)
+                .buttonStyle(.secondary).padding(Spacing.medium)
             } else {
                 StudyEmptyView(text: "Choose or create a semester.")
             }
@@ -172,7 +172,7 @@ struct StudyClassesColumn: View {
                     model.editing = .schedule(
                         StudyForms.newSchedule(for: discipline.id), id: nil, rotationWeeks: rotation)
                 }
-                .buttonStyle(.glass).padding(Spacing.medium)
+                .buttonStyle(.secondary).padding(Spacing.medium)
             } else {
                 StudyEmptyView(text: "Choose a discipline to see its classes.")
             }

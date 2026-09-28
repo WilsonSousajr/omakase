@@ -28,7 +28,7 @@ public struct SessionPromptView: View {
                 .background(Palette.surface.color, in: .rect(cornerRadius: Radius.medium))
             HStack {
                 Spacer()
-                Button("Skip") { dismiss() }.buttonStyle(.glass).keyboardShortcut(.cancelAction)
+                Button("Skip") { dismiss() }.buttonStyle(.secondary).keyboardShortcut(.cancelAction)
                 Button("Save") {
                     submit(prompt.writes(rating: rating, notes: notes))
                     dismiss()

@@ -56,11 +56,11 @@ struct FocusTimerControlsView: View {
                     .buttonStyle(.primary)
                     .disabled(timer.state.phase == .focus && taskID == nil)
             case .running:
-                Button("Pause", systemImage: "pause.fill") { timer.pause() }.buttonStyle(.glass)
-                Button("Skip", systemImage: "forward.end.fill") { timer.skip() }.buttonStyle(.glass)
+                Button("Pause", systemImage: "pause.fill") { timer.pause() }.buttonStyle(.secondary)
+                Button("Skip", systemImage: "forward.end.fill") { timer.skip() }.buttonStyle(.secondary)
             case .paused:
                 Button("Resume", systemImage: "play.fill") { timer.resume() }.buttonStyle(.primary)
-                Button("Skip", systemImage: "forward.end.fill") { timer.skip() }.buttonStyle(.glass)
+                Button("Skip", systemImage: "forward.end.fill") { timer.skip() }.buttonStyle(.secondary)
             }
         }
         .controlSize(.large)

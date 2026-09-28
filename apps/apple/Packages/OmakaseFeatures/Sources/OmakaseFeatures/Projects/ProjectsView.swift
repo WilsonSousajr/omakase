@@ -42,7 +42,7 @@ public struct ProjectsView: View {
             Text(workspaces.first { $0.id == model.selectedWorkspaceID }?.name ?? "All projects").sectionLabel()
             Spacer()
             Button("New Project…") { naming = .newProject(workspaceID: newProjectWorkspace ?? "") }
-                .buttonStyle(.glass)
+                .buttonStyle(.secondary)
                 .disabled(newProjectWorkspace == nil)
                 .help(newProjectWorkspace == nil ? "Create a workspace first" : "")
         }
@@ -103,7 +103,7 @@ struct ProjectsWorkspaceList: View {
                 }
             }
             .scrollContentBackground(.hidden)
-            Button("New Workspace…") { naming = .newWorkspace }.buttonStyle(.glass).padding(Spacing.medium)
+            Button("New Workspace…") { naming = .newWorkspace }.buttonStyle(.secondary).padding(Spacing.medium)
         }
     }
 

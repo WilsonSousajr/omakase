@@ -24,7 +24,7 @@ struct StudyFormSheet: View {
             }
             HStack {
                 Spacer()
-                Button("Cancel") { model.cancelEditing() }.buttonStyle(.glass).keyboardShortcut(.cancelAction)
+                Button("Cancel") { model.cancelEditing() }.buttonStyle(.secondary).keyboardShortcut(.cancelAction)
                 Button("Save") { Task { await model.saveEditing() } }.buttonStyle(.primary)
                     .keyboardShortcut(.defaultAction)
             }
