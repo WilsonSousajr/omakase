@@ -2,12 +2,12 @@ import OmakaseStore
 import SwiftData
 import SwiftUI
 
-/// The main window: the sidebar of screens and places (spec §6; the
-/// "Places" section below is a plain, temporary stand-in until S7 gives the
-/// sidebar its real layout) and the detail each one shows. Moved out of the
-/// app target (#256) so later M9 slices can grow and test it without
+/// The main window: the sidebar of the day and its places (`SidebarView`,
+/// spec §6, #260) and the detail each one shows. Moved out of the app
+/// target (#256) so later M9 slices can grow and test it without
 /// `OmakaseMac`. It publishes where a new task would go, for ⌘N, and its
-/// toolbar's ＋ opens capture with the same context (spec §4, #257).
+/// toolbar's ＋ and the sidebar's New Task open capture with the same
+/// context (spec §4, #257).
 ///
 ///     MainWindowView(day: FocusDay().today, models: screenModels, openCapture: { capture?.show(context: $0) })
 public struct MainWindowView: View {
@@ -21,8 +21,8 @@ public struct MainWindowView: View {
     // read through `librarySnapshot` below, so a redraw for any other
     // reason - a selection change, the running timer's tick - never
     // triggers a fresh set of SwiftData fetches (#262 review). The
-    // sidebar's Places section and `selection`'s fall-back to Focus both
-    // read the cached `placeDirectory` this reloads (spec §5, #259).
+    // sidebar's places and `selection`'s fall-back to Focus both read the
+    // cached `placeDirectory` this reloads (spec §5, §6, #259, #260).
     @Query private var libraryProjects: [ProjectRecord]
     @Query private var libraryDisciplines: [DisciplineRecord]
 
@@ -32,15 +32,15 @@ public struct MainWindowView: View {
 
     public var body: some View {
         NavigationSplitView {
-            sidebar
+            SidebarView(
+                selection: sidebarSelection, day: day, models: models, openFocus: openFocus,
+                newTask: { openCapture(captureContext) })
         } detail: {
             detail
         }
         .toolbar {
-            if let failedWrites = models.failedWrites {
-                ToolbarItem(placement: .primaryAction) { SyncIndicatorView(model: failedWrites) }
-            }
             // Until S8 settles the toolbar (spec §7): ＋ opens capture as ⌘N does.
+            // The sync item moved to the sidebar's footer (spec §6, #260).
             ToolbarItem(placement: .primaryAction) {
                 Button("New Task", systemImage: "plus") { openCapture(captureContext) }
                     .help("New Task (⌘N)")
@@ -51,25 +51,10 @@ public struct MainWindowView: View {
         .onChange(of: librarySnapshot, initial: true) { _, _ in reloadPlaces() }
     }
 
-    private var sidebar: some View {
-        List(selection: sidebarSelection) {
-            ForEach(SidebarItem.allCases) { item in
-                SidebarRowView(item: item).tag(SidebarSelection.item(item))
-                    .listItemTint(.fixed(AppTint.sidebarIcons.color))
-            }
-            Section("Places") {
-                ForEach(placeDirectory.places(for: .work)) { entry in placeRow(entry, symbol: TaskArea.work.symbol) }
-                ForEach(placeDirectory.places(for: .study)) { entry in
-                    placeRow(entry, symbol: TaskArea.study.symbol)
-                }
-                Label("Life", systemImage: TaskArea.life.symbol).tag(SidebarSelection.place(.life))
-            }
-        }
-        .scrollContentBackground(.hidden)
-    }
-
-    private func placeRow(_ entry: PlaceEntry, symbol: String) -> some View {
-        Label(entry.title, systemImage: symbol).tag(SidebarSelection.place(PlaceDirectory.place(for: entry.parent)))
+    /// The now strip's click (spec §6): Focus, with the strip's task selected there.
+    private func openFocus(_ taskID: String?) {
+        selectionRaw = SidebarSelection.item(.focus).rawValue
+        if let taskID { models.focus?.selectedID = taskID }
     }
 
     /// Where ⌘N and ＋ file a new task from the screen shown (spec §4's
@@ -82,7 +67,7 @@ public struct MainWindowView: View {
         PlaceLibrarySnapshot(today: day, projects: libraryProjects, disciplines: libraryDisciplines)
     }
 
-    /// Every row's kind mark, the sidebar's Places section and a place
+    /// Every row's kind mark, the sidebar's places and a place
     /// selection's validity all read `placeDirectory` (spec §5, §8);
     /// reloaded only when `librarySnapshot` changes, never on a redraw for
     /// some other reason - an archived project still reaches this on the
