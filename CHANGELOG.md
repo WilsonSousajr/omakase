@@ -10,6 +10,13 @@ for each milestone.
 
 ## [Unreleased]
 
+### Added
+
+- **`POST tasks/<id>/subtasks/` is idempotent** (#286). It honours
+  `Idempotency-Key` like the other creates the Mac outbox replays, so a
+  retried subtask create adds one subtask. A request without the header is
+  unchanged, and the response shape is the same.
+
 ## [0.1.0] - 2026-09-27
 
 The first release with the native macOS client. The API is not frozen below
