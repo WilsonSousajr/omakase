@@ -30,7 +30,8 @@ public struct SidebarFooterView: View {
         }
         .padding(.horizontal, Spacing.medium)
         .padding(.vertical, Spacing.small)
-        // The address is read online, as Settings' Account tab reads it; offline it stays "Account".
+        // Read online, as Settings' Account tab reads it; an offline read keeps
+        // the last known address, and "Account" shows only before the first.
         .task { await settings?.loadAccount() }
     }
 }

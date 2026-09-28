@@ -73,7 +73,10 @@ public final class SettingsModel {
         }
     }
 
-    public func loadAccount() async { email = await actions.account() }
+    /// Reads the signed-in address. An offline read (nil) keeps the last
+    /// known one: the sidebar's footer reads it each time it appears (#260),
+    /// and a known address shouldn't turn back into "Account" offline.
+    public func loadAccount() async { email = await actions.account() ?? email }
 
     public func setLaunchesAtLogin(_ enabled: Bool) {
         do {
