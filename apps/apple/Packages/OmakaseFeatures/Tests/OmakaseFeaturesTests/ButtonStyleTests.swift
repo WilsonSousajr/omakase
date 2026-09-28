@@ -47,6 +47,16 @@ struct ButtonStyleTests {
         #expect(Self.size(of: chosen).height == ControlMetrics.height)
     }
 
+    /// A menu button (Reschedule ⌄) is the same capsule with a ⌄ after its
+    /// label: under a custom button style macOS drops its own indicator, and
+    /// `.menuIndicator(.visible)` does not bring it back (seen in a harness).
+    @Test func aMenuCapsuleKeepsTheHeightAndAddsItsIndicatorIssue283() {
+        let menu = Self.size(of: Button("Reschedule") {}.buttonStyle(SecondaryMenuButtonStyle()))
+        let plain = Self.size(of: Button("Reschedule") {}.buttonStyle(.secondary))
+        #expect(menu.height == ControlMetrics.height)
+        #expect(menu.width > plain.width)
+    }
+
     /// An icon button (‹ ›, the rating dots) is a circle as tall as the capsules beside it.
     @Test func anIconButtonIsACircleOfTheControlHeightIssue283() {
         let size = Self.size(of: Button("Next", systemImage: "chevron.right") {}.buttonStyle(.icon))

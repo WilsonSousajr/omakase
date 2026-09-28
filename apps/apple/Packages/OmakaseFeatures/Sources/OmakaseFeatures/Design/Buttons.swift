@@ -92,6 +92,38 @@ extension ToggleStyle where Self == SecondaryToggleStyle {
     public static var secondary: SecondaryToggleStyle { SecondaryToggleStyle() }
 }
 
+/// A menu button (Reschedule ⌄, Remind me ⌄, Repeat ⌄): a secondary capsule
+/// with the ⌄ that says it opens a menu. Under `.menuStyle(.button)` macOS
+/// draws a custom button style but drops its own indicator, and
+/// `.menuIndicator(.visible)` does not bring it back (seen in a harness,
+/// #283), so this style draws it.
+///
+///     Menu { … } label: { Text("Reschedule") }.menuStyle(.secondary)
+public struct SecondaryMenuStyle: MenuStyle {
+    public init() {}
+
+    public func makeBody(configuration: Configuration) -> some View {
+        Menu(configuration)
+            .menuStyle(.button)
+            .buttonStyle(SecondaryMenuButtonStyle())
+    }
+}
+
+extension MenuStyle where Self == SecondaryMenuStyle {
+    public static var secondary: SecondaryMenuStyle { SecondaryMenuStyle() }
+}
+
+/// The capsule `SecondaryMenuStyle` draws: the label, then the ⌄.
+struct SecondaryMenuButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        let label = HStack(spacing: Spacing.tiny) {
+            configuration.label
+            Image(systemName: "chevron.down").font(TypeScale.caption.weight(.semibold)).imageScale(.small)
+        }
+        return SecondaryCapsuleBody(label: label, isPressed: configuration.isPressed, isSelected: false)
+    }
+}
+
 /// The secondary capsule, a view so it can read whether it is enabled.
 private struct SecondaryCapsuleBody<Label: View>: View {
     @Environment(\.isEnabled) private var isEnabled
