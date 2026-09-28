@@ -1,7 +1,8 @@
 import OmakaseStore
 
 /// The day as Focus lays it out. The list shows four sections; the Kanban
-/// board shows three columns, with carried-over tasks joining To do.
+/// board shows three columns, with carried-over tasks joining To do until
+/// they are moved on (#279): a card's kanban status always wins.
 ///
 ///     let board = FocusBoard(records: todaysTasks)
 public struct FocusBoard: Equatable, Sendable {
@@ -23,9 +24,13 @@ public struct FocusBoard: Equatable, Sendable {
 
     public init(cards: [FocusCard]) {
         let open = cards.filter { !$0.isCompleted && $0.kanbanStatus != "done" }
-        carriedOver = Self.ordered(open.filter(\.isCarriedOver))
+        // A drag to In progress must stick even for a carried-over card, so
+        // status is checked first; carried-over only sets To do's order
+        // otherwise (#279 — both used to exclude every carried-over card,
+        // so the board re-sorted a moved one back to To do on every render).
+        inProgress = Self.ordered(open.filter { $0.kanbanStatus == "in_progress" })
+        carriedOver = Self.ordered(open.filter { $0.isCarriedOver && $0.kanbanStatus != "in_progress" })
         toDo = Self.ordered(open.filter { !$0.isCarriedOver && $0.kanbanStatus != "in_progress" })
-        inProgress = Self.ordered(open.filter { !$0.isCarriedOver && $0.kanbanStatus == "in_progress" })
         done = Self.ordered(cards.filter { $0.isCompleted || $0.kanbanStatus == "done" })
     }
 
