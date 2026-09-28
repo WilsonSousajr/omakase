@@ -58,7 +58,8 @@ public struct CaptureView: View {
             Button("None") { model.choose(parent: nil) }
             ForEach(model.parentGroups) { group in parentSection(group) }
         } label: {
-            Text(model.parentTitle)
+            // An explicit ink label, as every menu capsule's (#172).
+            Text(model.parentTitle).foregroundStyle(FocusPanelActionsView.menuLabel.color)
         }
         .menuStyle(.secondary)
         .fixedSize()

@@ -79,6 +79,8 @@ struct FocusSubtasksView: View {
 struct FocusPanelActionsView: View {
     /// The Reschedule menu's label: ink, like the other glass buttons. Left to
     /// itself a `.menuStyle(.button)` menu draws it dim, as if disabled (#172).
+    /// `.menuStyle(.secondary)` wraps `.menuStyle(.button)`, so every menu
+    /// capsule still sets this explicitly (#283).
     static let menuLabel = Palette.ink
     let card: FocusCard
     let day: String
