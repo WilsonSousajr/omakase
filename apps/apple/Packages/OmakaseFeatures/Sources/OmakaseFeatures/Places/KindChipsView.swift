@@ -19,6 +19,8 @@ public struct KindChipsView: View {
             ForEach(TaskArea.allCases, id: \.self) { area in chip(for: area) }
         }
         .motion(Motion.select, value: selection)
+        // Never squeezed by a long parent title beside it (#264's review).
+        .fixedSize()
     }
 
     private func chip(for area: TaskArea) -> some View {

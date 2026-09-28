@@ -61,6 +61,10 @@ public final class TriageModel {
 
     public func saveEdit(_ id: String, _ changes: TaskEdit) { actions.edit(id, changes) }
 
+    /// "File under ▸" in the row's action menu (spec §4, S5 #258): the same
+    /// write path as an editor save, so re-filing works offline too.
+    public func refile(_ id: String, to filing: TaskFiling) { actions.edit(id, TaskEdit(filing: filing)) }
+
     /// The sidebar's count; SwiftUI hides a zero badge.
     public static func badge(count: Int) -> Int { max(count, 0) }
 }

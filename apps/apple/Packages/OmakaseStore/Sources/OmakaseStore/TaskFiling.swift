@@ -47,6 +47,19 @@ public struct TaskFiling: Hashable, Sendable {
             disciplineID.map(TaskParent.discipline) ?? projectID.map(TaskParent.project)
         self.init(area: TaskArea(wire: areaWire), parent: parent)
     }
+
+    /// Picks `area`, dropping `parent` when it no longer fits: a discipline
+    /// under Work, a project under Study, or any parent under Life. Shared
+    /// by capture and the task editor (spec §4, S5 #258), so the rule for
+    /// clearing a mismatched parent on a kind change lives in one place.
+    ///
+    ///     TaskFiling.choosing(.work, keeping: .discipline("d1")).parent == nil
+    public static func choosing(_ area: TaskArea, keeping parent: TaskParent?) -> TaskFiling {
+        guard let parent, TaskFiling(area: area, parent: parent).area == area else {
+            return TaskFiling(area: area, parent: nil)
+        }
+        return TaskFiling(area: area, parent: parent)
+    }
 }
 
 extension TaskParent {

@@ -75,4 +75,13 @@ struct TriageModelTests {
     @Test func theBadgeCountsOpenTasksAndHidesAtZero() {
         #expect(TriageModel.badge(count: 0) == 0 && TriageModel.badge(count: 4) == 4)
     }
+
+    // MARK: "File under ▸" (S5, #258)
+
+    @Test func filingUnderSendsTheChosenFilingAsAnEdit() {
+        let inbox = model()
+        inbox.refile("t1", to: TaskFiling(area: .study, parent: .discipline("d1")))
+        #expect(recorder.edited.first?.0 == "t1")
+        #expect(recorder.edited.first?.1 == TaskEdit(filing: TaskFiling(area: .study, parent: .discipline("d1"))))
+    }
 }

@@ -46,36 +46,11 @@ public struct CaptureView: View {
             HStack(spacing: Spacing.medium) {
                 KindChipsView(selection: Binding(get: { model.area }, set: { model.choose($0) }))
                 Spacer()
-                if model.showsParentChip { parentMenu }
+                ParentMenuChip(
+                    area: model.area, parent: Binding(get: { model.parent }, set: { model.choose(parent: $0) }),
+                    directory: model.directory)
             }
             Text(model.hint).font(TypeScale.caption).foregroundStyle(Palette.inkMuted.color)
-        }
-    }
-
-    /// The current kind's places, a section per workspace, and "None".
-    private var parentMenu: some View {
-        Menu {
-            Button("None") { model.choose(parent: nil) }
-            ForEach(model.parentGroups) { group in parentSection(group) }
-        } label: {
-            // An explicit ink label, as every menu capsule's (#172).
-            Text(model.parentTitle).foregroundStyle(FocusPanelActionsView.menuLabel.color)
-        }
-        .menuStyle(.secondary)
-        .fixedSize()
-    }
-
-    @ViewBuilder private func parentSection(_ group: PlaceGroup) -> some View {
-        if let title = group.title {
-            Section(title) { parentButtons(group.entries) }
-        } else {
-            Section { parentButtons(group.entries) }
-        }
-    }
-
-    private func parentButtons(_ entries: [PlaceEntry]) -> some View {
-        ForEach(entries) { entry in
-            Button(entry.title) { model.choose(parent: entry.parent) }
         }
     }
 

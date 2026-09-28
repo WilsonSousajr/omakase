@@ -110,44 +110,20 @@ struct CaptureModelTests {
         #expect(model.filing == TaskFiling(area: .study, parent: nil))
     }
 
-    // MARK: The parent chip
+    // MARK: The parent chip's directory
 
-    @Test func workListsProjectsAndStudyListsDisciplines() {
-        let model = model(lastArea: .work)
-        #expect(model.parentChoices == [Self.thesis])
-        model.choose(.study)
-        #expect(model.parentChoices == [Self.algebra])
-        #expect(model.showsParentChip)
+    /// `ParentMenuChip` reads this (S5 #258); `PlaceDirectoryTests` and
+    /// `PlaceGroupTests` pin what it lists and how it groups.
+    @Test func theDirectoryIsExposedForTheParentChip() {
+        #expect(model().directory == Self.directory)
     }
 
-    @Test func lifeHidesTheParentChip() {
-        let model = model(lastArea: .life)
-        #expect(model.parentChoices.isEmpty)
-        #expect(!model.showsParentChip)
-    }
-
-    @Test func anEmptyDirectoryHidesTheChipAndSavesTheKindAlone() {
+    @Test func anEmptyDirectoryStillSavesTheKindAlone() {
         let recorder = CaptureRecorder()
         let model = model(directory: .empty, lastArea: .study, recorder: recorder)
-        #expect(!model.showsParentChip)
         model.draft = "Read chapter 4"
         #expect(model.saveEnter())
         #expect(recorder.requests.map(\.filing) == [TaskFiling(area: .study, parent: nil)])
-    }
-
-    @Test func theChipNamesTheParentOrItsAbsence() {
-        let model = model(lastArea: .work)
-        #expect(model.parentTitle == "No project")
-        model.choose(.study)
-        #expect(model.parentTitle == "No discipline")
-        model.choose(parent: .discipline("d1"))
-        #expect(model.parentTitle == "Linear algebra")
-    }
-
-    @Test func theChipGroupsProjectsByWorkspace() {
-        let home = PlaceEntry(parent: .project("p2"), title: "Garden", group: "Home", color: KindTint.work)
-        let grouped = PlaceDirectory(projects: [home], disciplines: [], semesterTitle: nil)
-        #expect(model(directory: grouped).parentGroups == [PlaceGroup(title: "Home", entries: [home])])
     }
 
     // MARK: Saving
@@ -265,9 +241,9 @@ struct CaptureModelTests {
 
     @Test func reopeningReadsThePlacesAgain() {
         let model = model(directory: .empty)
-        #expect(!model.showsParentChip)
+        #expect(model.directory == .empty)
         model.reseed(context: CaptureContext(), directory: Self.directory)
-        #expect(model.parentChoices == [Self.thesis])
+        #expect(model.directory == Self.directory)
     }
 
     // MARK: The day a save is scheduled on

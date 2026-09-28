@@ -93,6 +93,7 @@ struct TriageActionItems: View {
     let card: FocusCard
     let model: TriageModel
     let pickDate: () -> Void
+    @Environment(\.placeDirectory) private var directory
 
     var body: some View {
         Button("Today") { model.schedule(card.id, .today) }
@@ -101,8 +102,44 @@ struct TriageActionItems: View {
         Divider()
         Button("Edit…") { model.beginEditing(card.id) }
         Button("Complete") { model.complete(card.id) }
+        fileUnderMenu
         Divider()
         Button("Delete…", role: .destructive) { model.askToDelete(card.id) }
+    }
+
+    /// "File under ▸" (spec §4, S5 #258): every task made before M9 is Work
+    /// with no parent, so this is how it reaches Study or Life.
+    private var fileUnderMenu: some View {
+        Menu("File under") {
+            Menu(TaskArea.work.title) { placeButtons(for: .work) }
+            Menu(TaskArea.study.title) { placeButtons(for: .study) }
+            Button(TaskArea.life.title) { refile(.life) }
+        }
+    }
+
+    /// A kind's places, grouped as the capture menu groups them, plus
+    /// "<kind>, no <parent>".
+    @ViewBuilder private func placeButtons(for area: TaskArea) -> some View {
+        Button(area == .study ? "Study, no discipline" : "Work, no project") { refile(area) }
+        ForEach(PlaceGroup.groups(of: directory.places(for: area))) { group in placeSection(group, area: area) }
+    }
+
+    @ViewBuilder private func placeSection(_ group: PlaceGroup, area: TaskArea) -> some View {
+        if let title = group.title {
+            Section(title) { placeEntryButtons(group.entries, area: area) }
+        } else {
+            Section { placeEntryButtons(group.entries, area: area) }
+        }
+    }
+
+    private func placeEntryButtons(_ entries: [PlaceEntry], area: TaskArea) -> some View {
+        ForEach(entries) { entry in
+            Button(entry.title) { refile(area, parent: entry.parent) }
+        }
+    }
+
+    private func refile(_ area: TaskArea, parent: TaskParent? = nil) {
+        model.refile(card.id, to: TaskFiling(area: area, parent: parent))
     }
 }
 

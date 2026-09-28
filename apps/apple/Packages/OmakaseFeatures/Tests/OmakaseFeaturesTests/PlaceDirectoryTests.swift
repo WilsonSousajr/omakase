@@ -120,6 +120,12 @@ struct PlaceDirectoryTests {
         #expect(PlaceDirectory.empty.places(for: .life) == [])
     }
 
+    /// `ParentMenuChip` hides itself when this is empty (spec §4, S5 #258).
+    @Test func anEmptyDirectoryHasNoPlacesForWorkOrStudy() {
+        #expect(PlaceDirectory.empty.places(for: .work).isEmpty)
+        #expect(PlaceDirectory.empty.places(for: .study).isEmpty)
+    }
+
     @Test func markForAKnownParentUsesTheEntry() {
         let entry = PlaceEntry(parent: .project("p1"), title: "Thesis", group: nil, color: KindTint.work)
         let directory = PlaceDirectory(projects: [entry], disciplines: [], semesterTitle: nil)

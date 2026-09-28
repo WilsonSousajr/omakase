@@ -25,7 +25,8 @@ struct TaskEditorModelTests {
         return calendar
     }()
     let original = TaskDraft(
-        title: "Draft essay", notes: "", priority: "medium", estimate: 30, dueDay: "2026-03-09")
+        title: "Draft essay", notes: "", priority: "medium", estimate: 30, dueDay: "2026-03-09",
+        filing: TaskFiling(area: .work, parent: nil))
 
     func editor() -> TaskEditorModel {
         TaskEditorModel(draft: original, today: "2026-03-07", calendar: utc, actions: recorder.actions)
@@ -105,10 +106,70 @@ struct TaskEditorModelTests {
         (record.notes, record.estimatedMinutes, record.dueDay) = ("Cite", 20, "2026-03-10")
         #expect(
             TaskDraft(record: record)
-                == TaskDraft(title: "Essay", notes: "Cite", priority: "high", estimate: 20, dueDay: "2026-03-10"))
+                == TaskDraft(
+                    title: "Essay", notes: "Cite", priority: "high", estimate: 20, dueDay: "2026-03-10",
+                    filing: TaskFiling(area: .work, parent: nil)))
     }
 
     @Test func theFourPrioritiesAreOfferedInOrder() {
         #expect(TaskDraft.priorities == ["low", "medium", "high", "urgent"])
+    }
+
+    // MARK: The draft starts from the record's filing (S5, #258)
+
+    @Test func theDraftStartsFromTheRecordsFiling() {
+        let record = TaskRecord(
+            id: "t1", title: "Essay", filing: TaskFiling(area: .study, parent: .discipline("d1")))
+        #expect(TaskDraft(record: record).filing == TaskFiling(area: .study, parent: .discipline("d1")))
+    }
+
+    // MARK: Re-filing in the editor (S5, #258)
+
+    @Test func anUntouchedEditorsChangesHaveNoFiling() {
+        #expect(editor().changes.filing == nil)
+    }
+
+    @Test func choosingAKindYieldsAFilingChange() {
+        let model = editor()
+        model.choose(.study)
+        #expect(model.area == .study)
+        #expect(model.changes.filing == TaskFiling(area: .study, parent: nil))
+    }
+
+    @Test func choosingAParentDerivesTheKindAndYieldsAFilingChange() {
+        let model = editor()
+        model.choose(parent: .discipline("d1"))
+        #expect(model.area == .study && model.parent == .discipline("d1"))
+        #expect(model.changes.filing == TaskFiling(area: .study, parent: .discipline("d1")))
+    }
+
+    @Test func choosingAnotherKindClearsAParentThatNoLongerFits() {
+        let model = editor()
+        model.choose(parent: .project("p1"))
+        model.choose(.study)
+        #expect(model.area == .study && model.parent == nil)
+        #expect(model.changes.filing == TaskFiling(area: .study, parent: nil))
+    }
+
+    @Test func choosingTheSameKindKeepsAParentThatFits() {
+        let model = editor()
+        model.choose(parent: .project("p1"))
+        model.choose(.work)
+        #expect(model.parent == .project("p1"))
+    }
+
+    @Test func returningToTheOriginalFilingYieldsNoChange() {
+        let model = editor()
+        model.choose(.study)
+        model.choose(.work)
+        #expect(model.changes.filing == nil)
+    }
+
+    @Test func aFilingChangeAloneCanBeSaved() {
+        let model = editor()
+        model.choose(.life)
+        #expect(model.canSave)
+        #expect(model.save())
+        #expect(recorder.saved == [TaskEdit(filing: TaskFiling(area: .life, parent: nil))])
     }
 }

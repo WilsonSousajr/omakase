@@ -530,6 +530,35 @@ optional project or discipline (spec §4, #257). The library must be cached
    is still enabled, and ⌘N opens the panel with the last kind and ⏎ Today.
 9. Quit and relaunch. ⌥⌘N opens with the kind last saved (step 6's).
 
+## M9 S5 - Re-file a task from the editor and the Inbox
+
+Every task made before M9 is Work with no parent; the task editor and the
+Inbox's action menu are how one moves to Study or Life (spec §4, #258). The
+library must be cached (open Projects and Study once, online) so the parent
+chip and "File under" have places to offer.
+
+1. On Focus, select a Work task with no project and press ⏎. The editor's
+   "Kind" row shows Work selected and its parent chip reads "No project".
+2. Press the Study chip, open the parent chip and pick "Linear algebra",
+   then press Save (⌘Return).
+   - The row's kind mark now reads "Linear algebra", and its block on Plan
+     turns wisteria (Study's colour).
+   - `curl ".../api/v1/tasks/<id>/"` shows `"area": "study"` and that
+     discipline's id in `"discipline"`.
+3. Give a project a fifty-character name (for example "A fifty character
+   project name for testing purposes"). Open a Work task's editor and pick
+   that project from the parent chip: its label truncates with an ellipsis
+   instead of squashing the three kind chips beside it, which stay full
+   width and tappable.
+4. In the Inbox, click a row's ⋯ (or right-click it), then "File under ▸" ›
+   Life. The task moves to Life without opening the editor.
+   - `curl ".../api/v1/tasks/<id>/"` shows `"area": "personal"` and both
+     `"project"` and `"discipline"` null.
+5. "File under ▸" › Work lists "Work, no project" and each project,
+   grouped by workspace as capture's parent menu groups them; Study lists
+   "Study, no discipline" and each discipline the same way. Either files
+   the task under the chosen place.
+
 ## M9 S6 - A place's task list
 
 A project, a discipline or Life now lists its own open tasks (spec §5,
