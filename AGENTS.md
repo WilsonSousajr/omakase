@@ -390,6 +390,14 @@ approval.**
     List them with `find . -path ./.git -prune -o -name '* [0-9].*' -print`,
     and check each one against git history (`git hash-object`) before
     removing it. Moving the checkout out of iCloud ends both.
+- **Never pick your own SwiftPM `--scratch-path`.** Run the package tests
+  through `apps/apple/test-packages.sh`. To run one package by hand, from
+  `apps/apple`, reuse its dir:
+  `--scratch-path "$(python3 tools/swiftpm_scratch.py --cache-root "$HOME/Library/Caches/omakase/swiftpm" --checkout "$(git rev-parse --show-toplevel)")/OmakaseStore"`.
+  Each checkout gets its own dir, so parallel worktrees never wait on one
+  SwiftPM lock, and the dirs of removed worktrees are deleted on every run.
+  A private scratch dir (`swiftpm-s2`, `store-224`) is deleted by nothing:
+  about 100 of them filled 20 GB (#297).
 - To dry-run a merge of a stale branch, `git merge-tree --write-tree <base>
   <branch>` merges to a tree object without touching anything. Only
   `Auto-merging` lines means the merge is clean.

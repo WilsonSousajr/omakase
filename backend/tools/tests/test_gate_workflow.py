@@ -163,8 +163,17 @@ class TestSwiftBuildsOutsideTheCheckout:
             assert "--scratch-path" in line, f"{line.strip()!r} builds inside the checkout"
 
     def test_the_default_scratch_is_the_user_cache_not_the_repo_issue134(self):
-        default = re.search(r'SCRATCH="\$\{OMAKASE_SWIFTPM_SCRATCH:-([^}]+)\}"', self._script())
-        assert default, "test-packages.sh must set SCRATCH from OMAKASE_SWIFTPM_SCRATCH with a default"
-        assert default.group(1).startswith("$HOME/Library/Caches/"), (
-            f"default scratch {default.group(1)!r} is not under ~/Library/Caches (never synced)"
+        root = re.search(r'--cache-root "([^"]+)"', self._script())
+        assert root, "test-packages.sh must pass tools/swiftpm_scratch.py a --cache-root"
+        assert root.group(1).startswith("$HOME/Library/Caches/"), (
+            f"scratch root {root.group(1)!r} is not under ~/Library/Caches (never synced)"
         )
+
+    def test_the_scratch_is_per_checkout_and_not_overridable_issue297(self):
+        """An overridable scratch path is how agents piled up ~100 private
+        scratch dirs, ~20 GB, that nothing deleted."""
+        script = self._script()
+        assert "SCRATCH=$(python3 tools/swiftpm_scratch.py" in script, (
+            "test-packages.sh must take SCRATCH from tools/swiftpm_scratch.py, which prunes removed worktrees' dirs"
+        )
+        assert "OMAKASE_SWIFTPM_SCRATCH" not in script, "test-packages.sh must not let a caller pick the scratch dir"
