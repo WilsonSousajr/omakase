@@ -17,6 +17,11 @@ public final class SubtaskRecord {
         (title, isCompleted, order) = (dto.title, dto.isCompleted, dto.order)
     }
 
+    /// A subtask with no server copy yet: one a capture adds under a `local-` id (#286).
+    public init(id: String, taskID: String, title: String, order: Int) {
+        (self.id, self.taskID, self.title, isCompleted, self.order) = (id, taskID, title, false, order)
+    }
+
     public func apply(_ dto: SubtaskDTO) { (title, isCompleted, order) = (dto.title, dto.isCompleted, dto.order) }
 }
 
