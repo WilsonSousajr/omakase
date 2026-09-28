@@ -102,6 +102,12 @@ struct ButtonStyleTests {
         }
     }
 
+    /// The Calendar overlay's switch is a capsule of the same height while on.
+    @Test func anOnToggleKeepsTheControlHeightIssue283() {
+        let toggle = Toggle("Calendar", isOn: .constant(true)).toggleStyle(.secondary)
+        #expect(Self.size(of: toggle).height == ControlMetrics.height)
+    }
+
     /// Mono chrome (glass-pass §1): the capsule's label and its chosen fill
     /// are ink. A dim label read as disabled on glass (#172, #213).
     @Test func secondaryIsInkNotShuIssue283() {

@@ -94,7 +94,8 @@ public struct SecondaryToggleStyle: ToggleStyle {
             configuration.label
         }
         .buttonStyle(SecondaryButtonStyle(isSelected: configuration.isOn))
-        .accessibilityAddTraits(configuration.isOn ? .isSelected : [])
+        // A Button underneath, so VoiceOver must be told it is a toggle.
+        .accessibilityAddTraits(configuration.isOn ? [.isToggle, .isSelected] : .isToggle)
     }
 }
 
