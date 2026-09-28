@@ -14,8 +14,6 @@ public struct PlaceIDError: Error, Equatable, CustomStringConvertible {
 /// or Life's. Follows `LibrarySync`'s pattern — read first, so a failed read
 /// leaves the cache as it was — except the plain list also returns series
 /// templates and skipped rows, which are dropped before the cache sees them.
-///
-///     try await PlaceSync(api: api, context: context).refresh(.discipline("d1"), today: "2026-09-27")
 @MainActor
 public final class PlaceSync {
     private let api: any APIClient
@@ -23,6 +21,13 @@ public final class PlaceSync {
 
     public init(api: any APIClient, context: ModelContext) { (self.api, self.context) = (api, context) }
 
+    /// Reads `place`'s open tasks and reconciles the cache with them: drops
+    /// series templates and skipped rows, upserts the rest, and prunes a
+    /// cached row the answer no longer has unless a pending write, a
+    /// `local-`/`occ-` placeholder, or DaySync still owns it. Offline or on
+    /// any other error, the cache is left exactly as it was.
+    ///
+    ///     try await PlaceSync(api: api, context: context).refresh(.discipline("d1"), today: "2026-09-27")
     public func refresh(_ place: TaskPlace, today: String) async throws {
         // Snapshot before the read too: a write pending here and accepted
         // while the network call is in flight loses its outbox entry before

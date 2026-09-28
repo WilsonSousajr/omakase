@@ -7,6 +7,7 @@ public enum PlaceSection: String, CaseIterable, Sendable {
     case upcoming
     case noDate
 
+    /// The section's header, in the order a place's list shows them (spec §5).
     public var title: String {
         switch self {
         case .overdue: "Overdue"

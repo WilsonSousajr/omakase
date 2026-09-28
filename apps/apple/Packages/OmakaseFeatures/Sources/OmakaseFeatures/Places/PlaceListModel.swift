@@ -32,6 +32,7 @@ public final class PlaceListModel {
         refresh()
     }
 
+    /// The place leaves the screen: nothing is read for it until `show(_:)` names one again.
     public func hide() { shown = nil }
 
     /// Reads the shown place again; a no-op when none is shown.
