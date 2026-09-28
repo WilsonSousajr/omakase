@@ -681,6 +681,9 @@ as a mark: a dot on the chosen chip, a bar on a block (glass-pass §1, #283).
    rating dots as circles, the energy levels), Study's New… buttons,
    Projects' New… buttons and the sheets' Cancel/Skip/Retry/Discard are
    capsules too.
-7. Toggle light and dark (System Settings › Appearance). Every capsule's
-   label reads clearly in both, and the chosen chip's fill is visible in
-   both.
+7. Plan: click a block. Open task and Edit task… are ink capsules; Delete
+   block is the same capsule with a red label, as the block's context
+   menu's Delete is.
+8. Toggle light and dark (System Settings › Appearance). Every capsule's
+   label, Delete block's red included, reads clearly in both, and the
+   chosen chip's fill is visible in both.
