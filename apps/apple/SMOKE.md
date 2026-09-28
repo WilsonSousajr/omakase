@@ -656,3 +656,31 @@ with a task carried over from yesterday.
    a card left in it): the drop still works.
 4. Stop the backend. Drag a card to In progress, then start the backend:
    the move replays, and the server has `kanban_status: "in_progress"`.
+
+## M9 G1 - One shape family and colour as marks
+
+Every button is a capsule of one height (`ControlMetrics.height`, 32 pt),
+icon-only buttons are glass circles as tall, and a kind's colour shows only
+as a mark: a dot on the chosen chip, a bar on a block (glass-pass §1, #283).
+
+1. Focus: select a task. Complete (the ink pill), Edit…, Reschedule ⌄,
+   Remind me ⌄ and Repeat ⌄ are all capsules of the same height; none is
+   a rounded rectangle. Reschedule, Remind me and Repeat each show a ⌄
+   after the label and still open their menus.
+2. Start the timer. Pause and Skip are glass capsules as tall as Complete.
+3. Press ⌘N. The Work, Study and Life chips are grey glass capsules with
+   no coloured border. The chosen one has a faint ink fill and a small dot
+   in its kind colour before its glyph; ⌘1–3 move both. The parent chip
+   beside them is the same capsule, with a ⌄.
+4. Plan › Week. Blocks are solid grey (`surface`) with only the 3-pt bar
+   in their colour, and the kind glyph beside the title is grey. A class
+   is dashed, with its book in its colour and no tint behind it.
+5. Plan's header: Today is a capsule, ‹ and › are glass circles of the
+   same height, and Calendar is a capsule with a faint ink fill while on.
+6. Inbox: Today is a capsule and … is a glass circle. Review (Reopen, the
+   rating dots as circles, the energy levels), Study's New… buttons,
+   Projects' New… buttons and the sheets' Cancel/Skip/Retry/Discard are
+   capsules too.
+7. Toggle light and dark (System Settings › Appearance). Every capsule's
+   label reads clearly in both, and the chosen chip's fill is visible in
+   both.
