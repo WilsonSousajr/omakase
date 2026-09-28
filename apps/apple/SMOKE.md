@@ -687,3 +687,24 @@ as a mark: a dot on the chosen chip, a bar on a block (glass-pass §1, #283).
 8. Toggle light and dark (System Settings › Appearance). Every capsule's
    label, Delete block's red included, reads clearly in both, and the
    chosen chip's fill is visible in both.
+
+## #276
+
+Launching with an expired access token fired the day's seven catch-up
+requests concurrently; each 401 refreshed on its own, and only one of the
+seven was ever retried, so the toolbar wrongly said "Offline" until a later
+catch-up. A single in-flight refresh now serves every concurrent 401.
+
+1. Sign in, then quit the app.
+2. Make the access token expired: either wait past the 60-minute lifetime,
+   or shorten it locally (`SIMPLE_JWT["ACCESS_TOKEN_LIFETIME"]` in
+   `backend/omakase/settings.py`, then restart the backend), or delete only
+   the access half by editing the Keychain item
+   `dev.omakase.mac.tokens`/`jwt` (Keychain Access.app) to an invalid value
+   while keeping the refresh token.
+3. Launch the app. The toolbar's sync indicator settles on "Synced", not
+   "Offline".
+4. Check the backend's request log (`docker-compose logs backend` or the
+   terminal running it): exactly one `POST /api/v1/auth/token/refresh/`,
+   not seven, and every other request that first got a 401 appears again
+   right after with a 200.
