@@ -247,6 +247,7 @@ public actor OmakaseAPIClient: APIClient {
         try await task.value
     }
 
+    /// The actual `POST token/refresh/`, run exactly once per `refresh()` caller group.
     private func performRefresh() async throws {
         guard var stored = await tokens.load() else { throw APIError.signedOut }
         let body = try OmakaseJSON.encoder.encode(["refresh": stored.refresh])
