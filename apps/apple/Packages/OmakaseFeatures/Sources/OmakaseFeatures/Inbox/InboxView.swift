@@ -47,16 +47,18 @@ public struct InboxView: View {
 
 /// One task: the row itself, a "Today" shortcut, and the rest in a menu.
 /// Shared by the Inbox and a place's list (spec §5), so both triage a task
-/// the same way.
+/// the same way. A place's own list hides the kind mark (spec §8), which
+/// would only repeat the place's own title.
 struct TriageRowView: View {
     let card: FocusCard
     let model: TriageModel
+    var showsKindMark = true
     @State private var picking = false
     @State private var picked = Date.now
 
     var body: some View {
         HStack(spacing: Spacing.small) {
-            PlanTaskRowView(card: card)
+            PlanTaskRowView(card: card, showsKindMark: showsKindMark)
             Button("Today") { model.schedule(card.id, .today) }.buttonStyle(.glass)
             Menu {
                 TriageActionItems(card: card, model: model) { picking = true }

@@ -5,7 +5,9 @@ import SwiftUI
 /// A place's open tasks (spec §5): a project's, a discipline's, or Life's,
 /// grouped Overdue/Today/Upcoming/No date. Rows and their ⋯ actions are
 /// `TriageRowView`'s, the same ones the Inbox uses, because a place list
-/// triages exactly the way the Inbox does.
+/// triages exactly the way the Inbox does — apart from the kind mark
+/// (spec §8), which is hidden here, since it would only repeat this
+/// screen's own title.
 public struct PlaceTasksView: View {
     private let place: TaskPlace
     private let day: String
@@ -67,7 +69,7 @@ struct PlaceSectionView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.small) {
             Text(group.section.title).sectionLabel()
-            ForEach(group.cards) { card in TriageRowView(card: card, model: model) }
+            ForEach(group.cards) { card in TriageRowView(card: card, model: model, showsKindMark: false) }
         }
     }
 }
