@@ -83,6 +83,25 @@ struct ButtonStyleTests {
         }
     }
 
+    /// Mono chrome is about kind colour, not the platform's destructive
+    /// signal: "Delete block" deletes at once, with no undo, and drew in ink
+    /// like its neighbours until the G1 review. Its label is red again, and
+    /// never shu, which is a signal, not a button colour.
+    @Test func aDestructiveButtonStaysRedIssue283() {
+        #expect(SecondaryButtonStyle.labelColor(for: .destructive) == Palette.destructive)
+        #expect(SecondaryButtonStyle.labelColor(for: nil) == Palette.ink)
+        #expect(SecondaryButtonStyle.labelColor(for: .cancel) == Palette.ink)
+        #expect(Palette.destructive != Palette.shu)
+    }
+
+    /// The red reads where the ink does: over the blurred ground, the glass's worst backdrop.
+    @Test func aDestructiveLabelReadsOnGlassOverTheBlurredGroundIssue283() {
+        for dark in Self.sides {
+            let ground = TranslucencyTests.blurred(dark: dark)
+            #expect(RGB.contrast(Palette.destructive.side(dark: dark), ground) >= 4.5)
+        }
+    }
+
     /// Mono chrome (glass-pass §1): the capsule's label and its chosen fill
     /// are ink. A dim label read as disabled on glass (#172, #213).
     @Test func secondaryIsInkNotShuIssue283() {

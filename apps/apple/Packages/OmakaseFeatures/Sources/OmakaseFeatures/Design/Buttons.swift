@@ -44,8 +44,18 @@ public struct SecondaryButtonStyle: ButtonStyle {
 
     public init(isSelected: Bool = false) { self.isSelected = isSelected }
 
+    /// Ink, or `Palette.destructive` for a destructive button: mono chrome
+    /// is about kind colour, not the platform's destructive signal (#283).
+    ///
+    ///     SecondaryButtonStyle.labelColor(for: .destructive)   // Palette.destructive
+    static func labelColor(for role: ButtonRole?) -> DesignColor {
+        role == .destructive ? Palette.destructive : label
+    }
+
     public func makeBody(configuration: Configuration) -> some View {
-        SecondaryCapsuleBody(label: configuration.label, isPressed: configuration.isPressed, isSelected: isSelected)
+        SecondaryCapsuleBody(
+            label: configuration.label, role: configuration.role, isPressed: configuration.isPressed,
+            isSelected: isSelected)
     }
 }
 
@@ -61,7 +71,7 @@ public struct IconButtonStyle: ButtonStyle {
     public init() {}
 
     public func makeBody(configuration: Configuration) -> some View {
-        IconCircleBody(label: configuration.label, isPressed: configuration.isPressed)
+        IconCircleBody(label: configuration.label, role: configuration.role, isPressed: configuration.isPressed)
     }
 }
 
@@ -120,7 +130,7 @@ struct SecondaryMenuButtonStyle: ButtonStyle {
             configuration.label
             Image(systemName: "chevron.down").font(TypeScale.caption.weight(.semibold)).imageScale(.small)
         }
-        return SecondaryCapsuleBody(label: label, isPressed: configuration.isPressed, isSelected: false)
+        return SecondaryCapsuleBody(label: label, role: nil, isPressed: configuration.isPressed, isSelected: false)
     }
 }
 
@@ -128,12 +138,13 @@ struct SecondaryMenuButtonStyle: ButtonStyle {
 private struct SecondaryCapsuleBody<Label: View>: View {
     @Environment(\.isEnabled) private var isEnabled
     let label: Label
+    let role: ButtonRole?
     let isPressed: Bool
     let isSelected: Bool
 
     var body: some View {
         label
-            .glassControlLabel(isPressed: isPressed, isEnabled: isEnabled)
+            .glassControlLabel(role: role, isPressed: isPressed, isEnabled: isEnabled)
             .padding(.horizontal, Spacing.large)
             .padding(.vertical, Spacing.small)
             .frame(minHeight: ControlMetrics.height)
@@ -151,12 +162,13 @@ private struct SecondaryCapsuleBody<Label: View>: View {
 private struct IconCircleBody<Label: View>: View {
     @Environment(\.isEnabled) private var isEnabled
     let label: Label
+    let role: ButtonRole?
     let isPressed: Bool
 
     var body: some View {
         label
             .labelStyle(.iconOnly)
-            .glassControlLabel(isPressed: isPressed, isEnabled: isEnabled)
+            .glassControlLabel(role: role, isPressed: isPressed, isEnabled: isEnabled)
             .frame(width: ControlMetrics.height, height: ControlMetrics.height)
             .contentShape(.circle)
             .glassEffect(.regular.interactive(), in: .circle)
@@ -164,11 +176,11 @@ private struct IconCircleBody<Label: View>: View {
 }
 
 extension View {
-    /// A glass control's label: the body face at medium weight, in ink,
-    /// dimmed while pressed or disabled.
-    fileprivate func glassControlLabel(isPressed: Bool, isEnabled: Bool) -> some View {
+    /// A glass control's label: the body face at medium weight, in ink (red
+    /// for a destructive role), dimmed while pressed or disabled.
+    fileprivate func glassControlLabel(role: ButtonRole?, isPressed: Bool, isEnabled: Bool) -> some View {
         font(TypeScale.body.weight(.medium))
-            .foregroundStyle(SecondaryButtonStyle.label.color)
+            .foregroundStyle(SecondaryButtonStyle.labelColor(for: role).color)
             .opacity(ControlMetrics.labelOpacity(isPressed: isPressed, isEnabled: isEnabled))
     }
 }

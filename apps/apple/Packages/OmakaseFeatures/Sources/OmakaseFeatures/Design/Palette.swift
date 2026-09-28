@@ -22,4 +22,9 @@ public enum Palette {
     public static let matcha = DesignColor(dark: 0x7FAF82, light: 0x5E8C61)
     /// Ai (indigo): long break.
     public static let indigo = DesignColor(dark: 0x6D8FC4, light: 0x3F5E8C)
+    /// A destructive button's label ("Delete block"): the platform's red
+    /// signal, which mono chrome keeps (G1 review, #283). Never shu. Lighter
+    /// (dark) and deeper (light) than the system red, which reads only 2.6 /
+    /// 1.8:1 over the blurred ground the glass sits on; this reads 4.6:1.
+    public static let destructive = DesignColor(dark: 0xFFA297, light: 0x8C201A)
 }
