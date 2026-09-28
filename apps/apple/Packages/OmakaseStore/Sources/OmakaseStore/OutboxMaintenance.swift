@@ -93,12 +93,14 @@ public struct OutboxMaintenance {
         try context.save()
     }
 
+    /// A subtask's create takes its `local-` subtask too (#286), so a
+    /// discarded capture leaves none of its subtasks behind.
     private func deleteRecord(createdBy entry: OutboxEntry) throws {
         guard let localID = entry.createsLocalID else { return }
-        if entry.kind == "block.create" {
-            try context.delete(model: TimeBlockRecord.self, where: #Predicate { $0.id == localID })
-        } else {
-            try context.delete(model: TaskRecord.self, where: #Predicate { $0.id == localID })
+        switch entry.kind {
+        case "block.create": try context.delete(model: TimeBlockRecord.self, where: #Predicate { $0.id == localID })
+        case "subtask.create": try context.delete(model: SubtaskRecord.self, where: #Predicate { $0.id == localID })
+        default: try context.delete(model: TaskRecord.self, where: #Predicate { $0.id == localID })
         }
     }
 

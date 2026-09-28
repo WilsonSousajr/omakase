@@ -93,6 +93,7 @@ public final class TaskWrites {
         if let create = queue.unsentCreate(of: id) {
             queue.withdraw(create)
             try deleteUnsentBlocks(of: id)
+            try deleteUnsentSubtasks(of: id)
         } else {
             try queue.enqueue(
                 kind: "task.delete", method: "DELETE", path: "/api/v1/tasks/\(id)/", body: nil, subjectID: id)
@@ -106,6 +107,13 @@ public final class TaskWrites {
     private func deleteUnsentBlocks(of taskID: String) throws {
         let blocks = FetchDescriptor<TimeBlockRecord>(predicate: #Predicate { $0.taskID == taskID })
         for block in try context.fetch(blocks) { context.delete(block) }
+    }
+
+    /// The same for the subtasks a capture added with it (#286): their
+    /// creates went with the task's, and no refresh lists a `local-` task's.
+    private func deleteUnsentSubtasks(of taskID: String) throws {
+        let subtasks = FetchDescriptor<SubtaskRecord>(predicate: #Predicate { $0.taskID == taskID })
+        for subtask in try context.fetch(subtasks) { context.delete(subtask) }
     }
 
     private func patch(_ record: TaskRecord, body: some Encodable) throws {

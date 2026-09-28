@@ -159,4 +159,23 @@ struct TaskCaptureTests {
         #expect(error.description.contains(#"task "Email the advisor" was saved"#))
         #expect(try entries().map(\.kind) == ["task.create", "subtask.create"])
     }
+
+    // MARK: Withdrawn or discarded with the task
+
+    @Test func deletingAnUnsentCaptureTakesItsSubtasksWithIt() throws {
+        let task = try capture()
+        try TaskWrites(context: context).delete(task)
+        #expect(try subtasks().isEmpty)
+        #expect(try entries().isEmpty)
+    }
+
+    @Test func discardingAParkedCaptureTakesItsSubtasks() async throws {
+        _ = try capture()
+        await api.script([.reply(400, #"{"detail":"title too long"}"#)])
+        await drain()
+        try OutboxMaintenance(context: context).discard(sequence: try #require(try entries().first).sequence)
+        #expect(try context.fetch(FetchDescriptor<TaskRecord>()).isEmpty)
+        #expect(try subtasks().isEmpty)
+        #expect(try entries().isEmpty)
+    }
 }
