@@ -7,7 +7,8 @@ import Testing
 
 /// A slot drawn on Plan and saved with ⏎ (spec §9, #264): the app captures
 /// the task on the slot's day, then creates its block naming the `local-`
-/// id, in one write. These replay that sequence through the real outbox.
+/// id, in one write. These replay that sequence through the real outbox,
+/// calling the same Store helper the app calls (`captureTask`, #286).
 @MainActor
 struct SlotCaptureTests {
     let container: ModelContainer
@@ -19,10 +20,10 @@ struct SlotCaptureTests {
     /// What `AppServices.capture` does for a `.slot`: the task on the
     /// slot's day, so no reschedule is queued, then its block.
     func captureSlot() throws -> (task: TaskRecord, block: TimeBlockRecord) {
-        let task = try TaskWrites(context: context).capture(
-            title: "Read chapter 4", day: "2026-09-28", filing: TaskFiling(area: .study, parent: nil))
-        let block = try BlockWrites(context: context).create(
-            taskID: task.id, studyBlockID: nil, day: "2026-09-28", start: "14:00:00", end: "15:00:00")
+        let task = try TaskWrites(context: context).captureTask(
+            title: "Read chapter 4", day: "2026-09-28", filing: TaskFiling(area: .study, parent: nil),
+            details: TaskCaptureDetails(), slot: CaptureSlot(day: "2026-09-28", start: "14:00:00", end: "15:00:00"))
+        let block = try #require(try context.fetch(FetchDescriptor<TimeBlockRecord>()).first)
         return (task, block)
     }
 
