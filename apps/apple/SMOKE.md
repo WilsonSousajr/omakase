@@ -575,7 +575,13 @@ Study once, online) so Work and Study have places.
 3. Select a task in Focus and start the timer. The top of the sidebar shows
    a small ring in the focus colour, the countdown and the task's title.
    The countdown ticks each second; the rows and counts below it don't
-   flicker or redraw.
+   flicker or redraw. To check that nothing else redraws, build for
+   profiling and open Instruments' SwiftUI template. Record about 10
+   seconds with the timer running and without touching the app. In the
+   View Body lane, `SidebarNowStripView` and `MenuBarTimerLabelView` run
+   about once a second, while `MainWindowView` and `SidebarView` don't run
+   at all. Before #260's fix, the menu-bar label's countdown made
+   `App.body` redraw the whole window every second.
 4. Pause. The strip stays, dimmed. Resume, then Skip to a break: the ring
    takes the break's colour.
 5. Skip until the timer waits with no phase running, with a block later

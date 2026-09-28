@@ -66,11 +66,8 @@ struct OmakaseMacApp: App {
                 .modelContainer(services.container)
             }
         } label: {
-            if let timer, let text = MenuBar.label(for: timer.state, remaining: timer.remainingText) {
-                Label(text, systemImage: "timer")
-            } else {
-                Image(systemName: "timer")
-            }
+            // Its own view, so App.body never reads the tick (#260 review).
+            if let timer { MenuBarTimerLabelView(timer: timer) } else { Image(systemName: "timer") }
         }
         .menuBarExtraStyle(.window)
     }
